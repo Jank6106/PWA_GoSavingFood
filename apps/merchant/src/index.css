@@ -1,0 +1,328 @@
+:root {
+  --primary-amber: #f59e0b;
+  --primary-amber-hover: #d97706;
+  --accent-emerald: #10b981;
+  --bg-dark: #0f1420;
+  --card-bg: rgba(30, 39, 59, 0.75);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding-bottom: 80px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.glass-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(15, 20, 32, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 16px;
+}
+
+.header-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.store-name {
+  font-size: 12px;
+  color: var(--primary-amber);
+  font-weight: 600;
+}
+
+/* Layout */
+.app-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Stats Row */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+}
+
+.stat-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary-amber);
+  margin-bottom: 2px;
+}
+
+.stat-lbl {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Create Button */
+.create-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f1420;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
+  transition: all 0.2s;
+}
+
+.create-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+/* Section Title */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Product List */
+.product-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.product-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.product-info h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.product-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 10px;
+}
+
+.toggle-switch {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--accent-emerald);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Order Verification Box */
+.verify-box {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(56, 189, 248, 0.05));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.verify-input-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.verify-input {
+  flex: 1;
+  background: #0f1420;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.verify-submit-btn {
+  background: var(--accent-emerald);
+  color: #0f1420;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Modal Form */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-card {
+  background: #192236;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 440px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.form-group {
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  background: #0f1420;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-cancel {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-submit {
+  flex: 2;
+  background: var(--primary-amber);
+  color: #0f1420;
+  font-weight: 700;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(15, 20, 32, 0.95);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 12px;
+  z-index: 40;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-item.active {
+  color: var(--primary-amber);
+  font-weight: 700;
+}
