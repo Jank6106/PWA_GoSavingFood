@@ -5,8 +5,8 @@ import React, { useState } from "react";
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"customer" | "merchant">("customer");
 
-  const [customerUrl, setCustomerUrl] = useState("/customer");
-  const [merchantUrl, setMerchantUrl] = useState("/merchant");
+  const [customerUrl, setCustomerUrl] = useState("https://gsf-customer-pwa.vercel.app");
+  const [merchantUrl, setMerchantUrl] = useState("https://gsf-merchant-pwa.vercel.app");
 
   React.useEffect(() => {
     if (window.location.hostname === "localhost") {
