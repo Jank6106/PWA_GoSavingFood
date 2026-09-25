@@ -1,376 +1,177 @@
-import { useState, useEffect } from 'react';
-import { AppHeader } from './app/layouts/AppHeader';
-import { BottomNav } from './app/layouts/BottomNav';
-import { HomePage } from './features/home/pages/HomePage';
+import { useEffect, useState } from 'react';
+import { AppLayout } from './app/layouts/AppLayout';
+import { AuthProvider } from './contexts/AuthContext';
+import { AuthModal } from './features/auth/components/AuthModal';
 import { CartPage } from './features/cart/pages/CartPage';
+import { BagDetailPage } from './features/catalog/pages/BagDetailPage';
+import { BagsPage } from './features/catalog/pages/BagsPage';
+import { BrandDetailPage } from './features/catalog/pages/BrandDetailPage';
+import { MerchantDetailPage } from './features/catalog/pages/MerchantDetailPage';
+import { CheckoutPage } from './features/checkout/pages/CheckoutPage';
+import { OrderSuccessPage } from './features/checkout/pages/OrderSuccessPage';
+import { PaymentPage } from './features/checkout/pages/PaymentPage';
+import { HomePage } from './features/home/pages/HomePage';
+import { SelectLocationPage } from './features/location/pages/SelectLocationPage';
+import { NotificationsPage } from './features/notifications/pages/NotificationsPage';
+import { OrderDetailPage } from './features/orders/pages/OrderDetailPage';
+import { OrderFeedbackPage } from './features/orders/pages/OrderFeedbackPage';
 import { OrdersPage } from './features/orders/pages/OrdersPage';
 import { ProfilePage } from './features/profile/pages/ProfilePage';
-import { Dialog, Button, Badge } from '@gosavingfood/ui';
-import { Clock, MapPin, Plus, Share2 } from 'lucide-react';
+import { SearchPage } from './features/search/pages/SearchPage';
+import { useCart } from './hooks/useCart';
+import { useAuth } from './hooks/useAuth';
+import { useCustomerCatalog } from './hooks/useCustomerCatalog';
+import { customerService } from './services/customer.service';
 import type {
-  ProductDeal,
-  CartItem,
-  CustomerOrder,
+  AppRoute,
+  CheckoutDraft,
   CustomerTab,
+  NotificationItem,
+  Order,
+  SurpriseBag,
+  Voucher,
 } from './shared/types/customer.types';
-
-const INITIAL_DEALS: ProductDeal[] = [
-  {
-    id: 'deal-1',
-    shopName: 'Bánh Mì Sài Gòn Bakery',
-    title: 'Túi Bí Mật Bánh Mì Tươi Cuối Ngày',
-    category: 'bag',
-    originalPrice: 80000,
-    rescuePrice: 25000,
-    discountPercentage: 68,
-    pickupTime: '18:30 - 20:00',
-    distance: '400m',
-    stock: 3,
-    icon: '🥖',
-    description: 'Bao gồm 3-4 loại bánh mì tươi thơm ngon được nướng trong ngày (bánh mì bơ tỏi, croissant, bánh mì mè đen). Chất lượng tuyệt hảo.',
-  },
-  {
-    id: 'deal-2',
-    shopName: 'Quán Cơm Bento Mẹ Nấu',
-    title: 'Suất Cơm Trưa Bento Thập Cẩm',
-    category: 'rice',
-    originalPrice: 65000,
-    rescuePrice: 22000,
-    discountPercentage: 66,
-    pickupTime: '13:30 - 15:00',
-    distance: '800m',
-    stock: 4,
-    icon: '🍱',
-    description: 'Cơm nóng sốt kèm món mặn (sườn nướng hoặc cá kho), canh rau theo mùa và trứng chiên. Đóng hộp giấy bảo vệ môi trường.',
-  },
-  {
-    id: 'deal-3',
-    shopName: 'Le Petit Paris Cafe',
-    title: 'Túi Bánh Ngọt French Pastry',
-    category: 'bakery',
-    originalPrice: 120000,
-    rescuePrice: 45000,
-    discountPercentage: 62,
-    pickupTime: '19:00 - 21:00',
-    distance: '1.2km',
-    stock: 2,
-    icon: '🥐',
-    description: 'Bánh sừng bò ngàn lớp, bánh Danish trái cây tươi hoặc tart trứng béo ngậy chuẩn công thức bánh Pháp cao cấp.',
-  },
-  {
-    id: 'deal-4',
-    shopName: 'Healthy Green Salad Bar',
-    title: 'Salad Ức Gà Áp Chảo & Rau Củ Tươi',
-    category: 'healthy',
-    originalPrice: 75000,
-    rescuePrice: 29000,
-    discountPercentage: 61,
-    pickupTime: '17:00 - 19:00',
-    distance: '1.5km',
-    stock: 5,
-    icon: '🥗',
-    description: 'Xà lách thuỷ canh giòn ngọt, ức gà áp chảo sốt mè rang, trứng luộc lòng đào và cà chua bi organic.',
-  },
-];
-
-const INITIAL_ORDERS: CustomerOrder[] = [
-  {
-    id: 'ord-101',
-    orderCode: 'GSF-8821',
-    shopName: 'Bánh Mì Sài Gòn Bakery',
-    items: [
-      {
-        product: INITIAL_DEALS[0],
-        quantity: 1,
-      },
-    ],
-    totalAmount: 25000,
-    pickupTime: '18:30 - 20:00 hôm nay',
-    pickupAddress: '42 Nguyễn Huệ, P. Bến Nghé, Quận 1',
-    status: 'ready',
-    createdAt: new Date().toISOString(),
-  },
-];
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<CustomerTab>('home');
-  const [deals] = useState<ProductDeal[]>(INITIAL_DEALS);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<CustomerOrder[]>(INITIAL_ORDERS);
-  const [selectedDeal, setSelectedDeal] = useState<ProductDeal | null>(null);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showIOSPrompt, setShowIOSPrompt] = useState<boolean>(false);
-  const [isStandalone, setIsStandalone] = useState<boolean>(false);
-  const [isCheckingOut, setIsCheckingOut] = useState<boolean>(false);
+function CustomerApp() {
+  const catalog = useCustomerCatalog();
+  const cart = useCart();
+  const auth = useAuth();
+  const [history, setHistory] = useState<AppRoute[]>([{ name: 'tabs', tab: 'home' }]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [location, setLocation] = useState('Quận 1, TP.HCM');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(
+    () => window.matchMedia('(display-mode: standalone)').matches
+  );
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    // Kiểm tra PWA standalone
-    const checkStandalone = () => {
-      const standalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        ('standalone' in window.navigator && (window.navigator as unknown as { standalone: boolean }).standalone === true) ||
-        document.referrer.includes('android-app://');
-      setIsStandalone(Boolean(standalone));
+    let active = true;
+    Promise.all([
+      customerService.getOrders(),
+      customerService.getNotifications(),
+      customerService.getVouchers(),
+    ]).then(([nextOrders, nextNotifications, nextVouchers]) => {
+      if (!active) return;
+      setOrders(nextOrders);
+      setNotifications(nextNotifications);
+      setVouchers(nextVouchers);
+    });
+    const handleInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
     };
-
-    checkStandalone();
-
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      active = false;
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
     };
   }, []);
 
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setIsStandalone(true);
-      }
-      setDeferredPrompt(null);
-    } else {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIOS) {
-        setShowIOSPrompt(true);
-      } else {
-        alert(
-          '👉 Để cài đặt GoSavingFood:\n1. Bấm nút 3 chấm (⋮) trên trình duyệt.\n2. Chọn "Cài đặt ứng dụng" hoặc "Thêm vào Màn hình chính".'
-        );
-      }
-    }
-  };
+  const route = history[history.length - 1];
+  const activeTab: CustomerTab = route.name === 'tabs' ? route.tab : 'home';
+  const push = (nextRoute: AppRoute) => setHistory((current) => [...current, nextRoute]);
+  const back = () => setHistory((current) => (current.length > 1 ? current.slice(0, -1) : current));
+  const openTab = (tab: CustomerTab) => setHistory([{ name: 'tabs', tab }]);
+  const home = () => openTab('home');
+  const selectedBag = route.name === 'bag' ? catalog.bags.find((bag) => bag.id === route.id) ?? null : null;
+  const selectedMerchantId = route.name === 'merchant' ? route.id : selectedBag?.merchantId;
+  const selectedMerchant = catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? null;
+  const selectedBrand = route.name === 'brand' ? catalog.brands.find((brand) => brand.id === route.id) ?? null : null;
+  const selectedOrderId = route.name === 'order' || route.name === 'review' || route.name === 'report' ? route.id : route.name === 'success' ? route.orderId : null;
+  const selectedOrder = selectedOrderId ? orders.find((order) => order.id === selectedOrderId) ?? null : null;
 
-  // Thêm vào giỏ hàng
-  const handleAddToCart = (deal: ProductDeal) => {
-    setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.product.id === deal.id);
-      if (existing) {
-        if (existing.quantity >= deal.stock) {
-          alert(`Rất tiếc, chỉ còn ${deal.stock} suất cho món này!`);
-          return prevCart;
-        }
-        return prevCart.map((item) =>
-          item.product.id === deal.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prevCart, { product: deal, quantity: 1 }];
-    });
-  };
-
-  // Cập nhật số lượng
-  const handleUpdateQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      handleRemoveItem(productId);
+  const addToCart = (bag: SurpriseBag, quantity = 1) => cart.addItem(bag, quantity);
+  const buyNow = (bag: SurpriseBag, quantity: number) => {
+    addToCart(bag, quantity);
+    if (!auth.isAuthenticated) {
+      auth.showAuthModal();
       return;
     }
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
-    );
+    push({ name: 'checkout' });
+  };
+  const startCheckout = () => {
+    if (!auth.isAuthenticated) {
+      auth.showAuthModal();
+      return;
+    }
+    push({ name: 'checkout' });
+  };
+  const confirmPayment = async (draft: CheckoutDraft) => {
+    if (!cart.items.length) return;
+    setIsSubmitting(true);
+    const merchant = catalog.merchants.find((item) => item.id === cart.items[0].merchantId);
+    const order: Omit<Order, 'id' | 'orderCode' | 'createdAt'> = {
+      merchantId: cart.items[0].merchantId,
+      merchantName: merchant?.name ?? cart.items[0].bag.merchantName,
+      items: cart.items.map((item) => ({
+        bagId: item.bag.id,
+        bagName: item.bag.name,
+        imageUrl: item.bag.imageUrl,
+        quantity: item.quantity,
+        unitPrice: item.bag.discountPrice,
+        totalPrice: item.bag.discountPrice * item.quantity,
+      })),
+      totalOriginalPrice: cart.summary.original,
+      totalDiscountPrice: cart.summary.subtotal,
+      discountAmount: draft.discountAmount,
+      finalAmount: Math.max(0, cart.summary.subtotal - draft.discountAmount),
+      status: draft.paymentMethod === 'cash' ? 'pending' : 'confirmed',
+      paymentMethod: draft.paymentMethod,
+      paymentStatus: draft.paymentMethod === 'cash' ? 'pending' : 'success',
+      pickupTime: draft.pickupTime,
+      pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
+    };
+    const created = await customerService.createOrder(order);
+    setOrders((current) => [created, ...current]);
+    cart.clear();
+    setIsSubmitting(false);
+    setHistory([{ name: 'success', orderId: created.id }]);
+  };
+  const installApp = async () => {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      setIsStandalone(choice.outcome === 'accepted');
+      setInstallPrompt(null);
+      return;
+    }
+    window.alert('Mở menu trình duyệt và chọn “Thêm vào màn hình chính” để cài GoSavingFood.');
   };
 
-  // Xóa khỏi giỏ
-  const handleRemoveItem = (productId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
+  const renderScreen = () => {
+    if (route.name === 'tabs') {
+      if (route.tab === 'home') return <HomePage {...catalog} location={location} onSearch={() => push({ name: 'search' })} onLocation={() => push({ name: 'location' })} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })} onAdd={addToCart} onViewAll={() => push({ name: 'bags' })} />;
+      if (route.tab === 'cart') return <CartPage items={cart.items} isAuthenticated={auth.isAuthenticated} {...cart.summary} onLogin={auth.showAuthModal} onExplore={home} onCheckout={startCheckout} onUpdate={cart.updateQuantity} onRemove={cart.removeItem} />;
+      if (route.tab === 'orders') return <OrdersPage orders={orders} isAuthenticated={auth.isAuthenticated} onLogin={auth.showAuthModal} onOpenOrder={(order) => push({ name: 'order', id: order.id })} />;
+      return <ProfilePage user={auth.user} isStandalone={isStandalone} onLogin={auth.showAuthModal} onLogout={auth.logout} onOrders={() => openTab('orders')} onNotifications={() => push({ name: 'notifications' })} onLocation={() => push({ name: 'location' })} onInstall={installApp} />;
+    }
+    if (route.name === 'search') return <SearchPage bags={catalog.bags} merchants={catalog.merchants} onBack={back} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
+    if (route.name === 'bags') return <BagsPage bags={catalog.bags} categories={catalog.categories} onBack={back} onOpen={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
+    if (route.name === 'bag') return <BagDetailPage bag={selectedBag} merchant={selectedMerchant} onBack={back} onMerchant={() => selectedMerchant && push({ name: 'merchant', id: selectedMerchant.id })} onAdd={addToCart} onBuyNow={buyNow} />;
+    if (route.name === 'merchant') return <MerchantDetailPage merchant={selectedMerchant} bags={catalog.bags.filter((bag) => bag.merchantId === route.id)} onBack={back} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
+    if (route.name === 'brand') return <BrandDetailPage brand={selectedBrand} stores={catalog.merchants.filter((merchant) => merchant.brandId === route.id)} onBack={back} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} />;
+    if (route.name === 'checkout' && auth.user) return <CheckoutPage items={cart.items} subtotal={cart.summary.subtotal} user={auth.user} vouchers={vouchers} onBack={back} onContinue={(draft) => push({ name: 'payment', draft })} />;
+    if (route.name === 'payment') return <PaymentPage draft={route.draft} total={Math.max(0, cart.summary.subtotal - route.draft.discountAmount)} isSubmitting={isSubmitting} onBack={back} onConfirm={() => confirmPayment(route.draft)} />;
+    if (route.name === 'success' && selectedOrder) return <OrderSuccessPage order={selectedOrder} onOrders={() => openTab('orders')} onHome={home} />;
+    if (route.name === 'order' && selectedOrder) return <OrderDetailPage order={selectedOrder} onBack={back} onReview={() => push({ name: 'review', id: selectedOrder.id })} onReport={() => push({ name: 'report', id: selectedOrder.id })} />;
+    if ((route.name === 'review' || route.name === 'report') && selectedOrder) return <OrderFeedbackPage mode={route.name} order={selectedOrder} onBack={back} onSubmit={() => { window.alert(route.name === 'review' ? 'Đã gửi đánh giá. Cảm ơn bạn!' : 'Đã gửi báo cáo. Chúng tôi sẽ sớm liên hệ.'); back(); }} />;
+    if (route.name === 'notifications') return <NotificationsPage notifications={notifications} onBack={back} onReadAll={() => setNotifications((current) => current.map((item) => ({ ...item, read: true })))} />;
+    if (route.name === 'location') return <SelectLocationPage currentLocation={location} onBack={back} onSelect={(nextLocation) => { setLocation(nextLocation); back(); }} />;
+    return null;
   };
 
-  // Đặt hàng từ giỏ
-  const handleCheckout = () => {
-    if (cart.length === 0) return;
-    setIsCheckingOut(true);
+  const isTabs = route.name === 'tabs';
+  return <><AppLayout activeTab={activeTab} cartCount={cart.summary.count} location={location} unreadCount={notifications.filter((item) => !item.read).length} showHeader={isTabs && route.tab === 'home'} showBottomNav={isTabs} onTabChange={openTab} onLocationClick={() => push({ name: 'location' })} onNotificationClick={() => push({ name: 'notifications' })}>{renderScreen()}</AppLayout><AuthModal /></>;
+}
 
-    setTimeout(() => {
-      const randomCode = `GSF-${Math.floor(1000 + Math.random() * 9000)}`;
-      const total = cart.reduce(
-        (sum, item) => sum + item.product.rescuePrice * item.quantity,
-        0
-      );
-      const firstShop = cart[0].product.shopName;
-
-      const newOrder: CustomerOrder = {
-        id: `ord-${Date.now()}`,
-        orderCode: randomCode,
-        shopName: firstShop,
-        items: [...cart],
-        totalAmount: total,
-        pickupTime: 'Hôm nay theo khung giờ từng món',
-        pickupAddress: 'Địa chỉ cửa hàng trên hóa đơn',
-        status: 'ready',
-        createdAt: new Date().toISOString(),
-      };
-
-      setOrders((prev) => [newOrder, ...prev]);
-      setCart([]);
-      setIsCheckingOut(false);
-      setActiveTab('orders');
-    }, 600);
-  };
-
-  // Tổng số lượng món trong giỏ
-  const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-  return (
-    <div className="customer-app-shell">
-      {/* Header */}
-      <AppHeader
-        isStandalone={isStandalone}
-        onInstallClick={handleInstallClick}
-      />
-
-      {/* Main Screen Content */}
-      <main className="customer-main-content">
-        {activeTab === 'home' && (
-          <HomePage
-            deals={deals}
-            onAddToCart={handleAddToCart}
-            onViewDetails={(deal) => setSelectedDeal(deal)}
-          />
-        )}
-
-        {activeTab === 'cart' && (
-          <CartPage
-            cart={cart}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveItem}
-            onCheckout={handleCheckout}
-            onGoHome={() => setActiveTab('home')}
-            isCheckingOut={isCheckingOut}
-          />
-        )}
-
-        {activeTab === 'orders' && (
-          <OrdersPage
-            orders={orders}
-            onGoHome={() => setActiveTab('home')}
-          />
-        )}
-
-        {activeTab === 'profile' && (
-          <ProfilePage
-            isStandalone={isStandalone}
-            onInstallClick={handleInstallClick}
-          />
-        )}
-      </main>
-
-      {/* Bottom Navigation với 4 mục chính */}
-      <BottomNav
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
-        cartCount={totalCartCount}
-      />
-
-      {/* Dialog chi tiết suất ăn khi click vào */}
-      {selectedDeal && (
-        <Dialog
-          isOpen={Boolean(selectedDeal)}
-          onClose={() => setSelectedDeal(null)}
-          title={selectedDeal.title}
-          footer={
-            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-              <Button
-                variant="outline"
-                size="md"
-                style={{ flex: 1 }}
-                onClick={() => setSelectedDeal(null)}
-              >
-                Đóng
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                style={{ flex: 2 }}
-                leftIcon={<Plus size={18} strokeWidth={2.5} />}
-                onClick={() => {
-                  handleAddToCart(selectedDeal);
-                  setSelectedDeal(null);
-                }}
-              >
-                Thêm vào giỏ ({selectedDeal.rescuePrice.toLocaleString('vi-VN')}đ)
-              </Button>
-            </div>
-          }
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div
-              style={{
-                fontSize: '48px',
-                textAlign: 'center',
-                backgroundColor: 'var(--color-primary-soft)',
-                borderRadius: '16px',
-                padding: '24px',
-              }}
-            >
-              {selectedDeal.icon}
-            </div>
-
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <Badge variant="offer">Giảm {selectedDeal.discountPercentage}%</Badge>
-              <Badge variant="neutral">
-                <MapPin size={12} /> {selectedDeal.distance}
-              </Badge>
-            </div>
-
-            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-              <strong>Quán:</strong> {selectedDeal.shopName}
-            </p>
-
-            <p style={{ fontSize: '14px', lineHeight: '20px', color: 'var(--color-text-primary)' }}>
-              {selectedDeal.description}
-            </p>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-              <Clock size={16} strokeWidth={2} />
-              <span>Khung giờ nhận: <strong>{selectedDeal.pickupTime}</strong></span>
-            </div>
-          </div>
-        </Dialog>
-      )}
-
-      {/* Dialog hướng dẫn cài đặt iOS */}
-      {showIOSPrompt && (
-        <Dialog
-          isOpen={showIOSPrompt}
-          onClose={() => setShowIOSPrompt(false)}
-          title="Cài đặt trên iPhone / iPad"
-          footer={
-            <Button
-              variant="primary"
-              size="md"
-              fullWidth
-              onClick={() => setShowIOSPrompt(false)}
-            >
-              Đã hiểu
-            </Button>
-          }
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14px', lineHeight: '22px' }}>
-            <p>
-              1. Bấm vào biểu tượng <strong>Chia sẻ (Share <Share2 size={14} style={{ display: 'inline' }} />)</strong> ở thanh dưới trình duyệt Safari.
-            </p>
-            <p>
-              2. Cuộn xuống và chọn <strong>"Thêm vào Màn hình chính" (Add to Home Screen ➕)</strong>.
-            </p>
-            <p>
-              3. Bấm <strong>"Thêm" (Add)</strong> ở góc trên bên phải để hoàn tất!
-            </p>
-          </div>
-        </Dialog>
-      )}
-    </div>
-  );
+export default function App() {
+  return <AuthProvider><CustomerApp /></AuthProvider>;
 }

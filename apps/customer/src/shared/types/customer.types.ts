@@ -1,34 +1,174 @@
-export interface ProductDeal {
+export type FoodCategory =
+  | 'all'
+  | 'vegetarian'
+  | 'meat'
+  | 'bakery'
+  | 'seafood'
+  | 'beverage'
+  | 'other';
+
+export type OrderStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'preparing'
+  | 'ready_for_pickup'
+  | 'completed'
+  | 'cancelled';
+
+export type PaymentMethod = 'banking' | 'momo' | 'cash';
+export type PaymentStatus = 'pending' | 'success' | 'failed';
+export type CustomerTab = 'home' | 'cart' | 'orders' | 'profile';
+
+export interface User {
   id: string;
-  shopName: string;
+  name: string;
+  phone: string;
+  email?: string;
+  avatar?: string;
+}
+
+export interface Banner {
+  id: string;
+  eyebrow: string;
   title: string;
-  category: 'bag' | 'bakery' | 'rice' | 'healthy';
-  originalPrice: number;
-  rescuePrice: number;
-  discountPercentage: number;
-  pickupTime: string;
-  distance: string;
-  stock: number;
-  imageUrl?: string;
+  description: string;
+  accent: 'green' | 'yellow' | 'mint';
   icon: string;
-  description?: string;
+}
+
+export interface Category {
+  id: FoodCategory;
+  label: string;
+  icon: string;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  rating: number;
+  totalStores: number;
+  categories: string[];
+  sustainabilityMessage: string;
+}
+
+export interface Merchant {
+  id: string;
+  brandId?: string;
+  name: string;
+  description: string;
+  phone: string;
+  address: string;
+  logo: string;
+  banner: string;
+  rating: number;
+  totalRatings: number;
+  distance: number;
+  status: 'active' | 'inactive';
+  isOpen: boolean;
+  openingHours: string;
+}
+
+export interface SurpriseBag {
+  id: string;
+  merchantId: string;
+  merchantName: string;
+  name: string;
+  description: string;
+  originalPrice: number;
+  discountPrice: number;
+  category: Exclude<FoodCategory, 'all'>;
+  imageUrl: string;
+  quantity: number;
+  maxQuantity: number;
+  pickupStart: string;
+  pickupEnd: string;
+  isAvailable: boolean;
+  expiresAt: string;
+  rating: number;
 }
 
 export interface CartItem {
-  product: ProductDeal;
+  bag: SurpriseBag;
   quantity: number;
+  merchantId: string;
 }
 
-export interface CustomerOrder {
+export interface OrderItem {
+  bagId: string;
+  bagName: string;
+  imageUrl?: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface Order {
   id: string;
   orderCode: string;
-  items: CartItem[];
-  totalAmount: number;
-  shopName: string;
+  merchantId: string;
+  merchantName: string;
+  items: OrderItem[];
+  totalOriginalPrice: number;
+  totalDiscountPrice: number;
+  discountAmount: number;
+  finalAmount: number;
+  status: OrderStatus;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
   pickupTime: string;
   pickupAddress: string;
-  status: 'ready' | 'completed' | 'cancelled';
   createdAt: string;
 }
 
-export type CustomerTab = 'home' | 'cart' | 'orders' | 'profile';
+export interface NotificationItem {
+  id: string;
+  icon: string;
+  title: string;
+  body: string;
+  time: string;
+  read: boolean;
+}
+
+export interface Voucher {
+  id: string;
+  code: string;
+  description: string;
+  discountValue: number;
+  minOrderValue: number;
+  isActive: boolean;
+}
+
+export interface LocationSuggestion {
+  id: string;
+  name: string;
+  address: string;
+  distance: string;
+}
+
+export interface CheckoutDraft {
+  customerName: string;
+  phone: string;
+  pickupTime: string;
+  voucherCode?: string;
+  discountAmount: number;
+  note: string;
+  paymentMethod: PaymentMethod;
+}
+
+export type AppRoute =
+  | { name: 'tabs'; tab: CustomerTab }
+  | { name: 'search' }
+  | { name: 'bags' }
+  | { name: 'bag'; id: string }
+  | { name: 'merchant'; id: string }
+  | { name: 'brand'; id: string }
+  | { name: 'checkout' }
+  | { name: 'payment'; draft: CheckoutDraft }
+  | { name: 'success'; orderId: string }
+  | { name: 'order'; id: string }
+  | { name: 'review'; id: string }
+  | { name: 'report'; id: string }
+  | { name: 'notifications' }
+  | { name: 'location' };

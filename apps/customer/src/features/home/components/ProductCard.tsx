@@ -1,78 +1,39 @@
-import React from 'react';
-import { Clock, MapPin, Plus } from 'lucide-react';
-import { Card, Badge, Button } from '@gosavingfood/ui';
-import type { ProductDeal } from '../../../shared/types/customer.types';
+import { Clock3, MapPin, Plus } from 'lucide-react';
+import { Badge, Button } from '@gosavingfood/ui';
+import type { SurpriseBag } from '../../../shared/types/customer.types';
 
 interface ProductCardProps {
-  deal: ProductDeal;
-  onAddToCart: (deal: ProductDeal) => void;
-  onViewDetails?: (deal: ProductDeal) => void;
+  bag: SurpriseBag;
+  compact?: boolean;
+  onOpen: (bag: SurpriseBag) => void;
+  onAdd: (bag: SurpriseBag) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({
-  deal,
-  onAddToCart,
-  onViewDetails,
-}) => {
+export function ProductCard({ bag, compact = false, onOpen, onAdd }: ProductCardProps) {
+  const discount = Math.round((1 - bag.discountPrice / bag.originalPrice) * 100);
+
   return (
-    <Card className="customer-deal-card">
-      <div
-        className="customer-deal-img-wrapper"
-        onClick={() => onViewDetails?.(deal)}
-        role={onViewDetails ? 'button' : undefined}
-        tabIndex={onViewDetails ? 0 : undefined}
-      >
-        <div className="customer-deal-icon-bg" aria-hidden="true">
-          <span>{deal.icon}</span>
-        </div>
-        <div className="customer-deal-badges">
-          <Badge variant="offer">-{deal.discountPercentage}%</Badge>
-          <Badge variant="neutral">
-            <MapPin size={11} strokeWidth={2.5} />
-            {deal.distance}
-          </Badge>
-        </div>
-      </div>
-
-      <div className="customer-deal-body">
-        <div className="customer-deal-shop">{deal.shopName}</div>
-        <h3
-          className="customer-deal-title"
-          onClick={() => onViewDetails?.(deal)}
-        >
-          {deal.title}
-        </h3>
-
-        <div className="customer-deal-pickup">
-          <Clock size={13} strokeWidth={2} />
-          <span>Lấy món: <strong>{deal.pickupTime}</strong></span>
-        </div>
-
-        <div className="customer-deal-footer">
-          <div className="customer-deal-pricing">
-            <span className="customer-deal-original">
-              {deal.originalPrice.toLocaleString('vi-VN')}đ
-            </span>
-            <span className="customer-deal-rescue">
-              {deal.rescuePrice.toLocaleString('vi-VN')}đ
-            </span>
+    <article className={`customer-bag-card ${compact ? 'is-compact' : ''}`}>
+      <button type="button" className="customer-bag-image" onClick={() => onOpen(bag)}>
+        <img src={bag.imageUrl} alt="" />
+        <Badge variant="error">-{discount}%</Badge>
+        <span className="customer-distance"><MapPin size={12} /> 0,8 km</span>
+      </button>
+      <div className="customer-bag-content">
+        <span className="customer-bag-merchant">{bag.merchantName}</span>
+        <button type="button" className="customer-bag-title" onClick={() => onOpen(bag)}>{bag.name}</button>
+        <div className="customer-pickup-line"><Clock3 size={14} /> {bag.pickupStart}–{bag.pickupEnd}</div>
+        <div className="customer-bag-footer">
+          <div className="customer-price-stack">
+            <del>{bag.originalPrice.toLocaleString('vi-VN')}đ</del>
+            <strong>{bag.discountPrice.toLocaleString('vi-VN')}đ</strong>
           </div>
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => onAddToCart(deal)}
-            aria-label={`Thêm ${deal.title} vào giỏ`}
-            leftIcon={<Plus size={16} strokeWidth={2.5} />}
-          >
-            Cứu món
+          <Button size="sm" onClick={() => onAdd(bag)} aria-label={`Thêm ${bag.name}`}>
+            <Plus size={17} />
           </Button>
         </div>
-
-        <div className="customer-deal-stock">
-          Còn lại {deal.stock} suất hôm nay
-        </div>
+        <small className="customer-stock">Chỉ còn {bag.quantity} túi</small>
       </div>
-    </Card>
+    </article>
   );
-};
+}

@@ -1,52 +1,35 @@
-import React from 'react';
-import { MapPin, Smartphone } from 'lucide-react';
-import { Badge } from '@gosavingfood/ui';
+import { Bell, ChevronDown, MapPin } from 'lucide-react';
 
 interface AppHeaderProps {
-  isStandalone?: boolean;
-  onInstallClick?: () => void;
+  location: string;
+  unreadCount: number;
+  onLocationClick: () => void;
+  onNotificationClick: () => void;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({
-  isStandalone = false,
-  onInstallClick,
-}) => {
+export function AppHeader({
+  location,
+  unreadCount,
+  onLocationClick,
+  onNotificationClick,
+}: AppHeaderProps) {
   return (
     <header className="customer-header">
-      <div className="customer-header-inner">
-        <div className="customer-brand">
-          <div className="customer-logo-badge">
-            <span className="customer-logo-icon" aria-hidden="true">🌱</span>
-          </div>
-          <div>
-            <h1 className="customer-brand-title">GoSavingFood</h1>
-            <div className="customer-location">
-              <MapPin size={13} strokeWidth={2.5} />
-              <span>Quận 1, TP. Hồ Chí Minh</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="customer-header-actions">
-          {isStandalone ? (
-            <Badge variant="primary">
-              <Smartphone size={12} strokeWidth={2} />
-              PWA App
-            </Badge>
-          ) : (
-            onInstallClick && (
-              <button
-                type="button"
-                className="customer-install-btn"
-                onClick={onInstallClick}
-                aria-label="Cài đặt App vào màn hình chính"
-              >
-                📲 Tải App
-              </button>
-            )
-          )}
+      <div className="customer-brand">
+        <div className="customer-logo" aria-hidden="true">🌱</div>
+        <div>
+          <div className="customer-brand-name">GoSavingFood</div>
+          <button type="button" className="customer-location-trigger" onClick={onLocationClick}>
+            <MapPin size={13} />
+            <span>{location}</span>
+            <ChevronDown size={13} />
+          </button>
         </div>
       </div>
+      <button type="button" className="customer-round-button" onClick={onNotificationClick} aria-label="Thông báo">
+        <Bell size={21} />
+        {unreadCount > 0 && <span className="customer-notification-count">{unreadCount}</span>}
+      </button>
     </header>
   );
-};
+}
