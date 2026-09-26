@@ -54,21 +54,27 @@ img { display: block; max-width: 100%; }
 
 .customer-home-screen { padding-top: 0; }
 .customer-banner-bleed { margin: 0 -16px; width: calc(100% + 32px); position: relative; overflow: hidden; }
-.customer-campaign { position: relative; min-height: 184px; padding: 22px 20px 28px; overflow: hidden; border-radius: 0 0 28px 28px; background: linear-gradient(135deg, #003722 0%, #006b42 60%, #059669 100%); color: #fff; box-shadow: 0 12px 30px rgba(0, 107, 66, 0.2); transition: background 0.4s ease; }
-.customer-campaign.is-yellow { background: linear-gradient(135deg, #4d3800 0%, #855f00 50%, #d97706 100%); box-shadow: 0 12px 30px rgba(180, 83, 9, 0.2); }
-.customer-campaign.is-mint { background: linear-gradient(135deg, #02362b 0%, #047857 55%, #14b8a6 100%); box-shadow: 0 12px 30px rgba(4, 120, 87, 0.2); }
-.customer-campaign-ambient { position: absolute; top: -40px; right: -40px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, transparent 70%); pointer-events: none; }
-.customer-campaign-content { position: relative; z-index: 2; max-width: 68%; }
-.customer-campaign-eyebrow { display: inline-flex; align-items: center; gap: 5px; color: #bbf7d0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; background: rgba(255, 255, 255, 0.14); padding: 3px 8px; border-radius: 999px; margin-bottom: 6px; backdrop-filter: blur(4px); }
-.customer-campaign.is-yellow .customer-campaign-eyebrow { color: #fef08a; background: rgba(255, 255, 255, 0.16); }
-.customer-campaign.is-mint .customer-campaign-eyebrow { color: #99f6e4; background: rgba(255, 255, 255, 0.16); }
-.customer-campaign h1 { margin: 6px 0 6px; font-size: 21px; font-weight: 800; line-height: 27px; letter-spacing: -0.2px; }
-.customer-campaign p { margin: 0; color: rgba(255, 255, 255, 0.85); font-size: 12px; line-height: 17px; }
-.customer-campaign-graphic { position: absolute; right: 14px; bottom: 22px; z-index: 1; pointer-events: none; }
-.customer-campaign-graphic-badge { display: grid; width: 100px; height: 100px; place-items: center; border-radius: 26px; background: rgba(255, 255, 255, 0.12); border: 1.5px solid rgba(255, 255, 255, 0.22); color: rgba(255, 255, 255, 0.88); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); transform: rotate(-7deg); backdrop-filter: blur(8px); }
+.customer-campaign-slider { position: relative; width: 100%; min-height: 204px; overflow: hidden; border-radius: 0; box-shadow: 0 12px 30px rgba(0, 50, 30, 0.18); background: #003620; }
+.customer-campaign { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; min-height: 204px; padding: 22px 20px 32px; overflow: hidden; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-in-out; background: #003620; }
+.customer-campaign.is-active { position: relative; opacity: 1; pointer-events: auto; }
+.customer-campaign.is-green { background: linear-gradient(135deg, #022c1b 0%, #064e3b 60%, #047857 100%); }
+.customer-campaign.is-yellow { background: linear-gradient(135deg, #451a03 0%, #78350f 60%, #b45309 100%); }
+.customer-campaign.is-mint { background: linear-gradient(135deg, #022c22 0%, #065f46 60%, #0d9488 100%); }
+.customer-campaign-media { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; }
+.customer-campaign-image { width: 100%; height: 100%; object-fit: cover; object-position: center; transform: scale(1); transition: transform 6s cubic-bezier(0.25, 1, 0.5, 1); }
+.customer-campaign.is-active .customer-campaign-image { transform: scale(1.06); }
+.customer-campaign-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0, 28, 16, 0.52) 0%, rgba(0, 38, 22, 0.3) 50%, rgba(0, 0, 0, 0.15) 100%), linear-gradient(to top, rgba(0, 20, 12, 0.72) 0%, rgba(0, 20, 12, 0.18) 50%, transparent 100%); backdrop-filter: none; }
+.customer-campaign.is-yellow .customer-campaign-overlay { background: linear-gradient(135deg, rgba(40, 24, 0, 0.52) 0%, rgba(60, 36, 0, 0.3) 50%, rgba(0, 0, 0, 0.15) 100%), linear-gradient(to top, rgba(30, 18, 0, 0.72) 0%, rgba(30, 18, 0, 0.18) 50%, transparent 100%); }
+.customer-campaign.is-mint .customer-campaign-overlay { background: linear-gradient(135deg, rgba(0, 32, 24, 0.52) 0%, rgba(0, 45, 34, 0.3) 50%, rgba(0, 0, 0, 0.15) 100%), linear-gradient(to top, rgba(0, 22, 16, 0.72) 0%, rgba(0, 22, 16, 0.18) 50%, transparent 100%); }
+.customer-campaign-content { position: relative; z-index: 2; max-width: 88%; }
+.customer-campaign-eyebrow { display: inline-flex; align-items: center; gap: 5px; color: #dcfce7; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; backdrop-filter: blur(8px); }
+.customer-campaign.is-yellow .customer-campaign-eyebrow { color: #fef08a; background: rgba(0, 0, 0, 0.35); }
+.customer-campaign.is-mint .customer-campaign-eyebrow { color: #99f6e4; background: rgba(0, 0, 0, 0.35); }
+.customer-campaign h1 { margin: 0 0 6px; color: #ffffff; font-size: 22px; font-weight: 850; line-height: 28px; letter-spacing: -0.3px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 1px 3px rgba(0, 0, 0, 0.9); }
+.customer-campaign p { margin: 0; color: rgba(255, 255, 255, 0.95); font-size: 13px; line-height: 18px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 1px 2px rgba(0, 0, 0, 0.85); }
 .customer-campaign-dots { position: absolute; z-index: 3; bottom: 12px; left: 20px; display: flex; align-items: center; gap: 5px; }
-.customer-campaign-dots button { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 3px; background: rgba(255, 255, 255, 0.4); cursor: pointer; transition: all 0.25s ease; }
-.customer-campaign-dots button.is-active { width: 22px; background: #ffffff; border-radius: 3px; }
+.customer-campaign-dots button { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 4px; background: rgba(255, 255, 255, 0.45); cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.customer-campaign-dots button.is-active { width: 24px; background: #ffffff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); border-radius: 4px; }
 
 .customer-search-trigger, .customer-search-box { display: flex; min-height: 50px; align-items: center; gap: 10px; width: 100%; padding: 0 15px; border: 1px solid var(--color-border-subtle); border-radius: 15px; background: #fff; color: var(--color-text-muted); box-shadow: 0 4px 16px rgb(25 28 29 / 4%); }
 .customer-search-trigger { cursor: pointer; }

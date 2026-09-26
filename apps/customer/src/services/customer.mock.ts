@@ -29,6 +29,7 @@ export const mockBanners: Banner[] = [
     description: 'Túi bất ngờ từ các cửa hàng quanh bạn, giảm đến 70%.',
     accent: 'green',
     icon: 'bag',
+    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80',
   },
   {
     id: 'banner-2',
@@ -37,6 +38,7 @@ export const mockBanners: Banner[] = [
     description: 'Dùng mã HELLOGSF khi thanh toán đơn từ 50.000đ.',
     accent: 'yellow',
     icon: 'ticket',
+    imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80',
   },
   {
     id: 'banner-3',
@@ -45,6 +47,7 @@ export const mockBanners: Banner[] = [
     description: 'Một lựa chọn nhỏ, thêm một ngày tốt cho hành tinh.',
     accent: 'mint',
     icon: 'globe',
+    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80',
   },
 ];
 

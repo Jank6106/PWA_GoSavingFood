@@ -34,6 +34,7 @@ export interface Banner {
   description: string;
   accent: 'green' | 'yellow' | 'mint';
   icon: string;
+  imageUrl?: string;
 }
 
 export interface Category {

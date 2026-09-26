@@ -1,4 +1,4 @@
-import { Sparkles, ShoppingBag, TicketPercent, Globe2 } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import type { Banner } from '../../../shared/types/customer.types';
 
 interface HomeBannerProps {
@@ -7,35 +7,43 @@ interface HomeBannerProps {
   onSelectIndex: (index: number) => void;
 }
 
-const bannerIcons: Record<string, typeof ShoppingBag> = {
-  bag: ShoppingBag,
-  ticket: TicketPercent,
-  globe: Globe2,
-  salad: ShoppingBag,
-};
-
 export function HomeBanner({ banners, currentIndex, onSelectIndex }: HomeBannerProps) {
   if (!banners.length) return null;
-  const currentBanner = banners[currentIndex] ?? banners[0];
-  const IconComponent = bannerIcons[currentBanner.icon] ?? ShoppingBag;
 
   return (
     <div className="customer-banner-bleed">
-      <section className={`customer-campaign is-${currentBanner.accent}`}>
-        <div className="customer-campaign-ambient" aria-hidden="true" />
-        <div className="customer-campaign-content">
-          <span className="customer-campaign-eyebrow">
-            <Sparkles size={13} />
-            {currentBanner.eyebrow}
-          </span>
-          <h1>{currentBanner.title}</h1>
-          <p>{currentBanner.description}</p>
-        </div>
-        <div className="customer-campaign-graphic" aria-hidden="true">
-          <div className="customer-campaign-graphic-badge">
-            <IconComponent size={64} strokeWidth={1.4} />
-          </div>
-        </div>
+      <div className="customer-campaign-slider">
+        {banners.map((banner, index) => {
+          const isActive = index === currentIndex;
+          return (
+            <article
+              key={banner.id}
+              className={`customer-campaign is-${banner.accent} ${isActive ? 'is-active' : ''}`}
+              aria-hidden={!isActive}
+            >
+              {banner.imageUrl && (
+                <div className="customer-campaign-media">
+                  <img
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    className="customer-campaign-image"
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                  />
+                  <div className="customer-campaign-overlay" />
+                </div>
+              )}
+              <div className="customer-campaign-content">
+                <span className="customer-campaign-eyebrow">
+                  <Sparkles size={13} />
+                  {banner.eyebrow}
+                </span>
+                <h1>{banner.title}</h1>
+                <p>{banner.description}</p>
+              </div>
+            </article>
+          );
+        })}
+
         <div className="customer-campaign-dots" role="tablist" aria-label="Danh sách banner">
           {banners.map((item, index) => (
             <button
@@ -48,7 +56,7 @@ export function HomeBanner({ banners, currentIndex, onSelectIndex }: HomeBannerP
             />
           ))}
         </div>
-      </section>
+      </div>
     </div>
   );
 }
