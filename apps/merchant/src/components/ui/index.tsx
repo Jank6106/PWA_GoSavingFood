@@ -23,13 +23,12 @@ export function TextAreaField({ label, error, ...props }: TextAreaFieldProps) { 
 
 export function SelectField({ label, children, ...props }: { label: string; children: ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) { const id = useId(); return <label className="merchant-field" htmlFor={id}><span>{label}</span><div className="merchant-field-control"><select id={id} {...props}>{children}</select></div></label>; }
 
-export function Modal({ open, title, description, onClose, children, size = 'medium' }: { open: boolean; title: string; description?: string; onClose: () => void; children: ReactNode; size?: 'small' | 'medium' | 'large' }) {
+export function Modal({ open, title, description, onClose, children, size = 'medium', className = '' }: { open: boolean; title: string; description?: string; onClose: () => void; children: ReactNode; size?: 'small' | 'medium' | 'large'; className?: string }) {
   if (!open) return null;
-  return <div className="merchant-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className={`merchant-modal merchant-modal--${size}`} role="dialog" aria-modal="true" aria-label={title}><header><div><h2>{title}</h2>{description && <p>{description}</p>}</div><button type="button" aria-label="Đóng" onClick={onClose}><X size={20} /></button></header><div className="merchant-modal-body">{children}</div></section></div>;
+  return <div className="merchant-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className={`merchant-modal merchant-modal--${size} ${className}`} role="dialog" aria-modal="true" aria-label={title}><header><div><h2>{title}</h2>{description && <p>{description}</p>}</div><button type="button" aria-label="Đóng" onClick={onClose}><X size={20} /></button></header><div className="merchant-modal-body">{children}</div></section></div>;
 }
 
 export function LoadingSpinner({ message = 'Đang tải dữ liệu...' }: { message?: string }) { return <div className="merchant-state"><LoaderCircle className="spin" size={34} /><strong>{message}</strong></div>; }
 export function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) { return <div className="merchant-state merchant-state--error"><TriangleAlert size={34} /><strong>Đã có lỗi xảy ra</strong><p>{message}</p><Button variant="outline" onClick={onRetry}><RotateCcw size={16} /> Thử lại</Button></div>; }
 export function EmptyState({ icon, title, message, action }: { icon: ReactNode; title: string; message: string; action?: ReactNode }) { return <div className="merchant-state"><span className="merchant-state-icon">{icon}</span><strong>{title}</strong><p>{message}</p>{action}</div>; }
 export function ToastBar({ message }: { message: string | null }) { return message ? <div className="merchant-toast" role="status">✓ {message}</div> : null; }
-

@@ -26,6 +26,7 @@ export interface BagItem {
   quantity: number;
   availableQuantity: number;
   imageUrl: string;
+  imageUrls: string[];
   pickupTimeStart: string;
   pickupTimeEnd: string;
   status: BagStatus;
@@ -58,6 +59,8 @@ export interface MerchantOrder {
   imageUrl: string;
   status: OrderStatus;
   createdAt: string;
+  placedAt: string;
+  paidAt?: string;
   pickupTime: string;
   qrCode: string;
   note?: string;
@@ -73,7 +76,7 @@ export interface OrderSummaryMetrics {
 }
 
 export type InventorySchedule = 'today' | 'tomorrow';
-export type InventoryScheduleFilter = InventorySchedule | 'all';
+export type InventoryScheduleFilter = InventorySchedule;
 
 export interface InventoryItem {
   id: string;
@@ -89,6 +92,7 @@ export interface InventoryItem {
   minQuantity: number;
   unit: string;
   schedule: InventorySchedule;
+  appliesTomorrow: boolean;
   lastUpdated: string;
 }
 
@@ -120,6 +124,7 @@ export interface StoreProfile {
 }
 
 export type StoreUpdateInput = Pick<StoreProfile, 'name' | 'description' | 'phone' | 'address'>;
+export type StoreImageUpdate = Partial<Pick<StoreProfile, 'coverImage' | 'avatar'>>;
 
 export interface AnalyticsMetrics {
   totalRevenue: number;
@@ -127,6 +132,7 @@ export interface AnalyticsMetrics {
   monthlyGrowthPercent: number;
   previousMonthRevenue: number;
   totalOrders: number;
+  totalSoldBags: number;
   bagsOnShelf: number;
   averageRating: number;
   totalReviewsCount: number;
@@ -158,4 +164,3 @@ export interface NotificationItem {
   timeAgo: string;
   avatarUrl?: string;
 }
-
