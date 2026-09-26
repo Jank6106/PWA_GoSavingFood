@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@gosavingfood/ui';
-import { ScreenHeader } from '../../../shared/components/ScreenHeader';
+import { ScreenHeader } from '../../../shared/components';
 import type { Order } from '../../../shared/types/customer.types';
 
 interface OrderFeedbackPageProps { mode: 'review' | 'report'; order: Order; onBack: () => void; onSubmit: () => void; }

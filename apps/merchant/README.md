@@ -1,75 +1,33 @@
-# React + TypeScript + Vite
+# GoSavingFood Merchant PWA
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ứng dụng quản lý dành cho đối tác cửa hàng, được xây bằng React, TypeScript và Vite.
 
-Currently, two official plugins are available:
+## Kiến trúc
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```text
+src/
+├── types/       # Data contracts
+├── mocks/       # Unified demo dataset
+├── services/    # API/mock adapters, không phụ thuộc React
+├── hooks/       # State, computed data và mutations
+├── components/  # UI theo domain
+├── pages/       # Screen composition
+├── App.tsx      # Auth flow và tab shell
+└── index.css    # Merchant design system + responsive layout
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Luồng dữ liệu tuân theo `Types → Services → Hooks → UI`. Túi hàng được đồng bộ sang kệ hàng thông qua subscription trong inventory service.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Chạy ứng dụng
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Từ thư mục gốc workspace:
 
+```bash
+pnpm --filter=merchant dev
+pnpm --filter=merchant build
+pnpm --filter=merchant lint
 ```
+
+Development server mặc định chạy tại `http://localhost:5174`.
+
+Tài khoản demo được điền sẵn trên màn hình đăng nhập. Lần đăng nhập đầu tiên sẽ đi qua wizard thiết lập cửa hàng; trạng thái hoàn thành được lưu riêng theo từng tài khoản trong local storage của trình duyệt.

@@ -1,0 +1,6 @@
+import { AnalyticsMetricsGrid, RecentReviewsList, RevenueChartCard, RevenueOverviewCard } from '../components/analytics';
+import { ErrorState, LoadingSpinner, ToastBar } from '../components/ui';
+import { useAnalytics } from '../hooks/useAnalytics';
+
+export function AnalyticsScreen({ storeId }: { storeId: string }) { const state = useAnalytics(storeId); if (state.loading && !state.metrics) return <LoadingSpinner />; if (state.error || !state.metrics) return <ErrorState message={state.error ?? 'Không có dữ liệu.'} onRetry={() => void state.loadData()} />; return <><ToastBar message={state.toastMessage} /><div className="merchant-screen-heading"><div><span>Dữ liệu thời gian thực</span><h1>Tổng quan kinh doanh</h1><p>Cập nhật kết quả doanh thu, đơn hàng và phản hồi khách hàng.</p></div></div><RevenueOverviewCard metrics={state.metrics} exporting={state.exporting} onExport={() => void state.exportReport()} /><AnalyticsMetricsGrid metrics={state.metrics} /><RevenueChartCard data={state.chartData} timeframe={state.timeframe} onTimeframe={state.changeTimeframe} /><RecentReviewsList reviews={state.reviews} /></>; }
+

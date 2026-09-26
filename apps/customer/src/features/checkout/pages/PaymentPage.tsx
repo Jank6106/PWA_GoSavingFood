@@ -1,6 +1,6 @@
 import { Check, Copy } from 'lucide-react';
 import { Button } from '@gosavingfood/ui';
-import { ScreenHeader } from '../../../shared/components/ScreenHeader';
+import { ScreenHeader } from '../../../shared/components';
 import type { CheckoutDraft } from '../../../shared/types/customer.types';
 
 interface PaymentPageProps { draft: CheckoutDraft; total: number; isSubmitting: boolean; onBack: () => void; onConfirm: () => void; }

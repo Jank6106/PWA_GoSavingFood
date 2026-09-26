@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gsf-merchant-v1';
+const CACHE_NAME = 'gsf-merchant-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

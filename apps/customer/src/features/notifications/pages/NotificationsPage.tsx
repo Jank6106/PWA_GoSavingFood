@@ -1,6 +1,6 @@
 import { CheckCheck } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
-import { ScreenHeader } from '../../../shared/components/ScreenHeader';
+import { ScreenHeader } from '../../../shared/components';
 import type { NotificationItem } from '../../../shared/types/customer.types';
 
 interface NotificationsPageProps { notifications: NotificationItem[]; onBack: () => void; onReadAll: () => void; }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, MapPin, Search, Sparkles } from 'lucide-react';
 import { Chip, ErrorState, Skeleton } from '@gosavingfood/ui';
-import { ProductCard } from '../components/ProductCard';
+import { BagCard, MerchantCard, SectionHeading } from '../../../shared/components';
 import type { Banner, Brand, Category, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 interface HomePageProps {
@@ -99,19 +99,14 @@ export function HomePage({
       </button>
 
       <section className="customer-content-section">
-        <div className="customer-section-heading">
-          <div><span>🎁</span><div><h2>Túi bất ngờ</h2><p>Ngon, tiết kiệm và thân thiện môi trường</p></div></div>
-          <button type="button" onClick={onViewAll}>Xem tất cả</button>
-        </div>
+        <SectionHeading icon="🎁" title="Túi bất ngờ" subtitle="Ngon, tiết kiệm và thân thiện môi trường" actionLabel="Xem tất cả" onAction={onViewAll} />
         <div className="customer-horizontal-list">
-          {visibleBags.map((bag) => <ProductCard key={bag.id} bag={bag} compact onOpen={onOpenBag} onAdd={onAdd} />)}
+          {visibleBags.map((bag) => <BagCard key={bag.id} bag={bag} compact onOpen={onOpenBag} onAdd={onAdd} />)}
         </div>
       </section>
 
       <section className="customer-content-section">
-        <div className="customer-section-heading">
-          <div><span>⭐</span><div><h2>Thương hiệu nổi bật</h2><p>Đối tác được yêu thích gần bạn</p></div></div>
-        </div>
+        <SectionHeading icon="⭐" title="Thương hiệu nổi bật" subtitle="Đối tác được yêu thích gần bạn" />
         <div className="customer-brand-track">
           {brands.map((brand) => (
             <button key={brand.id} type="button" onClick={() => onOpenBrand(brand)}>
@@ -122,18 +117,12 @@ export function HomePage({
       </section>
 
       <section className="customer-content-section">
-        <div className="customer-section-heading">
-          <div><span>⚡</span><div><h2>Giải cứu cấp tốc</h2><p>Sắp hết giờ nhận hôm nay</p></div></div>
-        </div>
+        <SectionHeading icon="⚡" title="Giải cứu cấp tốc" subtitle="Sắp hết giờ nhận hôm nay" />
         <div className="customer-merchant-list">
           {merchants.map((merchant) => {
             const merchantBag = bags.find((bag) => bag.merchantId === merchant.id);
             return (
-              <button key={merchant.id} type="button" className="customer-merchant-card" onClick={() => onOpenMerchant(merchant)}>
-                <span className="customer-merchant-logo">{merchant.logo}</span>
-                <span><strong>{merchant.name}</strong><small>★ {merchant.rating} · {merchant.distance.toLocaleString('vi-VN')} km</small>{merchantBag && <em>Từ {merchantBag.discountPrice.toLocaleString('vi-VN')}đ</em>}</span>
-                <ArrowRight size={18} />
-              </button>
+              <MerchantCard key={merchant.id} merchant={merchant} detail={`★ ${merchant.rating} · ${merchant.distance.toLocaleString('vi-VN')} km`} meta={merchantBag ? `Từ ${merchantBag.discountPrice.toLocaleString('vi-VN')}đ` : undefined} onClick={onOpenMerchant} />
             );
           })}
         </div>

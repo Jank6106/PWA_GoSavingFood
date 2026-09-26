@@ -1,0 +1,18 @@
+import { Bell, Store } from 'lucide-react';
+
+interface AppHeaderProps {
+  storeName: string;
+  title?: string;
+  subtitle?: string;
+  isOpen: boolean;
+  unreadCount: number;
+  showStatusToggle?: boolean;
+  onToggleStatus: () => void;
+  onNotificationPress: () => void;
+  onProfilePress: () => void;
+}
+
+export function AppHeader({ storeName, title, subtitle, isOpen, unreadCount, showStatusToggle = true, onToggleStatus, onNotificationPress, onProfilePress }: AppHeaderProps) {
+  return <header className="merchant-app-header"><div className="merchant-app-header-inner"><div className="merchant-header-brand"><span><Store size={21} /></span><div><strong>{title ?? storeName}</strong><small>{subtitle}</small></div></div><div className="merchant-header-actions">{showStatusToggle && <button type="button" className={`merchant-status-pill ${isOpen ? 'is-open' : 'is-closed'}`} onClick={onToggleStatus}><i /> <span>{isOpen ? 'Đang mở' : 'Tạm đóng'}</span></button>}<button type="button" className="merchant-header-icon" aria-label="Thông báo" onClick={onNotificationPress}><Bell size={19} />{unreadCount > 0 && <b>{unreadCount}</b>}</button><button type="button" className="merchant-profile-button" aria-label="Mở trang cá nhân" onClick={onProfilePress}>GS</button></div></div></header>;
+}
+

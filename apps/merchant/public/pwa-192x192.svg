@@ -1,10 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f59e0b"/>
-      <stop offset="100%" stop-color="#b45309"/>
-    </linearGradient>
-  </defs>
-  <rect width="192" height="192" rx="48" fill="url(#bgGrad)"/>
-  <text x="50%" y="54%" font-size="96" text-anchor="middle" dominant-baseline="central">🏪</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="44" fill="#005639"/>
+  <path d="M43 77h106v68a12 12 0 0 1-12 12H55a12 12 0 0 1-12-12V77Z" fill="#fff"/>
+  <path d="M36 72 49 37h94l13 35a14 14 0 0 1-25 12 14 14 0 0 1-24 0 14 14 0 0 1-23 0 14 14 0 0 1-24 0A14 14 0 0 1 36 72Z" fill="#DCFCE7"/>
+  <path d="M75 116c9-18 31-24 47-17-3 18-17 34-39 31-5 7-7 14-8 21h-9c1-12 5-24 14-34 8-9 18-13 28-15-13 0-24 5-33 14Z" fill="#005639"/>
 </svg>
