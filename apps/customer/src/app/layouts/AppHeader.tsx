@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Bell, Leaf } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -11,8 +12,21 @@ export function AppHeader({
   unreadCount,
   onNotificationClick,
 }: AppHeaderProps) {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Khi cuộn quá banner (khoảng 180px), kích hoạt header gốc
+      setIsScrolled(window.scrollY > 180);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="customer-header">
+    <header className={`customer-header ${isScrolled ? 'is-solid' : 'is-transparent'}`}>
       <div className="customer-brand">
         <div className="customer-logo" aria-hidden="true">
           <Leaf size={22} strokeWidth={2.4} />
