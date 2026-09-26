@@ -28,7 +28,7 @@ export const mockBanners: Banner[] = [
     title: 'Ngon hơn khi không bị lãng phí',
     description: 'Túi bất ngờ từ các cửa hàng quanh bạn, giảm đến 70%.',
     accent: 'green',
-    icon: '🥗',
+    icon: 'bag',
   },
   {
     id: 'banner-2',
@@ -36,7 +36,7 @@ export const mockBanners: Banner[] = [
     title: 'Giảm thêm 20.000đ cho đơn đầu tiên',
     description: 'Dùng mã HELLOGSF khi thanh toán đơn từ 50.000đ.',
     accent: 'yellow',
-    icon: '🎟️',
+    icon: 'ticket',
   },
   {
     id: 'banner-3',
@@ -44,17 +44,17 @@ export const mockBanners: Banner[] = [
     title: 'Mỗi túi cứu được giảm 2,5kg CO₂',
     description: 'Một lựa chọn nhỏ, thêm một ngày tốt cho hành tinh.',
     accent: 'mint',
-    icon: '🌍',
+    icon: 'globe',
   },
 ];
 
 export const mockCategories: Category[] = [
-  { id: 'all', label: 'Tất cả', icon: '✨' },
-  { id: 'bakery', label: 'Bánh ngọt', icon: '🥐' },
-  { id: 'meat', label: 'Món nóng', icon: '🍱' },
-  { id: 'vegetarian', label: 'Ăn xanh', icon: '🥗' },
-  { id: 'beverage', label: 'Đồ uống', icon: '🧋' },
-  { id: 'other', label: 'Túi bí mật', icon: '🎁' },
+  { id: 'all', label: 'Tất cả', icon: 'all' },
+  { id: 'bakery', label: 'Bánh ngọt', icon: 'bakery' },
+  { id: 'meat', label: 'Món nóng', icon: 'meat' },
+  { id: 'vegetarian', label: 'Ăn xanh', icon: 'vegetarian' },
+  { id: 'beverage', label: 'Đồ uống', icon: 'beverage' },
+  { id: 'other', label: 'Túi bí mật', icon: 'other' },
 ];
 
 export const mockBrands: Brand[] = [

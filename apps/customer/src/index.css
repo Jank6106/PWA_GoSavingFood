@@ -32,14 +32,18 @@ img { display: block; max-width: 100%; }
 .customer-screen { display: flex; flex-direction: column; gap: 20px; padding: 20px 16px 32px; }
 .customer-page-title, .customer-page-heading h1 { margin: 0; font-size: 26px; line-height: 34px; }
 
-.customer-header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 72px; padding: 12px 16px; background: rgb(255 255 255 / 94%); border-bottom: 1px solid var(--color-border-subtle); backdrop-filter: blur(14px); }
+.customer-header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 64px; padding: 12px 16px; background: linear-gradient(135deg, #004d2e 0%, #007043 55%, #10b981 100%); border-bottom: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 4px 20px rgba(0, 61, 39, 0.18); backdrop-filter: blur(14px); }
 .customer-brand { display: flex; align-items: center; gap: 10px; }
-.customer-logo { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 14px; background: var(--color-primary-soft); font-size: 22px; }
-.customer-brand-name { color: var(--color-primary); font-size: 17px; font-weight: 800; }
-.customer-location-trigger { display: flex; max-width: 270px; align-items: center; gap: 3px; padding: 2px 0 0; overflow: hidden; border: 0; background: none; color: var(--color-text-secondary); font-size: 12px; cursor: pointer; }
-.customer-location-trigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.customer-round-button { position: relative; display: grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; padding: 0; border: 1px solid var(--color-border-subtle); border-radius: 50%; background: #fff; cursor: pointer; }
+.customer-logo { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 12px; background: rgba(255, 255, 255, 0.18); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+.customer-brand-name { color: #ffffff; font-size: 20px; font-weight: 800; letter-spacing: -0.3px; line-height: 1; }
+
+.customer-round-button { position: relative; display: grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; padding: 0; border: 1px solid var(--color-border-subtle); border-radius: 50%; background: #fff; color: var(--color-text-primary); cursor: pointer; transition: all 0.2s ease; }
+.customer-round-button:hover, .customer-round-button:active { background: var(--color-bg-muted); }
 .customer-notification-count { position: absolute; top: -3px; right: -2px; min-width: 18px; height: 18px; padding: 0 4px; border: 2px solid #fff; border-radius: 9px; background: var(--color-error); color: #fff; font-size: 10px; font-weight: 800; line-height: 14px; }
+
+.customer-header .customer-round-button { width: 42px; height: 42px; flex: 0 0 42px; border: 1px solid rgba(255, 255, 255, 0.28); background: rgba(255, 255, 255, 0.18); color: #ffffff; backdrop-filter: blur(8px); }
+.customer-header .customer-round-button:hover, .customer-header .customer-round-button:active { background: rgba(255, 255, 255, 0.28); transform: scale(1.03); }
+.customer-header .customer-notification-count { border-color: #004d2e; }
 
 .customer-bottom-nav { position: fixed; z-index: 40; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(4, 1fr); width: min(100%, 560px); height: 76px; margin: 0 auto; padding: 8px 10px max(8px, env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border-subtle); background: rgb(255 255 255 / 96%); box-shadow: 0 -6px 22px rgb(25 28 29 / 7%); backdrop-filter: blur(16px); }
 .customer-bottom-nav button { display: flex; min-width: 0; align-items: center; flex-direction: column; justify-content: center; gap: 4px; border: 0; border-radius: 14px; background: none; color: var(--color-text-muted); cursor: pointer; }
@@ -48,23 +52,37 @@ img { display: block; max-width: 100%; }
 .customer-nav-icon { position: relative; display: grid; place-items: center; }
 .customer-nav-icon > span { position: absolute; top: -8px; right: -11px; display: grid; min-width: 18px; height: 18px; place-items: center; padding: 0 4px; border: 2px solid #fff; border-radius: 10px; background: var(--color-error); color: #fff; font-size: 10px; font-weight: 800; }
 
-.customer-campaign { position: relative; min-height: 174px; padding: 22px 112px 28px 20px; overflow: hidden; border-radius: 24px; background: linear-gradient(135deg, #003426, #006c40); color: #fff; box-shadow: 0 10px 28px rgb(0 108 64 / 18%); }
-.customer-campaign.is-yellow { background: linear-gradient(135deg, #604600, #d6a522); }
-.customer-campaign.is-mint { background: linear-gradient(135deg, #23573c, #63a97e); }
-.customer-campaign > div:first-child { position: relative; z-index: 2; }
-.customer-campaign span { display: inline-flex; align-items: center; gap: 5px; color: #d7ffdf; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
-.customer-campaign h1 { margin: 9px 0 7px; font-size: 23px; line-height: 29px; }
-.customer-campaign p { margin: 0; color: rgb(255 255 255 / 82%); font-size: 13px; line-height: 19px; }
-.customer-campaign-icon { position: absolute; right: -8px; bottom: -15px; font-size: 104px; transform: rotate(-8deg); filter: drop-shadow(0 8px 12px rgb(0 0 0 / 18%)); }
-.customer-campaign-dots { position: absolute; z-index: 3; bottom: 12px; left: 20px; display: flex; gap: 5px; }
-.customer-campaign-dots button { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 3px; background: rgb(255 255 255 / 45%); cursor: pointer; }
-.customer-campaign-dots button.is-active { width: 20px; background: #fff; }
+.customer-home-screen { padding-top: 0; }
+.customer-banner-bleed { margin: 0 -16px; width: calc(100% + 32px); position: relative; overflow: hidden; }
+.customer-campaign { position: relative; min-height: 184px; padding: 22px 20px 28px; overflow: hidden; border-radius: 0 0 28px 28px; background: linear-gradient(135deg, #003722 0%, #006b42 60%, #059669 100%); color: #fff; box-shadow: 0 12px 30px rgba(0, 107, 66, 0.2); transition: background 0.4s ease; }
+.customer-campaign.is-yellow { background: linear-gradient(135deg, #4d3800 0%, #855f00 50%, #d97706 100%); box-shadow: 0 12px 30px rgba(180, 83, 9, 0.2); }
+.customer-campaign.is-mint { background: linear-gradient(135deg, #02362b 0%, #047857 55%, #14b8a6 100%); box-shadow: 0 12px 30px rgba(4, 120, 87, 0.2); }
+.customer-campaign-ambient { position: absolute; top: -40px; right: -40px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, transparent 70%); pointer-events: none; }
+.customer-campaign-content { position: relative; z-index: 2; max-width: 68%; }
+.customer-campaign-eyebrow { display: inline-flex; align-items: center; gap: 5px; color: #bbf7d0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; background: rgba(255, 255, 255, 0.14); padding: 3px 8px; border-radius: 999px; margin-bottom: 6px; backdrop-filter: blur(4px); }
+.customer-campaign.is-yellow .customer-campaign-eyebrow { color: #fef08a; background: rgba(255, 255, 255, 0.16); }
+.customer-campaign.is-mint .customer-campaign-eyebrow { color: #99f6e4; background: rgba(255, 255, 255, 0.16); }
+.customer-campaign h1 { margin: 6px 0 6px; font-size: 21px; font-weight: 800; line-height: 27px; letter-spacing: -0.2px; }
+.customer-campaign p { margin: 0; color: rgba(255, 255, 255, 0.85); font-size: 12px; line-height: 17px; }
+.customer-campaign-graphic { position: absolute; right: 14px; bottom: 22px; z-index: 1; pointer-events: none; }
+.customer-campaign-graphic-badge { display: grid; width: 100px; height: 100px; place-items: center; border-radius: 26px; background: rgba(255, 255, 255, 0.12); border: 1.5px solid rgba(255, 255, 255, 0.22); color: rgba(255, 255, 255, 0.88); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); transform: rotate(-7deg); backdrop-filter: blur(8px); }
+.customer-campaign-dots { position: absolute; z-index: 3; bottom: 12px; left: 20px; display: flex; align-items: center; gap: 5px; }
+.customer-campaign-dots button { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 3px; background: rgba(255, 255, 255, 0.4); cursor: pointer; transition: all 0.25s ease; }
+.customer-campaign-dots button.is-active { width: 22px; background: #ffffff; border-radius: 3px; }
 
 .customer-search-trigger, .customer-search-box { display: flex; min-height: 50px; align-items: center; gap: 10px; width: 100%; padding: 0 15px; border: 1px solid var(--color-border-subtle); border-radius: 15px; background: #fff; color: var(--color-text-muted); box-shadow: 0 4px 16px rgb(25 28 29 / 4%); }
 .customer-search-trigger { cursor: pointer; }
 .customer-search-box input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--color-text-primary); font-size: 16px; }
-.customer-category-track { display: flex; gap: 8px; margin: 0 -16px; padding: 0 16px 3px; overflow-x: auto; scrollbar-width: none; }
-.customer-category-track::-webkit-scrollbar, .customer-horizontal-list::-webkit-scrollbar, .customer-brand-track::-webkit-scrollbar, .customer-filter-tabs::-webkit-scrollbar { display: none; }
+
+.customer-category-bar { display: flex; gap: 14px; margin: 0 -16px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+.customer-category-bar::-webkit-scrollbar { display: none; }
+.customer-category-pill { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 62px; flex-shrink: 0; border: 0; background: none; cursor: pointer; padding: 0; transition: transform 0.18s ease; }
+.customer-category-pill:active { transform: scale(0.95); }
+.customer-category-circle { display: grid; width: 54px; height: 54px; place-items: center; border-radius: 17px; background: #ffffff; border: 1.5px solid #e2ece5; color: #1b4332; box-shadow: 0 2px 8px rgba(0, 61, 39, 0.05); transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+.customer-category-pill:hover .customer-category-circle { border-color: #a7d0b8; transform: translateY(-1px); }
+.customer-category-pill.is-active .customer-category-circle { background: linear-gradient(135deg, #004d2e, #059669); border-color: transparent; color: #ffffff; box-shadow: 0 6px 18px rgba(0, 77, 46, 0.3); transform: translateY(-2px); }
+.customer-category-text { font-size: 11px; font-weight: 600; color: var(--color-text-secondary); text-align: center; white-space: nowrap; line-height: 1.2; transition: color 0.18s ease; }
+.customer-category-pill.is-active .customer-category-text { color: var(--color-primary); font-weight: 800; }
 
 .customer-location-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; border: 1px solid #cfe2d5; border-radius: 17px; background: #fff; text-align: left; cursor: pointer; }
 .customer-location-card > span:nth-child(2) { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; }
@@ -75,7 +93,7 @@ img { display: block; max-width: 100%; }
 .customer-content-section { display: flex; flex-direction: column; gap: 13px; }
 .customer-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .customer-section-heading > div { display: flex; min-width: 0; align-items: center; gap: 8px; }
-.customer-section-heading > div > span { font-size: 20px; }
+.customer-section-heading > div > span { display: inline-grid; width: 28px; height: 28px; place-items: center; border-radius: 8px; background: var(--color-primary-soft); color: var(--color-primary); flex-shrink: 0; }
 .customer-section-heading h2 { margin: 0; font-size: 18px; line-height: 24px; }
 .customer-section-heading p { margin: 1px 0 0; color: var(--color-text-muted); font-size: 12px; }
 .customer-section-heading > button { flex: 0 0 auto; padding: 6px; border: 0; background: none; color: var(--color-primary); font-size: 12px; font-weight: 800; cursor: pointer; }
@@ -104,13 +122,15 @@ img { display: block; max-width: 100%; }
 
 .customer-brand-track { display: flex; gap: 10px; margin: 0 -16px; padding: 0 16px 5px; overflow-x: auto; scrollbar-width: none; }
 .customer-brand-track button { display: flex; min-width: 112px; align-items: center; flex-direction: column; gap: 6px; padding: 14px 10px; border: 1px solid var(--color-border-subtle); border-radius: 17px; background: #fff; cursor: pointer; }
-.customer-brand-track button > span { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 15px; background: var(--color-bg-muted); font-size: 27px; }
+.customer-brand-track button > span, .customer-brand-avatar { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 15px; background: var(--color-primary-soft); color: var(--color-primary); transition: all 0.2s ease; }
+.customer-brand-track button:hover > span, .customer-brand-track button:hover .customer-brand-avatar { background: var(--color-primary); color: #fff; }
 .customer-brand-track strong { max-width: 100%; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .customer-brand-track small { color: #9b6800; font-weight: 800; }
 
 .customer-merchant-list { display: flex; flex-direction: column; gap: 10px; }
 .customer-merchant-card { display: flex; align-items: center; gap: 11px; width: 100%; padding: 12px; border: 1px solid var(--color-border-subtle); border-radius: 17px; background: #fff; text-align: left; cursor: pointer; }
-.customer-merchant-logo { display: grid; width: 50px; height: 50px; flex: 0 0 50px; place-items: center; border-radius: 15px; background: var(--color-primary-soft); font-size: 27px; }
+.customer-merchant-logo { display: grid; width: 50px; height: 50px; flex: 0 0 50px; place-items: center; border-radius: 15px; background: var(--color-primary-soft); color: var(--color-primary); transition: all 0.2s ease; }
+.customer-merchant-card:hover .customer-merchant-logo { background: var(--color-primary); color: #fff; }
 .customer-merchant-card > span:nth-child(2) { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; }
 .customer-merchant-card strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .customer-merchant-card small { display: flex; align-items: center; gap: 3px; overflow: hidden; color: var(--color-text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }

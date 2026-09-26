@@ -1,8 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, MapPin, Search, Sparkles } from 'lucide-react';
-import { Chip, ErrorState, Skeleton } from '@gosavingfood/ui';
+import {
+  ArrowRight,
+  Award,
+  Coffee,
+  Croissant,
+  Flame,
+  Gift,
+  Leaf,
+  MapPin,
+  Search,
+  UtensilsCrossed,
+} from 'lucide-react';
+import { ErrorState, Skeleton } from '@gosavingfood/ui';
 import { BagCard, MerchantCard, SectionHeading } from '../../../shared/components';
-import type { Banner, Brand, Category, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
+import { CategoryBar, HomeBanner } from '../components';
+import type { Banner, Brand, Category, FoodCategory, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 interface HomePageProps {
   banners: Banner[];
@@ -22,6 +34,14 @@ interface HomePageProps {
   onViewAll: () => void;
 }
 
+const getBrandIcon = (brand: Brand) => {
+  const catList = brand.categories.join(' ').toLowerCase();
+  if (catList.includes('bánh')) return Croissant;
+  if (catList.includes('uống') || catList.includes('cà phê') || catList.includes('coffee')) return Coffee;
+  if (catList.includes('salad') || catList.includes('healthy') || catList.includes('xanh')) return Leaf;
+  return UtensilsCrossed;
+};
+
 export function HomePage({
   banners,
   categories,
@@ -40,7 +60,7 @@ export function HomePage({
   onViewAll,
 }: HomePageProps) {
   const [bannerIndex, setBannerIndex] = useState(0);
-  const [category, setCategory] = useState('all');
+  const [category, setCategory] = useState<string>('all');
 
   useEffect(() => {
     if (banners.length < 2) return;
@@ -57,40 +77,36 @@ export function HomePage({
   );
 
   if (isLoading) {
-    return <div className="customer-screen customer-loading-grid"><Skeleton height={168} /><Skeleton height={48} /><Skeleton height={240} /></div>;
+    return (
+      <div className="customer-screen customer-loading-grid">
+        <Skeleton height={190} />
+        <Skeleton height={48} />
+        <Skeleton height={80} />
+        <Skeleton height={240} />
+      </div>
+    );
   }
 
   if (error) return <ErrorState message={error} />;
-  const banner = banners[bannerIndex];
 
   return (
     <div className="customer-screen customer-home-screen">
-      {banner && (
-        <section className={`customer-campaign is-${banner.accent}`}>
-          <div>
-            <span><Sparkles size={14} /> {banner.eyebrow}</span>
-            <h1>{banner.title}</h1>
-            <p>{banner.description}</p>
-          </div>
-          <div className="customer-campaign-icon">{banner.icon}</div>
-          <div className="customer-campaign-dots">
-            {banners.map((item, index) => <button key={item.id} type="button" className={index === bannerIndex ? 'is-active' : ''} onClick={() => setBannerIndex(index)} aria-label={`Banner ${index + 1}`} />)}
-          </div>
-        </section>
-      )}
+      <HomeBanner
+        banners={banners}
+        currentIndex={bannerIndex}
+        onSelectIndex={setBannerIndex}
+      />
 
       <button type="button" className="customer-search-trigger" onClick={onSearch}>
         <Search size={19} />
         <span>Tìm cửa hàng hoặc túi thực phẩm...</span>
       </button>
 
-      <div className="customer-category-track">
-        {categories.map((item) => (
-          <Chip key={item.id} selected={category === item.id} onClick={() => setCategory(item.id)}>
-            {item.icon} {item.label}
-          </Chip>
-        ))}
-      </div>
+      <CategoryBar
+        categories={categories}
+        selectedCategory={category}
+        onSelectCategory={(id: FoodCategory) => setCategory(id)}
+      />
 
       <button type="button" className="customer-location-card" onClick={onLocation}>
         <span className="customer-location-pin"><MapPin size={20} /></span>
@@ -99,30 +115,59 @@ export function HomePage({
       </button>
 
       <section className="customer-content-section">
-        <SectionHeading icon="🎁" title="Túi bất ngờ" subtitle="Ngon, tiết kiệm và thân thiện môi trường" actionLabel="Xem tất cả" onAction={onViewAll} />
+        <SectionHeading
+          icon={<Gift size={18} strokeWidth={2} />}
+          title="Túi bất ngờ"
+          subtitle="Ngon, tiết kiệm và thân thiện môi trường"
+          actionLabel="Xem tất cả"
+          onAction={onViewAll}
+        />
         <div className="customer-horizontal-list">
-          {visibleBags.map((bag) => <BagCard key={bag.id} bag={bag} compact onOpen={onOpenBag} onAdd={onAdd} />)}
-        </div>
-      </section>
-
-      <section className="customer-content-section">
-        <SectionHeading icon="⭐" title="Thương hiệu nổi bật" subtitle="Đối tác được yêu thích gần bạn" />
-        <div className="customer-brand-track">
-          {brands.map((brand) => (
-            <button key={brand.id} type="button" onClick={() => onOpenBrand(brand)}>
-              <span>{brand.logo}</span><strong>{brand.name}</strong><small>★ {brand.rating}</small>
-            </button>
+          {visibleBags.map((bag) => (
+            <BagCard key={bag.id} bag={bag} compact onOpen={onOpenBag} onAdd={onAdd} />
           ))}
         </div>
       </section>
 
       <section className="customer-content-section">
-        <SectionHeading icon="⚡" title="Giải cứu cấp tốc" subtitle="Sắp hết giờ nhận hôm nay" />
+        <SectionHeading
+          icon={<Award size={18} strokeWidth={2} />}
+          title="Thương hiệu nổi bật"
+          subtitle="Đối tác được yêu thích gần bạn"
+        />
+        <div className="customer-brand-track">
+          {brands.map((brand) => {
+            const BrandIcon = getBrandIcon(brand);
+            return (
+              <button key={brand.id} type="button" onClick={() => onOpenBrand(brand)}>
+                <span className="customer-brand-avatar">
+                  <BrandIcon size={20} strokeWidth={1.9} />
+                </span>
+                <strong>{brand.name}</strong>
+                <small>★ {brand.rating}</small>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="customer-content-section">
+        <SectionHeading
+          icon={<Flame size={18} strokeWidth={2} />}
+          title="Giải cứu cấp tốc"
+          subtitle="Sắp hết giờ nhận hôm nay"
+        />
         <div className="customer-merchant-list">
           {merchants.map((merchant) => {
             const merchantBag = bags.find((bag) => bag.merchantId === merchant.id);
             return (
-              <MerchantCard key={merchant.id} merchant={merchant} detail={`★ ${merchant.rating} · ${merchant.distance.toLocaleString('vi-VN')} km`} meta={merchantBag ? `Từ ${merchantBag.discountPrice.toLocaleString('vi-VN')}đ` : undefined} onClick={onOpenMerchant} />
+              <MerchantCard
+                key={merchant.id}
+                merchant={merchant}
+                detail={`★ ${merchant.rating} · ${merchant.distance.toLocaleString('vi-VN')} km`}
+                meta={merchantBag ? `Từ ${merchantBag.discountPrice.toLocaleString('vi-VN')}đ` : undefined}
+                onClick={onOpenMerchant}
+              />
             );
           })}
         </div>

@@ -1,32 +1,30 @@
-import { Bell, ChevronDown, MapPin } from 'lucide-react';
+import { Bell, Leaf } from 'lucide-react';
 
 interface AppHeaderProps {
-  location: string;
+  location?: string;
   unreadCount: number;
-  onLocationClick: () => void;
+  onLocationClick?: () => void;
   onNotificationClick: () => void;
 }
 
 export function AppHeader({
-  location,
   unreadCount,
-  onLocationClick,
   onNotificationClick,
 }: AppHeaderProps) {
   return (
     <header className="customer-header">
       <div className="customer-brand">
-        <div className="customer-logo" aria-hidden="true">🌱</div>
-        <div>
-          <div className="customer-brand-name">GoSavingFood</div>
-          <button type="button" className="customer-location-trigger" onClick={onLocationClick}>
-            <MapPin size={13} />
-            <span>{location}</span>
-            <ChevronDown size={13} />
-          </button>
+        <div className="customer-logo" aria-hidden="true">
+          <Leaf size={22} strokeWidth={2.4} />
         </div>
+        <div className="customer-brand-name">GoSavingFood</div>
       </div>
-      <button type="button" className="customer-round-button" onClick={onNotificationClick} aria-label="Thông báo">
+      <button
+        type="button"
+        className="customer-round-button"
+        onClick={onNotificationClick}
+        aria-label="Thông báo"
+      >
         <Bell size={21} />
         {unreadCount > 0 && <span className="customer-notification-count">{unreadCount}</span>}
       </button>
