@@ -1,20 +1,28 @@
 import { useState } from 'react';
 import { Dialog, Button, Input } from '@gosavingfood/ui';
-import { Smartphone, UserRound } from 'lucide-react';
+import { KeyRound, Smartphone, UserRound } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 
 export function AuthModal() {
   const { isAuthOpen, hideAuthModal, login } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('0901234589');
+  const [identifier, setIdentifier] = useState('customer@example.com');
+  const [password, setPassword] = useState('Password123!');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const submit = async () => {
-    if (!phone.trim() || (mode === 'register' && !name.trim())) return;
+    if (!identifier.trim() || (mode === 'register' && !name.trim())) return;
     setIsSubmitting(true);
-    await login(name, phone);
-    setIsSubmitting(false);
+    setErrorMessage(null);
+    try {
+      await login(name, identifier, password);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Xác thực không thành công.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -25,28 +33,43 @@ export function AuthModal() {
       className="customer-auth-dialog"
       footer={
         <Button fullWidth size="lg" isLoading={isSubmitting} onClick={submit}>
-          {mode === 'login' ? 'Đăng nhập bằng OTP' : 'Đăng ký & nhận OTP'}
+          {mode === 'login' ? 'Đăng nhập ngay' : 'Đăng ký tài khoản'}
         </Button>
       }
     >
       <div className="customer-auth-content">
         <div className="customer-auth-mark">🌱</div>
         <p>Đăng nhập để giữ giỏ hàng, theo dõi đơn và xem tác động xanh của bạn.</p>
+
+        {errorMessage && (
+          <div style={{ color: '#ef4444', fontSize: '13px', textAlign: 'center', marginBottom: '8px' }}>
+            {errorMessage}
+          </div>
+        )}
+
         {mode === 'register' && (
           <Input
             label="Họ và tên"
             value={name}
             onChange={(event) => setName(event.target.value)}
             leftIcon={<UserRound size={18} />}
-            placeholder="Nguyễn Minh Anh"
+            placeholder="Nguyễn Văn A"
           />
         )}
         <Input
-          label="Số điện thoại"
-          value={phone}
-          onChange={(event) => setPhone(event.target.value)}
+          label="Email hoặc Số điện thoại"
+          value={identifier}
+          onChange={(event) => setIdentifier(event.target.value)}
           leftIcon={<Smartphone size={18} />}
-          inputMode="tel"
+          placeholder="customer@example.com"
+        />
+        <Input
+          label="Mật khẩu"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          leftIcon={<KeyRound size={18} />}
+          placeholder="••••••••"
         />
         <div className="customer-auth-switch">
           <span>{mode === 'login' ? 'Chưa có tài khoản?' : 'Đã có tài khoản?'}</span>

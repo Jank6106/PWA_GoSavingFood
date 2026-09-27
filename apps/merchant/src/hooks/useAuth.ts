@@ -1,11 +1,23 @@
-import { useState } from 'react';
-import { changePasswordService, completeSetupService, loginService, logoutService } from '../services/auth.service';
+import { useEffect, useState } from 'react';
+import {
+  changePasswordService,
+  completeSetupService,
+  getCurrentMerchantUser,
+  loginService,
+  logoutService,
+} from '../services/auth.service';
 import type { AuthUser, LoginCredentials } from '../types';
 
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getCurrentMerchantUser().then((existing) => {
+      if (existing) setUser(existing);
+    });
+  }, []);
 
   const login = async (credentials: LoginCredentials) => {
     setLoading(true); setError(null);

@@ -7,7 +7,7 @@ export interface AuthContextValue {
   isAuthOpen: boolean;
   showAuthModal: () => void;
   hideAuthModal: () => void;
-  login: (name: string, phone: string) => Promise<void>;
+  login: (name: string, phone: string, password?: string) => Promise<void>;
   logout: () => void;
 }
 

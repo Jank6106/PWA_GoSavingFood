@@ -140,7 +140,7 @@ function CustomerApp() {
       pickupTime: draft.pickupTime,
       pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
     };
-    const created = await customerService.createOrder(order);
+    const created = await customerService.createOrder(order, draft.voucherCode);
     setOrders((current) => [created, ...current]);
     cart.clear();
     setIsSubmitting(false);

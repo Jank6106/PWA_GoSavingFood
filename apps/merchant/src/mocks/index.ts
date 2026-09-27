@@ -1,6 +1,6 @@
 import type { AnalyticsMetrics, BagItem, InventoryItem, MerchantOrder, NotificationItem, ReviewItem, RevenueChartPoint, StoreProfile } from '../types';
 
-export const STORE_ID = 'store-gsf-01';
+export const STORE_ID = 'b0000000-0000-0000-0000-000000000002';
 export const PRESET_BAG_CATEGORIES = ['Bánh ngọt', 'Món Việt', 'Đồ uống', 'Rau củ', 'Combo bất ngờ'];
 export const PRESET_BAG_IMAGES = [
   'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
@@ -42,10 +42,10 @@ export const INITIAL_INVENTORY_MOCK: InventoryItem[] = INITIAL_BAGS_MOCK.filter(
 }));
 
 export const STORE_PROFILE_MOCK: StoreProfile = {
-  id: STORE_ID, userId: 'merchant-user-01', name: 'GoGreen Bakery', description: 'Bánh tươi và những bữa ăn tử tế, cùng bạn giảm lãng phí mỗi ngày.',
-  coverImage: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1400&q=80',
-  logoUrl: '', avatar: 'GS', address: '128 Nguyễn Huệ, P. Bến Nghé, Quận 1, TP.HCM', latitude: 10.7736, longitude: 106.7035,
-  phone: '028 3822 8899', email: 'hello@gogreen.vn', category: 'Tiệm bánh', openingHours: '07:00', closingHours: '21:00', pickupHours: '17:30 - 20:30',
+  id: STORE_ID, userId: 'merchant-user-01', name: 'Quán Chay Quýt', description: 'Quán ăn chay healthy hàng ngày cùng bạn giảm lãng phí mỗi ngày.',
+  coverImage: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1400&q=80',
+  logoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200', avatar: 'QCQ', address: '456 Lê Lợi, Q1, TP.HCM', latitude: 10.7798, longitude: 106.7032,
+  phone: '+84900000003', email: 'merchant@gosavingfood.vn', category: 'Quán ăn chay', openingHours: '07:00', closingHours: '20:00', pickupHours: '11:00 - 14:00',
   isOpen: true, rating: 4.9, totalRescuedBags: 1284, totalCo2SavedKg: 642, createdAt: now, updatedAt: now,
 };
 

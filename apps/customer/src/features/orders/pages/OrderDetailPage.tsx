@@ -1,4 +1,5 @@
-import { Clock3, MapPin, MessageSquareText, QrCode, TriangleAlert } from 'lucide-react';
+import { Clock3, MapPin, MessageSquareText, TriangleAlert } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@gosavingfood/ui';
 import {
   FormSection,
@@ -27,7 +28,12 @@ export function OrderDetailPage({ order, onBack, onReview, onReport }: OrderDeta
         <h1>{isReady ? 'Hẹn gặp bạn tại cửa hàng!' : 'Cảm ơn bạn đã giải cứu món ngon'}</h1>
         <p>Nhớ kiểm tra khung giờ và mã nhận hàng trước khi đến.</p>
       </section>
-      {isReady && <section className="customer-pickup-code"><QrCode size={34} /><span>Mã nhận hàng</span><strong>{order.orderCode}</strong></section>}
+      <section className="customer-pickup-code" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+        <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+          <QRCodeSVG value={order.qrCode || order.orderCode} size={150} level="M" />
+        </div>
+        <span>Mã nhận hàng: <strong>{order.orderCode}</strong></span>
+      </section>
       <FormSection title="Chi tiết đơn">
         {order.items.map((item) => <OrderItemRow key={item.bagId} imageUrl={item.imageUrl} name={item.bagName} quantity={item.quantity} unitPrice={item.unitPrice} />)}
       </FormSection>

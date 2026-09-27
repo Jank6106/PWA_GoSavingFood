@@ -121,6 +121,7 @@ export interface Order {
   pickupTime: string;
   pickupAddress: string;
   createdAt: string;
+  qrCode?: string;
 }
 
 export interface NotificationItem {
