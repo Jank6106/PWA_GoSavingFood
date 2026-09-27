@@ -1,7 +1,7 @@
 import { Clock3, ShieldCheck, Trash2 } from 'lucide-react';
 import { Button, EmptyState } from '@gosavingfood/ui';
 import { AuthRequiredState, OrderSummary, PageHeading, QuantityStepper } from '../../../shared/components';
-import type { CartItem } from '../../../shared/types/customer.types';
+import type { CartItem, SurpriseBag } from '../../../shared/types/customer.types';
 
 interface CartPageProps {
   items: CartItem[];
@@ -14,6 +14,7 @@ interface CartPageProps {
   onCheckout: () => void;
   onUpdate: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
+  onOpenBag?: (bag: SurpriseBag) => void;
 }
 
 export function CartPage(props: CartPageProps) {
@@ -23,12 +24,24 @@ export function CartPage(props: CartPageProps) {
   if (!props.items.length) {
     return <div className="customer-screen"><h1 className="customer-page-title">Giỏ hàng</h1><EmptyState title="Giỏ hàng trống" description="Khám phá các túi thực phẩm ngon đang chờ được giải cứu." action={<Button onClick={props.onExplore}>Khám phá ngay</Button>} /></div>;
   }
+
+  const handleItemClick = (e: React.MouseEvent, bag: SurpriseBag) => {
+    if ((e.target as HTMLElement).closest('.customer-stepper, .customer-remove-button')) {
+      return;
+    }
+    props.onOpenBag?.(bag);
+  };
+
   return (
     <div className="customer-screen customer-cart-screen">
       <PageHeading title="Giỏ hàng" subtitle="Túi được giữ trong 15 phút" action={<span><Clock3 size={15} /> 14:36</span>} />
       <div className="customer-cart-list">
         {props.items.map((item) => (
-          <article key={item.bag.id} className="customer-cart-item">
+          <article
+            key={item.bag.id}
+            className="customer-cart-item"
+            onClick={(e) => handleItemClick(e, item.bag)}
+          >
             <img src={item.bag.imageUrl} alt="" />
             <div><small>{item.bag.merchantName}</small><h2>{item.bag.name}</h2><strong>{item.bag.discountPrice.toLocaleString('vi-VN')}đ</strong><span>{item.bag.pickupStart}–{item.bag.pickupEnd}</span></div>
             <button type="button" className="customer-remove-button" onClick={() => props.onRemove(item.bag.id)}><Trash2 size={17} /></button>
