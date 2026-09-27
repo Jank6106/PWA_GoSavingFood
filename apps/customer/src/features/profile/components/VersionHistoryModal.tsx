@@ -110,8 +110,8 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
         <div className="gsf-drawer-body">
           {/* Current Version Card */}
           <div className="customer-version-current-card">
-            <div className="customer-version-app-icon">
-              <Smartphone size={28} />
+            <div className="customer-version-app-icon" style={{ overflow: 'hidden', padding: 0 }}>
+              <img src="/logo.png" alt="GoSavingFood" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '14px' }} />
             </div>
             <div className="customer-version-app-info">
               <div className="customer-version-app-badge-row">

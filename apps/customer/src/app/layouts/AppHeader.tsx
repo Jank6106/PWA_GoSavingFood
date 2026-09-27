@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, Leaf } from 'lucide-react';
+import { Bell } from 'lucide-react';
 
 interface AppHeaderProps {
   location?: string;
@@ -29,7 +29,7 @@ export function AppHeader({
     <header className={`customer-header ${isScrolled ? 'is-solid' : 'is-transparent'}`}>
       <div className="customer-brand">
         <div className="customer-logo" aria-hidden="true">
-          <Leaf size={22} strokeWidth={2.4} />
+          <img src="/logo.png" alt="GoSavingFood Logo" className="customer-logo-img" />
         </div>
         <div className="customer-brand-name">GoSavingFood</div>
       </div>
