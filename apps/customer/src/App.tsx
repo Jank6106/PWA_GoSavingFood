@@ -23,6 +23,7 @@ import { useCart } from './hooks/useCart';
 import { useAuth } from './hooks/useAuth';
 import { useCustomerCatalog } from './hooks/useCustomerCatalog';
 import { customerService } from './services/customer.service';
+import { mockBags, mockMerchants } from './services/customer.mock';
 import type {
   AppRoute,
   CheckoutDraft,
@@ -89,9 +90,17 @@ function CustomerApp() {
   const back = () => setHistory((current) => (current.length > 1 ? current.slice(0, -1) : current));
   const openTab = (tab: CustomerTab) => setHistory([{ name: 'tabs', tab }]);
   const home = () => openTab('home');
-  const selectedBag = route.name === 'bag' ? catalog.bags.find((bag) => bag.id === route.id) ?? null : null;
+  const selectedBag =
+    route.name === 'bag'
+      ? catalog.bags.find((bag) => bag.id === route.id) ??
+        mockBags.find((bag) => bag.id === route.id) ??
+        null
+      : null;
   const selectedMerchantId = route.name === 'merchant' ? route.id : selectedBag?.merchantId;
-  const selectedMerchant = catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? null;
+  const selectedMerchant =
+    catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ??
+    mockMerchants.find((merchant) => merchant.id === selectedMerchantId) ??
+    null;
   const selectedBrand = route.name === 'brand' ? catalog.brands.find((brand) => brand.id === route.id) ?? null : null;
   const selectedOrderId = route.name === 'order' || route.name === 'review' || route.name === 'report' ? route.id : route.name === 'success' ? route.orderId : null;
   const selectedOrder = selectedOrderId ? orders.find((order) => order.id === selectedOrderId) ?? null : null;
@@ -179,6 +188,7 @@ function CustomerApp() {
           onBack={back}
           onReview={() => push({ name: 'review', id: selectedOrder.id })}
           onReport={() => push({ name: 'report', id: selectedOrder.id })}
+          onOpenBag={(bagId) => push({ name: 'bag', id: bagId })}
           onUpdateOrder={(updated) => {
             setOrders((prev) =>
               prev.map((o) => (o.id === updated.id ? updated : o))

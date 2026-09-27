@@ -23,8 +23,6 @@ import {
   FormSection,
   InfoRow,
   OrderItemRow,
-  OrderStatusBadge,
-  OrderSummary,
   ScreenHeader,
 } from '../../../shared/components';
 import type { Order } from '../../../shared/types/customer.types';
@@ -36,6 +34,7 @@ interface OrderDetailPageProps {
   onReport: () => void;
   onUpdateOrder?: (updatedOrder: Order) => void;
   onReorder?: (order: Order) => void;
+  onOpenBag?: (bagId: string) => void;
 }
 
 function formatDateTime(dateStr?: string): string {
@@ -82,6 +81,7 @@ export function OrderDetailPage({
   onReport,
   onUpdateOrder,
   onReorder,
+  onOpenBag,
 }: OrderDetailPageProps) {
   const [currentOrder, setCurrentOrder] = useState<Order>(order);
   const [isEditingNote, setIsEditingNote] = useState(false);
@@ -141,24 +141,14 @@ export function OrderDetailPage({
       )}
 
       <ScreenHeader
-        title={currentOrder.orderCode}
-        subtitle={currentOrder.merchantName}
+        title="Chi tiết đơn hàng"
         onBack={onBack}
       />
 
-      {/* Top Status Card - Status specific heading without "Nhớ kiểm tra..." */}
+      {/* Top Status Card - Only big text and guide note */}
       <section
         className={`customer-order-status-card customer-order-status-card--${status}`}
       >
-        <div className="customer-order-status-badge-row">
-          <OrderStatusBadge
-            status={status}
-            readyLabel={isReady ? 'Sẵn sàng nhận món' : undefined}
-          />
-          <span className="customer-order-status-time">
-            {formatDateTime(currentOrder.createdAt)}
-          </span>
-        </div>
 
         {isReady && (
           <>
@@ -332,42 +322,38 @@ export function OrderDetailPage({
         </FormSection>
       )}
 
-      {/* Lịch sử mua hàng / Chi tiết món */}
+      {/* Chi tiết món & Giá gộp cùng một khung */}
       <FormSection title={isCompleted || isCancelled ? 'Lịch sử món đã đặt' : 'Chi tiết món'}>
-        {currentOrder.items.map((item) => (
-          <OrderItemRow
-            key={item.bagId}
-            imageUrl={item.imageUrl}
-            name={item.bagName}
-            quantity={item.quantity}
-            unitPrice={item.unitPrice}
-          />
-        ))}
-      </FormSection>
+        <div className="customer-order-items-group">
+          {currentOrder.items.map((item) => (
+            <OrderItemRow
+              key={item.bagId}
+              imageUrl={item.imageUrl}
+              name={item.bagName}
+              quantity={item.quantity}
+              unitPrice={item.unitPrice}
+              onClick={onOpenBag ? () => onOpenBag(item.bagId) : undefined}
+            />
+          ))}
+        </div>
 
-      {/* Chi tiết thanh toán & giá */}
-      <OrderSummary
-        rows={[
-          {
-            label: 'Giá gốc thực phẩm',
-            value: `${currentOrder.totalOriginalPrice.toLocaleString('vi-VN')}đ`,
-          },
-          ...(savingsAmount > 0
-            ? [
-                {
-                  label: 'Tiết kiệm từ giải cứu',
-                  value: `-${savingsAmount.toLocaleString('vi-VN')}đ`,
-                  tone: 'saving' as const,
-                },
-              ]
-            : []),
-          {
-            label: 'Tổng thanh toán',
-            value: `${currentOrder.finalAmount.toLocaleString('vi-VN')}đ`,
-            tone: 'total' as const,
-          },
-        ]}
-      />
+        <div className="customer-order-merged-pricing">
+          <div className="customer-pricing-row">
+            <span>Giá gốc thực phẩm</span>
+            <strong>{currentOrder.totalOriginalPrice.toLocaleString('vi-VN')}đ</strong>
+          </div>
+          {savingsAmount > 0 && (
+            <div className="customer-pricing-row is-saving">
+              <span>Tiết kiệm từ giải cứu</span>
+              <strong>-{savingsAmount.toLocaleString('vi-VN')}đ</strong>
+            </div>
+          )}
+          <div className="customer-pricing-row is-total">
+            <span>Tổng thanh toán</span>
+            <strong>{currentOrder.finalAmount.toLocaleString('vi-VN')}đ</strong>
+          </div>
+        </div>
+      </FormSection>
 
       {/* Section Đánh giá cho Đơn Hoàn thành */}
       {isCompleted && (
@@ -464,17 +450,14 @@ export function OrderDetailPage({
           </Button>
         )}
 
-        {/* Secondary options */}
-        <div className="customer-secondary-actions">
-          {isCompleted && !currentOrder.review && (
-            <Button variant="outline" onClick={onReview}>
-              <MessageSquareText size={18} /> Đánh giá
+        {/* Secondary options - Chỉ hiển thị cho mục Hoàn thành */}
+        {isCompleted && (
+          <div className="customer-completed-secondary-actions">
+            <Button fullWidth variant="ghost" onClick={onReport}>
+              <TriangleAlert size={18} /> Báo cáo sự cố
             </Button>
-          )}
-          <Button variant="ghost" onClick={onReport}>
-            <TriangleAlert size={18} /> Báo cáo sự cố
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Modal Hủy Đơn Hàng cho mục Chờ xác nhận */}
