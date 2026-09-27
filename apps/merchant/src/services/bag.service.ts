@@ -14,7 +14,7 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
       .eq('store_id', storeId)
       .order('created_at', { ascending: false });
 
-    if (!error && Array.isArray(dbBags) && dbBags.length > 0) {
+    if (!error && Array.isArray(dbBags)) {
       return dbBags.map((b: any) => ({
         id: b.id,
         storeId: b.store_id,
@@ -110,8 +110,13 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
       if (userStore?.id) {
         targetStoreId = userStore.id;
       }
+    } else {
+      throw new Error('Chưa đăng nhập. Vui lòng đăng nhập tài khoản cửa hàng trước khi tạo túi.');
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.message?.includes('Chưa đăng nhập')) {
+      throw err;
+    }
     console.warn('Lỗi lấy thông tin user store:', err);
   }
 
@@ -124,7 +129,7 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
       original_price: input.originalPrice,
       discount_price: input.salePrice,
       category: input.category || 'bakery',
-      image_url: input.imageUrl || input.imageUrls[0],
+      image_url: input.imageUrl || input.imageUrls?.[0] || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
       quantity: input.quantity,
       max_quantity: 2,
       pickup_start:
