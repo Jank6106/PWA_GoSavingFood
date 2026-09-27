@@ -6,6 +6,50 @@ import { clone, delay } from './utils';
 
 let bagStore = clone(INITIAL_BAGS_MOCK);
 
+export const CATEGORY_MAP_TO_DB: Record<string, 'bakery' | 'beverage' | 'raw_food' | 'vegetarian' | 'other'> = {
+  'Bánh ngọt': 'bakery',
+  'Đồ uống': 'beverage',
+  'Rau củ': 'raw_food',
+  'Rau củ & Trái cây': 'raw_food',
+  'Món Chay': 'vegetarian',
+  'Món chay': 'vegetarian',
+  'Món Việt': 'other',
+  'Combo bất ngờ': 'other',
+  'Khác': 'other',
+  bakery: 'bakery',
+  beverage: 'beverage',
+  raw_food: 'raw_food',
+  vegetarian: 'vegetarian',
+  other: 'other',
+};
+
+export const CATEGORY_MAP_TO_UI: Record<string, string> = {
+  bakery: 'Bánh ngọt',
+  beverage: 'Đồ uống',
+  raw_food: 'Rau củ',
+  vegetarian: 'Món Chay',
+  other: 'Món Việt',
+};
+
+export function normalizeCategoryToDb(category?: string): 'bakery' | 'beverage' | 'raw_food' | 'vegetarian' | 'other' {
+  if (!category) return 'bakery';
+  const trimmed = category.trim();
+  if (CATEGORY_MAP_TO_DB[trimmed]) {
+    return CATEGORY_MAP_TO_DB[trimmed];
+  }
+  const lower = trimmed.toLowerCase();
+  if (lower.includes('bánh') || lower.includes('bakery')) return 'bakery';
+  if (lower.includes('uống') || lower.includes('nước') || lower.includes('beverage') || lower.includes('drink')) return 'beverage';
+  if (lower.includes('rau') || lower.includes('củ') || lower.includes('trái cây') || lower.includes('quả') || lower.includes('raw')) return 'raw_food';
+  if (lower.includes('chay') || lower.includes('vege')) return 'vegetarian';
+  return 'other';
+}
+
+export function normalizeCategoryToUi(category?: string): string {
+  if (!category) return 'Bánh ngọt';
+  return CATEGORY_MAP_TO_UI[category] || category;
+}
+
 export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
   try {
     const { data: dbBags, error } = await supabase
@@ -20,7 +64,7 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
         storeId: b.store_id,
         name: b.name,
         description: b.description || '',
-        category: b.category || 'bakery',
+        category: normalizeCategoryToUi(b.category),
         originalPrice: Number(b.original_price),
         salePrice: Number(b.discount_price),
         quantity: Number(b.quantity),
@@ -128,7 +172,7 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
       description: input.description,
       original_price: input.originalPrice,
       discount_price: input.salePrice,
-      category: input.category || 'bakery',
+      category: normalizeCategoryToDb(input.category),
       image_url: input.imageUrl || input.imageUrls?.[0] || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
       quantity: input.quantity,
       max_quantity: 2,
@@ -156,6 +200,7 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     ...input,
     id: data.id,
     storeId: targetStoreId,
+    category: normalizeCategoryToUi(data.category),
     availableQuantity: input.quantity,
     status: input.quantity > 0 ? 'active' : 'sold_out',
     createdAt: data.created_at || new Date().toISOString(),
@@ -174,7 +219,7 @@ export async function updateBagItem(bagId: string, input: BagInput): Promise<Bag
         description: input.description,
         original_price: input.originalPrice,
         discount_price: input.salePrice,
-        category: input.category,
+        category: normalizeCategoryToDb(input.category),
         image_url: input.imageUrl || input.imageUrls[0],
         quantity: input.quantity,
         pickup_start: input.pickupTimeStart.length === 5 ? `${input.pickupTimeStart}:00` : input.pickupTimeStart,
