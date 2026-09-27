@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Camera, ChevronDown, ChevronRight, Gift, HelpCircle, LogOut, Mail, Phone, ReceiptText, Share2, UserRound } from 'lucide-react';
+import { Camera, ChevronRight, Gift, HelpCircle, LogOut, Mail, Pencil, Phone, ReceiptText, Share2, UserRound } from 'lucide-react';
 import { Badge, Button, Input } from '@gosavingfood/ui';
 import { AuthRequiredState } from '../../../shared/components';
 import type { Order, User } from '../../../shared/types/customer.types';
@@ -30,6 +30,7 @@ export function ProfilePage(props: ProfilePageProps) {
   }
 
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(props.user.name);
   const [phone, setPhone] = useState(props.user.phone);
   const [email, setEmail] = useState(props.user.email || '');
@@ -38,6 +39,18 @@ export function ProfilePage(props: ProfilePageProps) {
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleInfoAccordion = () => {
+    if (isInfoOpen) {
+      setIsEditing(false);
+      if (props.user) {
+        setName(props.user.name);
+        setPhone(props.user.phone);
+        setEmail(props.user.email || '');
+      }
+    }
+    setIsInfoOpen(!isInfoOpen);
+  };
 
   const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -166,11 +179,11 @@ export function ProfilePage(props: ProfilePageProps) {
           <button
             type="button"
             className="customer-accordion-trigger"
-            onClick={() => setIsInfoOpen(!isInfoOpen)}
+            onClick={toggleInfoAccordion}
             aria-expanded={isInfoOpen}
           >
             <span><UserRound size={19} /> Thông tin cá nhân</span>
-            <ChevronDown size={18} className={`customer-accordion-chevron ${isInfoOpen ? 'is-open' : ''}`} />
+            <ChevronRight size={18} className={`customer-accordion-chevron ${isInfoOpen ? 'is-open' : ''}`} />
           </button>
 
           {isInfoOpen && (
@@ -182,6 +195,7 @@ export function ProfilePage(props: ProfilePageProps) {
                   onChange={(e) => setName(e.target.value)}
                   leftIcon={<UserRound size={18} />}
                   placeholder="Nhập họ và tên"
+                  disabled={!isEditing}
                 />
 
                 <Input
@@ -191,6 +205,7 @@ export function ProfilePage(props: ProfilePageProps) {
                   leftIcon={<Phone size={18} />}
                   placeholder="090 123 4567"
                   inputMode="tel"
+                  disabled={!isEditing}
                 />
 
                 <Input
@@ -200,16 +215,50 @@ export function ProfilePage(props: ProfilePageProps) {
                   leftIcon={<Mail size={18} />}
                   placeholder="example@gmail.com"
                   inputMode="email"
+                  disabled={!isEditing}
                 />
 
-                <div className="customer-panel-actions">
-                  <Button variant="outline" size="sm" onClick={() => setIsInfoOpen(false)}>
-                    Hủy
-                  </Button>
-                  <Button size="sm" onClick={handleSaveProfile}>
-                    Lưu thay đổi
-                  </Button>
-                </div>
+                {!isEditing ? (
+                  <div className="customer-panel-actions">
+                    <Button
+                      fullWidth
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Pencil size={14} /> Chỉnh sửa
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="customer-panel-actions customer-panel-actions--editing">
+                    <Button
+                      fullWidth
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        if (props.user) {
+                          setName(props.user.name);
+                          setPhone(props.user.phone);
+                          setEmail(props.user.email || '');
+                        }
+                        setIsEditing(false);
+                      }}
+                    >
+                      Hủy
+                    </Button>
+                    <Button
+                      fullWidth
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        handleSaveProfile();
+                        setIsEditing(false);
+                      }}
+                    >
+                      Lưu thay đổi
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
