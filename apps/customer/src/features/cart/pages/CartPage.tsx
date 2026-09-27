@@ -1,4 +1,4 @@
-import { Clock3, ShieldCheck, Trash2 } from 'lucide-react';
+import { ShieldCheck, Trash2 } from 'lucide-react';
 import { Button, EmptyState } from '@gosavingfood/ui';
 import { AuthRequiredState, OrderSummary, PageHeading, QuantityStepper } from '../../../shared/components';
 import type { CartItem, SurpriseBag } from '../../../shared/types/customer.types';
@@ -34,7 +34,7 @@ export function CartPage(props: CartPageProps) {
 
   return (
     <div className="customer-screen customer-cart-screen">
-      <PageHeading title="Giỏ hàng" subtitle="Túi được giữ trong 15 phút" action={<span><Clock3 size={15} /> 14:36</span>} />
+      <PageHeading title="Giỏ hàng" />
       <div className="customer-cart-list">
         {props.items.map((item) => (
           <article
