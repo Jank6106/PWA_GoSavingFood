@@ -39,7 +39,14 @@ export function CategoryBar({
             key={item.id}
             type="button"
             className={`customer-category-pill ${isSelected ? 'is-active' : ''}`}
-            onClick={() => onSelectCategory(item.id)}
+            onClick={(e) => {
+              e.currentTarget.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'center',
+              });
+              onSelectCategory(item.id);
+            }}
             role="tab"
             aria-selected={isSelected}
           >

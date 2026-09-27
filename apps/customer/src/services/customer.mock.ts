@@ -431,9 +431,9 @@ export const mockOrders: Order[] = [
 ];
 
 export const mockNotifications: NotificationItem[] = [
-  { id: 'notification-1', icon: '🎁', title: 'Túi mới gần bạn', body: 'Paris Baguette vừa thêm 4 túi bánh Pháp cuối ngày.', time: '5 phút trước', read: false },
-  { id: 'notification-2', icon: '✅', title: 'Đơn hàng sẵn sàng', body: 'Đơn GSF-8821 đã sẵn sàng để bạn đến nhận.', time: '25 phút trước', read: false },
-  { id: 'notification-3', icon: '🌱', title: 'Tác động tuần này', body: 'Bạn đã giúp giảm 5kg CO₂ nhờ giải cứu 2 bữa ăn.', time: 'Hôm qua', read: true },
+  { id: 'notification-1', icon: 'bag', title: 'Túi mới gần bạn', body: 'Paris Baguette vừa thêm 4 túi bánh Pháp cuối ngày.', time: '5 phút trước', read: false },
+  { id: 'notification-2', icon: 'order', title: 'Đơn hàng sẵn sàng', body: 'Đơn GSF-8821 đã sẵn sàng để bạn đến nhận.', time: '25 phút trước', read: false },
+  { id: 'notification-3', icon: 'leaf', title: 'Tác động tuần này', body: 'Bạn đã giúp giảm 5kg CO₂ nhờ giải cứu 2 bữa ăn.', time: 'Hôm qua', read: true },
 ];
 
 export const mockVouchers: Voucher[] = [
