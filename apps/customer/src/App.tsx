@@ -172,8 +172,58 @@ function CustomerApp() {
     if (route.name === 'checkout' && auth.user) return <CheckoutPage items={cart.items} subtotal={cart.summary.subtotal} user={auth.user} vouchers={vouchers} onBack={back} onContinue={(draft) => push({ name: 'payment', draft })} />;
     if (route.name === 'payment') return <PaymentPage draft={route.draft} total={Math.max(0, cart.summary.subtotal - route.draft.discountAmount)} isSubmitting={isSubmitting} onBack={back} onConfirm={() => confirmPayment(route.draft)} />;
     if (route.name === 'success' && selectedOrder) return <OrderSuccessPage order={selectedOrder} onOrders={() => openTab('orders')} onHome={home} />;
-    if (route.name === 'order' && selectedOrder) return <OrderDetailPage order={selectedOrder} onBack={back} onReview={() => push({ name: 'review', id: selectedOrder.id })} onReport={() => push({ name: 'report', id: selectedOrder.id })} />;
-    if ((route.name === 'review' || route.name === 'report') && selectedOrder) return <OrderFeedbackPage mode={route.name} order={selectedOrder} onBack={back} onSubmit={() => { window.alert(route.name === 'review' ? 'Đã gửi đánh giá. Cảm ơn bạn!' : 'Đã gửi báo cáo. Chúng tôi sẽ sớm liên hệ.'); back(); }} />;
+    if (route.name === 'order' && selectedOrder)
+      return (
+        <OrderDetailPage
+          order={selectedOrder}
+          onBack={back}
+          onReview={() => push({ name: 'review', id: selectedOrder.id })}
+          onReport={() => push({ name: 'report', id: selectedOrder.id })}
+          onUpdateOrder={(updated) => {
+            setOrders((prev) =>
+              prev.map((o) => (o.id === updated.id ? updated : o))
+            );
+          }}
+          onReorder={(order) => {
+            if (order.items[0]) {
+              push({ name: 'bag', id: order.items[0].bagId });
+            } else {
+              openTab('home');
+            }
+          }}
+        />
+      );
+    if ((route.name === 'review' || route.name === 'report') && selectedOrder)
+      return (
+        <OrderFeedbackPage
+          mode={route.name}
+          order={selectedOrder}
+          onBack={back}
+          onSubmit={(feedback) => {
+            if (route.name === 'review') {
+              setOrders((prev) =>
+                prev.map((o) =>
+                  o.id === selectedOrder.id
+                    ? {
+                        ...o,
+                        review: {
+                          rating: feedback.rating,
+                          tags: feedback.tags,
+                          comment: feedback.comment,
+                          createdAt: new Date().toISOString(),
+                        },
+                      }
+                    : o
+                )
+              );
+              window.alert('Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn đã được lưu lại.');
+            } else {
+              window.alert('Đã gửi báo cáo sự cố. Đội ngũ CSKH GoSavingFood sẽ sớm liên hệ lại.');
+            }
+            back();
+          }}
+        />
+      );
     if (route.name === 'notifications') return <NotificationsPage notifications={notifications} onBack={back} onReadAll={() => setNotifications((current) => current.map((item) => ({ ...item, read: true })))} />;
     if (route.name === 'location') return <SelectLocationPage currentLocation={location} onBack={back} onSelect={(nextLocation) => { setLocation(nextLocation); back(); }} />;
     return null;

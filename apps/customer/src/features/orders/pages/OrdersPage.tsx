@@ -25,7 +25,7 @@ export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: Or
   if (!isAuthenticated) return <AuthRequiredState icon="📦" title="Theo dõi đơn hàng của bạn" description="Đăng nhập để nhận cập nhật và xem mã lấy hàng." loginLabel="Đăng nhập ngay" onLogin={onLogin} />;
   return (
     <div className="customer-screen">
-      <PageHeading title="Đơn hàng" subtitle="Theo dõi hành trình giải cứu món ngon" />
+      <PageHeading title="Đơn hàng" />
       <div className="customer-filter-tabs">{filters.map((item) => <button type="button" key={item.id} className={filter === item.id ? 'is-active' : ''} onClick={() => setFilter(item.id)}>{item.label}</button>)}</div>
       {!visibleOrders.length ? <EmptyState title="Chưa có đơn phù hợp" description="Các đơn của bạn sẽ xuất hiện tại đây." /> : <div className="customer-orders-list">{visibleOrders.map((order) => {
         return <button key={order.id} type="button" className="customer-order-card" onClick={() => onOpenOrder(order)}><div className="customer-order-card-top"><span><small>{order.orderCode}</small><strong>{order.merchantName}</strong></span><OrderStatusBadge status={order.status} /></div><div className="customer-order-products">{order.items.map((item) => <span key={item.bagId}>{item.quantity}× {item.bagName}</span>)}</div><div className="customer-order-meta"><span><Clock3 size={14} /> {order.pickupTime}</span><span><MapPin size={14} /> {order.pickupAddress}</span></div><div className="customer-order-card-bottom"><span>Tổng cộng <strong>{order.finalAmount.toLocaleString('vi-VN')}đ</strong></span><ChevronRight size={19} /></div></button>;

@@ -122,6 +122,17 @@ export interface Order {
   pickupTime: string;
   pickupAddress: string;
   createdAt: string;
+  paidAt?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  cancelReason?: string;
+  note?: string;
+  review?: {
+    rating: number;
+    tags?: string[];
+    comment: string;
+    createdAt: string;
+  };
 }
 
 export interface NotificationItem {
