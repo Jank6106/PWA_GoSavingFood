@@ -440,7 +440,7 @@ export function ProfilePage(props: ProfilePageProps) {
           className="customer-delete-account-button"
           onClick={() => setIsDeleteOpen(true)}
         >
-          <Trash2 size={17} /> Xóa tài khoản
+          <Trash2 size={18} /> Xóa tài khoản
         </button>
       </section>
 
