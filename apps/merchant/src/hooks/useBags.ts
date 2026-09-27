@@ -50,8 +50,16 @@ export function useBags(storeId: string) {
 
   const addBag = async (input: BagInput) => {
     setSaving(true);
-    try { const bag = await createBagItem(storeId, input); setAllBags((items) => [bag, ...items]); setIsCreateModalOpen(false); showToast('Đã tạo túi hàng và đưa lên kệ'); }
-    finally { setSaving(false); }
+    try {
+      const bag = await createBagItem(storeId, input);
+      setAllBags((items) => [bag, ...items]);
+      setIsCreateModalOpen(false);
+      showToast('Đã tạo túi hàng và đưa lên kệ');
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi tạo túi hàng');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const editBag = async (input: BagInput) => {

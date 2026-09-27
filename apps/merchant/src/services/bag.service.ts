@@ -92,58 +92,72 @@ export async function updateBagQuantity(bagId: string, quantity: number): Promis
 }
 
 export async function createBagItem(storeId: string, input: BagInput): Promise<BagItem> {
-  const bagId = `bag-${Date.now()}`;
-  try {
-    const { data, error } = await supabase
-      .from('surprise_bags')
-      .insert({
-        store_id: storeId,
-        name: input.name,
-        description: input.description,
-        original_price: input.originalPrice,
-        discount_price: input.salePrice,
-        category: input.category || 'bakery',
-        image_url: input.imageUrl || input.imageUrls[0],
-        quantity: input.quantity,
-        max_quantity: 2,
-        pickup_start: input.pickupTimeStart.length === 5 ? `${input.pickupTimeStart}:00` : input.pickupTimeStart,
-        pickup_end: input.pickupTimeEnd.length === 5 ? `${input.pickupTimeEnd}:00` : input.pickupTimeEnd,
-        is_daily: true,
-        is_available: true,
-        expires_at: new Date(Date.now() + 86400000 * 7).toISOString(),
-      })
-      .select()
-      .single();
+  let targetStoreId = storeId;
 
-    if (!error && data) {
-      const newBag: BagItem = {
-        ...input,
-        id: data.id,
-        storeId,
-        availableQuantity: input.quantity,
-        status: input.quantity > 0 ? 'active' : 'sold_out',
-        createdAt: data.created_at || new Date().toISOString(),
-      };
-      bagStore.unshift(newBag);
-      syncBagToInventoryShelf(newBag);
-      return clone(newBag);
+  // Đảm bảo targetStoreId là store thuộc quyền sở hữu của user đang đăng nhập để RLS cho phép
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: userStore } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('owner_user_id', user.id)
+        .maybeSingle();
+
+      if (userStore?.id) {
+        targetStoreId = userStore.id;
+      }
     }
   } catch (err) {
-    console.warn('Tạo túi mù trên Supabase lỗi:', err);
+    console.warn('Lỗi lấy thông tin user store:', err);
   }
 
-  await delay(300);
-  const bag: BagItem = {
+  const { data, error } = await supabase
+    .from('surprise_bags')
+    .insert({
+      store_id: targetStoreId,
+      name: input.name,
+      description: input.description,
+      original_price: input.originalPrice,
+      discount_price: input.salePrice,
+      category: input.category || 'bakery',
+      image_url: input.imageUrl || input.imageUrls[0],
+      quantity: input.quantity,
+      max_quantity: 2,
+      pickup_start:
+        input.pickupTimeStart.length === 5
+          ? `${input.pickupTimeStart}:00`
+          : input.pickupTimeStart,
+      pickup_end:
+        input.pickupTimeEnd.length === 5
+          ? `${input.pickupTimeEnd}:00`
+          : input.pickupTimeEnd,
+      is_daily: true,
+      is_available: true,
+      expires_at: new Date(Date.now() + 86400000 * 7).toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Lỗi khi lưu túi mù vào Database Supabase:', error);
+    throw new Error(`Không thể lưu túi mù vào Database: ${error.message}`);
+  }
+
+  const newBag: BagItem = {
     ...input,
-    id: bagId,
-    storeId,
+    id: data.id,
+    storeId: targetStoreId,
     availableQuantity: input.quantity,
     status: input.quantity > 0 ? 'active' : 'sold_out',
-    createdAt: new Date().toISOString(),
+    createdAt: data.created_at || new Date().toISOString(),
   };
-  bagStore.unshift(bag);
-  syncBagToInventoryShelf(bag);
-  return clone(bag);
+  bagStore.unshift(newBag);
+  syncBagToInventoryShelf(newBag);
+  return clone(newBag);
 }
 
 export async function updateBagItem(bagId: string, input: BagInput): Promise<BagItem> {
