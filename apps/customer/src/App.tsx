@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { AppLayout } from './app/layouts/AppLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthModal } from './features/auth/components/AuthModal';
@@ -51,6 +52,13 @@ function CustomerApp() {
     () => window.matchMedia('(display-mode: standalone)').matches
   );
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = window.setTimeout(() => setToastMessage(null), 2500);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
 
   useEffect(() => {
     let active = true;
@@ -88,7 +96,10 @@ function CustomerApp() {
   const selectedOrderId = route.name === 'order' || route.name === 'review' || route.name === 'report' ? route.id : route.name === 'success' ? route.orderId : null;
   const selectedOrder = selectedOrderId ? orders.find((order) => order.id === selectedOrderId) ?? null : null;
 
-  const addToCart = (bag: SurpriseBag, quantity = 1) => cart.addItem(bag, quantity);
+  const addToCart = (bag: SurpriseBag, quantity = 1) => {
+    cart.addItem(bag, quantity);
+    setToastMessage(`Đã thêm “${bag.name}” vào giỏ hàng`);
+  };
   const buyNow = (bag: SurpriseBag, quantity: number) => {
     addToCart(bag, quantity);
     if (!auth.isAuthenticated) {
@@ -169,7 +180,44 @@ function CustomerApp() {
   };
 
   const isTabs = route.name === 'tabs';
-  return <><AppLayout activeTab={activeTab} cartCount={cart.summary.count} location={location} unreadCount={notifications.filter((item) => !item.read).length} showHeader={isTabs && route.tab === 'home'} showBottomNav={isTabs} onTabChange={openTab} onLocationClick={() => push({ name: 'location' })} onNotificationClick={() => push({ name: 'notifications' })}>{renderScreen()}</AppLayout><AuthModal /></>;
+  return (
+    <>
+      <AppLayout
+        activeTab={activeTab}
+        cartCount={cart.summary.count}
+        location={location}
+        unreadCount={notifications.filter((item) => !item.read).length}
+        showHeader={isTabs && route.tab === 'home'}
+        showBottomNav={isTabs}
+        onTabChange={openTab}
+        onLocationClick={() => push({ name: 'location' })}
+        onNotificationClick={() => push({ name: 'notifications' })}
+      >
+        {renderScreen()}
+      </AppLayout>
+
+      {toastMessage && (
+        <aside className="customer-toast-popup" role="status" aria-live="polite">
+          <div className="customer-toast-icon">
+            <CheckCircle2 size={18} />
+          </div>
+          <span className="customer-toast-text">{toastMessage}</span>
+          <button
+            type="button"
+            className="customer-toast-cta"
+            onClick={() => {
+              setToastMessage(null);
+              openTab('cart');
+            }}
+          >
+            Xem giỏ
+          </button>
+        </aside>
+      )}
+
+      <AuthModal />
+    </>
+  );
 }
 
 export default function App() {

@@ -1,5 +1,5 @@
-import { Clock3, MapPin, Plus } from 'lucide-react';
-import { Badge, Button } from '@gosavingfood/ui';
+import { useState } from 'react';
+import { Check, Clock3, MapPin, Plus } from 'lucide-react';
 import type { SurpriseBag } from '../types/customer.types';
 import { PriceDisplay } from './PriceDisplay';
 
@@ -12,23 +12,54 @@ interface BagCardProps {
 }
 
 export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen, onAdd }: BagCardProps) {
+  const [added, setAdded] = useState(false);
   const discount = Math.round((1 - bag.discountPrice / bag.originalPrice) * 100);
+
+  const handleAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAdd(bag);
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1200);
+  };
   return (
-    <article className={`customer-bag-card ${compact ? 'is-compact' : ''}`}>
-      <button type="button" className="customer-bag-image" onClick={() => onOpen(bag)}>
-        <img src={bag.imageUrl} alt="" />
-        <Badge variant="error">-{discount}%</Badge>
-        <span className="customer-distance"><MapPin size={12} /> {distanceLabel}</span>
-      </button>
-      <div className="customer-bag-content">
-        <span className="customer-bag-merchant">{bag.merchantName}</span>
-        <button type="button" className="customer-bag-title" onClick={() => onOpen(bag)}>{bag.name}</button>
-        <div className="customer-pickup-line"><Clock3 size={14} /> {bag.pickupStart}–{bag.pickupEnd}</div>
-        <div className="customer-bag-footer">
-          <PriceDisplay original={bag.originalPrice} current={bag.discountPrice} />
-          <Button size="sm" onClick={() => onAdd(bag)} aria-label={`Thêm ${bag.name}`}><Plus size={17} /></Button>
+    <article
+      className={`customer-bag-card ${compact ? 'is-compact' : ''}`}
+      onClick={() => onOpen(bag)}
+    >
+      <div className="customer-bag-media">
+        <img src={bag.imageUrl} alt={bag.name} className="customer-bag-photo" loading="lazy" />
+      </div>
+
+      <div className="customer-bag-top-badges">
+        <span className="customer-discount-tag">-{discount}%</span>
+        <span className="customer-distance-tag">
+          <MapPin size={11} /> {distanceLabel}
+        </span>
+      </div>
+
+      <div className="customer-bag-overlay">
+        <div className="customer-bag-info">
+          <span className="customer-bag-merchant">{bag.merchantName}</span>
+          <h3 className="customer-bag-title">{bag.name}</h3>
+          <div className="customer-bag-meta-row">
+            <span className="customer-bag-time">
+              <Clock3 size={11} /> {bag.pickupStart}–{bag.pickupEnd}
+            </span>
+            <span className="customer-bag-stock">Còn {bag.quantity} túi</span>
+          </div>
         </div>
-        <small className="customer-stock">Chỉ còn {bag.quantity} túi</small>
+
+        <div className="customer-bag-bottom-row">
+          <PriceDisplay original={bag.originalPrice} current={bag.discountPrice} />
+          <button
+            type="button"
+            className={`customer-bag-add-btn ${added ? 'is-added' : ''}`}
+            onClick={handleAdd}
+            aria-label={`Thêm ${bag.name}`}
+          >
+            {added ? <Check size={16} strokeWidth={3} /> : <Plus size={16} strokeWidth={2.8} />}
+          </button>
+        </div>
       </div>
     </article>
   );
