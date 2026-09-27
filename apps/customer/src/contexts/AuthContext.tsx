@@ -22,6 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAuthOpen(false);
       },
       logout: () => setUser(null),
+      updateProfile: (updates: Partial<User>) => {
+        setUser((prev) => (prev ? { ...prev, ...updates } : null));
+      },
     }),
     [isAuthOpen, user]
   );

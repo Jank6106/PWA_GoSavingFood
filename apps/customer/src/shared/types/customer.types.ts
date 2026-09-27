@@ -25,6 +25,7 @@ export interface User {
   phone: string;
   email?: string;
   avatar?: string;
+  coverImage?: string;
 }
 
 export interface Banner {

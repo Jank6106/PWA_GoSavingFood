@@ -9,6 +9,7 @@ export interface AuthContextValue {
   hideAuthModal: () => void;
   login: (name: string, phone: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (updates: Partial<User>) => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
