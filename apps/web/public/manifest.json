@@ -1,0 +1,24 @@
+{
+  "name": "GoSavingFood - Giải Cứu Thực Phẩm, Tối Ưu Giá Trị",
+  "short_name": "GoSavingFood",
+  "description": "Nền tảng kết nối giải cứu thực phẩm cận hạn và dư thừa trong ngày với giá giảm 50% - 80%",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f1e8",
+  "theme_color": "#163e2e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/media/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/media/logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
