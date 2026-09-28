@@ -133,6 +133,7 @@ export interface Order {
     comment: string;
     createdAt: string;
   };
+  qrCode?: string;
 }
 
 export interface NotificationItem {

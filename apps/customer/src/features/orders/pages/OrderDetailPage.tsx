@@ -9,7 +9,6 @@ import {
   FileText,
   MapPin,
   MessageSquareText,
-  QrCode,
   RotateCcw,
   Sparkles,
   Star,
@@ -19,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@gosavingfood/ui';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   FormSection,
   InfoRow,
@@ -35,6 +35,8 @@ interface OrderDetailPageProps {
   onUpdateOrder?: (updatedOrder: Order) => void;
   onReorder?: (order: Order) => void;
   onOpenBag?: (bagId: string) => void;
+  onSaveNote?: (orderId: string, note: string) => void;
+  onCancelOrder?: (orderId: string, reason: string) => void;
 }
 
 function formatDateTime(dateStr?: string): string {
@@ -82,6 +84,8 @@ export function OrderDetailPage({
   onUpdateOrder,
   onReorder,
   onOpenBag,
+  onSaveNote,
+  onCancelOrder,
 }: OrderDetailPageProps) {
   const [currentOrder, setCurrentOrder] = useState<Order>(order);
   const [isEditingNote, setIsEditingNote] = useState(false);
@@ -102,6 +106,7 @@ export function OrderDetailPage({
     };
     setCurrentOrder(updated);
     onUpdateOrder?.(updated);
+    onSaveNote?.(updated.id, updated.note ?? '');
     setIsEditingNote(false);
     showToast('Đã cập nhật ghi chú đơn hàng!');
   };
@@ -115,6 +120,7 @@ export function OrderDetailPage({
     };
     setCurrentOrder(updated);
     onUpdateOrder?.(updated);
+    onCancelOrder?.(updated.id, updated.cancelReason ?? '');
     setIsCancelModalOpen(false);
     showToast('Đã hủy đơn hàng và kích hoạt hoàn tiền 100%!');
   };
@@ -193,7 +199,9 @@ export function OrderDetailPage({
       {/* Pickup Code Section - For Ready for pickup */}
       {isReady && (
         <section className="customer-pickup-code">
-          <QrCode size={40} />
+          <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+            <QRCodeSVG value={currentOrder.qrCode || currentOrder.orderCode} size={148} level="M" />
+          </div>
           <span>Mã nhận hàng điện tử</span>
           <strong>{currentOrder.orderCode}</strong>
           <small>Đưa mã này hoặc mã QR cho nhân viên tại quán để lấy món</small>

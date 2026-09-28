@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, History, Smartphone, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, History, Sparkles, X } from 'lucide-react';
 import { Badge, Button } from '@gosavingfood/ui';
 
 interface VersionHistoryModalProps {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { customerService } from '../services/customer.service';
 import type { User } from '../shared/types/customer.types';
@@ -9,6 +9,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
+  useEffect(() => {
+    customerService.getUser().then((existing) => {
+      if (existing) setUser(existing);
+    });
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -16,12 +22,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthOpen,
       showAuthModal: () => setIsAuthOpen(true),
       hideAuthModal: () => setIsAuthOpen(false),
-      login: async (name, phone) => {
-        const nextUser = await customerService.login(name, phone);
+      login: async (name, phone, password) => {
+        const nextUser = await customerService.login(phone, password, name);
         setUser(nextUser);
         setIsAuthOpen(false);
       },
-      logout: () => setUser(null),
+      logout: () => {
+        void customerService.logout();
+        setUser(null);
+      },
       updateProfile: (updates: Partial<User>) => {
         setUser((prev) => (prev ? { ...prev, ...updates } : null));
       },

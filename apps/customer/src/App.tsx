@@ -149,7 +149,7 @@ function CustomerApp() {
       pickupTime: draft.pickupTime,
       pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
     };
-    const created = await customerService.createOrder(order);
+    const created = await customerService.createOrder(order, draft.voucherCode);
     setOrders((current) => [created, ...current]);
     cart.clear();
     setIsSubmitting(false);
@@ -189,6 +189,12 @@ function CustomerApp() {
           onReview={() => push({ name: 'review', id: selectedOrder.id })}
           onReport={() => push({ name: 'report', id: selectedOrder.id })}
           onOpenBag={(bagId) => push({ name: 'bag', id: bagId })}
+          onSaveNote={(orderId, note) => {
+            void customerService.updateOrderNote(orderId, note);
+          }}
+          onCancelOrder={(orderId, reason) => {
+            void customerService.cancelOrder(orderId, reason);
+          }}
           onUpdateOrder={(updated) => {
             setOrders((prev) =>
               prev.map((o) => (o.id === updated.id ? updated : o))
@@ -211,6 +217,12 @@ function CustomerApp() {
           onBack={back}
           onSubmit={(feedback) => {
             if (route.name === 'review') {
+              void customerService.submitFeedback(
+                selectedOrder.id,
+                selectedOrder.merchantId,
+                feedback.rating,
+                feedback.comment
+              );
               setOrders((prev) =>
                 prev.map((o) =>
                   o.id === selectedOrder.id
