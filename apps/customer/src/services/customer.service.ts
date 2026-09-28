@@ -482,6 +482,7 @@ export const customerService = {
 
   async cancelOrder(orderId: string, reason: string) {
     try {
+      // Schema hiện tại chưa có cancel_reason/cancelled_at -> thử ghi kèm lý do trước,
       const { error } = await supabase
         .from('orders')
         .update({
@@ -490,7 +491,17 @@ export const customerService = {
           cancelled_at: new Date().toISOString(),
         })
         .eq('id', orderId);
-      return !error;
+      if (!error) return true;
+
+      // nếu thất bại thì fallback chỉ ghi status để đơn vẫn được hủy trên hệ thống.
+      const fallback = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderId);
+      if (!fallback.error) return true;
+
+      console.warn('Hủy đơn hàng trên hệ thống lỗi:', fallback.error.message || error.message);
+      return false;
     } catch (err) {
       console.warn('Hủy đơn hàng trên hệ thống lỗi:', err);
       return false;
