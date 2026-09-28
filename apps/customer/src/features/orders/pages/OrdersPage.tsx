@@ -22,7 +22,7 @@ const filters: Array<{ id: 'all' | OrderStatus; label: string }> = [
 export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: OrdersPageProps) {
   const [filter, setFilter] = useState<'all' | OrderStatus>('all');
   const visibleOrders = useMemo(() => orders.filter((order) => filter === 'all' || order.status === filter), [filter, orders]);
-  if (!isAuthenticated) return <AuthRequiredState icon="📦" title="Theo dõi đơn hàng của bạn" description="Đăng nhập để nhận cập nhật và xem mã lấy hàng." loginLabel="Đăng nhập ngay" onLogin={onLogin} />;
+  if (!isAuthenticated) return <AuthRequiredState onLogin={onLogin} />;
   return (
     <div className="customer-screen">
       <PageHeading title="Đơn hàng" />

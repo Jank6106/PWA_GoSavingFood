@@ -44,14 +44,7 @@ interface ProfilePageProps {
 
 export function ProfilePage(props: ProfilePageProps) {
   if (!props.user) {
-    return (
-      <AuthRequiredState
-        icon="👋"
-        title="Xin chào!"
-        description="Đăng nhập để quản lý tài khoản và theo dõi tác động xanh của bạn."
-        onLogin={props.onLogin}
-      />
-    );
+    return <AuthRequiredState onLogin={props.onLogin} />;
   }
 
   const [isInfoOpen, setIsInfoOpen] = useState(false);

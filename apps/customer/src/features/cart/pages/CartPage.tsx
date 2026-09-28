@@ -19,7 +19,7 @@ interface CartPageProps {
 
 export function CartPage(props: CartPageProps) {
   if (!props.isAuthenticated) {
-    return <AuthRequiredState icon="🛒" title="Đăng nhập để xem giỏ hàng" description="Giữ các túi bạn yêu thích và hoàn tất đặt hàng chỉ trong vài bước." secondaryLabel="Tiếp tục khám phá" onLogin={props.onLogin} onSecondary={props.onExplore} />;
+    return <AuthRequiredState onLogin={props.onLogin} />;
   }
   if (!props.items.length) {
     return <div className="customer-screen"><h1 className="customer-page-title">Giỏ hàng</h1><EmptyState title="Giỏ hàng trống" description="Khám phá các túi thực phẩm ngon đang chờ được giải cứu." action={<Button onClick={props.onExplore}>Khám phá ngay</Button>} /></div>;
