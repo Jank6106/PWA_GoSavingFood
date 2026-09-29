@@ -55,24 +55,21 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
   const rawPassword = credentials.password;
 
   if (!username || !rawPassword) {
-    throw new Error('Thông tin đăng nhập không hợp lệ.');
+    throw new Error('Vui lòng nhập đầy đủ thông tin đăng nhập.');
   }
 
   const isEmail = username.includes('@');
-  const email = isEmail ? username : `${username}@merchant.gosavingfood.vn`;
+  const email = isEmail ? username : `${username}@gosavingfood.vn`;
 
   const candidatePasswords = [
     rawPassword,
-    rawPassword === '123456' ? '12345600Aa!' : null,
+    rawPassword === '12345600Aa!' ? 'Password123!' : null,
     rawPassword === 'Password123!' ? '12345600Aa!' : null,
-    rawPassword.length < 8 ? `${rawPassword}00Aa!` : null,
-    rawPassword.length < 8 ? `${rawPassword}Aa1!` : null,
   ].filter((p): p is string => Boolean(p));
 
   let user = null;
   let lastError: any = null;
 
-  // 1. Thử đăng nhập lần lượt với các candidate password
   for (const pwd of candidatePasswords) {
     const { data: signInData, error: signInError } =
       await supabase.auth.signInWithPassword({ email, password: pwd });
@@ -85,36 +82,13 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
     }
   }
 
-  // 2. Nếu chưa có tài khoản, thử đăng ký với mật khẩu an toàn
-  if (!user) {
-    const safeSignUpPassword =
-      rawPassword.length < 8 ? `${rawPassword}00Aa!` : rawPassword;
-
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password: safeSignUpPassword,
-      options: {
-        data: {
-          name: username,
-          role: 'merchant',
-        },
-      },
-    });
-
-    if (!signUpError && signUpData.user) {
-      user = signUpData.user;
-    } else {
-      lastError = signUpError || lastError;
-    }
-  }
-
   if (user) {
-    // Đảm bảo user có một store thuộc quyền sở hữu của mình để RLS cho phép tạo túi mù
+    // Lấy thông tin store thuộc quyền sở hữu của merchant
     const store = await ensureUserStore(user, username);
     const storeId = store?.id;
 
     if (!storeId) {
-      throw new Error('Không thể khởi tạo thông tin cửa hàng trên hệ thống.');
+      throw new Error('Tài khoản chưa được liên kết với cửa hàng nào. Vui lòng liên hệ Admin.');
     }
 
     const storeName = store?.name || username;
@@ -125,6 +99,10 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
       displayName: storeName,
       isFirstLogin: !isSetupCompleted(user.id),
     };
+  }
+
+  if (lastError?.message?.includes('Invalid login credentials')) {
+    throw new Error('Tài khoản hoặc mật khẩu không chính xác. Vui lòng liên hệ Admin nếu bạn chưa được cấp tài khoản.');
   }
 
   throw new Error(

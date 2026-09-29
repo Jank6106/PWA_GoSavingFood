@@ -22,8 +22,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthOpen,
       showAuthModal: () => setIsAuthOpen(true),
       hideAuthModal: () => setIsAuthOpen(false),
-      login: async (name, phone, password) => {
-        const nextUser = await customerService.login(phone, password, name);
+      login: async (identifier, password) => {
+        const nextUser = await customerService.login(identifier, password);
+        setUser(nextUser);
+        setIsAuthOpen(false);
+      },
+      register: async (name, identifier, password) => {
+        const nextUser = await customerService.register(name, identifier, password);
         setUser(nextUser);
         setIsAuthOpen(false);
       },

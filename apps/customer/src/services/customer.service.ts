@@ -518,56 +518,85 @@ export const customerService = {
     }
   },
 
-  async login(emailOrPhone: string, password?: string, name?: string) {
+  async login(emailOrPhone: string, password?: string) {
     const isEmail = emailOrPhone.includes('@');
-    const email = isEmail ? emailOrPhone.trim() : `${emailOrPhone.trim()}@gosavingfood.vn`;
+    const email = isEmail
+      ? emailOrPhone.trim()
+      : `${emailOrPhone.trim().replace(/\s+/g, '')}@gosavingfood.vn`;
     const pwd = password || 'Password123!';
 
-    try {
-      const { data: signInData, error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password: pwd,
-        });
-
-      if (!signInError && signInData.user) {
-        const u = signInData.user;
-        return {
-          id: u.id,
-          name: u.user_metadata?.name || name || u.email?.split('@')[0] || 'Khách hàng',
-          phone: u.user_metadata?.phone || emailOrPhone,
-          email: u.email,
-        } satisfies User;
-      }
-
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    const { data: signInData, error: signInError } =
+      await supabase.auth.signInWithPassword({
         email,
         password: pwd,
-        options: {
-          data: {
-            name: name || 'Khách hàng mới',
-            phone: emailOrPhone,
-            role: 'customer',
-          },
-        },
       });
 
-      if (!signUpError && signUpData.user) {
-        const u = signUpData.user;
-        return {
-          id: u.id,
-          name: u.user_metadata?.name || name || 'Khách hàng mới',
-          phone: emailOrPhone,
-          email: u.email,
-        } satisfies User;
+    if (signInError) {
+      if (signInError.message.includes('Invalid login credentials')) {
+        throw new Error('Email/Số điện thoại hoặc mật khẩu không chính xác.');
       }
-    } catch (err) {
-      console.warn('Supabase auth error:', err);
+      throw new Error(signInError.message || 'Đăng nhập không thành công.');
     }
 
-    throw new Error(
-      'Không thể đăng nhập. Vui lòng kiểm tra lại email/số điện thoại và mật khẩu.'
-    );
+    if (signInData.user) {
+      const u = signInData.user;
+      return {
+        id: u.id,
+        name: u.user_metadata?.name || u.email?.split('@')[0] || 'Khách hàng',
+        phone: u.user_metadata?.phone || (isEmail ? '' : emailOrPhone),
+        email: u.email,
+        avatar: u.user_metadata?.avatar,
+      } satisfies User;
+    }
+
+    throw new Error('Đăng nhập không thành công.');
+  },
+
+  async register(name: string, emailOrPhone: string, password?: string) {
+    const isEmail = emailOrPhone.includes('@');
+    const email = isEmail
+      ? emailOrPhone.trim()
+      : `${emailOrPhone.trim().replace(/\s+/g, '')}@gosavingfood.vn`;
+    const pwd = password || 'Password123!';
+
+    if (pwd.length < 6) {
+      throw new Error('Mật khẩu phải có ít nhất 6 ký tự.');
+    }
+
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password: pwd,
+      options: {
+        data: {
+          name: name.trim(),
+          phone: isEmail ? '' : emailOrPhone.trim(),
+          role: 'customer',
+        },
+      },
+    });
+
+    if (signUpError) {
+      if (
+        signUpError.message.includes('User already registered') ||
+        signUpError.message.includes('already registered')
+      ) {
+        throw new Error('Tài khoản này đã tồn tại. Vui lòng chuyển sang Đăng nhập.');
+      }
+      throw new Error(signUpError.message || 'Đăng ký tài khoản không thành công.');
+    }
+
+    if (signUpData.user) {
+      const u = signUpData.user;
+      return {
+        id: u.id,
+        name: u.user_metadata?.name || name || 'Khách hàng mới',
+        phone: u.user_metadata?.phone || (isEmail ? '' : emailOrPhone),
+        email: u.email,
+        avatar: u.user_metadata?.avatar,
+      } satisfies User;
+    }
+
+    throw new Error('Đăng ký không thành công.');
   },
 
   async logout() {
