@@ -240,6 +240,7 @@ export const customerService = {
         .from('surprise_bags')
         .select('*, stores(name, logo_url, address)')
         .eq('id', id)
+        .eq('is_available', true)
         .maybeSingle();
 
       if (data) {
@@ -279,7 +280,8 @@ export const customerService = {
       const { data: bags } = await supabase
         .from('surprise_bags')
         .select('*')
-        .eq('store_id', id);
+        .eq('store_id', id)
+        .eq('is_available', true);
 
       if (store) {
         const merchant: Merchant = {

@@ -59,11 +59,17 @@ export function useInventory(storeId: string) {
     setHasUnsavedChanges(true);
     hasUnsavedChangesRef.current = true;
   };
-  const removeFromShelf = (item: InventoryItem) => {
+  const removeFromShelf = async (item: InventoryItem) => {
+    if (!item.bagId) return;
     setAllItems((entries) => entries.filter((entry) => entry.id !== item.id));
-    if (item.bagId) setRemovedBagIds((ids) => ids.includes(item.bagId as string) ? ids : [...ids, item.bagId as string]);
-    setHasUnsavedChanges(true);
-    hasUnsavedChangesRef.current = true;
+    setSavedItems((entries) => entries.filter((entry) => entry.id !== item.id));
+    try {
+      await updateBagStatus(item.bagId, 'hidden');
+      showToast(`Đã gỡ "${item.name}" khỏi kệ hàng`);
+    } catch {
+      showToast('Lỗi khi gỡ sản phẩm khỏi kệ.');
+      await loadData();
+    }
   };
   const cancelChanges = () => {
     setAllItems(savedItems);

@@ -6,14 +6,154 @@ import { Button, Field, Modal, SelectField, TextAreaField } from '../ui';
 
 const readImageFiles = async (files: FileList) => Promise.all(Array.from(files).filter((file) => file.type.startsWith('image/')).map((file) => new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('Không thể đọc ảnh.')); reader.readAsDataURL(file); })));
 
-export function BagFilterBar({ searchQuery, onSearchQueryChange, onOpenCreateModal }: { searchQuery: string; onSearchQueryChange: (value: string) => void; onOpenCreateModal: () => void }) {
-  return <div className="merchant-filter-bar"><label className="merchant-search"><Search size={19} /><input value={searchQuery} onChange={(event) => onSearchQueryChange(event.target.value)} placeholder="Tìm túi hàng hoặc danh mục..." /></label><Button onClick={onOpenCreateModal}><Plus size={18} /> Tạo túi mới</Button></div>;
+export function BagFilterBar({
+  searchQuery,
+  onSearchQueryChange,
+  statusFilter,
+  onStatusFilterChange,
+  allCount,
+  onShelfCount,
+  offShelfCount,
+  onOpenCreateModal,
+}: {
+  searchQuery: string;
+  onSearchQueryChange: (value: string) => void;
+  statusFilter?: 'all' | 'on_shelf' | 'off_shelf';
+  onStatusFilterChange?: (filter: 'all' | 'on_shelf' | 'off_shelf') => void;
+  allCount?: number;
+  onShelfCount?: number;
+  offShelfCount?: number;
+  onOpenCreateModal: () => void;
+}) {
+  return (
+    <div className="merchant-bag-filter-container">
+      <div className="merchant-filter-bar">
+        <label className="merchant-search">
+          <Search size={19} />
+          <input
+            value={searchQuery}
+            onChange={(event) => onSearchQueryChange(event.target.value)}
+            placeholder="Tìm túi hàng hoặc danh mục..."
+          />
+        </label>
+        <Button onClick={onOpenCreateModal}>
+          <Plus size={18} /> Tạo túi mới
+        </Button>
+      </div>
+      {statusFilter && onStatusFilterChange && (
+        <div className="merchant-status-tabs">
+          <button
+            type="button"
+            className={statusFilter === 'all' ? 'is-active' : ''}
+            onClick={() => onStatusFilterChange('all')}
+          >
+            Tất cả {allCount !== undefined ? `(${allCount})` : ''}
+          </button>
+          <button
+            type="button"
+            className={statusFilter === 'on_shelf' ? 'is-active' : ''}
+            onClick={() => onStatusFilterChange('on_shelf')}
+          >
+            Đang lên kệ {onShelfCount !== undefined ? `(${onShelfCount})` : ''}
+          </button>
+          <button
+            type="button"
+            className={statusFilter === 'off_shelf' ? 'is-active' : ''}
+            onClick={() => onStatusFilterChange('off_shelf')}
+          >
+            Đã gỡ kệ {offShelfCount !== undefined ? `(${offShelfCount})` : ''}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export function BagCard({ bag, onToggleStatus, onIncreaseQuantity, onDecreaseQuantity, onOpenDetails, onEdit }: { bag: BagItem; onToggleStatus: (id: string) => void; onIncreaseQuantity: (id: string) => void; onDecreaseQuantity: (id: string) => void; onOpenDetails: (bag: BagItem) => void; onEdit: (bag: BagItem) => void }) {
-  const statusLabel = bag.status === 'active' ? 'Đang bán' : bag.status === 'sold_out' ? 'Hết hàng' : 'Đã gỡ kệ';
+export function BagCard({
+  bag,
+  onToggleStatus,
+  onIncreaseQuantity,
+  onDecreaseQuantity,
+  onOpenDetails,
+  onEdit,
+}: {
+  bag: BagItem;
+  onToggleStatus: (id: string) => void;
+  onIncreaseQuantity: (id: string) => void;
+  onDecreaseQuantity: (id: string) => void;
+  onOpenDetails: (bag: BagItem) => void;
+  onEdit: (bag: BagItem) => void;
+}) {
   const isOnShelf = bag.status !== 'hidden';
-  return <article className="merchant-card merchant-product-card"><img src={bag.imageUrl} alt={bag.name} /><div className="merchant-product-main"><div className="merchant-card-title-row"><div><span className="merchant-eyebrow">{bag.category}</span><h3>{bag.name}</h3></div><span className={`merchant-badge merchant-badge--${bag.status}`}>{statusLabel}</span></div><p className="merchant-clamp">{bag.description}</p><div className="merchant-product-meta"><span><Tag size={14} /><s>{bag.originalPrice.toLocaleString('vi-VN')}đ</s><strong>{bag.salePrice.toLocaleString('vi-VN')}đ</strong></span><span><Clock3 size={14} /> {bag.pickupTimeStart}–{bag.pickupTimeEnd}</span></div><footer><div className="merchant-quantity"><button type="button" onClick={() => onDecreaseQuantity(bag.id)} aria-label="Giảm số lượng"><Minus size={16} /></button><strong>{bag.availableQuantity}</strong><button type="button" onClick={() => onIncreaseQuantity(bag.id)} aria-label="Tăng số lượng"><Plus size={16} /></button><small>túi còn lại</small></div><div className="merchant-card-actions"><Button size="small" variant="secondary" onClick={() => onToggleStatus(bag.id)}>{isOnShelf ? <EyeOff size={16} /> : <Eye size={16} />}{isOnShelf ? 'Gỡ khỏi kệ' : 'Đưa lên kệ'}</Button><Button size="small" variant="outline" onClick={() => onEdit(bag)}><Pencil size={15} /> Sửa</Button><Button size="small" variant="ghost" onClick={() => onOpenDetails(bag)}>Chi tiết</Button></div></footer></div></article>;
+  const statusLabel = isOnShelf
+    ? bag.status === 'active'
+      ? 'Đang lên kệ'
+      : 'Hết hàng'
+    : 'Đã gỡ kệ';
+
+  return (
+    <article className={`merchant-card merchant-product-card ${!isOnShelf ? 'merchant-product-card--off-shelf' : ''}`}>
+      <img src={bag.imageUrl} alt={bag.name} />
+      <div className="merchant-product-main">
+        <div className="merchant-card-title-row">
+          <div>
+            <span className="merchant-eyebrow">{bag.category}</span>
+            <h3>{bag.name}</h3>
+          </div>
+          <span className={`merchant-badge merchant-badge--${bag.status}`}>
+            {statusLabel}
+          </span>
+        </div>
+        <p className="merchant-clamp">{bag.description}</p>
+        <div className="merchant-product-meta">
+          <span>
+            <Tag size={14} />
+            <s>{bag.originalPrice.toLocaleString('vi-VN')}đ</s>
+            <strong>{bag.salePrice.toLocaleString('vi-VN')}đ</strong>
+          </span>
+          <span>
+            <Clock3 size={14} /> {bag.pickupTimeStart}–{bag.pickupTimeEnd}
+          </span>
+        </div>
+        <footer>
+          <div className="merchant-quantity">
+            <button
+              type="button"
+              onClick={() => onDecreaseQuantity(bag.id)}
+              aria-label="Giảm số lượng"
+            >
+              <Minus size={16} />
+            </button>
+            <strong>{bag.availableQuantity}</strong>
+            <button
+              type="button"
+              onClick={() => onIncreaseQuantity(bag.id)}
+              aria-label="Tăng số lượng"
+            >
+              <Plus size={16} />
+            </button>
+            <small>túi còn lại</small>
+          </div>
+          <div className="merchant-card-actions">
+            <Button
+              size="small"
+              variant={isOnShelf ? 'secondary' : 'primary'}
+              onClick={() => onToggleStatus(bag.id)}
+            >
+              {isOnShelf ? <EyeOff size={16} /> : <Eye size={16} />}
+              {isOnShelf ? 'Gỡ khỏi kệ' : 'Đưa lên kệ'}
+            </Button>
+            <Button size="small" variant="outline" onClick={() => onEdit(bag)}>
+              <Pencil size={15} /> Sửa
+            </Button>
+            <Button size="small" variant="ghost" onClick={() => onOpenDetails(bag)}>
+              Chi tiết
+            </Button>
+          </div>
+        </footer>
+      </div>
+    </article>
+  );
 }
 
 export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?: BagItem; open: boolean; saving: boolean; onClose: () => void; onSubmit: (input: BagInput) => void }) {
@@ -106,7 +246,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
 export function BagDetailsModal({ bag, open, saving, onClose, onToggleStatus, onDelete, onEdit }: { bag: BagItem | null; open: boolean; saving: boolean; onClose: () => void; onToggleStatus: (id: string) => void; onDelete: (id: string) => void; onEdit: (bag: BagItem) => void }) {
   if (!bag) return null;
   const isOnShelf = bag.status !== 'hidden';
-  return <Modal open={open} title="Chi tiết túi hàng" onClose={onClose}><div className="merchant-detail-hero"><img src={bag.imageUrl} alt={bag.name} /><span className={`merchant-badge merchant-badge--${bag.status}`}>{bag.status === 'active' ? 'Đang bán' : bag.status === 'hidden' ? 'Đã gỡ kệ' : 'Hết hàng'}</span></div><div className="merchant-detail-content"><span className="merchant-eyebrow">{bag.category}</span><h3>{bag.name}</h3><p>{bag.description}</p><dl><div><dt>Giá giải cứu</dt><dd>{bag.salePrice.toLocaleString('vi-VN')}đ</dd></div><div><dt>Còn lại</dt><dd>{bag.availableQuantity} túi</dd></div><div><dt>Nhận hàng</dt><dd>{bag.pickupTimeStart}–{bag.pickupTimeEnd}</dd></div></dl></div><div className="merchant-form-actions merchant-form-actions--between"><Button variant="danger" loading={saving} onClick={() => onDelete(bag.id)}><Trash2 size={16} /> Xóa túi</Button><div><Button variant="outline" onClick={() => onEdit(bag)}><Pencil size={16} /> Chỉnh sửa</Button><Button variant="secondary" onClick={() => onToggleStatus(bag.id)}>{isOnShelf ? <EyeOff size={16} /> : <Eye size={16} />}{isOnShelf ? 'Gỡ khỏi kệ' : 'Đưa lên kệ'}</Button></div></div></Modal>;
+  return <Modal open={open} title="Chi tiết túi hàng" onClose={onClose}><div className="merchant-detail-hero"><img src={bag.imageUrl} alt={bag.name} /><span className={`merchant-badge merchant-badge--${bag.status}`}>{bag.status === 'active' ? 'Đang lên kệ' : bag.status === 'hidden' ? 'Đã gỡ kệ' : 'Hết hàng'}</span></div><div className="merchant-detail-content"><span className="merchant-eyebrow">{bag.category}</span><h3>{bag.name}</h3><p>{bag.description}</p><dl><div><dt>Giá giải cứu</dt><dd>{bag.salePrice.toLocaleString('vi-VN')}đ</dd></div><div><dt>Còn lại</dt><dd>{bag.availableQuantity} túi</dd></div><div><dt>Nhận hàng</dt><dd>{bag.pickupTimeStart}–{bag.pickupTimeEnd}</dd></div></dl></div><div className="merchant-form-actions merchant-form-actions--between"><Button variant="danger" loading={saving} onClick={() => onDelete(bag.id)}><Trash2 size={16} /> Xóa túi</Button><div><Button variant="outline" onClick={() => onEdit(bag)}><Pencil size={16} /> Chỉnh sửa</Button><Button variant={isOnShelf ? 'secondary' : 'primary'} onClick={() => onToggleStatus(bag.id)}>{isOnShelf ? <EyeOff size={16} /> : <Eye size={16} />}{isOnShelf ? 'Gỡ khỏi kệ' : 'Đưa lên kệ'}</Button></div></div></Modal>;
 }
 
 export const BagEmptyIcon = PackageOpen;

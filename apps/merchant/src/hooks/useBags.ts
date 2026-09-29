@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBagItem, deleteBagItem, fetchBagItems, updateBagItem, updateBagQuantity, updateBagStatus } from '../services/bag.service';
+import { subscribeInventory } from '../services/inventory.service';
 import type { BagInput, BagItem } from '../types';
 import { useToast } from './useToast';
+
+export type BagStatusFilter = 'all' | 'on_shelf' | 'off_shelf';
 
 export function useBags(storeId: string) {
   const [allBags, setAllBags] = useState<BagItem[]>([]);
@@ -9,6 +12,7 @@ export function useBags(storeId: string) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<BagStatusFilter>('all');
   const [selectedBag, setSelectedBag] = useState<BagItem | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -22,9 +26,33 @@ export function useBags(storeId: string) {
     finally { setLoading(false); }
   }, [storeId]);
 
-  useEffect(() => { const timer = window.setTimeout(() => { void loadBags(); }, 0); return () => window.clearTimeout(timer); }, [loadBags]);
+  useEffect(() => {
+    void loadBags();
+    const unsubscribe = subscribeInventory(() => {
+      void loadBags();
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [loadBags]);
 
-  const bags = useMemo(() => allBags.filter((bag) => `${bag.name} ${bag.category}`.toLocaleLowerCase('vi-VN').includes(searchQuery.toLocaleLowerCase('vi-VN'))), [allBags, searchQuery]);
+  const onShelfCount = useMemo(() => allBags.filter((b) => b.status !== 'hidden').length, [allBags]);
+  const offShelfCount = useMemo(() => allBags.filter((b) => b.status === 'hidden').length, [allBags]);
+
+  const bags = useMemo(
+    () =>
+      allBags.filter((bag) => {
+        const matchesQuery = `${bag.name} ${bag.category}`
+          .toLocaleLowerCase('vi-VN')
+          .includes(searchQuery.toLocaleLowerCase('vi-VN'));
+        if (!matchesQuery) return false;
+        if (statusFilter === 'on_shelf') return bag.status !== 'hidden';
+        if (statusFilter === 'off_shelf') return bag.status === 'hidden';
+        return true;
+      }),
+    [allBags, searchQuery, statusFilter]
+  );
+
   const replaceBag = (updated: BagItem) => setAllBags((items) => items.map((bag) => bag.id === updated.id ? updated : bag));
 
   const toggleStatus = async (bagId: string) => {
@@ -75,5 +103,5 @@ export function useBags(storeId: string) {
     finally { setSaving(false); }
   };
 
-  return { bags, loading, error, saving, searchQuery, selectedBag, isCreateModalOpen, isDetailModalOpen, isEditModalOpen, toastMessage, setSearchQuery, setSelectedBag, setIsCreateModalOpen, setIsDetailModalOpen, setIsEditModalOpen, toggleStatus, changeQuantity, addBag, editBag, removeBag, loadBags };
+  return { bags, allBags, loading, error, saving, searchQuery, statusFilter, onShelfCount, offShelfCount, selectedBag, isCreateModalOpen, isDetailModalOpen, isEditModalOpen, toastMessage, setSearchQuery, setStatusFilter, setSelectedBag, setIsCreateModalOpen, setIsDetailModalOpen, setIsEditModalOpen, toggleStatus, changeQuantity, addBag, editBag, removeBag, loadBags };
 }
