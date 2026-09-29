@@ -68,7 +68,7 @@ const formatRelativeTime = (iso?: string | null) => {
 };
 
 const getBagImage = (name: string, url?: string | null) => {
-  if (url && url.startsWith('http')) return url;
+  if (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:'))) return url;
   const n = (name || '').toLowerCase();
   if (n.includes('salad'))
     return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600';
@@ -170,7 +170,10 @@ export const customerService = {
         const { data: directBags } = await supabase
           .from('surprise_bags')
           .select('*, stores(name, logo_url, address)')
-          .limit(20);
+          .eq('is_available', true)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(30);
         if (Array.isArray(directBags)) {
           bagsSource = directBags;
         }
@@ -194,7 +197,13 @@ export const customerService = {
           isAvailable: b.is_available ?? true,
           expiresAt: b.expires_at || new Date(Date.now() + 86400000 * 7).toISOString(),
           rating: 4.9,
+          createdAt: b.created_at,
         }));
+
+        remoteBags.sort((a: any, b: any) => {
+          if (!a.createdAt || !b.createdAt) return 0;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
       }
     } catch (err) {
       console.warn('Lấy dữ liệu Supabase getHome lỗi:', err);

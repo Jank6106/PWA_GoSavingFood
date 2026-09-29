@@ -73,7 +73,15 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
     }
   };
 
-  const uploadFiles = async (event: ChangeEvent<HTMLInputElement>) => { if (!event.target.files?.length) return; const files = await readImageFiles(event.target.files); setImageUrls((current) => [...current, ...files]); event.target.value = ''; };
+  const uploadFiles = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) return;
+    const files = await readImageFiles(event.target.files);
+    setImageUrls((current) => {
+      const filtered = current.filter((img) => !PRESET_BAG_IMAGES.includes(img));
+      return [...files, ...filtered];
+    });
+    event.target.value = '';
+  };
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const original = Number(originalPrice);
