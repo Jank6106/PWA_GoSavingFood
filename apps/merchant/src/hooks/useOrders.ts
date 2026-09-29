@@ -83,6 +83,8 @@ export function useOrders(storeId: string) {
       );
       setSelectedOrder((order) => (order?.id === id ? updated : order));
       showToast(message);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể cập nhật đơn hàng.');
     } finally {
       setSaving(false);
     }
@@ -99,6 +101,9 @@ export function useOrders(storeId: string) {
         showToast('Đơn hàng đã hoàn thành');
       }
       return valid;
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể xác thực mã QR.');
+      return false;
     } finally {
       setSaving(false);
     }

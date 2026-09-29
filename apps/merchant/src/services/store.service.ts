@@ -1,65 +1,99 @@
-import { STORE_PROFILE_MOCK } from '../mocks';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../types';
-import { getCompletedBagQuantity } from './order.service';
+import { fetchCompletedBagQuantity } from './order.service';
 import { supabase } from './supabase';
-import { clone, delay } from './utils';
 
-let profileStore = clone(STORE_PROFILE_MOCK);
+const CO2_KG_PER_BAG = 2.5;
 
-export async function fetchStoreProfile(storeId: string): Promise<StoreProfile> {
-  try {
-    const { data: store, error } = await supabase
-      .from('stores')
-      .select('*')
-      .eq('id', storeId)
+const mapStoreRow = (store: any): StoreProfile => ({
+  id: store.id,
+  userId: store.owner_user_id || '',
+  name: store.name,
+  description: store.description || '',
+  coverImage: store.banner_url || '',
+  logoUrl: store.logo_url || '',
+  avatar: store.logo_url || '',
+  address: store.address || '',
+  latitude: Number(store.latitude) || 0,
+  longitude: Number(store.longitude) || 0,
+  phone: store.phone || '',
+  email: '',
+  category: (store.food_categories && store.food_categories[0]) || 'bakery',
+  openingHours: store.open_time?.slice(0, 5) || '08:00',
+  closingHours: store.close_time?.slice(0, 5) || '22:00',
+  pickupHours: '19:00 - 21:00',
+  isOpen: store.is_open ?? true,
+  rating: Number(store.rating) || 0,
+  totalRescuedBags: 0,
+  totalCo2SavedKg: 0,
+  createdAt: store.created_at || new Date().toISOString(),
+  updatedAt: store.updated_at || new Date().toISOString(),
+});
+
+export async function fetchStoreProfile(storeId: string): Promise<StoreProfile | null> {
+  const { data: store, error } = await supabase
+    .from('stores')
+    .select('*')
+    .eq('id', storeId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('Lấy thông tin store từ Supabase lỗi:', error.message);
+    return null;
+  }
+  if (!store) return null;
+
+  const profile = mapStoreRow(store);
+
+  const rescuedBags = await fetchCompletedBagQuantity(storeId);
+  profile.totalRescuedBags = rescuedBags;
+  profile.totalCo2SavedKg = Math.round(rescuedBags * CO2_KG_PER_BAG);
+
+  if (store.owner_user_id) {
+    const { data: owner } = await supabase
+      .from('users')
+      .select('email, phone')
+      .eq('id', store.owner_user_id)
       .maybeSingle();
-
-    if (!error && store) {
-      return {
-        id: store.id,
-        userId: store.owner_user_id || 'merchant-user-01',
-        name: store.name,
-        description: store.description || '',
-        coverImage:
-          store.banner_url ||
-          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
-        logoUrl:
-          store.logo_url ||
-          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
-        avatar:
-          store.logo_url ||
-          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
-        address: store.address || '',
-        latitude: store.latitude || 10.7745,
-        longitude: store.longitude || 106.7032,
-        phone: store.phone || '',
-        email: 'merchant@gosavingfood.vn',
-        category: (store.food_categories && store.food_categories[0]) || 'bakery',
-        openingHours: store.open_time?.slice(0, 5) || '08:00',
-        closingHours: store.close_time?.slice(0, 5) || '22:00',
-        pickupHours: '19:00 - 21:00',
-        isOpen: store.is_open ?? true,
-        rating: Number(store.rating) || 4.9,
-        totalRescuedBags: getCompletedBagQuantity(storeId) || 120,
-        totalCo2SavedKg: 180,
-        createdAt: store.created_at || new Date().toISOString(),
-        updatedAt: store.updated_at || new Date().toISOString(),
-      };
-    }
-  } catch (err) {
-    console.warn('Lấy thông tin store từ Supabase lỗi:', err);
+    profile.email = owner?.email || '';
+    if (!profile.phone && owner?.phone) profile.phone = owner.phone;
   }
 
-  await delay(120);
-  return clone({ ...profileStore, totalRescuedBags: getCompletedBagQuantity(storeId) });
+  return profile;
 }
-
 export async function updateStoreProfile(
   storeId: string,
   input: StoreUpdateInput
-): Promise<StoreProfile> {
-  try {
-    await supabase
+): Promise<StoreProfile | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Chưa đăng nhập tài khoản cửa hàng.');
+
+  const { data: current } = await supabase
+    .from('stores')
+    .select('latitude, longitude')
+    .eq('id', storeId)
+    .maybeSingle();
+
+  if (current && current.latitude != null && current.longitude != null) {
+    // RPC chuẩn của backend: cập nhật vị trí + các trường trong 1 transaction
+    const { error } = await supabase.rpc('update_store_location_and_fields', {
+      p_owner_user_id: user.id,
+      p_latitude: Number(current.latitude),
+      p_longitude: Number(current.longitude),
+      p_updates: {
+        name: input.name,
+        description: input.description,
+        phone: input.phone,
+        address: input.address,
+      },
+    });
+    if (error) {
+      console.warn('Cập nhật store qua RPC lỗi:', error.message);
+      throw new Error('Không thể lưu thông tin cửa hàng.');
+    }
+  } else {
+    const { error } = await supabase
       .from('stores')
       .update({
         name: input.name,
@@ -69,51 +103,59 @@ export async function updateStoreProfile(
         updated_at: new Date().toISOString(),
       })
       .eq('id', storeId);
-  } catch (err) {
-    console.warn('Cập nhật store trên Supabase lỗi:', err);
+    if (error) {
+      console.warn('Cập nhật store trên Supabase lỗi:', error.message);
+      throw new Error('Không thể lưu thông tin cửa hàng.');
+    }
   }
 
-  await delay(200);
-  profileStore = { ...profileStore, ...input, updatedAt: new Date().toISOString() };
-  return clone(profileStore);
+  return fetchStoreProfile(storeId);
 }
 
-export async function toggleStoreOpenStatus(storeId: string): Promise<StoreProfile> {
-  const nextOpen = !profileStore.isOpen;
-  try {
-    await supabase
-      .from('stores')
-      .update({
-        is_open: nextOpen,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', storeId);
-  } catch (err) {
-    console.warn('Đổi trạng thái đóng/mở store trên Supabase lỗi:', err);
+export async function toggleStoreOpenStatus(storeId: string): Promise<StoreProfile | null> {
+  const { data: store, error: readError } = await supabase
+    .from('stores')
+    .select('is_open')
+    .eq('id', storeId)
+    .maybeSingle();
+
+  if (readError || !store) {
+    console.warn('Đọc trạng thái store lỗi:', readError?.message);
+    throw new Error('Không thể xác định trạng thái cửa hàng.');
   }
 
-  await delay(120);
-  profileStore.isOpen = nextOpen;
-  return clone(profileStore);
+  const { error } = await supabase
+    .from('stores')
+    .update({
+      is_open: !store.is_open,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', storeId);
+
+  if (error) {
+    console.warn('Đổi trạng thái đóng/mở store trên Supabase lỗi:', error.message);
+    throw new Error('Không thể đổi trạng thái cửa hàng.');
+  }
+
+  return fetchStoreProfile(storeId);
 }
 
 export async function updateStoreImages(
   storeId: string,
   input: StoreImageUpdate
-): Promise<StoreProfile> {
-  try {
-    const updatePayload: Record<string, any> = {};
-    if (input.coverImage) updatePayload.banner_url = input.coverImage;
-    if (input.avatar) updatePayload.logo_url = input.avatar;
-    if (Object.keys(updatePayload).length > 0) {
-      updatePayload.updated_at = new Date().toISOString();
-      await supabase.from('stores').update(updatePayload).eq('id', storeId);
+): Promise<StoreProfile | null> {
+  const updatePayload: Record<string, any> = {};
+  if (input.coverImage) updatePayload.banner_url = input.coverImage;
+  if (input.avatar) updatePayload.logo_url = input.avatar;
+
+  if (Object.keys(updatePayload).length > 0) {
+    updatePayload.updated_at = new Date().toISOString();
+    const { error } = await supabase.from('stores').update(updatePayload).eq('id', storeId);
+    if (error) {
+      console.warn('Cập nhật ảnh store trên Supabase lỗi:', error.message);
+      throw new Error('Không thể cập nhật ảnh cửa hàng.');
     }
-  } catch (err) {
-    console.warn('Cập nhật ảnh store trên Supabase lỗi:', err);
   }
 
-  await delay(200);
-  profileStore = { ...profileStore, ...input, updatedAt: new Date().toISOString() };
-  return clone(profileStore);
+  return fetchStoreProfile(storeId);
 }

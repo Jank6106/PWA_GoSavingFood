@@ -1,10 +1,80 @@
-import { NOTIFICATIONS_MOCK } from '../mocks';
 import type { NotificationItem } from '../types';
-import { clone, delay } from './utils';
+import { supabase } from './supabase';
 
-let notifications: NotificationItem[] = clone(NOTIFICATIONS_MOCK);
-export const notificationService = {
-  async fetchNotifications() { await delay(180); return clone(notifications); },
-  async markAsRead(id: string) { await delay(100); notifications = notifications.map((item) => item.id === id ? { ...item, isRead: true } : item); return clone(notifications); },
-  async markAllAsRead() { await delay(120); notifications = notifications.map((item) => ({ ...item, isRead: true })); return clone(notifications); },
+const formatTimeAgo = (iso?: string | null) => {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(diff) || diff < 0) return 'Vừa xong';
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return 'Vừa xong';
+  if (minutes < 60) return `${minutes} phút trước`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} ngày trước`;
+  return new Date(iso).toLocaleDateString('vi-VN');
 };
+
+const inferNotificationType = (row: any): NotificationItem['type'] => {
+  const status = String(row?.data?.status ?? '');
+  const title = String(row?.title ?? '').toLowerCase();
+  if (status === 'ready_for_pickup') return 'pickup_reminder';
+  if (status === 'completed') return 'completed_order';
+  if (status === 'cancelled') return 'cancelled_order';
+  if (title.includes('đánh giá') || title.includes('review')) return 'review_alert';
+  return 'new_order';
+};
+
+const mapNotification = (row: any): NotificationItem => ({
+  id: row.id,
+  orderId: row?.data?.orderId,
+  title: row.title || 'Thông báo',
+  message: row.body || '',
+  type: inferNotificationType(row),
+  isRead: Boolean(row.is_read),
+  createdAt: row.created_at || new Date().toISOString(),
+  timeAgo: formatTimeAgo(row.created_at),
+});
+
+async function fetchNotifications(userId: string): Promise<NotificationItem[]> {
+  if (!userId) return [];
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.warn('Lấy thông báo từ Supabase lỗi:', error.message);
+    return [];
+  }
+  return (data || []).map(mapNotification);
+}
+
+async function markAsRead(userId: string, id: string): Promise<NotificationItem[]> {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('id', id)
+    .eq('user_id', userId);
+  if (error) console.warn('Đánh dấu thông báo đã đọc lỗi:', error.message);
+  return fetchNotifications(userId);
+}
+
+async function markAllAsRead(userId: string): Promise<NotificationItem[]> {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+  if (error) console.warn('Đánh dấu tất cả thông báo đã đọc lỗi:', error.message);
+  return fetchNotifications(userId);
+}
+
+export const notificationService = {
+  fetchNotifications,
+  markAsRead,
+  markAllAsRead,
+};
+

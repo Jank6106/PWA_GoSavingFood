@@ -1,27 +1,71 @@
-import {
-  mockBanners,
-  mockBrands,
-  mockCategories,
-  mockLocations,
-  mockNotifications,
-  mockOrders,
-  mockUser,
-  mockVouchers,
-} from './customer.mock';
 import { supabase } from './supabase';
 import type {
+  Banner,
   Brand,
+  Category,
   FoodCategory,
   LocationSuggestion,
   Merchant,
+  NotificationItem,
   Order,
   SurpriseBag,
   User,
   Voucher,
 } from '../shared/types/customer.types';
 
-const delay = (milliseconds = 100) =>
-  new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds));
+// Nội dung UI tĩnh (banner & danh mục không có bảng riêng trong DB)
+const HOME_BANNERS: Banner[] = [
+  {
+    id: 'banner-1',
+    eyebrow: 'Giải cứu hôm nay',
+    title: 'Ngon hơn khi không bị lãng phí',
+    description: 'Túi bất ngờ từ các cửa hàng quanh bạn, giảm đến 70%.',
+    accent: 'green',
+    icon: 'bag',
+    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    id: 'banner-2',
+    eyebrow: 'Ưu đãi thành viên',
+    title: 'Giảm thêm 20.000đ cho đơn đầu tiên',
+    description: 'Dùng mã HELLOGSF khi thanh toán đơn từ 50.000đ.',
+    accent: 'yellow',
+    icon: 'ticket',
+    imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    id: 'banner-3',
+    eyebrow: 'Tác động xanh',
+    title: 'Mỗi túi cứu được giảm 2,5kg CO₂',
+    description: 'Một lựa chọn nhỏ, thêm một ngày tốt cho hành tinh.',
+    accent: 'mint',
+    icon: 'globe',
+    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80',
+  },
+];
+
+const HOME_CATEGORIES: Category[] = [
+  { id: 'all', label: 'Tất cả', icon: 'all' },
+  { id: 'bakery', label: 'Bánh ngọt', icon: 'bakery' },
+  { id: 'meat', label: 'Món nóng', icon: 'meat' },
+  { id: 'vegetarian', label: 'Ăn xanh', icon: 'vegetarian' },
+  { id: 'beverage', label: 'Đồ uống', icon: 'beverage' },
+  { id: 'other', label: 'Túi bí mật', icon: 'other' },
+];
+
+const formatRelativeTime = (iso?: string | null) => {
+  if (!iso) return '';
+  const milliseconds = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(milliseconds) || milliseconds < 0) return 'Vừa xong';
+  const minutes = Math.floor(milliseconds / 60000);
+  if (minutes < 1) return 'Vừa xong';
+  if (minutes < 60) return `${minutes} phút trước`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} ngày trước`;
+  return new Date(iso).toLocaleDateString('vi-VN');
+};
 
 const getBagImage = (name: string, url?: string | null) => {
   if (url && url.startsWith('http')) return url;
@@ -46,6 +90,20 @@ const getStoreBanner = (url?: string | null) =>
   (url && url.startsWith('http'))
     ? url
     : 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800';
+
+const mapCreateOrderError = (error: { message?: string; details?: string } | null): string => {
+  const raw = `${error?.message ?? ''} ${error?.details ?? ''}`;
+  if (raw.includes('BAG_UNAVAILABLE'))
+    return 'Túi thực phẩm đã hết hoặc không còn mở bán. Vui lòng chọn túi khác.';
+  if (raw.includes('BAG_NOT_FOUND')) return 'Không tìm thấy túi thực phẩm trong hệ thống.';
+  if (raw.includes('STORE_MISMATCH')) return 'Túi thực phẩm không thuộc cửa hàng đã chọn.';
+  if (raw.includes('VOUCHER_NOT_FOUND')) return 'Mã giảm giá không tồn tại.';
+  if (raw.includes('VOUCHER_ALREADY_USED')) return 'Bạn đã dùng mã giảm giá này cho đơn khác.';
+  if (raw.includes('VOUCHER_EXPIRED')) return 'Mã giảm giá đã hết hạn sử dụng.';
+  if (raw.includes('VOUCHER_USAGE_LIMIT')) return 'Mã giảm giá đã hết lượt sử dụng.';
+  if (raw.includes('VOUCHER_INACTIVE')) return 'Mã giảm giá không còn hiệu lực.';
+  return 'Không thể tạo đơn hàng. Vui lòng kiểm tra lại rồi thử lại.';
+};
 
 export const customerService = {
   async getHome(coords?: { lat: number; lng: number }) {
@@ -146,24 +204,21 @@ export const customerService = {
     const merchants = remoteStores.length > 0 ? remoteStores : [];
     const bags = remoteBags.length > 0 ? remoteBags : [];
 
-    const brands: Brand[] =
-      merchants.length > 0
-        ? merchants.map((m) => ({
-            id: m.id,
-            name: m.name,
-            logo: m.logo,
-            description: m.description,
-            rating: m.rating,
-            totalStores: 1,
-            categories: ['Món Chay', 'Thực Dưỡng', 'Healthy'],
-            sustainabilityMessage:
-              'Đồng hành cùng GoSavingFood giảm lãng phí thực phẩm mỗi ngày.',
-          }))
-        : mockBrands;
+    const brands: Brand[] = merchants.map((m) => ({
+      id: m.id,
+      name: m.name,
+      logo: m.logo,
+      description: m.description,
+      rating: m.rating,
+      totalStores: 1,
+      categories: ['Món Chay', 'Thực Dưỡng', 'Healthy'],
+      sustainabilityMessage:
+        'Đồng hành cùng GoSavingFood giảm lãng phí thực phẩm mỗi ngày.',
+    }));
 
     return {
-      banners: mockBanners,
-      categories: mockCategories,
+      banners: HOME_BANNERS,
+      categories: HOME_CATEGORIES,
       brands,
       merchants,
       bags,
@@ -336,12 +391,57 @@ export const customerService = {
     } catch (err) {
       console.warn('Lấy đơn hàng từ Supabase lỗi:', err);
     }
-    return [...mockOrders];
+    return [];
   },
 
-  async getNotifications() {
-    await delay();
-    return [...mockNotifications];
+  async getNotifications(): Promise<NotificationItem[]> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (!error && Array.isArray(data)) {
+        return data.map((n: any) => ({
+          id: n.id,
+          icon: n.icon || 'system',
+          title: n.title || 'Thông báo',
+          body: n.body || '',
+          time: formatRelativeTime(n.created_at),
+          read: Boolean(n.is_read),
+        }));
+      }
+      if (error) console.warn('Lấy thông báo từ Supabase lỗi:', error.message);
+    } catch (err) {
+      console.warn('Lấy thông báo từ Supabase lỗi:', err);
+    }
+    return [];
+  },
+
+  async markAllNotificationsRead(): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      if (error) console.warn('Đánh dấu đã đọc thông báo lỗi:', error.message);
+      return !error;
+    } catch (err) {
+      console.warn('Đánh dấu đã đọc thông báo lỗi:', err);
+      return false;
+    }
   },
 
   async getVouchers(): Promise<Voucher[]> {
@@ -361,14 +461,14 @@ export const customerService = {
         }));
       }
     } catch {
-      // Fallback
+      // Lỗi truy vấn vouchers -> trả rỗng
     }
-    return [...mockVouchers];
+    return [];
   },
 
   async searchLocations(query: string): Promise<LocationSuggestion[]> {
     const trimmed = query.trim();
-    if (!trimmed) return [...mockLocations];
+    if (!trimmed) return [];
 
     try {
       const { data, error } = await supabase.functions.invoke('search-location', {
@@ -383,15 +483,10 @@ export const customerService = {
         }));
       }
     } catch (err) {
-      console.warn('search-location edge function failed, using mock:', err);
+      console.warn('search-location edge function failed:', err);
     }
 
-    const normalized = trimmed.toLocaleLowerCase('vi-VN');
-    return mockLocations.filter((location) =>
-      `${location.name} ${location.address}`
-        .toLocaleLowerCase('vi-VN')
-        .includes(normalized)
-    );
+    return [];
   },
 
   async getUser(): Promise<User | null> {
@@ -459,7 +554,9 @@ export const customerService = {
       console.warn('Supabase auth error:', err);
     }
 
-    return { ...mockUser, name: name || mockUser.name, phone: emailOrPhone };
+    throw new Error(
+      'Không thể đăng nhập. Vui lòng kiểm tra lại email/số điện thoại và mật khẩu.'
+    );
   },
 
   async logout() {
@@ -472,7 +569,11 @@ export const customerService = {
 
   async updateOrderNote(orderId: string, note: string) {
     try {
-      const { error } = await supabase.from('orders').update({ note }).eq('id', orderId);
+      const { error } = await supabase.rpc('update_order_note', {
+        p_order_id: orderId,
+        p_note: note,
+      });
+      if (error) console.warn('Cập nhật ghi chú đơn hàng lỗi:', error.message);
       return !error;
     } catch (err) {
       console.warn('Cập nhật ghi chú đơn hàng lỗi:', err);
@@ -482,28 +583,57 @@ export const customerService = {
 
   async cancelOrder(orderId: string, reason: string) {
     try {
-      // Schema hiện tại chưa có cancel_reason/cancelled_at -> thử ghi kèm lý do trước,
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          status: 'cancelled',
-          cancel_reason: reason,
-          cancelled_at: new Date().toISOString(),
-        })
-        .eq('id', orderId);
-      if (!error) return true;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
 
-      // nếu thất bại thì fallback chỉ ghi status để đơn vẫn được hủy trên hệ thống.
-      const fallback = await supabase
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', orderId);
-      if (!fallback.error) return true;
+      const { error } = await supabase.rpc('transition_order_status_transaction', {
+        p_order_id: orderId,
+        p_target_status: 'cancelled',
+        p_actor_id: user.id,
+        p_actor_role: 'customer',
+      });
 
-      console.warn('Hủy đơn hàng trên hệ thống lỗi:', fallback.error.message || error.message);
-      return false;
+      if (error) {
+        console.warn('Hủy đơn hàng trên hệ thống lỗi:', error.message, error.details);
+        return false;
+      }
+
+      if (reason.trim()) {
+        const { error: reasonError } = await supabase.rpc('set_order_cancel_reason', {
+          p_order_id: orderId,
+          p_reason: reason.trim(),
+        });
+        if (reasonError) console.warn('Lưu lý do hủy đơn lỗi:', reasonError.message);
+      }
+
+      return true;
     } catch (err) {
       console.warn('Hủy đơn hàng trên hệ thống lỗi:', err);
+      return false;
+    }
+  },
+
+  async submitIssue(orderId: string, title: string, description: string) {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase.from('issues').insert({
+        order_id: orderId,
+        reporter_id: user.id,
+        reporter_role: 'customer',
+        title,
+        description: description || null,
+      });
+
+      if (error) console.warn('Gửi báo cáo sự cố lỗi:', error.message);
+      return !error;
+    } catch (err) {
+      console.warn('Gửi báo cáo sự cố lỗi:', err);
       return false;
     }
   },
@@ -511,52 +641,53 @@ export const customerService = {
     order: Omit<Order, 'id' | 'orderCode' | 'createdAt'>,
     voucherCode?: string
   ): Promise<Order> {
-    const tempId = `order-${Date.now()}`;
-    const generatedOrderCode = `GSF-${Math.floor(100000 + Math.random() * 900000)}`;
-    const qrCodeString = `GSF-ORDER-${generatedOrderCode}-${tempId}`;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const idempotencyKey = crypto.randomUUID();
-      const pickupIso = new Date(Date.now() + 3600000).toISOString();
-
-      const { data: rpcOrder, error } = await supabase.rpc(
-        'create_order_transaction',
-        {
-          p_customer_id: user?.id || 'a0000000-0000-0000-0000-000000000001',
-          p_store_id: order.merchantId,
-          p_items: order.items.map((i) => ({
-            bag_id: i.bagId,
-            quantity: i.quantity,
-          })),
-          p_idempotency_key: idempotencyKey,
-          p_pickup_time: pickupIso,
-          p_payment_method: order.paymentMethod,
-          p_voucher_code: voucherCode || null,
-        }
-      );
-
-      if (!error && rpcOrder) {
-        return {
-          ...order,
-          id: rpcOrder.id || tempId,
-          orderCode: rpcOrder.order_code || generatedOrderCode,
-          qrCode: rpcOrder.qr_code || qrCodeString,
-          createdAt: rpcOrder.created_at || new Date().toISOString(),
-        };
-      }
-    } catch (err) {
-      console.warn('Tạo đơn Supabase create_order_transaction lỗi:', err);
+    if (!user) {
+      throw new Error('Vui lòng đăng nhập trước khi đặt hàng.');
     }
+
+    const orderId = crypto.randomUUID();
+    const generatedOrderCode = `GSF-${orderId.slice(0, 6).toUpperCase()}`;
+    const qrCodeString = `GSF-ORDER-${generatedOrderCode}-${Date.now()}`;
+    const idempotencyKey = crypto.randomUUID();
+    const pickupIso = new Date(Date.now() + 3600000).toISOString();
+
+    const { data: rpcResult, error } = await supabase.rpc('place_order', {
+      p_id: orderId,
+      p_store_id: order.merchantId,
+      p_idempotency_key: idempotencyKey,
+      p_items: order.items.map((item) => ({
+        bagId: item.bagId,
+        quantity: item.quantity,
+      })),
+      p_voucher_code: voucherCode || null,
+      p_pickup_time: pickupIso,
+      p_payment_method: order.paymentMethod,
+      p_note: order.note || null,
+      p_total_original_price: order.totalOriginalPrice,
+      p_total_discount_price: order.totalDiscountPrice,
+      p_discount_amount: order.discountAmount,
+      p_final_amount: order.finalAmount,
+      p_qr_code: qrCodeString,
+    });
+
+    if (error) {
+      console.warn('Tạo đơn place_order lỗi:', error.message, error.details);
+      throw new Error(mapCreateOrderError(error));
+    }
+
+    const createdId = (rpcResult as { order_id?: string } | null)?.order_id || orderId;
 
     return {
       ...order,
-      id: tempId,
+      id: createdId,
       orderCode: generatedOrderCode,
       qrCode: qrCodeString,
+      status: 'pending',
+      paymentStatus: 'pending',
       createdAt: new Date().toISOString(),
     };
   },

@@ -1,10 +1,40 @@
-import { INITIAL_BAGS_MOCK } from '../mocks';
 import type { BagInput, BagItem, BagStatus } from '../types';
 import { removeBagFromInventoryShelf, syncBagToInventoryShelf } from './inventory.service';
 import { supabase } from './supabase';
-import { clone, delay } from './utils';
 
-let bagStore = clone(INITIAL_BAGS_MOCK);
+const DEFAULT_BAG_IMAGE =
+  'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600';
+
+const mapDbBag = (b: any): BagItem => ({
+  id: b.id,
+  storeId: b.store_id,
+  name: b.name,
+  description: b.description || '',
+  category: normalizeCategoryToUi(b.category),
+  originalPrice: Number(b.original_price),
+  salePrice: Number(b.discount_price),
+  quantity: Number(b.quantity),
+  availableQuantity: Number(b.quantity),
+  imageUrl: b.image_url || DEFAULT_BAG_IMAGE,
+  imageUrls: [b.image_url || DEFAULT_BAG_IMAGE],
+  pickupTimeStart: b.pickup_start?.slice(0, 5) || '18:00',
+  pickupTimeEnd: b.pickup_end?.slice(0, 5) || '21:00',
+  status: (b.is_available ? (b.quantity > 0 ? 'active' : 'sold_out') : 'hidden') as BagStatus,
+  createdAt: b.created_at || new Date().toISOString(),
+});
+
+const fetchBagRow = async (bagId: string): Promise<BagItem | null> => {
+  const { data, error } = await supabase
+    .from('surprise_bags')
+    .select('*')
+    .eq('id', bagId)
+    .maybeSingle();
+  if (error) {
+    console.warn('Lấy túi hàng từ Supabase lỗi:', error.message);
+    return null;
+  }
+  return data ? mapDbBag(data) : null;
+};
 
 export const CATEGORY_MAP_TO_DB: Record<string, 'bakery' | 'beverage' | 'raw_food' | 'vegetarian' | 'other'> = {
   'Bánh ngọt': 'bakery',
@@ -51,88 +81,56 @@ export function normalizeCategoryToUi(category?: string): string {
 }
 
 export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
-  try {
-    const { data: dbBags, error } = await supabase
-      .from('surprise_bags')
-      .select('*')
-      .eq('store_id', storeId)
-      .order('created_at', { ascending: false });
+  const { data, error } = await supabase
+    .from('surprise_bags')
+    .select('*')
+    .eq('store_id', storeId)
+    .order('created_at', { ascending: false });
 
-    if (!error && Array.isArray(dbBags)) {
-      return dbBags.map((b: any) => ({
-        id: b.id,
-        storeId: b.store_id,
-        name: b.name,
-        description: b.description || '',
-        category: normalizeCategoryToUi(b.category),
-        originalPrice: Number(b.original_price),
-        salePrice: Number(b.discount_price),
-        quantity: Number(b.quantity),
-        availableQuantity: Number(b.quantity),
-        imageUrl:
-          b.image_url ||
-          'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
-        imageUrls: [
-          b.image_url ||
-            'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
-        ],
-        pickupTimeStart: b.pickup_start?.slice(0, 5) || '18:00',
-        pickupTimeEnd: b.pickup_end?.slice(0, 5) || '21:00',
-        status: (b.is_available ? (b.quantity > 0 ? 'active' : 'sold_out') : 'hidden') as BagStatus,
-        createdAt: b.created_at || new Date().toISOString(),
-      }));
-    }
-  } catch (err) {
-    console.warn('Lấy danh sách bags từ Supabase lỗi:', err);
+  if (error) {
+    console.warn('Lấy danh sách bags từ Supabase lỗi:', error.message);
+    return [];
   }
-
-  await delay();
-  return clone(bagStore.filter((bag) => bag.storeId === storeId || storeId === 'store-gsf-01'));
+  return (data || []).map(mapDbBag);
 }
 
 export async function updateBagStatus(bagId: string, status: BagStatus): Promise<BagItem> {
-  try {
-    await supabase
-      .from('surprise_bags')
-      .update({
-        is_available: status !== 'hidden',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', bagId);
-  } catch (err) {
-    console.warn('Cập nhật trạng thái túi trên Supabase lỗi:', err);
+  const { error } = await supabase
+    .from('surprise_bags')
+    .update({
+      is_available: status !== 'hidden',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', bagId);
+  if (error) {
+    console.warn('Cập nhật trạng thái túi trên Supabase lỗi:', error.message);
+    throw new Error('Không thể cập nhật trạng thái túi hàng.');
   }
 
-  await delay(160);
-  const bag = bagStore.find((item) => item.id === bagId);
+  const bag = await fetchBagRow(bagId);
   if (!bag) throw new Error('Không tìm thấy túi hàng.');
-  bag.status = status;
   syncBagToInventoryShelf(bag);
-  return clone(bag);
+  return bag;
 }
 
 export async function updateBagQuantity(bagId: string, quantity: number): Promise<BagItem> {
   const safeQty = Math.max(0, quantity);
-  try {
-    await supabase
-      .from('surprise_bags')
-      .update({
-        quantity: safeQty,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', bagId);
-  } catch (err) {
-    console.warn('Cập nhật số lượng túi trên Supabase lỗi:', err);
+  const { error } = await supabase
+    .from('surprise_bags')
+    .update({
+      quantity: safeQty,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', bagId);
+  if (error) {
+    console.warn('Cập nhật số lượng túi trên Supabase lỗi:', error.message);
+    throw new Error('Không thể cập nhật số lượng túi hàng.');
   }
 
-  await delay(140);
-  const bag = bagStore.find((item) => item.id === bagId);
+  const bag = await fetchBagRow(bagId);
   if (!bag) throw new Error('Không tìm thấy túi hàng.');
-  bag.availableQuantity = safeQty;
-  bag.quantity = Math.max(bag.quantity, bag.availableQuantity);
-  if (bag.status !== 'hidden') bag.status = bag.availableQuantity === 0 ? 'sold_out' : 'active';
   syncBagToInventoryShelf(bag);
-  return clone(bag);
+  return bag;
 }
 
 export async function createBagItem(storeId: string, input: BagInput): Promise<BagItem> {
@@ -205,52 +203,45 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     status: input.quantity > 0 ? 'active' : 'sold_out',
     createdAt: data.created_at || new Date().toISOString(),
   };
-  bagStore.unshift(newBag);
   syncBagToInventoryShelf(newBag);
-  return clone(newBag);
+  return newBag;
 }
 
 export async function updateBagItem(bagId: string, input: BagInput): Promise<BagItem> {
-  try {
-    await supabase
-      .from('surprise_bags')
-      .update({
-        name: input.name,
-        description: input.description,
-        original_price: input.originalPrice,
-        discount_price: input.salePrice,
-        category: normalizeCategoryToDb(input.category),
-        image_url: input.imageUrl || input.imageUrls[0],
-        quantity: input.quantity,
-        pickup_start: input.pickupTimeStart.length === 5 ? `${input.pickupTimeStart}:00` : input.pickupTimeStart,
-        pickup_end: input.pickupTimeEnd.length === 5 ? `${input.pickupTimeEnd}:00` : input.pickupTimeEnd,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', bagId);
-  } catch (err) {
-    console.warn('Cập nhật túi mù trên Supabase lỗi:', err);
+  const { error } = await supabase
+    .from('surprise_bags')
+    .update({
+      name: input.name,
+      description: input.description,
+      original_price: input.originalPrice,
+      discount_price: input.salePrice,
+      category: normalizeCategoryToDb(input.category),
+      image_url: input.imageUrl || input.imageUrls[0],
+      quantity: input.quantity,
+      pickup_start:
+        input.pickupTimeStart.length === 5 ? `${input.pickupTimeStart}:00` : input.pickupTimeStart,
+      pickup_end:
+        input.pickupTimeEnd.length === 5 ? `${input.pickupTimeEnd}:00` : input.pickupTimeEnd,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', bagId);
+  if (error) {
+    console.warn('Cập nhật túi mù trên Supabase lỗi:', error.message);
+    throw new Error('Không thể cập nhật túi hàng.');
   }
 
-  await delay(250);
-  const bag = bagStore.find((item) => item.id === bagId);
+  const bag = await fetchBagRow(bagId);
   if (!bag) throw new Error('Không tìm thấy túi hàng.');
-  Object.assign(bag, input);
-  bag.imageUrl = input.imageUrls[0] ?? input.imageUrl;
-  bag.quantity = Math.max(bag.quantity, input.quantity);
-  bag.availableQuantity = Math.min(bag.availableQuantity, bag.quantity);
-  if (bag.status !== 'hidden') bag.status = bag.availableQuantity === 0 ? 'sold_out' : 'active';
   syncBagToInventoryShelf(bag);
-  return clone(bag);
+  return bag;
 }
 
 export async function deleteBagItem(bagId: string): Promise<boolean> {
-  try {
-    await supabase.from('surprise_bags').delete().eq('id', bagId);
-  } catch (err) {
-    console.warn('Xóa túi mù trên Supabase lỗi:', err);
+  const { error } = await supabase.from('surprise_bags').delete().eq('id', bagId);
+  if (error) {
+    console.warn('Xóa túi mù trên Supabase lỗi:', error.message);
+    throw new Error('Không thể xóa túi hàng.');
   }
-  await delay(200);
-  bagStore = bagStore.filter((bag) => bag.id !== bagId);
   removeBagFromInventoryShelf(bagId);
   return true;
 }

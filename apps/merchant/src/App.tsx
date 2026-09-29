@@ -20,7 +20,7 @@ export default function App() {
   const [route, setRoute] = useState<'login' | 'setup' | TabRoute>('login');
   const storeId = auth.user?.storeId ?? STORE_ID;
   const store = useStoreProfile(storeId);
-  const notifications = useNotifications();
+  const notifications = useNotifications(auth.user?.id ?? '');
 
   const handleLogin = async (credentials: LoginCredentials) => {
     const user = await auth.login(credentials);

@@ -16,6 +16,7 @@
   "packageManager": "pnpm@11.13.1",
   "type": "module",
   "devDependencies": {
+    "pg": "^8.23.0",
     "turbo": "^2.10.12"
   }
 }

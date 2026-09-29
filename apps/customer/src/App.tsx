@@ -23,7 +23,6 @@ import { useCart } from './hooks/useCart';
 import { useAuth } from './hooks/useAuth';
 import { useCustomerCatalog } from './hooks/useCustomerCatalog';
 import { customerService } from './services/customer.service';
-import { mockBags, mockMerchants } from './services/customer.mock';
 import type {
   AppRoute,
   CheckoutDraft,
@@ -84,6 +83,11 @@ function CustomerApp() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!auth.user) return;
+    void customerService.getNotifications().then((items) => setNotifications(items));
+  }, [auth.user]);
+
   const route = history[history.length - 1];
   const activeTab: CustomerTab = route.name === 'tabs' ? route.tab : 'home';
   const push = (nextRoute: AppRoute) => setHistory((current) => [...current, nextRoute]);
@@ -92,15 +96,11 @@ function CustomerApp() {
   const home = () => openTab('home');
   const selectedBag =
     route.name === 'bag'
-      ? catalog.bags.find((bag) => bag.id === route.id) ??
-        mockBags.find((bag) => bag.id === route.id) ??
-        null
+      ? catalog.bags.find((bag) => bag.id === route.id) ?? null
       : null;
   const selectedMerchantId = route.name === 'merchant' ? route.id : selectedBag?.merchantId;
   const selectedMerchant =
-    catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ??
-    mockMerchants.find((merchant) => merchant.id === selectedMerchantId) ??
-    null;
+    catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? null;
   const selectedBrand = route.name === 'brand' ? catalog.brands.find((brand) => brand.id === route.id) ?? null : null;
   const selectedOrderId = route.name === 'order' || route.name === 'review' || route.name === 'report' ? route.id : route.name === 'success' ? route.orderId : null;
   const selectedOrder = selectedOrderId ? orders.find((order) => order.id === selectedOrderId) ?? null : null;
@@ -127,33 +127,43 @@ function CustomerApp() {
   const confirmPayment = async (draft: CheckoutDraft) => {
     if (!cart.items.length) return;
     setIsSubmitting(true);
-    const merchant = catalog.merchants.find((item) => item.id === cart.items[0].merchantId);
-    const order: Omit<Order, 'id' | 'orderCode' | 'createdAt'> = {
-      merchantId: cart.items[0].merchantId,
-      merchantName: merchant?.name ?? cart.items[0].bag.merchantName,
-      items: cart.items.map((item) => ({
-        bagId: item.bag.id,
-        bagName: item.bag.name,
-        imageUrl: item.bag.imageUrl,
-        quantity: item.quantity,
-        unitPrice: item.bag.discountPrice,
-        totalPrice: item.bag.discountPrice * item.quantity,
-      })),
-      totalOriginalPrice: cart.summary.original,
-      totalDiscountPrice: cart.summary.subtotal,
-      discountAmount: draft.discountAmount,
-      finalAmount: Math.max(0, cart.summary.subtotal - draft.discountAmount),
-      status: draft.paymentMethod === 'cash' ? 'pending' : 'confirmed',
-      paymentMethod: draft.paymentMethod,
-      paymentStatus: draft.paymentMethod === 'cash' ? 'pending' : 'success',
-      pickupTime: draft.pickupTime,
-      pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
-    };
-    const created = await customerService.createOrder(order, draft.voucherCode);
-    setOrders((current) => [created, ...current]);
-    cart.clear();
-    setIsSubmitting(false);
-    setHistory([{ name: 'success', orderId: created.id }]);
+    try {
+      const merchant = catalog.merchants.find((item) => item.id === cart.items[0].merchantId);
+      const order: Omit<Order, 'id' | 'orderCode' | 'createdAt'> = {
+        merchantId: cart.items[0].merchantId,
+        merchantName: merchant?.name ?? cart.items[0].bag.merchantName,
+        items: cart.items.map((item) => ({
+          bagId: item.bag.id,
+          bagName: item.bag.name,
+          imageUrl: item.bag.imageUrl,
+          quantity: item.quantity,
+          unitPrice: item.bag.discountPrice,
+          totalPrice: item.bag.discountPrice * item.quantity,
+        })),
+        totalOriginalPrice: cart.summary.original,
+        totalDiscountPrice: cart.summary.subtotal,
+        discountAmount: draft.discountAmount,
+        finalAmount: Math.max(0, cart.summary.subtotal - draft.discountAmount),
+        status: 'pending',
+        paymentMethod: draft.paymentMethod,
+        paymentStatus: 'pending',
+        pickupTime: draft.pickupTime,
+        pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
+        note: draft.note?.trim() || undefined,
+      };
+      const created = await customerService.createOrder(order, draft.voucherCode);
+      setOrders((current) => [created, ...current]);
+      cart.clear();
+      setHistory([{ name: 'success', orderId: created.id }]);
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : 'Không thể tạo đơn hàng. Vui lòng thử lại.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   const installApp = async () => {
     if (installPrompt) {
@@ -240,13 +250,28 @@ function CustomerApp() {
               );
               window.alert('Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn đã được lưu lại.');
             } else {
+              void customerService.submitIssue(
+                selectedOrder.id,
+                feedback.tags[0] || 'Báo cáo sự cố',
+                feedback.comment
+              );
               window.alert('Đã gửi báo cáo sự cố. Đội ngũ CSKH GoSavingFood sẽ sớm liên hệ lại.');
             }
             back();
           }}
         />
       );
-    if (route.name === 'notifications') return <NotificationsPage notifications={notifications} onBack={back} onReadAll={() => setNotifications((current) => current.map((item) => ({ ...item, read: true })))} />;
+    if (route.name === 'notifications')
+      return (
+        <NotificationsPage
+          notifications={notifications}
+          onBack={back}
+          onReadAll={() => {
+            void customerService.markAllNotificationsRead();
+            setNotifications((current) => current.map((item) => ({ ...item, read: true })));
+          }}
+        />
+      );
     if (route.name === 'location') return <SelectLocationPage currentLocation={location} onBack={back} onSelect={(nextLocation) => { setLocation(nextLocation); back(); }} />;
     return null;
   };
