@@ -82,12 +82,12 @@ const getBagImage = (name: string, url?: string | null) => {
 };
 
 const getStoreLogo = (url?: string | null) =>
-  (url && url.startsWith('http'))
+  (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')))
     ? url
     : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200';
 
 const getStoreBanner = (url?: string | null) =>
-  (url && url.startsWith('http'))
+  (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')))
     ? url
     : 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800';
 

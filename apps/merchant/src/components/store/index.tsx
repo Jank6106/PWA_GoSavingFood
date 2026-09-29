@@ -1,5 +1,5 @@
-import { Headphones, ImageUp, KeyRound, LogOut, MapPin, Pencil, Phone, Save, Send, ShoppingBag, Star, X } from 'lucide-react';
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { Clock, Headphones, ImageUp, KeyRound, LogOut, MapPin, Pencil, Phone, Save, Send, ShoppingBag, Star, X } from 'lucide-react';
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../../types';
 import { Button, Field, Modal, TextAreaField } from '../ui';
 
@@ -49,8 +49,37 @@ export function StoreCoverHeader({ profile, saving, onSaveImages }: { profile: S
 
 export function StoreInfoFormCard({ profile, saving, onSave }: { profile: StoreProfile; saving: boolean; onSave: (input: StoreUpdateInput) => void }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState<StoreUpdateInput>({ name: profile.name, description: profile.description, phone: profile.phone, address: profile.address });
-  const startEditing = () => { setForm({ name: profile.name, description: profile.description, phone: profile.phone, address: profile.address }); setIsEditing(true); };
+  const [form, setForm] = useState<StoreUpdateInput>({
+    name: profile.name,
+    description: profile.description,
+    phone: profile.phone,
+    address: profile.address,
+    openingHours: profile.openingHours || '08:00',
+    closingHours: profile.closingHours || '22:00',
+  });
+
+  useEffect(() => {
+    setForm({
+      name: profile.name,
+      description: profile.description,
+      phone: profile.phone,
+      address: profile.address,
+      openingHours: profile.openingHours || '08:00',
+      closingHours: profile.closingHours || '22:00',
+    });
+  }, [profile]);
+
+  const startEditing = () => {
+    setForm({
+      name: profile.name,
+      description: profile.description,
+      phone: profile.phone,
+      address: profile.address,
+      openingHours: profile.openingHours || '08:00',
+      closingHours: profile.closingHours || '22:00',
+    });
+    setIsEditing(true);
+  };
   const submit = (event: FormEvent) => { event.preventDefault(); onSave(form); setIsEditing(false); };
   return (
     <section className="merchant-card merchant-settings-card">
@@ -61,11 +90,15 @@ export function StoreInfoFormCard({ profile, saving, onSave }: { profile: StoreP
         {!isEditing && <Button size="small" variant="outline" onClick={startEditing}><Pencil size={15} /> Thay đổi thông tin</Button>}
       </header>
       <form className="merchant-form" onSubmit={submit}>
-        <Field label="Tên cửa hàng" value={form.name} disabled={!isEditing} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
-        <TextAreaField label="Giới thiệu" value={form.description} disabled={!isEditing} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+        <Field label="Tên cửa hàng" value={form.name ?? ''} disabled={!isEditing} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
+        <TextAreaField label="Giới thiệu" value={form.description ?? ''} disabled={!isEditing} onChange={(event) => setForm({ ...form, description: event.target.value })} />
         <div className="merchant-form-grid">
-          <Field label="Số điện thoại" icon={<Phone size={17} />} value={form.phone} disabled={!isEditing} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-          <Field label="Địa chỉ" icon={<MapPin size={17} />} value={form.address} disabled={!isEditing} onChange={(event) => setForm({ ...form, address: event.target.value })} />
+          <Field label="Số điện thoại" icon={<Phone size={17} />} value={form.phone ?? ''} disabled={!isEditing} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+          <Field label="Địa chỉ" icon={<MapPin size={17} />} value={form.address ?? ''} disabled={!isEditing} onChange={(event) => setForm({ ...form, address: event.target.value })} />
+        </div>
+        <div className="merchant-form-grid">
+          <Field label="Giờ mở cửa" type="time" icon={<Clock size={17} />} value={form.openingHours ?? '08:00'} disabled={!isEditing} onChange={(event) => setForm({ ...form, openingHours: event.target.value })} />
+          <Field label="Giờ đóng cửa" type="time" icon={<Clock size={17} />} value={form.closingHours ?? '22:00'} disabled={!isEditing} onChange={(event) => setForm({ ...form, closingHours: event.target.value })} />
         </div>
         {isEditing && (
           <div className="merchant-form-actions">

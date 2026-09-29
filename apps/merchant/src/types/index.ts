@@ -123,7 +123,7 @@ export interface StoreProfile {
   updatedAt: string;
 }
 
-export type StoreUpdateInput = Pick<StoreProfile, 'name' | 'description' | 'phone' | 'address'>;
+export type StoreUpdateInput = Partial<Pick<StoreProfile, 'name' | 'description' | 'phone' | 'address' | 'openingHours' | 'closingHours' | 'category'>>;
 export type StoreImageUpdate = Partial<Pick<StoreProfile, 'coverImage' | 'avatar'>>;
 
 export interface AnalyticsMetrics {

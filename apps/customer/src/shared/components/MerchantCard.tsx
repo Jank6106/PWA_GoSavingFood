@@ -9,6 +9,9 @@ interface MerchantCardProps {
   onClick: (merchant: Merchant) => void;
 }
 
+const isMediaUrl = (url?: string | null) =>
+  Boolean(url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')));
+
 const getMerchantIcon = (merchant: Merchant) => {
   const name = merchant.name.toLowerCase();
   if (name.includes('baguette') || name.includes('bánh')) return Croissant;
@@ -20,11 +23,16 @@ const getMerchantIcon = (merchant: Merchant) => {
 
 export function MerchantCard({ merchant, detail, meta, showArrow = true, onClick }: MerchantCardProps) {
   const Icon = getMerchantIcon(merchant);
+  const hasLogoImage = isMediaUrl(merchant.logo);
 
   return (
     <button type="button" className="customer-merchant-card" onClick={() => onClick(merchant)}>
       <span className="customer-merchant-logo">
-        <Icon size={24} strokeWidth={1.8} />
+        {hasLogoImage ? (
+          <img src={merchant.logo} alt={merchant.name} />
+        ) : (
+          <Icon size={24} strokeWidth={1.8} />
+        )}
       </span>
       <span>
         <strong>{merchant.name}</strong>

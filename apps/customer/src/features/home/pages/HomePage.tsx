@@ -138,10 +138,20 @@ export function HomePage({
         <div className="customer-brand-track">
           {brands.map((brand) => {
             const BrandIcon = getBrandIcon(brand);
+            const isImageLogo = Boolean(
+              brand.logo &&
+                (brand.logo.startsWith('http') ||
+                  brand.logo.startsWith('data:') ||
+                  brand.logo.startsWith('blob:'))
+            );
             return (
               <button key={brand.id} type="button" onClick={() => onOpenBrand(brand)}>
                 <span className="customer-brand-avatar">
-                  <BrandIcon size={20} strokeWidth={1.9} />
+                  {isImageLogo ? (
+                    <img src={brand.logo} alt={brand.name} />
+                  ) : (
+                    <BrandIcon size={20} strokeWidth={1.9} />
+                  )}
                 </span>
                 <strong>{brand.name}</strong>
                 <small>★ {brand.rating}</small>

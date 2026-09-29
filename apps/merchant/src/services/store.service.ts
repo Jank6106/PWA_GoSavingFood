@@ -69,44 +69,31 @@ export async function updateStoreProfile(
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Chưa đăng nhập tài khoản cửa hàng.');
 
-  const { data: current } = await supabase
-    .from('stores')
-    .select('latitude, longitude')
-    .eq('id', storeId)
-    .maybeSingle();
+  const updatePayload: Record<string, any> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (input.name !== undefined) updatePayload.name = input.name;
+  if (input.description !== undefined) updatePayload.description = input.description;
+  if (input.phone !== undefined) updatePayload.phone = input.phone;
+  if (input.address !== undefined) updatePayload.address = input.address;
+  if (input.openingHours !== undefined) {
+    updatePayload.open_time = input.openingHours.length === 5 ? `${input.openingHours}:00` : input.openingHours;
+  }
+  if (input.closingHours !== undefined) {
+    updatePayload.close_time = input.closingHours.length === 5 ? `${input.closingHours}:00` : input.closingHours;
+  }
+  if (input.category !== undefined) {
+    updatePayload.food_categories = [input.category];
+  }
 
-  if (current && current.latitude != null && current.longitude != null) {
-    // RPC chuẩn của backend: cập nhật vị trí + các trường trong 1 transaction
-    const { error } = await supabase.rpc('update_store_location_and_fields', {
-      p_owner_user_id: user.id,
-      p_latitude: Number(current.latitude),
-      p_longitude: Number(current.longitude),
-      p_updates: {
-        name: input.name,
-        description: input.description,
-        phone: input.phone,
-        address: input.address,
-      },
-    });
-    if (error) {
-      console.warn('Cập nhật store qua RPC lỗi:', error.message);
-      throw new Error('Không thể lưu thông tin cửa hàng.');
-    }
-  } else {
-    const { error } = await supabase
-      .from('stores')
-      .update({
-        name: input.name,
-        description: input.description,
-        phone: input.phone,
-        address: input.address,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', storeId);
-    if (error) {
-      console.warn('Cập nhật store trên Supabase lỗi:', error.message);
-      throw new Error('Không thể lưu thông tin cửa hàng.');
-    }
+  const { error } = await supabase
+    .from('stores')
+    .update(updatePayload)
+    .eq('id', storeId);
+
+  if (error) {
+    console.warn('Cập nhật store trên Supabase lỗi:', error.message);
+    throw new Error('Không thể lưu thông tin cửa hàng.');
   }
 
   return fetchStoreProfile(storeId);

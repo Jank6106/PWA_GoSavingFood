@@ -64,12 +64,19 @@ export function useCustomerCatalog() {
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibility);
 
-    // 2. Đồng bộ realtime từ Supabase khi có thay đổi trên bảng surprise_bags
+    // 2. Đồng bộ realtime từ Supabase khi có thay đổi trên bảng surprise_bags hoặc stores
     const channel = supabase
-      .channel('catalog-surprise-bags')
+      .channel('catalog-realtime-sync')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'surprise_bags' },
+        () => {
+          void fetchCatalog(false);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'stores' },
         () => {
           void fetchCatalog(false);
         }
