@@ -346,11 +346,15 @@ export const customerService = {
     return { brand, stores: [merchant] };
   },
 
-  async getOrders(): Promise<Order[]> {
+  async getOrders(userId?: string): Promise<Order[]> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      let currentUserId = userId;
+      if (!currentUserId) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        currentUserId = user?.id;
+      }
 
       const query = supabase
         .from('orders')
@@ -363,8 +367,8 @@ export const customerService = {
         )
         .order('created_at', { ascending: false });
 
-      if (user) {
-        query.eq('customer_id', user.id);
+      if (currentUserId) {
+        query.eq('customer_id', currentUserId);
       }
 
       const { data, error } = await query;

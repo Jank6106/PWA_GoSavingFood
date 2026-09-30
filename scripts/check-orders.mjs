@@ -12,12 +12,9 @@ const client = new pg.Client({
 
 async function check() {
   await client.connect();
-  const uRes = await client.query("SELECT id, email, role, name, phone FROM public.users WHERE id = '74b19be9-5a56-4034-888d-d1d33fcdedb4'");
-  console.log('Customer User:', uRes.rows);
-
-  const mRes = await client.query("SELECT s.id, s.name, s.owner_user_id, u.email FROM public.stores s JOIN public.users u ON u.id = s.owner_user_id WHERE s.id = '799e644e-2f82-4a85-ba12-b194cf4cc547'");
-  console.log('Store & Owner:', mRes.rows);
-
+  const res = await client.query("SELECT id, status, customer_id, store_id, qr_code, created_at FROM public.orders WHERE id::text ILIKE '49406b%' OR qr_code ILIKE '%49406b%';");
+  console.log('Order GSF-49406B:');
+  console.table(res.rows);
   await client.end();
 }
 

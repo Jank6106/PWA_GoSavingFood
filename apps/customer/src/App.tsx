@@ -86,14 +86,47 @@ function CustomerApp() {
 
   useEffect(() => {
     if (!auth.user) return;
-    void customerService.getOrders().then((items) => setOrders(items));
+    void customerService.getOrders(auth.user.id).then((items) => {
+      if (items && items.length > 0) setOrders(items);
+    });
     void customerService.getNotifications().then((items) => setNotifications(items));
 
     const channel = customerService.subscribeToCustomerUpdates(
       auth.user.id,
-      () => {
-        // Cập nhật ngay danh sách đơn hàng khi trạng thái thay đổi trên server
-        void customerService.getOrders().then((items) => setOrders(items));
+      (orderPayload) => {
+        console.log('[Realtime Customer App] onOrderChange received:', orderPayload?.eventType, orderPayload?.new?.status, orderPayload?.new?.id);
+        if (orderPayload?.new && orderPayload.new.id) {
+          const rawStatus = orderPayload.new.status;
+          const normalizedStatus = rawStatus === 'picked_up' ? 'completed' : rawStatus;
+          setOrders((current) => {
+            const exists = current.some(
+              (o) => o.id.toLowerCase() === String(orderPayload.new.id).toLowerCase()
+            );
+            if (exists) {
+              return current.map((order) =>
+                order.id.toLowerCase() === String(orderPayload.new.id).toLowerCase()
+                  ? {
+                      ...order,
+                      status: normalizedStatus,
+                      updatedAt: orderPayload.new.updated_at || order.createdAt,
+                      completedAt: orderPayload.new.completed_at || order.completedAt,
+                      cancelledAt: orderPayload.new.cancelled_at || order.cancelledAt,
+                      cancelReason: orderPayload.new.cancel_reason || order.cancelReason,
+                      paymentStatus: orderPayload.new.payment_status || order.paymentStatus,
+                    }
+                  : order
+              );
+            }
+            return current;
+          });
+        }
+
+        // Luôn đồng bộ dữ liệu mới nhất từ server ở background
+        if (auth.user?.id) {
+          void customerService.getOrders(auth.user.id).then((items) => {
+            if (items && items.length > 0) setOrders(items);
+          });
+        }
       },
       (notificationPayload) => {
         // Cập nhật danh sách thông báo và bật toast alert khi có thông báo mới
@@ -109,7 +142,7 @@ function CustomerApp() {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [auth.user]);
+  }, [auth.user?.id]);
 
   const route = history[history.length - 1];
   const activeTab: CustomerTab = route.name === 'tabs' ? route.tab : 'home';
@@ -126,7 +159,7 @@ function CustomerApp() {
     catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? null;
   const selectedBrand = route.name === 'brand' ? catalog.brands.find((brand) => brand.id === route.id) ?? null : null;
   const selectedOrderId = route.name === 'order' || route.name === 'review' || route.name === 'report' ? route.id : route.name === 'success' ? route.orderId : null;
-  const selectedOrder = selectedOrderId ? orders.find((order) => order.id === selectedOrderId) ?? null : null;
+  const selectedOrder = selectedOrderId ? orders.find((order) => order.id.toLowerCase() === selectedOrderId.toLowerCase()) ?? null : null;
 
   const addToCart = (bag: SurpriseBag, quantity = 1) => {
     cart.addItem(bag, quantity);
@@ -216,8 +249,30 @@ function CustomerApp() {
     if (route.name === 'brand') return <BrandDetailPage brand={selectedBrand} stores={catalog.merchants.filter((merchant) => merchant.brandId === route.id)} onBack={back} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} />;
     if (route.name === 'checkout' && auth.user) return <CheckoutPage items={cart.items} subtotal={cart.summary.subtotal} user={auth.user} vouchers={vouchers} onBack={back} onContinue={(draft) => push({ name: 'payment', draft })} />;
     if (route.name === 'payment') return <PaymentPage draft={route.draft} total={Math.max(0, cart.summary.subtotal - route.draft.discountAmount)} isSubmitting={isSubmitting} onBack={back} onConfirm={() => confirmPayment(route.draft)} />;
-    if (route.name === 'success' && selectedOrder) return <OrderSuccessPage order={selectedOrder} onOrders={() => openTab('orders')} onHome={home} />;
-    if (route.name === 'order' && selectedOrder)
+    if (route.name === 'success') {
+      if (!selectedOrder) {
+        return (
+          <div className="customer-screen customer-screen--center" style={{ padding: '2rem', textAlign: 'center' }}>
+            <p>Đang tải đơn hàng...</p>
+            <button type="button" className="customer-secondary-btn" onClick={() => openTab('orders')} style={{ marginTop: '1rem' }}>
+              Xem danh sách đơn
+            </button>
+          </div>
+        );
+      }
+      return <OrderSuccessPage order={selectedOrder} onOrders={() => openTab('orders')} onHome={home} />;
+    }
+    if (route.name === 'order') {
+      if (!selectedOrder) {
+        return (
+          <div className="customer-screen customer-screen--center" style={{ padding: '2rem', textAlign: 'center' }}>
+            <p>Đang tải chi tiết đơn hàng...</p>
+            <button type="button" className="customer-secondary-btn" onClick={() => openTab('orders')} style={{ marginTop: '1rem' }}>
+              Quay lại danh sách đơn
+            </button>
+          </div>
+        );
+      }
       return (
         <OrderDetailPage
           order={selectedOrder}
@@ -233,7 +288,7 @@ function CustomerApp() {
           }}
           onUpdateOrder={(updated) => {
             setOrders((prev) =>
-              prev.map((o) => (o.id === updated.id ? updated : o))
+              prev.map((o) => (o.id.toLowerCase() === updated.id.toLowerCase() ? updated : o))
             );
           }}
           onReorder={(order) => {
@@ -245,6 +300,7 @@ function CustomerApp() {
           }}
         />
       );
+    }
     if ((route.name === 'review' || route.name === 'report') && selectedOrder)
       return (
         <OrderFeedbackPage
