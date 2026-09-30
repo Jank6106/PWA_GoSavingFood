@@ -23,6 +23,7 @@ import { useCart } from './hooks/useCart';
 import { useAuth } from './hooks/useAuth';
 import { useCustomerCatalog } from './hooks/useCustomerCatalog';
 import { customerService } from './services/customer.service';
+import { supabase } from './services/supabase';
 import type {
   AppRoute,
   CheckoutDraft,
@@ -106,7 +107,7 @@ function CustomerApp() {
     );
 
     return () => {
-      void channel.unsubscribe();
+      void supabase.removeChannel(channel);
     };
   }, [auth.user]);
 

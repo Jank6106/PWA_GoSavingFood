@@ -385,7 +385,7 @@ export const customerService = {
           totalDiscountPrice: Number(o.total_discount_price) || Number(o.final_amount),
           discountAmount: Number(o.discount_amount) || 0,
           finalAmount: Number(o.final_amount) || 0,
-          status: o.status,
+          status: o.status === 'picked_up' ? 'completed' : o.status,
           paymentMethod: o.payment_method || 'cash',
           paymentStatus: o.payment_status || (o.status === 'pending' ? 'pending' : 'success'),
           pickupTime: o.pickup_time || '11:00 - 14:00',
@@ -471,6 +471,7 @@ export const customerService = {
           filter: `customer_id=eq.${userId}`,
         },
         (payload) => {
+          console.log('[Realtime Customer] Order changed:', payload.eventType, (payload.new as any)?.status);
           onOrderChange(payload);
         }
       )
@@ -483,10 +484,14 @@ export const customerService = {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
+          console.log('[Realtime Customer] Notification received:', (payload.new as any)?.title);
           onNotificationChange(payload);
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (err) console.warn('[Realtime Customer] Channel subscription error:', err);
+        else console.log('[Realtime Customer] Channel status:', status);
+      });
   },
 
   async getVouchers(): Promise<Voucher[]> {

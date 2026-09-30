@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertCircle,
   Calendar,
@@ -94,6 +94,11 @@ export function OrderDetailPage({
   const [selectedCancelReason, setSelectedCancelReason] = useState(CANCEL_REASONS[0]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    setCurrentOrder(order);
+    setNoteValue(order.note || '');
+  }, [order]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 2500);
@@ -129,7 +134,7 @@ export function OrderDetailPage({
   const isReady = status === 'ready_for_pickup';
   const isPending = status === 'pending';
   const isConfirmedOrPreparing = status === 'confirmed' || status === 'preparing';
-  const isCompleted = status === 'completed';
+  const isCompleted = status === 'completed' || (status as string) === 'picked_up';
   const isCancelled = status === 'cancelled';
 
   const savingsAmount = Math.max(

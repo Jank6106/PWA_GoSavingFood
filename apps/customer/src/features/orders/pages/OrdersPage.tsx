@@ -14,6 +14,7 @@ interface OrdersPageProps {
 const filters: Array<{ id: 'all' | OrderStatus; label: string }> = [
   { id: 'all', label: 'Tất cả' },
   { id: 'pending', label: 'Đang xử lý' },
+  { id: 'confirmed', label: 'Đã xác nhận' },
   { id: 'ready_for_pickup', label: 'Chờ lấy' },
   { id: 'completed', label: 'Hoàn thành' },
   { id: 'cancelled', label: 'Đã hủy' },
@@ -26,11 +27,16 @@ export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: Or
       orders.filter((order) => {
         if (filter === 'all') return true;
         if (filter === 'pending') {
-          return (
-            order.status === 'pending' ||
-            order.status === 'confirmed' ||
-            order.status === 'preparing'
-          );
+          return order.status === 'pending';
+        }
+        if (filter === 'confirmed') {
+          return order.status === 'confirmed' || order.status === 'preparing';
+        }
+        if (filter === 'ready_for_pickup') {
+          return order.status === 'ready_for_pickup';
+        }
+        if (filter === 'completed') {
+          return order.status === 'completed' || order.status === 'picked_up';
         }
         return order.status === filter;
       }),

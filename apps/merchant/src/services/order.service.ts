@@ -188,7 +188,9 @@ export async function verifyOrderQR(orderId: string, code: string): Promise<bool
   const orderCode = `GSF-${String(order.id).slice(0, 6).toUpperCase()}`;
   const matches =
     normalized === qrCode ||
+    qrCode.includes(normalized) ||
     normalized.includes(orderCode) ||
+    orderCode.includes(normalized) ||
     normalized.includes(String(order.id).toUpperCase());
   if (!matches) return false;
 
@@ -215,10 +217,14 @@ export function subscribeToStoreOrders(
         filter: `store_id=eq.${storeId}`,
       },
       (payload) => {
+        console.log('[Realtime Merchant] Store orders changed:', payload.eventType, (payload.new as any)?.status);
         onOrderChange(payload);
       }
     )
-    .subscribe();
+    .subscribe((status, err) => {
+      if (err) console.warn('[Realtime Merchant] Channel subscription error:', err);
+      else console.log('[Realtime Merchant] Channel status:', status);
+    });
 }
 
 export async function fetchCompletedBagQuantity(storeId: string): Promise<number> {
