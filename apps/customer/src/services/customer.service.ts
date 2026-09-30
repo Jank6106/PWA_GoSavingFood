@@ -679,7 +679,8 @@ export const customerService = {
   },
   async createOrder(
     order: Omit<Order, 'id' | 'orderCode' | 'createdAt'>,
-    voucherCode?: string
+    voucherCode?: string,
+    customerInfo?: { name?: string; phone?: string }
   ): Promise<Order> {
     const {
       data: { user },
@@ -687,6 +688,17 @@ export const customerService = {
 
     if (!user) {
       throw new Error('Vui lòng đăng nhập trước khi đặt hàng.');
+    }
+
+    if (customerInfo?.name?.trim() || customerInfo?.phone?.trim()) {
+      try {
+        const updates: Record<string, string> = { updated_at: new Date().toISOString() };
+        if (customerInfo.name?.trim()) updates.name = customerInfo.name.trim();
+        if (customerInfo.phone?.trim()) updates.phone = customerInfo.phone.trim();
+        await supabase.from('users').update(updates).eq('id', user.id);
+      } catch (err) {
+        console.warn('Cập nhật thông tin khách hàng vào bảng users lỗi:', err);
+      }
     }
 
     const orderId = crypto.randomUUID();

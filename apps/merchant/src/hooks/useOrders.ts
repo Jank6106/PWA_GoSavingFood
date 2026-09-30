@@ -8,7 +8,7 @@ import {
 import type { MerchantOrder, OrderStatus, OrderStatusFilter } from '../types';
 import { useToast } from './useToast';
 
-export function useOrders(storeId: string) {
+export function useOrders(storeId: string, targetOrderId?: string | null) {
   const [allOrders, setAllOrders] = useState<MerchantOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +49,32 @@ export function useOrders(storeId: string) {
     };
   }, [loadOrders, showToast, storeId]);
 
+  useEffect(() => {
+    if (!targetOrderId) return;
+    const findAndSelect = () => {
+      const target = allOrders.find(
+        (o) =>
+          o.id.toLowerCase() === targetOrderId.toLowerCase() ||
+          o.orderCode.toLowerCase() === targetOrderId.toLowerCase()
+      );
+      if (target) {
+        if (['completed', 'cancelled'].includes(target.status)) {
+          setStatusFilter(target.status);
+        } else {
+          setStatusFilter('all');
+        }
+        setSelectedOrder(target);
+        setIsDetailModalOpen(true);
+        return true;
+      }
+      return false;
+    };
+
+    if (!findAndSelect()) {
+      void loadOrders();
+    }
+  }, [targetOrderId, allOrders, loadOrders]);
+
   const orders = useMemo(
     () =>
       allOrders.filter(
@@ -74,7 +100,7 @@ export function useOrders(storeId: string) {
     [allOrders]
   );
 
-  const transition = async (id: string, status: OrderStatus, message: string) => {
+  const transition = async (id: string, status: OrderStatus, message: string): Promise<boolean> => {
     setSaving(true);
     try {
       const updated = await updateMerchantOrderStatus(id, status);
@@ -83,8 +109,10 @@ export function useOrders(storeId: string) {
       );
       setSelectedOrder((order) => (order?.id === id ? updated : order));
       showToast(message);
+      return true;
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Không thể cập nhật đơn hàng.');
+      return false;
     } finally {
       setSaving(false);
     }

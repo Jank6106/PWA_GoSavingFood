@@ -310,8 +310,8 @@ h1, h2, h3, p { margin: 0; }
 .merchant-settings-actions > button.is-danger > span { background: var(--danger-soft); }
 
 /* Modal and notifications */
-.merchant-modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; overflow-y: auto; place-items: center; padding: 18px; background: rgba(0,61,39,.62); backdrop-filter: blur(5px); }
-.merchant-modal { width: min(100%, 520px); max-height: min(88vh, 900px); overflow: auto; border: 1px solid var(--border); border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(0,61,39,.3); }
+.merchant-modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; overflow-y: auto; place-items: center; padding: 18px; background: rgba(71, 85, 105, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.merchant-modal { width: min(100%, 520px); max-height: min(88vh, 900px); overflow: auto; border: 1px solid #e2e8f0; border-radius: 22px; background: #fff; box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18), 0 4px 16px rgba(15, 23, 42, 0.08); }
 .merchant-modal--small { max-width: 420px; }
 .merchant-modal--large { max-width: 680px; }
 .merchant-modal > header { position: sticky; z-index: 3; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px; border-bottom: 1px solid #edf4ef; background: #fff; }

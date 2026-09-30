@@ -56,9 +56,7 @@ const mapDbOrder = (o: any): MerchantOrder => {
       'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
     status: mapDbStatusToUi(String(o.status)),
     createdAt: o.created_at || new Date().toISOString(),
-    placedAt: o.created_at
-      ? new Date(o.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-      : '',
+    placedAt: o.created_at || new Date().toISOString(),
     pickupTime: o.pickup_time
       ? new Date(o.pickup_time).toLocaleString('vi-VN', {
           hour: '2-digit',

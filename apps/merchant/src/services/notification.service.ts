@@ -25,16 +25,24 @@ const inferNotificationType = (row: any): NotificationItem['type'] => {
   return 'new_order';
 };
 
-const mapNotification = (row: any): NotificationItem => ({
-  id: row.id,
-  orderId: row?.data?.orderId,
-  title: row.title || 'Thông báo',
-  message: row.body || '',
-  type: inferNotificationType(row),
-  isRead: Boolean(row.is_read),
-  createdAt: row.created_at || new Date().toISOString(),
-  timeAgo: formatTimeAgo(row.created_at),
-});
+const mapNotification = (row: any): NotificationItem => {
+  const orderId = row?.data?.orderId || row?.data?.order_id || row?.data?.id;
+  const orderCode =
+    row?.data?.orderCode ||
+    row?.data?.order_code ||
+    (orderId ? `GSF-${String(orderId).slice(0, 6).toUpperCase()}` : undefined);
+  return {
+    id: row.id,
+    orderId,
+    orderCode,
+    title: row.title || 'Thông báo',
+    message: row.body || '',
+    type: inferNotificationType(row),
+    isRead: Boolean(row.is_read),
+    createdAt: row.created_at || new Date().toISOString(),
+    timeAgo: formatTimeAgo(row.created_at),
+  };
+};
 
 async function fetchNotifications(userId: string): Promise<NotificationItem[]> {
   if (!userId) return [];
@@ -72,9 +80,31 @@ async function markAllAsRead(userId: string): Promise<NotificationItem[]> {
   return fetchNotifications(userId);
 }
 
+export function subscribeToNotifications(
+  userId: string,
+  onNewNotification: (payload: any) => void
+) {
+  return supabase
+    .channel(`merchant-notifications-${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        onNewNotification(payload.new);
+      }
+    )
+    .subscribe();
+}
+
 export const notificationService = {
   fetchNotifications,
   markAsRead,
   markAllAsRead,
+  subscribeToNotifications,
 };
 

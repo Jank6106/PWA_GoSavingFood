@@ -151,7 +151,10 @@ function CustomerApp() {
         pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
         note: draft.note?.trim() || undefined,
       };
-      const created = await customerService.createOrder(order, draft.voucherCode);
+      const created = await customerService.createOrder(order, draft.voucherCode, {
+        name: draft.customerName,
+        phone: draft.phone,
+      });
       setOrders((current) => [created, ...current]);
       cart.clear();
       setHistory([{ name: 'success', orderId: created.id }]);
