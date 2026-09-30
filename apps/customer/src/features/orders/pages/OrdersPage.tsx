@@ -13,7 +13,7 @@ interface OrdersPageProps {
 
 const filters: Array<{ id: 'all' | OrderStatus; label: string }> = [
   { id: 'all', label: 'Tất cả' },
-  { id: 'pending', label: 'Chờ xác nhận' },
+  { id: 'pending', label: 'Đang xử lý' },
   { id: 'ready_for_pickup', label: 'Chờ lấy' },
   { id: 'completed', label: 'Hoàn thành' },
   { id: 'cancelled', label: 'Đã hủy' },
@@ -21,7 +21,21 @@ const filters: Array<{ id: 'all' | OrderStatus; label: string }> = [
 
 export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: OrdersPageProps) {
   const [filter, setFilter] = useState<'all' | OrderStatus>('all');
-  const visibleOrders = useMemo(() => orders.filter((order) => filter === 'all' || order.status === filter), [filter, orders]);
+  const visibleOrders = useMemo(
+    () =>
+      orders.filter((order) => {
+        if (filter === 'all') return true;
+        if (filter === 'pending') {
+          return (
+            order.status === 'pending' ||
+            order.status === 'confirmed' ||
+            order.status === 'preparing'
+          );
+        }
+        return order.status === filter;
+      }),
+    [filter, orders]
+  );
   if (!isAuthenticated) return <AuthRequiredState onLogin={onLogin} />;
   return (
     <div className="customer-screen">

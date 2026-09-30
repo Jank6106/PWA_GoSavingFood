@@ -37,9 +37,13 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
       void loadOrders();
     }, 0);
 
-    // Kích hoạt Supabase Realtime lắng nghe đơn mới
-    const channel = subscribeToStoreOrders(storeId, () => {
-      showToast('Có đơn hàng mới vừa được đặt!');
+    // Kích hoạt Supabase Realtime lắng nghe đơn mới & cập nhật đơn hàng
+    const channel = subscribeToStoreOrders(storeId, (payload) => {
+      if (payload.eventType === 'INSERT') {
+        showToast('Có đơn hàng mới vừa được đặt!');
+      } else if (payload.eventType === 'UPDATE' && payload.new?.status === 'cancelled') {
+        showToast('Một đơn hàng vừa được cập nhật sang đã hủy.');
+      }
       void loadOrders();
     });
 

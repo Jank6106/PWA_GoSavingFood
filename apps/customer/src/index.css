@@ -494,6 +494,8 @@ img { display: block; max-width: 100%; }
 .customer-order-status-card--ready_for_pickup { background: var(--color-primary-soft); border-color: #bed8c6; }
 .customer-order-status-card--pending { background: #fffbeb; border-color: #fde68a; }
 .customer-order-status-card--pending h1 { color: #b45309; }
+.customer-order-status-card--confirmed, .customer-order-status-card--preparing { background: #f0fdf9; border-color: #a7f3d0; }
+.customer-order-status-card--confirmed h1, .customer-order-status-card--preparing h1 { color: #047857; }
 .customer-order-status-card--completed { background: #f0fdf4; border-color: #bbf7d0; }
 .customer-order-status-card--completed h1 { color: #15803d; }
 .customer-order-status-card--cancelled { background: #fef2f2; border-color: #fecaca; }

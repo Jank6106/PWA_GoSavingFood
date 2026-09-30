@@ -85,7 +85,29 @@ function CustomerApp() {
 
   useEffect(() => {
     if (!auth.user) return;
+    void customerService.getOrders().then((items) => setOrders(items));
     void customerService.getNotifications().then((items) => setNotifications(items));
+
+    const channel = customerService.subscribeToCustomerUpdates(
+      auth.user.id,
+      () => {
+        // Cập nhật ngay danh sách đơn hàng khi trạng thái thay đổi trên server
+        void customerService.getOrders().then((items) => setOrders(items));
+      },
+      (notificationPayload) => {
+        // Cập nhật danh sách thông báo và bật toast alert khi có thông báo mới
+        void customerService.getNotifications().then((items) => setNotifications(items));
+        if (notificationPayload.eventType === 'INSERT' && notificationPayload.new) {
+          const title = notificationPayload.new.title || 'Thông báo mới';
+          const body = notificationPayload.new.body || '';
+          setToastMessage(body ? `${title}: ${body}` : title);
+        }
+      }
+    );
+
+    return () => {
+      void channel.unsubscribe();
+    };
   }, [auth.user]);
 
   const route = history[history.length - 1];

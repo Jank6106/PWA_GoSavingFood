@@ -3,7 +3,7 @@ import type { OrderStatus } from '../types/customer.types';
 
 const statusMeta: Record<OrderStatus, { label: string; variant: 'warning' | 'success' | 'neutral' | 'error' }> = {
   pending: { label: 'Chờ xác nhận', variant: 'warning' },
-  confirmed: { label: 'Chờ xác nhận', variant: 'warning' },
+  confirmed: { label: 'Đã xác nhận', variant: 'warning' },
   preparing: { label: 'Đang chuẩn bị', variant: 'warning' },
   ready_for_pickup: { label: 'Chờ lấy', variant: 'success' },
   completed: { label: 'Đã hoàn thành', variant: 'neutral' },

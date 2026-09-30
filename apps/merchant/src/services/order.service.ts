@@ -202,20 +202,20 @@ export async function verifyOrderQR(orderId: string, code: string): Promise<bool
 
 export function subscribeToStoreOrders(
   storeId: string,
-  onNewOrder: (payload: any) => void
+  onOrderChange: (payload: any) => void
 ) {
   return supabase
     .channel(`merchant-orders-${storeId}`)
     .on(
       'postgres_changes',
       {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
         table: 'orders',
         filter: `store_id=eq.${storeId}`,
       },
       (payload) => {
-        onNewOrder(payload.new);
+        onOrderChange(payload);
       }
     )
     .subscribe();

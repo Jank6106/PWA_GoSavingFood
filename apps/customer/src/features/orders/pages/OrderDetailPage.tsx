@@ -128,6 +128,7 @@ export function OrderDetailPage({
   const status = currentOrder.status;
   const isReady = status === 'ready_for_pickup';
   const isPending = status === 'pending';
+  const isConfirmedOrPreparing = status === 'confirmed' || status === 'preparing';
   const isCompleted = status === 'completed';
   const isCancelled = status === 'cancelled';
 
@@ -172,6 +173,16 @@ export function OrderDetailPage({
             <p>
               Cửa hàng đang kiểm tra thực phẩm trong ca và sẽ xác nhận trong ít
               phút. Bạn có thể thêm ghi chú hoặc hủy đơn nếu cần.
+            </p>
+          </>
+        )}
+
+        {isConfirmedOrPreparing && (
+          <>
+            <h1>Quán đã xác nhận & đang chuẩn bị</h1>
+            <p>
+              Cửa hàng đã xác nhận đơn và đang chuẩn bị các phần ăn cho bạn.
+              Chúng tôi sẽ thông báo ngay khi đơn hàng sẵn sàng để lấy!
             </p>
           </>
         )}

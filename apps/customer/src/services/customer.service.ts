@@ -455,6 +455,40 @@ export const customerService = {
     }
   },
 
+  subscribeToCustomerUpdates(
+    userId: string,
+    onOrderChange: (payload: any) => void,
+    onNotificationChange: (payload: any) => void
+  ) {
+    return supabase
+      .channel(`customer-realtime-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `customer_id=eq.${userId}`,
+        },
+        (payload) => {
+          onOrderChange(payload);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          onNotificationChange(payload);
+        }
+      )
+      .subscribe();
+  },
+
   async getVouchers(): Promise<Voucher[]> {
     try {
       const { data, error } = await supabase
