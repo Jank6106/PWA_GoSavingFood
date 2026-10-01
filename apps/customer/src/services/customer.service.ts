@@ -23,7 +23,7 @@ export const HOME_BANNERS: Banner[] = [
     description: 'Túi bất ngờ từ các cửa hàng quanh bạn, giảm đến 70%.',
     accent: 'green',
     icon: 'bag',
-    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=720&q=75',
   },
   {
     id: 'banner-2',
@@ -32,7 +32,7 @@ export const HOME_BANNERS: Banner[] = [
     description: 'Dùng mã HELLOGSF khi thanh toán đơn từ 50.000đ.',
     accent: 'yellow',
     icon: 'ticket',
-    imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=720&q=75',
   },
   {
     id: 'banner-3',
@@ -41,7 +41,7 @@ export const HOME_BANNERS: Banner[] = [
     description: 'Một lựa chọn nhỏ, thêm một ngày tốt cho hành tinh.',
     accent: 'mint',
     icon: 'globe',
-    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=720&q=75',
   },
 ];
 
@@ -68,29 +68,40 @@ const formatRelativeTime = (iso?: string | null) => {
   return new Date(iso).toLocaleDateString('vi-VN');
 };
 
+export const optimizeImageUrl = (url?: string | null, width = 480, quality = 75): string => {
+  if (!url) return '';
+  if (url.includes('images.unsplash.com')) {
+    const base = url.split('?')[0];
+    return `${base}?auto=format&fit=crop&w=${width}&q=${quality}`;
+  }
+  return url;
+};
+
 const getBagImage = (name: string, url?: string | null) => {
-  if (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:'))) return url;
+  if (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:'))) {
+    return optimizeImageUrl(url, 480, 75);
+  }
   const n = (name || '').toLowerCase();
   if (n.includes('salad'))
-    return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600';
+    return optimizeImageUrl('https://images.unsplash.com/photo-1512621776951-a57141f2eefd', 480, 75);
   if (n.includes('nước ép') || n.includes('thơm') || n.includes('uống'))
-    return 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=600';
+    return optimizeImageUrl('https://images.unsplash.com/photo-1613478223719-2ab802602423', 480, 75);
   if (n.includes('trái cây') || n.includes('hoa quả'))
-    return 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600';
+    return optimizeImageUrl('https://images.unsplash.com/photo-1619566636858-adf3ef46400b', 480, 75);
   if (n.includes('bánh'))
-    return 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600';
-  return 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600';
+    return optimizeImageUrl('https://images.unsplash.com/photo-1509440159596-0249088772ff', 480, 75);
+  return optimizeImageUrl('https://images.unsplash.com/photo-1540420773420-3366772f4999', 480, 75);
 };
 
 const getStoreLogo = (url?: string | null) =>
   (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')))
-    ? url
-    : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200';
+    ? optimizeImageUrl(url, 120, 80)
+    : optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 120, 80);
 
 const getStoreBanner = (url?: string | null) =>
   (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')))
-    ? url
-    : 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800';
+    ? optimizeImageUrl(url, 640, 75)
+    : optimizeImageUrl('https://images.unsplash.com/photo-1540420773420-3366772f4999', 640, 75);
 
 const mapCreateOrderError = (error: { message?: string; details?: string } | null): string => {
   const raw = `${error?.message ?? ''} ${error?.details ?? ''}`;

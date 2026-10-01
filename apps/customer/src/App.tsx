@@ -1,28 +1,39 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { AppLayout } from './app/layouts/AppLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthModal } from './features/auth/components/AuthModal';
 import { CartPage } from './features/cart/pages/CartPage';
 import { BagDetailPage } from './features/catalog/pages/BagDetailPage';
-import { BagsPage } from './features/catalog/pages/BagsPage';
-import { BrandDetailPage } from './features/catalog/pages/BrandDetailPage';
-import { MerchantDetailPage } from './features/catalog/pages/MerchantDetailPage';
-import { CheckoutPage } from './features/checkout/pages/CheckoutPage';
-import { OrderSuccessPage } from './features/checkout/pages/OrderSuccessPage';
-import { PaymentPage } from './features/checkout/pages/PaymentPage';
 import { HomePage } from './features/home/pages/HomePage';
-import { SelectLocationPage } from './features/location/pages/SelectLocationPage';
-import { NotificationsPage } from './features/notifications/pages/NotificationsPage';
-import { OrderDetailPage } from './features/orders/pages/OrderDetailPage';
-import { OrderFeedbackPage } from './features/orders/pages/OrderFeedbackPage';
 import { OrdersPage } from './features/orders/pages/OrdersPage';
 import { ProfilePage } from './features/profile/pages/ProfilePage';
-import { SearchPage } from './features/search/pages/SearchPage';
 import { useCart } from './hooks/useCart';
 import { useAuth } from './hooks/useAuth';
 import { useCustomerCatalog } from './hooks/useCustomerCatalog';
 import { customerService, HANOI_BAGS } from './services/customer.service';
+
+// Lazy-load các trang nặng hoặc chứa mapbox-gl để giảm 70% dung lượng bundle ban đầu
+const SearchPage = lazy(() => import('./features/search/pages/SearchPage').then((m) => ({ default: m.SearchPage })));
+const SelectLocationPage = lazy(() => import('./features/location/pages/SelectLocationPage').then((m) => ({ default: m.SelectLocationPage })));
+const CheckoutPage = lazy(() => import('./features/checkout/pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
+const PaymentPage = lazy(() => import('./features/checkout/pages/PaymentPage').then((m) => ({ default: m.PaymentPage })));
+const OrderSuccessPage = lazy(() => import('./features/checkout/pages/OrderSuccessPage').then((m) => ({ default: m.OrderSuccessPage })));
+const OrderDetailPage = lazy(() => import('./features/orders/pages/OrderDetailPage').then((m) => ({ default: m.OrderDetailPage })));
+const OrderFeedbackPage = lazy(() => import('./features/orders/pages/OrderFeedbackPage').then((m) => ({ default: m.OrderFeedbackPage })));
+const NotificationsPage = lazy(() => import('./features/notifications/pages/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
+const BagsPage = lazy(() => import('./features/catalog/pages/BagsPage').then((m) => ({ default: m.BagsPage })));
+const MerchantDetailPage = lazy(() => import('./features/catalog/pages/MerchantDetailPage').then((m) => ({ default: m.MerchantDetailPage })));
+const BrandDetailPage = lazy(() => import('./features/catalog/pages/BrandDetailPage').then((m) => ({ default: m.BrandDetailPage })));
+
+function ScreenLoadingFallback() {
+  return (
+    <div className="customer-screen customer-screen--center" style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
+      <div className="customer-skeleton" style={{ width: '48px', height: '48px', borderRadius: '50%', margin: '0 auto 1rem' }} />
+      <p style={{ color: '#718078', fontSize: '14px', margin: 0 }}>Đang mở trang...</p>
+    </div>
+  );
+}
 import { mapboxService } from './services/mapbox.service';
 import { supabase } from './services/supabase';
 
@@ -685,7 +696,9 @@ function CustomerApp() {
         onLocationClick={() => push({ name: 'location' })}
         onNotificationClick={() => push({ name: 'notifications' })}
       >
-        {renderScreen()}
+        <Suspense fallback={<ScreenLoadingFallback />}>
+          {renderScreen()}
+        </Suspense>
       </AppLayout>
 
       {toastMessage && (

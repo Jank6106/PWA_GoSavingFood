@@ -59,12 +59,14 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
   useEffect(() => {
     void fetchCatalog(true);
 
-    // 1. Đồng bộ khi user quay lại tab Customer app
+    // 1. Đồng bộ khi user quay lại tab Customer app (chỉ re-fetch khi đã rời tab hơn 3 phút)
     const handleFocus = () => {
-      void fetchCatalog(false);
+      if (Date.now() - lastFetchTimeRef.current > 180000) {
+        void fetchCatalog(false);
+      }
     };
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && Date.now() - lastFetchTimeRef.current > 180000) {
         void fetchCatalog(false);
       }
     };
