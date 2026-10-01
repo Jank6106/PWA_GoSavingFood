@@ -40,7 +40,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 function CustomerApp() {
-  const catalog = useCustomerCatalog();
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(undefined);
+  const catalog = useCustomerCatalog(coords);
   const cart = useCart();
   const auth = useAuth();
   const [history, setHistory] = useState<AppRoute[]>([{ name: 'tabs', tab: 'home' }]);
@@ -354,7 +355,20 @@ function CustomerApp() {
           }}
         />
       );
-    if (route.name === 'location') return <SelectLocationPage currentLocation={location} onBack={back} onSelect={(nextLocation) => { setLocation(nextLocation); back(); }} />;
+    if (route.name === 'location')
+      return (
+        <SelectLocationPage
+          currentLocation={location}
+          onBack={back}
+          onSelect={(nextLocation, nextCoords) => {
+            setLocation(nextLocation);
+            if (nextCoords) {
+              setCoords(nextCoords);
+            }
+            back();
+          }}
+        />
+      );
     return null;
   };
 

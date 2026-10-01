@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { mapboxService } from './mapbox.service';
 import type {
   Banner,
   Brand,
@@ -520,10 +521,21 @@ export const customerService = {
     return [];
   },
 
-  async searchLocations(query: string): Promise<LocationSuggestion[]> {
+  async searchLocations(query: string, proximity?: [number, number]): Promise<LocationSuggestion[]> {
     const trimmed = query.trim();
     if (!trimmed) return [];
 
+    // 1. Thử tìm kiếm trực tiếp bằng Mapbox Geocoding API
+    try {
+      const mapboxResults = await mapboxService.searchPlaces(trimmed, proximity);
+      if (mapboxResults.length > 0) {
+        return mapboxResults;
+      }
+    } catch (err) {
+      console.warn('[CustomerService] Mapbox search failed, trying fallback:', err);
+    }
+
+    // 2. Fallback qua Supabase Edge Function nếu có
     try {
       const { data, error } = await supabase.functions.invoke('search-location', {
         body: { q: trimmed },
@@ -537,9 +549,32 @@ export const customerService = {
         }));
       }
     } catch (err) {
-      console.warn('search-location edge function failed:', err);
+      console.warn('search-location edge function fallback failed:', err);
     }
 
+    return [];
+  },
+
+  /**
+   * Lấy danh sách cửa hàng gần nhất theo tọa độ [lat, lng] dùng PostGIS RPC
+   */
+  async getStoresNearby(coords: { lat: number; lng: number }, radiusMeters = 50000) {
+    try {
+      const { data, error } = await supabase.rpc('list_stores_nearby', {
+        p_lat: coords.lat,
+        p_lng: coords.lng,
+        p_radius: radiusMeters,
+        p_category: null,
+        p_page: 1,
+        p_limit: 30,
+      });
+
+      if (!error && Array.isArray(data)) {
+        return data.filter((s: any) => s.latitude && s.longitude);
+      }
+    } catch (err) {
+      console.error('[CustomerService] list_stores_nearby failed:', err);
+    }
     return [];
   },
 

@@ -160,6 +160,7 @@ export interface LocationSuggestion {
   name: string;
   address: string;
   distance: string;
+  coordinates?: [number, number];
 }
 
 export interface CheckoutDraft {

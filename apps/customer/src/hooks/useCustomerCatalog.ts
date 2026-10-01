@@ -19,7 +19,7 @@ const emptyCatalog: CatalogState = {
   bags: [],
 };
 
-export function useCustomerCatalog() {
+export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
   const [catalog, setCatalog] = useState<CatalogState>(emptyCatalog);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export function useCustomerCatalog() {
     lastFetchTimeRef.current = now;
 
     try {
-      const data = await customerService.getHome();
+      const data = await customerService.getHome(coords);
       setCatalog(data);
       setError(null);
     } catch {
@@ -46,7 +46,7 @@ export function useCustomerCatalog() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [coords?.lat, coords?.lng]);
 
   useEffect(() => {
     void fetchCatalog(true);
