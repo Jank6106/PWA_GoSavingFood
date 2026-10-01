@@ -22,12 +22,13 @@ import { SearchPage } from './features/search/pages/SearchPage';
 import { useCart } from './hooks/useCart';
 import { useAuth } from './hooks/useAuth';
 import { useCustomerCatalog } from './hooks/useCustomerCatalog';
-import { customerService } from './services/customer.service';
+import { customerService, HANOI_BAGS } from './services/customer.service';
 import { mapboxService } from './services/mapbox.service';
 import { supabase } from './services/supabase';
 
 import type {
   AppRoute,
+  CartItem,
   CheckoutDraft,
   CustomerTab,
   NotificationItem,
@@ -43,6 +44,28 @@ interface BeforeInstallPromptEvent extends Event {
 
 const STORAGE_LOCATION_KEY = 'gsf_customer_location';
 const STORAGE_COORDS_KEY = 'gsf_customer_coords';
+const STORAGE_HISTORY_KEY = 'gsf_customer_history';
+const STORAGE_PENDING_AUTH_KEY = 'gsf_pending_auth_target';
+
+interface PendingAuthTarget {
+  route?: AppRoute;
+  action?: 'add_to_cart' | 'buy_now';
+  bagId?: string;
+  quantity?: number;
+  timestamp: number;
+}
+
+function loadStoredHistory(): AppRoute[] {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_HISTORY_KEY);
+    if (!raw) return [{ name: 'tabs', tab: 'home' }];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed;
+    }
+  } catch {}
+  return [{ name: 'tabs', tab: 'home' }];
+}
 
 function CustomerApp() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(() => {
@@ -76,10 +99,46 @@ function CustomerApp() {
     }
   };
 
-  const catalog = useCustomerCatalog(coords);
-  const cart = useCart();
   const auth = useAuth();
-  const [history, setHistory] = useState<AppRoute[]>([{ name: 'tabs', tab: 'home' }]);
+  const catalog = useCustomerCatalog(coords);
+  const cart = useCart(auth.user?.id);
+  const [history, setHistory] = useState<AppRoute[]>(loadStoredHistory);
+  const [pendingAuthTarget, setPendingAuthTarget] = useState<PendingAuthTarget | null>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_PENDING_AUTH_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as PendingAuthTarget;
+      if (Date.now() - parsed.timestamp > 30 * 60 * 1000) {
+        localStorage.removeItem(STORAGE_PENDING_AUTH_KEY);
+        return null;
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
+  });
+
+  const savePendingAuth = (target: Omit<PendingAuthTarget, 'timestamp'> | null) => {
+    if (target) {
+      const full: PendingAuthTarget = { ...target, timestamp: Date.now() };
+      setPendingAuthTarget(full);
+      try {
+        localStorage.setItem(STORAGE_PENDING_AUTH_KEY, JSON.stringify(full));
+      } catch {}
+    } else {
+      setPendingAuthTarget(null);
+      try {
+        localStorage.removeItem(STORAGE_PENDING_AUTH_KEY);
+      } catch {}
+    }
+  };
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(history));
+    } catch {}
+  }, [history]);
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
@@ -121,7 +180,6 @@ function CustomerApp() {
     );
   }, []);
 
-
   useEffect(() => {
     if (!toastMessage) return;
     const timer = window.setTimeout(() => setToastMessage(null), 2500);
@@ -130,15 +188,9 @@ function CustomerApp() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      customerService.getOrders(),
-      customerService.getNotifications(),
-      customerService.getVouchers(),
-    ]).then(([nextOrders, nextNotifications, nextVouchers]) => {
+    customerService.getVouchers().then((nextVouchers) => {
       if (!active) return;
-      setOrders(nextOrders);
-      setNotifications(nextNotifications);
-      setVouchers(nextVouchers);
+      setVouchers(nextVouchers || []);
     });
     const handleInstallPrompt = (event: Event) => {
       event.preventDefault();
@@ -152,11 +204,15 @@ function CustomerApp() {
   }, []);
 
   useEffect(() => {
-    if (!auth.user) return;
+    if (!auth.user) {
+      setOrders([]);
+      setNotifications([]);
+      return;
+    }
     void customerService.getOrders(auth.user.id).then((items) => {
-      if (items && items.length > 0) setOrders(items);
+      setOrders(items || []);
     });
-    void customerService.getNotifications().then((items) => setNotifications(items));
+    void customerService.getNotifications().then((items) => setNotifications(items || []));
 
     const channel = customerService.subscribeToCustomerUpdates(
       auth.user.id,
@@ -217,10 +273,26 @@ function CustomerApp() {
   const back = () => setHistory((current) => (current.length > 1 ? current.slice(0, -1) : current));
   const openTab = (tab: CustomerTab) => setHistory([{ name: 'tabs', tab }]);
   const home = () => openTab('home');
+  const [directBag, setDirectBag] = useState<SurpriseBag | null>(null);
+
   const selectedBag =
     route.name === 'bag'
-      ? catalog.bags.find((bag) => bag.id === route.id) ?? null
+      ? catalog.bags.find((bag) => bag.id === route.id) ??
+        HANOI_BAGS.find((bag) => bag.id === route.id) ??
+        directBag ??
+        null
       : null;
+
+  useEffect(() => {
+    if (route.name === 'bag' && !selectedBag && !directBag) {
+      void customerService.getBag(route.id).then((bag) => {
+        if (bag) setDirectBag(bag);
+      });
+    } else if (route.name !== 'bag' && directBag) {
+      setDirectBag(null);
+    }
+  }, [route, selectedBag, directBag]);
+
   const selectedMerchantId = route.name === 'merchant' ? route.id : selectedBag?.merchantId;
   const selectedMerchant =
     catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? null;
@@ -228,34 +300,117 @@ function CustomerApp() {
   const selectedOrderId = route.name === 'order' || route.name === 'review' || route.name === 'report' ? route.id : route.name === 'success' ? route.orderId : null;
   const selectedOrder = selectedOrderId ? orders.find((order) => order.id.toLowerCase() === selectedOrderId.toLowerCase()) ?? null : null;
 
-  const addToCart = (bag: SurpriseBag, quantity = 1) => {
+  const addToCart = (bag: SurpriseBag, quantity = 1): boolean => {
+    if (!auth.isAuthenticated) {
+      savePendingAuth({
+        route: { name: 'bag', id: bag.id },
+        action: 'add_to_cart',
+        bagId: bag.id,
+        quantity,
+      });
+      auth.showAuthModal();
+      return false;
+    }
     cart.addItem(bag, quantity);
     setToastMessage(`Đã thêm “${bag.name}” vào giỏ hàng`);
+    return true;
   };
-  const buyNow = (bag: SurpriseBag, quantity: number) => {
-    addToCart(bag, quantity);
+  const buyNow = (bag: SurpriseBag, quantity = 1) => {
     if (!auth.isAuthenticated) {
+      savePendingAuth({
+        route: { name: 'bag', id: bag.id },
+        action: 'buy_now',
+        bagId: bag.id,
+        quantity,
+      });
       auth.showAuthModal();
       return;
     }
-    push({ name: 'checkout' });
+    const buyNowItem: CartItem = {
+      bag,
+      merchantId: bag.merchantId,
+      quantity,
+    };
+    push({ name: 'checkout', buyNowItem });
   };
   const startCheckout = () => {
     if (!auth.isAuthenticated) {
+      savePendingAuth({
+        route: { name: 'tabs', tab: 'cart' },
+        action: undefined,
+      });
       auth.showAuthModal();
       return;
     }
     push({ name: 'checkout' });
   };
-  const confirmPayment = async (draft: CheckoutDraft) => {
-    if (!cart.items.length) return;
+
+  // Tự động điều hướng về đúng trang khách định mua/thêm giỏ hàng và thực hiện tiếp hành động sau khi đăng nhập
+  useEffect(() => {
+    if (!auth.isAuthenticated || !auth.user || !pendingAuthTarget) return;
+
+    const { route: targetRoute, action, bagId, quantity = 1 } = pendingAuthTarget;
+
+    // 1. Chuyển về đúng trang mà khách định mua/thêm vào giỏ hàng
+    if (targetRoute) {
+      setHistory((current) => {
+        const last = current[current.length - 1];
+        if (
+          last &&
+          last.name === targetRoute.name &&
+          (last as any).id === (targetRoute as any).id &&
+          (last as any).tab === (targetRoute as any).tab
+        ) {
+          return current;
+        }
+        return [...current, targetRoute];
+      });
+    }
+
+    // 2. Chờ catalog tải xong để có thông tin túi và thực hiện tiếp hành động
+    if (bagId) {
+      if (catalog.isLoading) {
+        return; // Chờ catalog tải xong sẽ tự động kích hoạt lại effect
+      }
+      const targetBag =
+        catalog.bags.find((b) => b.id === bagId) ||
+        HANOI_BAGS.find((b) => b.id === bagId) ||
+        directBag;
+      if (targetBag) {
+        if (action === 'buy_now') {
+          const buyNowItem: CartItem = {
+            bag: targetBag,
+            merchantId: targetBag.merchantId,
+            quantity,
+          };
+          push({ name: 'checkout', buyNowItem });
+        } else {
+          cart.addItem(targetBag, quantity);
+          setToastMessage(`Đã thêm “${targetBag.name}” vào giỏ hàng`);
+        }
+      }
+    }
+
+    savePendingAuth(null);
+  }, [auth.isAuthenticated, auth.user?.id, pendingAuthTarget, catalog.bags, catalog.isLoading, directBag]);
+
+  const confirmPayment = async (draft: CheckoutDraft, buyNowItem?: CartItem) => {
+    const orderItems = buyNowItem ? [buyNowItem] : cart.items;
+    if (!orderItems.length) return;
     setIsSubmitting(true);
     try {
-      const merchant = catalog.merchants.find((item) => item.id === cart.items[0].merchantId);
+      const merchant = catalog.merchants.find((item) => item.id === orderItems[0].merchantId);
+      const subtotal = buyNowItem
+        ? buyNowItem.bag.discountPrice * buyNowItem.quantity
+        : cart.summary.subtotal;
+      const originalTotal = buyNowItem
+        ? buyNowItem.bag.originalPrice * buyNowItem.quantity
+        : cart.summary.original;
+
       const order: Omit<Order, 'id' | 'orderCode' | 'createdAt'> = {
-        merchantId: cart.items[0].merchantId,
-        merchantName: merchant?.name ?? cart.items[0].bag.merchantName,
-        items: cart.items.map((item) => ({
+        merchantId: orderItems[0].merchantId,
+        merchantName: merchant?.name ?? orderItems[0].bag.merchantName,
+        items: orderItems.map((item) => ({
           bagId: item.bag.id,
           bagName: item.bag.name,
           imageUrl: item.bag.imageUrl,
@@ -263,10 +418,10 @@ function CustomerApp() {
           unitPrice: item.bag.discountPrice,
           totalPrice: item.bag.discountPrice * item.quantity,
         })),
-        totalOriginalPrice: cart.summary.original,
-        totalDiscountPrice: cart.summary.subtotal,
+        totalOriginalPrice: originalTotal,
+        totalDiscountPrice: subtotal,
         discountAmount: draft.discountAmount,
-        finalAmount: Math.max(0, cart.summary.subtotal - draft.discountAmount),
+        finalAmount: Math.max(0, subtotal - draft.discountAmount),
         status: 'pending',
         paymentMethod: draft.paymentMethod,
         paymentStatus: 'pending',
@@ -278,8 +433,11 @@ function CustomerApp() {
         name: draft.customerName,
         phone: draft.phone,
       });
+      auth.updateProfile({ name: draft.customerName, phone: draft.phone });
       setOrders((current) => [created, ...current]);
-      cart.clear();
+      if (!buyNowItem) {
+        cart.clear();
+      }
       setHistory([{ name: 'success', orderId: created.id }]);
     } catch (error) {
       window.alert(
@@ -329,11 +487,70 @@ function CustomerApp() {
 
 
     if (route.name === 'bags') return <BagsPage bags={catalog.bags} categories={catalog.categories} onBack={back} onOpen={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
-    if (route.name === 'bag') return <BagDetailPage bag={selectedBag} merchant={selectedMerchant} onBack={back} onMerchant={() => selectedMerchant && push({ name: 'merchant', id: selectedMerchant.id })} onAdd={addToCart} onBuyNow={buyNow} />;
+    if (route.name === 'bag')
+      return (
+        <BagDetailPage
+          bag={selectedBag}
+          merchant={selectedMerchant}
+          isAuthenticated={auth.isAuthenticated}
+          isLoading={catalog.isLoading}
+          onBack={back}
+          onMerchant={() =>
+            selectedMerchant && push({ name: 'merchant', id: selectedMerchant.id })
+          }
+          onAdd={addToCart}
+          onBuyNow={buyNow}
+          onRequireAuth={(action, bagItem, qty) => {
+            const targetBag = bagItem || selectedBag;
+            if (targetBag) {
+              savePendingAuth({
+                route: { name: 'bag', id: targetBag.id },
+                action: action || 'add_to_cart',
+                bagId: targetBag.id,
+                quantity: qty || 1,
+              });
+            }
+            auth.showAuthModal();
+          }}
+        />
+      );
     if (route.name === 'merchant') return <MerchantDetailPage merchant={selectedMerchant} bags={catalog.bags.filter((bag) => bag.merchantId === route.id)} onBack={back} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
     if (route.name === 'brand') return <BrandDetailPage brand={selectedBrand} stores={catalog.merchants.filter((merchant) => merchant.brandId === route.id)} onBack={back} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} />;
-    if (route.name === 'checkout' && auth.user) return <CheckoutPage items={cart.items} subtotal={cart.summary.subtotal} user={auth.user} vouchers={vouchers} onBack={back} onContinue={(draft) => push({ name: 'payment', draft })} />;
-    if (route.name === 'payment') return <PaymentPage draft={route.draft} total={Math.max(0, cart.summary.subtotal - route.draft.discountAmount)} isSubmitting={isSubmitting} onBack={back} onConfirm={() => confirmPayment(route.draft)} />;
+    if (route.name === 'checkout' && auth.user) {
+      const checkoutItems = route.buyNowItem ? [route.buyNowItem] : cart.items;
+      const checkoutSubtotal = route.buyNowItem
+        ? route.buyNowItem.bag.discountPrice * route.buyNowItem.quantity
+        : cart.summary.subtotal;
+
+      return (
+        <CheckoutPage
+          items={checkoutItems}
+          subtotal={checkoutSubtotal}
+          user={auth.user}
+          vouchers={vouchers}
+          onBack={back}
+          onContinue={(draft) =>
+            push({ name: 'payment', draft, buyNowItem: route.buyNowItem })
+          }
+        />
+      );
+    }
+    if (route.name === 'payment') {
+      const paymentSubtotal = route.buyNowItem
+        ? route.buyNowItem.bag.discountPrice * route.buyNowItem.quantity
+        : cart.summary.subtotal;
+      const totalAmount = Math.max(0, paymentSubtotal - route.draft.discountAmount);
+
+      return (
+        <PaymentPage
+          draft={route.draft}
+          total={totalAmount}
+          isSubmitting={isSubmitting}
+          onBack={back}
+          onConfirm={() => confirmPayment(route.draft, route.buyNowItem)}
+        />
+      );
+    }
     if (route.name === 'success') {
       if (!selectedOrder) {
         return (
@@ -490,7 +707,7 @@ function CustomerApp() {
         </aside>
       )}
 
-      <AuthModal />
+      <AuthModal onClose={() => savePendingAuth(null)} />
     </>
   );
 }

@@ -11,17 +11,24 @@ interface CatalogState {
   bags: SurpriseBag[];
 }
 
-const emptyCatalog: CatalogState = {
-  banners: [],
-  categories: [],
-  brands: [],
-  merchants: [],
-  bags: [],
-};
+const CATALOG_CACHE_KEY = 'gsf_customer_catalog_cache';
+
+function getInitialCatalog(coords?: { lat: number; lng: number }): CatalogState {
+  try {
+    const raw = localStorage.getItem(CATALOG_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.bags) && parsed.bags.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {}
+  return customerService.getStaticHome(coords);
+}
 
 export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
-  const [catalog, setCatalog] = useState<CatalogState>(emptyCatalog);
-  const [isLoading, setIsLoading] = useState(true);
+  const [catalog, setCatalog] = useState<CatalogState>(() => getInitialCatalog(coords));
+  const [isLoading, setIsLoading] = useState(() => getInitialCatalog(coords).bags.length === 0);
   const [error, setError] = useState<string | null>(null);
   const lastFetchTimeRef = useRef<number>(0);
 
@@ -36,17 +43,18 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
     try {
       const data = await customerService.getHome(coords);
       setCatalog(data);
+      try {
+        localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(data));
+      } catch {}
       setError(null);
     } catch {
-      if (isInitial) {
+      if (isInitial && catalog.bags.length === 0) {
         setError('Không thể tải dữ liệu khám phá.');
       }
     } finally {
-      if (isInitial) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
-  }, [coords?.lat, coords?.lng]);
+  }, [coords?.lat, coords?.lng, catalog.bags.length]);
 
   useEffect(() => {
     void fetchCatalog(true);

@@ -91,8 +91,9 @@ export interface SurpriseBag {
   pickupStart: string;
   pickupEnd: string;
   isAvailable: boolean;
-  expiresAt: string;
+  expiresAt?: string;
   rating: number;
+  createdAt?: string;
 }
 
 export interface CartItem {
@@ -183,8 +184,8 @@ export type AppRoute =
   | { name: 'bag'; id: string }
   | { name: 'merchant'; id: string }
   | { name: 'brand'; id: string }
-  | { name: 'checkout' }
-  | { name: 'payment'; draft: CheckoutDraft }
+  | { name: 'checkout'; buyNowItem?: CartItem }
+  | { name: 'payment'; draft: CheckoutDraft; buyNowItem?: CartItem }
   | { name: 'success'; orderId: string }
   | { name: 'order'; id: string }
   | { name: 'review'; id: string }

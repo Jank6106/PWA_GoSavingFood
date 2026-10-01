@@ -17,15 +17,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        setUser({
-          id: session.user.id,
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Khách hàng',
-          phone: session.user.user_metadata?.phone || '',
-          email: session.user.email,
-          avatar: session.user.user_metadata?.avatar,
-        });
+        const fullUser = await customerService.getUser();
+        if (fullUser) {
+          setUser(fullUser);
+        } else {
+          const meta = session.user.user_metadata || {};
+          setUser({
+            id: session.user.id,
+            name:
+              meta.full_name ||
+              meta.name ||
+              session.user.email?.split('@')[0] ||
+              'Khách hàng',
+            phone: meta.phone || '',
+            email: session.user.email,
+            avatar: meta.avatar_url || meta.picture || meta.avatar,
+          });
+        }
       } else if (_event === 'SIGNED_OUT') {
         setUser(null);
       }
@@ -47,6 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const nextUser = await customerService.login(identifier, password);
         setUser(nextUser);
         setIsAuthOpen(false);
+      },
+      loginWithGoogle: async () => {
+        await customerService.loginWithGoogle();
       },
       register: async (name, identifier, password) => {
         const nextUser = await customerService.register(name, identifier, password);

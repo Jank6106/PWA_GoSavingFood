@@ -15,7 +15,7 @@ import type {
 } from '../shared/types/customer.types';
 
 // Nội dung UI tĩnh (banner & danh mục không có bảng riêng trong DB)
-const HOME_BANNERS: Banner[] = [
+export const HOME_BANNERS: Banner[] = [
   {
     id: 'banner-1',
     eyebrow: 'Giải cứu hôm nay',
@@ -45,7 +45,7 @@ const HOME_BANNERS: Banner[] = [
   },
 ];
 
-const HOME_CATEGORIES: Category[] = [
+export const HOME_CATEGORIES: Category[] = [
   { id: 'all', label: 'Tất cả', icon: 'all' },
   { id: 'bakery', label: 'Bánh ngọt', icon: 'bakery' },
   { id: 'meat', label: 'Món nóng', icon: 'meat' },
@@ -106,78 +106,889 @@ const mapCreateOrderError = (error: { message?: string; details?: string } | nul
   return 'Không thể tạo đơn hàng. Vui lòng kiểm tra lại rồi thử lại.';
 };
 
+export const HANOI_STORES: Merchant[] = [
+  {
+    id: 'store-hn-01',
+    brandId: 'store-hn-01',
+    name: 'Tous Les Jours - Hoàng Quốc Việt',
+    description: 'Thương hiệu bánh ngọt và bánh mì tươi phong cách Pháp - Hàn Quốc cao cấp.',
+    phone: '024 3755 8899',
+    address: '234 Hoàng Quốc Việt, Cổ Nhuế 1, Bắc Từ Liêm, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200',
+    banner: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
+    rating: 4.9,
+    totalRatings: 182,
+    distance: 450,
+    status: 'active',
+    isOpen: true,
+    openingHours: '06:30 - 22:00',
+    latitude: 21.0465,
+    longitude: 105.7892,
+  },
+  {
+    id: 'store-hn-02',
+    brandId: 'store-hn-02',
+    name: 'Bếp Chay An Lạc - Cổ Nhuế',
+    description: 'Cơm chay thanh tịnh, thực phẩm dinh dưỡng từ nấm và rau củ hữu cơ tươi ngon.',
+    phone: '0988 234 112',
+    address: '128 Cổ Nhuế, Cổ Nhuế 2, Bắc Từ Liêm, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=200',
+    banner: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
+    rating: 4.8,
+    totalRatings: 96,
+    distance: 300,
+    status: 'active',
+    isOpen: true,
+    openingHours: '09:00 - 21:00',
+    latitude: 21.0620,
+    longitude: 105.7765,
+  },
+  {
+    id: 'store-hn-03',
+    brandId: 'store-hn-03',
+    name: 'Fresh Garden Bakery - Phạm Văn Đồng',
+    description: 'Bánh tươi mỗi ngày, bánh mì gối dinh dưỡng, donut và bánh su kem béo ngậy.',
+    phone: '024 3856 9900',
+    address: '43 Phạm Văn Đồng, Mai Dịch, Cầu Giấy, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
+    banner: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
+    rating: 4.7,
+    totalRatings: 145,
+    distance: 1200,
+    status: 'active',
+    isOpen: true,
+    openingHours: '07:00 - 21:30',
+    latitude: 21.0410,
+    longitude: 105.7795,
+  },
+  {
+    id: 'store-hn-04',
+    brandId: 'store-hn-04',
+    name: 'WinMart+ - Green Stars Phạm Văn Đồng',
+    description: 'Siêu thị tiện lợi hàng đầu, rau củ quả VietGAP và thực phẩm sạch trong ngày.',
+    phone: '024 7106 6866',
+    address: 'Tòa 27A2 Green Stars, 234 Phạm Văn Đồng, Cổ Nhuế 1, Bắc Từ Liêm, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200',
+    banner: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800',
+    rating: 4.8,
+    totalRatings: 210,
+    distance: 600,
+    status: 'active',
+    isOpen: true,
+    openingHours: '06:00 - 22:00',
+    latitude: 21.0535,
+    longitude: 105.7820,
+  },
+  {
+    id: 'store-hn-05',
+    brandId: 'store-hn-05',
+    name: 'Highlands Coffee - IPH Xuân Thủy',
+    description: 'Cà phê rang xay đậm đà phong vị Việt cùng bánh ngọt và trà hoa quả thanh mát.',
+    phone: '024 3795 4242',
+    address: '241 Xuân Thủy, Dịch Vọng Hậu, Cầu Giấy, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=200',
+    banner: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800',
+    rating: 4.9,
+    totalRatings: 320,
+    distance: 2100,
+    status: 'active',
+    isOpen: true,
+    openingHours: '07:00 - 23:00',
+    latitude: 21.0368,
+    longitude: 105.7828,
+  },
+  {
+    id: 'store-hn-06',
+    brandId: 'store-hn-06',
+    name: 'Cơm Niêu Singapore KOMBO - Duy Tân',
+    description: 'Cơm niêu giòn rụm hai mặt hòa quyện cùng sốt bò tiêu đen và sốt gà nấm đặc sản.',
+    phone: '0971 615 775',
+    address: '86 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
+    banner: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+    rating: 4.8,
+    totalRatings: 175,
+    distance: 2800,
+    status: 'active',
+    isOpen: true,
+    openingHours: '10:00 - 21:00',
+    latitude: 21.0315,
+    longitude: 105.7835,
+  },
+  {
+    id: 'store-hn-07',
+    brandId: 'store-hn-07',
+    name: 'Bánh Mì Dân Tổ - Trần Cung',
+    description: 'Đặc sản bánh mì pate trứng xào trứ danh Hà Thành, giòn rụm và thơm nức mũi.',
+    phone: '0963 882 190',
+    address: '96 Trần Cung, Cổ Nhuế 1, Bắc Từ Liêm, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=200',
+    banner: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800',
+    rating: 4.7,
+    totalRatings: 88,
+    distance: 550,
+    status: 'active',
+    isOpen: true,
+    openingHours: '06:00 - 22:00',
+    latitude: 21.0498,
+    longitude: 105.7865,
+  },
+  {
+    id: 'store-hn-08',
+    brandId: 'store-hn-08',
+    name: 'Nước Ép Juicy Garden - Chùa Láng',
+    description: 'Nước ép trái cây tươi nguyên chất 100% không thêm đường và sinh tố detox mát lành.',
+    phone: '0912 345 678',
+    address: '112 Chùa Láng, Láng Thượng, Đống Đa, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=200',
+    banner: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=800',
+    rating: 4.9,
+    totalRatings: 130,
+    distance: 3500,
+    status: 'active',
+    isOpen: true,
+    openingHours: '08:00 - 22:00',
+    latitude: 21.0265,
+    longitude: 105.8035,
+  },
+  {
+    id: 'store-hn-09',
+    brandId: 'store-hn-09',
+    name: 'Bếp Cơm Quê Mẹ Nấu - Hồ Tùng Mậu',
+    description: 'Cơm trưa đậm đà hương vị gia đình Bắc Bộ, canh cua rau đay và thịt rang cháy cạnh.',
+    phone: '0945 678 910',
+    address: '136 Hồ Tùng Mậu, Mai Dịch, Cầu Giấy, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200',
+    banner: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+    rating: 4.8,
+    totalRatings: 112,
+    distance: 1900,
+    status: 'active',
+    isOpen: true,
+    openingHours: '10:30 - 20:30',
+    latitude: 21.0395,
+    longitude: 105.7695,
+  },
+  {
+    id: 'store-hn-10',
+    brandId: 'store-hn-10',
+    name: 'Nhà Hàng Chay Vị Lai - Lý Thường Kiệt',
+    description: 'Ẩm thực chay nghệ thuật cao cấp giữa lòng thủ đô, không gian thanh tịnh an nhiên.',
+    phone: '0853 535 656',
+    address: '67 Lý Thường Kiệt, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200',
+    banner: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
+    rating: 5.0,
+    totalRatings: 265,
+    distance: 7200,
+    status: 'active',
+    isOpen: true,
+    openingHours: '09:30 - 22:00',
+    latitude: 21.0245,
+    longitude: 105.8495,
+  },
+  {
+    id: 'store-hn-11',
+    brandId: 'store-hn-11',
+    name: 'Bơ Bồng Bềnh Bakery - Liễu Giai',
+    description: 'Bánh kem bắp mềm tan, tart trứng bơ thơm lừng và bánh mì hoa cúc brioche cao cấp.',
+    phone: '0936 123 789',
+    address: '54 Liễu Giai, Cống Vị, Ba Đình, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200',
+    banner: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
+    rating: 4.9,
+    totalRatings: 154,
+    distance: 4200,
+    status: 'active',
+    isOpen: true,
+    openingHours: '08:00 - 21:30',
+    latitude: 21.0345,
+    longitude: 105.8142,
+  },
+  {
+    id: 'store-hn-12',
+    brandId: 'store-hn-12',
+    name: 'Lạc Trà & Hoa Quả Tươi - Tây Hồ',
+    description: 'Trà sen Tây Hồ thơm ngát, trà ô long mãng cầu tươi cùng đĩa hoa quả nhiệt đới tươi sạch.',
+    phone: '0904 889 900',
+    address: '18 Đặng Thai Mai, Quảng An, Tây Hồ, Hà Nội',
+    logo: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=200',
+    banner: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800',
+    rating: 4.8,
+    totalRatings: 98,
+    distance: 5100,
+    status: 'active',
+    isOpen: true,
+    openingHours: '07:30 - 22:30',
+    latitude: 21.0665,
+    longitude: 105.8235,
+  },
+];
+
+export const HANOI_BAGS: SurpriseBag[] = [
+  // 1. Tous Les Jours - Hoàng Quốc Việt (store-hn-01)
+  {
+    id: 'bag-hn-01',
+    merchantId: 'store-hn-01',
+    merchantName: 'Tous Les Jours - Hoàng Quốc Việt',
+    name: 'Túi Bánh Mì & Pastry Cuối Ngày',
+    description: 'Bao gồm 3-4 loại bánh mì nướng tươi trong ngày: bánh sừng bò, bánh mì phô mai mềm và bánh ngọt pastry.',
+    originalPrice: 110000,
+    discountPrice: 35000,
+    category: 'bakery',
+    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
+    quantity: 5,
+    maxQuantity: 2,
+    pickupStart: '19:30',
+    pickupEnd: '22:00',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    id: 'bag-hn-02',
+    merchantId: 'store-hn-01',
+    merchantName: 'Tous Les Jours - Hoàng Quốc Việt',
+    name: 'Túi Bánh Ngọt Pháp & Croissant Bơ',
+    description: 'Croissant ngàn lớp giòn rụm bơ Pháp, pain au chocolat và bánh su mềm béo ngậy.',
+    originalPrice: 130000,
+    discountPrice: 45000,
+    category: 'bakery',
+    imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '20:00',
+    pickupEnd: '22:00',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+  {
+    id: 'bag-hn-03',
+    merchantId: 'store-hn-01',
+    merchantName: 'Tous Les Jours - Hoàng Quốc Việt',
+    name: 'Combo Bánh Mì Gối Mềm & Bánh Mặn',
+    description: 'Bánh mì gối ngũ cốc dinh dưỡng cho bữa sáng kèm 2 chiếc bánh xúc xích sốt cay kiểu Hàn.',
+    originalPrice: 85000,
+    discountPrice: 30000,
+    category: 'bakery',
+    imageUrl: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=600',
+    quantity: 6,
+    maxQuantity: 3,
+    pickupStart: '19:00',
+    pickupEnd: '21:30',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+  },
+
+  // 2. Bếp Chay An Lạc - Cổ Nhuế (store-hn-02)
+  {
+    id: 'bag-hn-04',
+    merchantId: 'store-hn-02',
+    merchantName: 'Bếp Chay An Lạc - Cổ Nhuế',
+    name: 'Phần Cơm Chay Thực Dưỡng Sen Vàng',
+    description: 'Cơm gạo lứt huyết rồng, đậu hũ sốt nấm hương, chả giò chay nấm và canh rong biển hạt sen thanh mát.',
+    originalPrice: 70000,
+    discountPrice: 35000,
+    category: 'vegetarian',
+    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600',
+    quantity: 6,
+    maxQuantity: 2,
+    pickupStart: '13:00',
+    pickupEnd: '14:30',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+  },
+  {
+    id: 'bag-hn-05',
+    merchantId: 'store-hn-02',
+    merchantName: 'Bếp Chay An Lạc - Cổ Nhuế',
+    name: 'Túi Bún Nem Chay & Giò Nấm Hà Thành',
+    description: 'Bún tươi mềm dẻo, nem rán giòn vỏ, giò nấm thủ công ăn kèm nước chấm chua ngọt tỏi ớt chay.',
+    originalPrice: 65000,
+    discountPrice: 30000,
+    category: 'vegetarian',
+    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600',
+    quantity: 5,
+    maxQuantity: 2,
+    pickupStart: '19:00',
+    pickupEnd: '21:00',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    id: 'bag-hn-06',
+    merchantId: 'store-hn-02',
+    merchantName: 'Bếp Chay An Lạc - Cổ Nhuế',
+    name: 'Túi Lẩu Nấm Chay Tươi Mini Tự Nấu',
+    description: 'Set nấm đùi gà, nấm kim châm, nấm bào ngư hữu cơ kèm nước cốt lẩu hầm táo đỏ và củ quả.',
+    originalPrice: 120000,
+    discountPrice: 49000,
+    category: 'vegetarian',
+    imageUrl: 'https://images.unsplash.com/photo-1547496502-affa22d38842?w=600',
+    quantity: 3,
+    maxQuantity: 1,
+    pickupStart: '18:30',
+    pickupEnd: '21:00',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+
+  // 3. Fresh Garden Bakery - Phạm Văn Đồng (store-hn-03)
+  {
+    id: 'bag-hn-07',
+    merchantId: 'store-hn-03',
+    merchantName: 'Fresh Garden Bakery - Phạm Văn Đồng',
+    name: 'Túi Bánh Su Kem & Donut Tươi Xốp',
+    description: 'Hộp bánh su kem vani mềm béo ngậy kèm bánh donut phủ sô cô la hạt hạnh nhân thơm ngon.',
+    originalPrice: 75000,
+    discountPrice: 29000,
+    category: 'bakery',
+    imageUrl: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=600',
+    quantity: 7,
+    maxQuantity: 2,
+    pickupStart: '19:30',
+    pickupEnd: '21:30',
+    isAvailable: true,
+    rating: 4.7,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    id: 'bag-hn-08',
+    merchantId: 'store-hn-03',
+    merchantName: 'Fresh Garden Bakery - Phạm Văn Đồng',
+    name: 'Túi Bánh Mì Bơ Tỏi & Xúc Xích Phô Mai',
+    description: 'Bánh mì nướng bơ tỏi giòn tan viền phô mai cùng bánh cuộn xúc xích tiêu đen béo thơm ngậy.',
+    originalPrice: 95000,
+    discountPrice: 39000,
+    category: 'bakery',
+    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
+    quantity: 5,
+    maxQuantity: 2,
+    pickupStart: '20:00',
+    pickupEnd: '21:30',
+    isAvailable: true,
+    rating: 4.7,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+  {
+    id: 'bag-hn-09',
+    merchantId: 'store-hn-03',
+    merchantName: 'Fresh Garden Bakery - Phạm Văn Đồng',
+    name: 'Bánh Mì Ngũ Cốc Nguyên Cám Healthy',
+    description: 'Túi bánh mì đen hạt chia, yến mạch và hạt lanh nguyên cám, lý tưởng cho chế độ ăn lành mạnh.',
+    originalPrice: 80000,
+    discountPrice: 32000,
+    category: 'bakery',
+    imageUrl: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '18:00',
+    pickupEnd: '21:00',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+  },
+
+  // 4. WinMart+ - Green Stars Phạm Văn Đồng (store-hn-04)
+  {
+    id: 'bag-hn-10',
+    merchantId: 'store-hn-04',
+    merchantName: 'WinMart+ - Green Stars Phạm Văn Đồng',
+    name: 'Túi Rau Củ Hữu Cơ Đà Lạt Chuẩn VietGAP',
+    description: 'Combo rau xà lách thủy canh, cà chua bi, cải ngọt và bí ngòi hữu cơ còn tươi ngon trong ngày.',
+    originalPrice: 60000,
+    discountPrice: 25000,
+    category: 'vegetarian',
+    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600',
+    quantity: 8,
+    maxQuantity: 3,
+    pickupStart: '19:00',
+    pickupEnd: '22:00',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+  },
+  {
+    id: 'bag-hn-11',
+    merchantId: 'store-hn-04',
+    merchantName: 'WinMart+ - Green Stars Phạm Văn Đồng',
+    name: 'Túi Thịt Heo & Gà Tươi Cứu Trợ Cuối Ngày',
+    description: 'Thịt ba chỉ heo mát MEATDeli hoặc ức gà phi lê đóng gói hút chân không, hạn dùng trong ngày.',
+    originalPrice: 110000,
+    discountPrice: 45000,
+    category: 'meat',
+    imageUrl: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '20:00',
+    pickupEnd: '22:00',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    id: 'bag-hn-12',
+    merchantId: 'store-hn-04',
+    merchantName: 'WinMart+ - Green Stars Phạm Văn Đồng',
+    name: 'Túi Bí Mật Trái Cây Nội Ngoại Nhập Tươi Ngon',
+    description: 'Táo Gala New Zealand, cam sành miền Tây và ổi lê giòn ngọt đóng khay giải cứu cuối ngày.',
+    originalPrice: 85000,
+    discountPrice: 35000,
+    category: 'other',
+    imageUrl: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600',
+    quantity: 6,
+    maxQuantity: 2,
+    pickupStart: '19:30',
+    pickupEnd: '22:00',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+
+  // 5. Highlands Coffee - IPH Xuân Thủy (store-hn-05)
+  {
+    id: 'bag-hn-13',
+    merchantId: 'store-hn-05',
+    merchantName: 'Highlands Coffee - IPH Xuân Thủy',
+    name: 'Túi Bánh Ngọt Mousse & Trà Thạch Đào',
+    description: 'Bánh mousse đào mềm mịn kết hợp cùng một ly Trà thạch đào thơm ngọt thanh nhiệt ngày hè.',
+    originalPrice: 85000,
+    discountPrice: 35000,
+    category: 'beverage',
+    imageUrl: 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=600',
+    quantity: 5,
+    maxQuantity: 2,
+    pickupStart: '20:30',
+    pickupEnd: '23:00',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    id: 'bag-hn-14',
+    merchantId: 'store-hn-05',
+    merchantName: 'Highlands Coffee - IPH Xuân Thủy',
+    name: 'Combo Cà Phê Phin Sữa Tươi & Bánh Phô Mai',
+    description: 'Cà phê phin truyền thống đậm đà thơm ngậy hòa cùng một lát cheesecake nướng béo bùi.',
+    originalPrice: 95000,
+    discountPrice: 39000,
+    category: 'beverage',
+    imageUrl: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '16:00',
+    pickupEnd: '18:30',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+  },
+  {
+    id: 'bag-hn-15',
+    merchantId: 'store-hn-05',
+    merchantName: 'Highlands Coffee - IPH Xuân Thủy',
+    name: 'Túi Mù Bánh Mì Que & Freeze Trà Xanh',
+    description: 'Bánh mì que pate giòn rụm nóng hổi kèm thức uống Freeze trà xanh thạch giòn mát lạnh.',
+    originalPrice: 89000,
+    discountPrice: 35000,
+    category: 'beverage',
+    imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600',
+    quantity: 6,
+    maxQuantity: 2,
+    pickupStart: '20:00',
+    pickupEnd: '22:30',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+  },
+
+  // 6. Cơm Niêu Singapore KOMBO - Duy Tân (store-hn-06)
+  {
+    id: 'bag-hn-16',
+    merchantId: 'store-hn-06',
+    merchantName: 'Cơm Niêu Singapore KOMBO - Duy Tân',
+    name: 'Suất Cơm Niêu Bò Nướng Sốt Tiêu Đen',
+    description: 'Cơm niêu cháy hai mặt giòn rụm, thịt bò ướp đậm đà nước sốt tiêu đen đặc sản cay nồng nàn.',
+    originalPrice: 115000,
+    discountPrice: 49000,
+    category: 'meat',
+    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '13:30',
+    pickupEnd: '14:30',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    id: 'bag-hn-17',
+    merchantId: 'store-hn-06',
+    merchantName: 'Cơm Niêu Singapore KOMBO - Duy Tân',
+    name: 'Cơm Niêu Gà Sốt Nấm Tươi Đậm Đà',
+    description: 'Cơm niêu nóng hổi thơm nức, thịt gà mềm thấm vị nước sốt nấm hương ngọt thanh tròn vị.',
+    originalPrice: 99000,
+    discountPrice: 45000,
+    category: 'meat',
+    imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600',
+    quantity: 5,
+    maxQuantity: 2,
+    pickupStart: '19:30',
+    pickupEnd: '21:00',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+  {
+    id: 'bag-hn-18',
+    merchantId: 'store-hn-06',
+    merchantName: 'Cơm Niêu Singapore KOMBO - Duy Tân',
+    name: 'Túi Cơm Niêu Thịt Heo Sốt BBQ Đậm Vị',
+    description: 'Thịt heo rim sốt BBQ thơm lừng ăn cùng lớp cơm cháy giòn rụm và canh rau củ trong ngày.',
+    originalPrice: 95000,
+    discountPrice: 42000,
+    category: 'meat',
+    imageUrl: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=600',
+    quantity: 3,
+    maxQuantity: 1,
+    pickupStart: '20:00',
+    pickupEnd: '21:00',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+  },
+
+  // 7. Bánh Mì Dân Tổ - Trần Cung (store-hn-07)
+  {
+    id: 'bag-hn-19',
+    merchantId: 'store-hn-07',
+    merchantName: 'Bánh Mì Dân Tổ - Trần Cung',
+    name: 'Combo Bánh Mì Thập Cẩm Nhân Xào Đậm Đà (2 chiếc)',
+    description: 'Nhân hỗn hợp xào thơm phức gồm pate, trứng, lạp xưởng, chả và bơ béo ngậy kèm dưa chuột.',
+    originalPrice: 70000,
+    discountPrice: 35000,
+    category: 'meat',
+    imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600',
+    quantity: 6,
+    maxQuantity: 2,
+    pickupStart: '17:00',
+    pickupEnd: '21:30',
+    isAvailable: true,
+    rating: 4.7,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    id: 'bag-hn-20',
+    merchantId: 'store-hn-07',
+    merchantName: 'Bánh Mì Dân Tổ - Trần Cung',
+    name: 'Túi Bánh Mì Trứng Pate Cổ Truyền & Sữa Đậu',
+    description: 'Bánh mì nướng than hoa giòn tan kẹp pate béo ngậy cùng cốc sữa đậu nành nấu lá dứa ngọt nhẹ.',
+    originalPrice: 55000,
+    discountPrice: 28000,
+    category: 'meat',
+    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
+    quantity: 5,
+    maxQuantity: 2,
+    pickupStart: '18:00',
+    pickupEnd: '22:00',
+    isAvailable: true,
+    rating: 4.7,
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+  },
+
+  // 8. Nước Ép Juicy Garden - Chùa Láng (store-hn-08)
+  {
+    id: 'bag-hn-21',
+    merchantId: 'store-hn-08',
+    merchantName: 'Nước Ép Juicy Garden - Chùa Láng',
+    name: 'Túi 2 Chai Nước Ép Trái Cây Cold-Pressed',
+    description: '2 chai 350ml ép lạnh nguyên chất (Cần tây táo dứa & Cam cà rốt gừng), không thêm đường và nước.',
+    originalPrice: 90000,
+    discountPrice: 35000,
+    category: 'beverage',
+    imageUrl: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=600',
+    quantity: 6,
+    maxQuantity: 2,
+    pickupStart: '19:00',
+    pickupEnd: '21:30',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+  },
+  {
+    id: 'bag-hn-22',
+    merchantId: 'store-hn-08',
+    merchantName: 'Nước Ép Juicy Garden - Chùa Láng',
+    name: 'Smoothie Bowl Detox Xanh & Granola Hạt',
+    description: 'Bát sinh tố bơ chuối cải xoăn phủ đầy dâu tây, việt quất và yến mạch nướng mật ong giòn bùi.',
+    originalPrice: 85000,
+    discountPrice: 38000,
+    category: 'beverage',
+    imageUrl: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '18:00',
+    pickupEnd: '21:00',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+
+  // 9. Bếp Cơm Quê Mẹ Nấu - Hồ Tùng Mậu (store-hn-09)
+  {
+    id: 'bag-hn-23',
+    merchantId: 'store-hn-09',
+    merchantName: 'Bếp Cơm Quê Mẹ Nấu - Hồ Tùng Mậu',
+    name: 'Suất Cơm Gia Đình Canh Cua Rau Đay & Thịt Rang',
+    description: 'Cơm trắng gạo tám thơm ăn cùng thịt ba chỉ rang cháy cạnh đậm vị, canh cua đồng giã tay và cà pháo.',
+    originalPrice: 75000,
+    discountPrice: 35000,
+    category: 'meat',
+    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600',
+    quantity: 5,
+    maxQuantity: 2,
+    pickupStart: '13:00',
+    pickupEnd: '14:00',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    id: 'bag-hn-24',
+    merchantId: 'store-hn-09',
+    merchantName: 'Bếp Cơm Quê Mẹ Nấu - Hồ Tùng Mậu',
+    name: 'Túi Cá Kho Tộ Riềng & Canh Chua Miền Bắc',
+    description: 'Cá trắm đen kho mục xương đượm vị riềng sả ăn kèm canh cá nấu măng chua và rau muống luộc dầm sấu.',
+    originalPrice: 85000,
+    discountPrice: 40000,
+    category: 'meat',
+    imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '19:00',
+    pickupEnd: '20:30',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+  {
+    id: 'bag-hn-25',
+    merchantId: 'store-hn-09',
+    merchantName: 'Bếp Cơm Quê Mẹ Nấu - Hồ Tùng Mậu',
+    name: 'Phần Cơm Sườn Xào Chua Ngọt Chuẩn Vị Mẹ',
+    description: 'Sườn thăn sụn non rim nước sốt cà chua dứa óng ánh, dưa chua xào lòng mề và cơm nóng.',
+    originalPrice: 80000,
+    discountPrice: 39000,
+    category: 'meat',
+    imageUrl: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '19:30',
+    pickupEnd: '20:30',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+
+  // 10. Nhà Hàng Chay Vị Lai - Lý Thường Kiệt (store-hn-10)
+  {
+    id: 'bag-hn-26',
+    merchantId: 'store-hn-10',
+    merchantName: 'Nhà Hàng Chay Vị Lai - Lý Thường Kiệt',
+    name: 'Túi Cao Cấp Vị Lai: Súp Nấm Rừng & Cơm Lá Sen',
+    description: 'Súp nấm tuyết đông trùng hạ thảo, cơm gạo sen gói lá sen hương thơm quý phái và chả nấm mối nướng.',
+    originalPrice: 140000,
+    discountPrice: 55000,
+    category: 'vegetarian',
+    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600',
+    quantity: 3,
+    maxQuantity: 1,
+    pickupStart: '20:00',
+    pickupEnd: '22:00',
+    isAvailable: true,
+    rating: 5.0,
+    createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+  },
+  {
+    id: 'bag-hn-27',
+    merchantId: 'store-hn-10',
+    merchantName: 'Nhà Hàng Chay Vị Lai - Lý Thường Kiệt',
+    name: 'Combo Chả Giò Rong Biển & Salad Hoa Quả Hữu Cơ',
+    description: 'Nem rong biển giòn tan cuộn khoai môn bùi bùi cùng bát salad sốt chanh leo thanh mát bổ dưỡng.',
+    originalPrice: 115000,
+    discountPrice: 45000,
+    category: 'vegetarian',
+    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '19:30',
+    pickupEnd: '21:30',
+    isAvailable: true,
+    rating: 5.0,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+
+  // 11. Bơ Bồng Bềnh Bakery - Liễu Giai (store-hn-11)
+  {
+    id: 'bag-hn-28',
+    merchantId: 'store-hn-11',
+    merchantName: 'Bơ Bồng Bềnh Bakery - Liễu Giai',
+    name: 'Túi Bánh Kem Bắp & Tart Trứng Nướng Phô Mai',
+    description: 'Hộp bánh kem bắp cốt bánh chiffon siêu mềm mịn thơm bơ và 2 chiếc tart trứng vỏ ngàn lớp giòn tan.',
+    originalPrice: 95000,
+    discountPrice: 39000,
+    category: 'bakery',
+    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
+    quantity: 5,
+    maxQuantity: 2,
+    pickupStart: '19:30',
+    pickupEnd: '21:30',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    id: 'bag-hn-29',
+    merchantId: 'store-hn-11',
+    merchantName: 'Bơ Bồng Bềnh Bakery - Liễu Giai',
+    name: 'Bánh Mì Hoa Cúc Brioche Bơ Pháp',
+    description: 'Bánh mì hoa cúc sợi bơ Pháp thơm lừng nức nở rắc hạt hạnh nhân lát, thơm ngậy nguyên ngày.',
+    originalPrice: 110000,
+    discountPrice: 45000,
+    category: 'bakery',
+    imageUrl: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=600',
+    quantity: 4,
+    maxQuantity: 2,
+    pickupStart: '18:30',
+    pickupEnd: '21:00',
+    isAvailable: true,
+    rating: 4.9,
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+  },
+
+  // 12. Lạc Trà & Hoa Quả Tươi - Tây Hồ (store-hn-12)
+  {
+    id: 'bag-hn-30',
+    merchantId: 'store-hn-12',
+    merchantName: 'Lạc Trà & Hoa Quả Tươi - Tây Hồ',
+    name: 'Túi Trà Ô Long Mãng Cầu Tươi & Trái Cây Cắt Sẵn',
+    description: 'Ly trà ô long thượng hạng dầm mãng cầu tươi ngọt thanh cùng khay dưa hấu và ổi ruby cắt sẵn ướp lạnh.',
+    originalPrice: 85000,
+    discountPrice: 35000,
+    category: 'beverage',
+    imageUrl: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=600',
+    quantity: 6,
+    maxQuantity: 2,
+    pickupStart: '19:00',
+    pickupEnd: '22:00',
+    isAvailable: true,
+    rating: 4.8,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+];
+
 export const customerService = {
+  getStaticHome(coords?: { lat: number; lng: number }) {
+    const lat = coords?.lat ?? 21.0535;
+    const lng = coords?.lng ?? 105.7820;
+
+    const hanoiStoresWithDistance: Merchant[] = HANOI_STORES.map((s) => {
+      const distKm = calculateDistanceKm([lng, lat], [s.longitude!, s.latitude!]);
+      return {
+        ...s,
+        distance: Math.round(distKm * 1000),
+      };
+    });
+    hanoiStoresWithDistance.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+
+    const brands: Brand[] = hanoiStoresWithDistance.map((m) => ({
+      id: m.id,
+      name: m.name,
+      logo: m.logo,
+      description: m.description,
+      rating: m.rating,
+      totalStores: 1,
+      categories: ['Món Chay', 'Thực Dưỡng', 'Healthy'],
+      sustainabilityMessage:
+        'Đồng hành cùng GoSavingFood giảm lãng phí thực phẩm mỗi ngày.',
+    }));
+
+    return {
+      banners: HOME_BANNERS,
+      categories: HOME_CATEGORIES,
+      brands,
+      merchants: hanoiStoresWithDistance,
+      bags: HANOI_BAGS,
+    };
+  },
+
   async getHome(coords?: { lat: number; lng: number }) {
-    const lat = coords?.lat ?? 10.7798;
-    const lng = coords?.lng ?? 106.7032;
+    const lat = coords?.lat ?? 21.0535;
+    const lng = coords?.lng ?? 105.7820;
 
     let remoteStores: Merchant[] = [];
     let remoteBags: SurpriseBag[] = [];
 
     try {
-      // 1. Lấy danh sách quán từ Supabase (list_stores_nearby hoặc bảng stores trực tiếp)
-      let rawStores: any[] = [];
-      const { data: storesData } = await supabase.rpc('list_stores_nearby', {
-        p_lat: lat,
-        p_lng: lng,
-        p_radius: 50000,
-        p_category: null,
-        p_page: 1,
-        p_limit: 20,
-      });
+      // Chạy song song cả truy vấn stores và bags từ Supabase để tối ưu tốc độ mạng tối đa
+      const [rawStores, bagsSource] = await Promise.all([
+        (async () => {
+          try {
+            const { data: storesData } = await supabase.rpc('list_stores_nearby', {
+              p_lat: lat,
+              p_lng: lng,
+              p_radius: 50000,
+              p_category: null,
+              p_page: 1,
+              p_limit: 20,
+            });
+            if (Array.isArray(storesData) && storesData.length > 0) return storesData;
+            const { data: directStores } = await supabase.from('stores').select('*').limit(30);
+            return Array.isArray(directStores) ? directStores : [];
+          } catch {
+            return [];
+          }
+        })(),
 
-      if (Array.isArray(storesData) && storesData.length > 0) {
-        rawStores = storesData;
-      } else {
-        const { data: directStores } = await supabase.from('stores').select('*');
-        if (Array.isArray(directStores)) {
-          rawStores = directStores;
-        }
-      }
+        (async () => {
+          try {
+            const { data: nearbyBags } = await supabase.rpc('list_bags_nearby', {
+              p_lat: lat,
+              p_lng: lng,
+              p_radius: 50000,
+              p_category: null,
+              p_page: 1,
+              p_limit: 30,
+            });
+            if (Array.isArray(nearbyBags) && nearbyBags.length > 0) return nearbyBags;
+            const { data: directBags } = await supabase
+              .from('surprise_bags')
+              .select('*, stores(name, logo_url, address)')
+              .eq('is_available', true)
+              .is('deleted_at', null)
+              .order('created_at', { ascending: false })
+              .limit(30);
+            return Array.isArray(directBags) ? directBags : [];
+          } catch {
+            return [];
+          }
+        })(),
+      ]);
 
       if (rawStores.length > 0) {
-        // Kiểm tra xem các quán trong DB có ở gần vị trí hiện tại (bán kính 50km) hay không
-        const firstStore = rawStores.find((s: any) => s.latitude && s.longitude);
-        let needAdaptToUserLocation = false;
-        if (firstStore) {
-          const dLat = Math.abs(Number(firstStore.latitude) - lat);
-          const dLng = Math.abs(Number(firstStore.longitude) - lng);
-          if (dLat > 0.45 || dLng > 0.45) {
-            needAdaptToUserLocation = true;
+        remoteStores = rawStores.map((s: any) => {
+          const storeLat = s.latitude != null ? Number(s.latitude) : undefined;
+          const storeLng = s.longitude != null ? Number(s.longitude) : undefined;
+
+          let distM = 500;
+          if (typeof storeLat === 'number' && typeof storeLng === 'number') {
+            const distKm = calculateDistanceKm([lng, lat], [storeLng, storeLat]);
+            distM = Math.round(distKm * 1000);
           }
-        } else {
-          needAdaptToUserLocation = true;
-        }
-
-        const clusterOffsets = [
-          { dLat: 0.0035, dLng: 0.0032 },
-          { dLat: -0.0052, dLng: 0.0045 },
-          { dLat: -0.0055, dLng: 0.0048 },
-          { dLat: 0.0065, dLng: -0.0055 },
-          { dLat: -0.0088, dLng: -0.0078 },
-          { dLat: -0.0092, dLng: -0.0075 },
-          { dLat: -0.0086, dLng: -0.0082 },
-          { dLat: 0.0125, dLng: 0.0035 },
-          { dLat: 0.0025, dLng: 0.0155 },
-          { dLat: 0.0028, dLng: 0.0158 },
-          { dLat: -0.0185, dLng: -0.0025 },
-        ];
-
-        remoteStores = rawStores.map((s: any, idx: number) => {
-          let storeLat = s.latitude ? Number(s.latitude) : lat;
-          let storeLng = s.longitude ? Number(s.longitude) : lng;
-
-          if (needAdaptToUserLocation) {
-            const offset = clusterOffsets[idx % clusterOffsets.length];
-            storeLat = lat + offset.dLat;
-            storeLng = lng + offset.dLng;
-          }
-
-          const distKm = Math.sqrt(
-            Math.pow((storeLat - lat) * 111, 2) +
-            Math.pow((storeLng - lng) * 111 * Math.cos((lat * Math.PI) / 180), 2)
-          );
-          const distM = Math.round(distKm * 1000);
 
           return {
             id: s.id,
@@ -185,7 +996,7 @@ export const customerService = {
             name: s.name,
             description: s.description || 'Quán ăn đối tác GoSavingFood',
             phone: s.phone || '+84900000000',
-            address: s.address || 'Hồ Chí Minh',
+            address: s.address || 'Việt Nam',
             logo: getStoreLogo(s.logo_url),
             banner: getStoreBanner(s.banner_url),
             rating: Number(s.rating) || 4.9,
@@ -200,37 +1011,11 @@ export const customerService = {
         });
       }
 
-      // 2. Lấy túi mù từ RPC list_bags_nearby hoặc trực tiếp bảng surprise_bags
-      let bagsSource: any[] = [];
-      const { data: nearbyBags } = await supabase.rpc('list_bags_nearby', {
-        p_lat: lat,
-        p_lng: lng,
-        p_radius: 50000,
-        p_category: null,
-        p_page: 1,
-        p_limit: 20,
-      });
-
-      if (Array.isArray(nearbyBags) && nearbyBags.length > 0) {
-        bagsSource = nearbyBags;
-      } else {
-        const { data: directBags } = await supabase
-          .from('surprise_bags')
-          .select('*, stores(name, logo_url, address)')
-          .eq('is_available', true)
-          .is('deleted_at', null)
-          .order('created_at', { ascending: false })
-          .limit(30);
-        if (Array.isArray(directBags)) {
-          bagsSource = directBags;
-        }
-      }
-
       if (bagsSource.length > 0) {
         remoteBags = bagsSource.map((b: any) => ({
           id: b.id,
           merchantId: b.store_id,
-          merchantName: b.store_name || b.stores?.name || 'Quán Chay Quýt',
+          merchantName: b.store_name || b.stores?.name || 'Quán đối tác',
           name: b.name,
           description: b.description || 'Túi cứu trợ thực phẩm xanh',
           originalPrice: Number(b.original_price) || 50000,
@@ -256,11 +1041,23 @@ export const customerService = {
       console.warn('Lấy dữ liệu Supabase getHome lỗi:', err);
     }
 
-    // Nếu database đã có dữ liệu thực tế -> DÙNG 100% DỮ LIỆU TỪ DATABASE
-    const merchants = remoteStores.length > 0 ? remoteStores : [];
-    const bags = remoteBags.length > 0 ? remoteBags : [];
+    // 1. Tính khoảng cách thực tế đến các cửa hàng Hà Nội
+    const hanoiStoresWithDistance: Merchant[] = HANOI_STORES.map((s) => {
+      const distKm = calculateDistanceKm([lng, lat], [s.longitude!, s.latitude!]);
+      return {
+        ...s,
+        distance: Math.round(distKm * 1000),
+      };
+    });
 
-    const brands: Brand[] = merchants.map((m) => ({
+    // 2. Kết hợp toàn bộ cửa hàng (Hà Nội + Supabase). Giữ 100% tọa độ thực tế, không dịch chuyển tọa độ giả lập!
+    const allStores = [...hanoiStoresWithDistance, ...remoteStores];
+    allStores.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+
+    // 3. Kết hợp toàn bộ 30 túi mù Hà Nội + túi mù trên Supabase
+    const allBags = [...HANOI_BAGS, ...remoteBags];
+
+    const brands: Brand[] = allStores.map((m) => ({
       id: m.id,
       name: m.name,
       logo: m.logo,
@@ -276,8 +1073,8 @@ export const customerService = {
       banners: HOME_BANNERS,
       categories: HOME_CATEGORIES,
       brands,
-      merchants,
-      bags,
+      merchants: allStores,
+      bags: allBags,
     };
   },
 
@@ -294,7 +1091,7 @@ export const customerService = {
         return {
           id: data.id,
           merchantId: data.store_id,
-          merchantName: data.stores?.name || 'Quán Chay Quýt',
+          merchantName: data.stores?.name || 'Quán đối tác',
           name: data.name,
           description: data.description || '',
           originalPrice: Number(data.original_price),
@@ -313,6 +1110,11 @@ export const customerService = {
     } catch (err) {
       console.warn('getBag Supabase lỗi:', err);
     }
+
+    // Tra cứu trong 30 túi mù tại Hà Nội
+    const localBag = HANOI_BAGS.find((b) => b.id === id);
+    if (localBag) return localBag;
+
     return null;
   },
 
@@ -342,10 +1144,12 @@ export const customerService = {
           banner: getStoreBanner(store.banner_url),
           rating: Number(store.rating) || 4.9,
           totalRatings: Number(store.total_ratings) || 50,
-          distance: 0.5,
+          distance: 500,
           status: 'active',
           isOpen: store.is_open ?? true,
           openingHours: `${store.open_time?.slice(0, 5) || '07:00'} - ${store.close_time?.slice(0, 5) || '20:00'}`,
+          latitude: store.latitude != null ? Number(store.latitude) : undefined,
+          longitude: store.longitude != null ? Number(store.longitude) : undefined,
         };
 
         const mappedBags: SurpriseBag[] = (bags || []).map((b: any) => ({
@@ -373,6 +1177,13 @@ export const customerService = {
       console.warn('getMerchant Supabase lỗi:', err);
     }
 
+    // Tra cứu trong danh sách cửa hàng thực tế tại Hà Nội
+    const localStore = HANOI_STORES.find((s) => s.id === id);
+    if (localStore) {
+      const storeBags = HANOI_BAGS.filter((b) => b.merchantId === id);
+      return { merchant: localStore, bags: storeBags };
+    }
+
     return { merchant: null, bags: [] };
   },
 
@@ -394,15 +1205,25 @@ export const customerService = {
   },
 
   async getOrders(userId?: string): Promise<Order[]> {
-    try {
-      let currentUserId = userId;
-      if (!currentUserId) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        currentUserId = user?.id;
-      }
+    let currentUserId = userId;
+    if (!currentUserId) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      currentUserId = user?.id;
+    }
 
+    if (!currentUserId) {
+      return [];
+    }
+
+    let localOrders: Order[] = [];
+    try {
+      const key = `gsf_local_orders_${currentUserId}`;
+      localOrders = JSON.parse(localStorage.getItem(key) || '[]');
+    } catch {}
+
+    try {
       const query = supabase
         .from('orders')
         .select(
@@ -412,19 +1233,16 @@ export const customerService = {
           order_items (*)
         `
         )
+        .eq('customer_id', currentUserId)
         .order('created_at', { ascending: false });
 
-      if (currentUserId) {
-        query.eq('customer_id', currentUserId);
-      }
-
       const { data, error } = await query;
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map((o: any) => ({
+      if (!error && Array.isArray(data)) {
+        const remoteOrders = data.map((o: any) => ({
           id: o.id,
           orderCode: o.order_code || `GSF-${o.id.slice(0, 6).toUpperCase()}`,
           merchantId: o.store_id,
-          merchantName: o.stores?.name || 'Quán Chay Quýt',
+          merchantName: o.stores?.name || 'Quán đối tác',
           items: (o.order_items || []).map((item: any) => ({
             bagId: item.bag_id,
             bagName: item.bag_name || 'Túi cứu trợ thực phẩm',
@@ -440,7 +1258,7 @@ export const customerService = {
           paymentMethod: o.payment_method || 'cash',
           paymentStatus: o.payment_status || (o.status === 'pending' ? 'pending' : 'success'),
           pickupTime: o.pickup_time || '11:00 - 14:00',
-          pickupAddress: o.stores?.address || '456 Lê Lợi, Q1, TP.HCM',
+          pickupAddress: o.stores?.address || 'Hà Nội',
           createdAt: o.created_at,
           paidAt: o.paid_at || undefined,
           completedAt: o.completed_at || undefined,
@@ -449,11 +1267,12 @@ export const customerService = {
           note: o.note || undefined,
           qrCode: o.qr_code || `GSF-ORDER-${o.id}`,
         }));
+        return [...localOrders, ...remoteOrders];
       }
     } catch (err) {
       console.warn('Lấy đơn hàng từ Supabase lỗi:', err);
     }
-    return [];
+    return localOrders;
   },
 
   async getNotifications(): Promise<NotificationItem[]> {
@@ -636,6 +1455,7 @@ export const customerService = {
    * Lấy danh sách cửa hàng gần nhất theo tọa độ [lat, lng] dùng PostGIS RPC
    */
   async getStoresNearby(coords: { lat: number; lng: number }, radiusMeters = 50000) {
+    let remoteStores: any[] = [];
     try {
       const { data, error } = await supabase.rpc('list_stores_nearby', {
         p_lat: coords.lat,
@@ -647,12 +1467,18 @@ export const customerService = {
       });
 
       if (!error && Array.isArray(data)) {
-        return data.filter((s: any) => s.latitude && s.longitude);
+        remoteStores = data.filter((s: any) => s.latitude && s.longitude);
       }
     } catch (err) {
       console.error('[CustomerService] list_stores_nearby failed:', err);
     }
-    return [];
+
+    const hanoiNearby = HANOI_STORES.filter((s) => {
+      const distKm = calculateDistanceKm([coords.lng, coords.lat], [s.longitude!, s.latitude!]);
+      return distKm * 1000 <= radiusMeters;
+    });
+
+    return [...hanoiNearby, ...remoteStores];
   },
 
   async getUser(): Promise<User | null> {
@@ -661,16 +1487,56 @@ export const customerService = {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return null;
+
+      let dbName = '';
+      let dbPhone = '';
+      let dbAvatar = '';
+      try {
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('name, phone, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (dbUser) {
+          dbName = dbUser.name || '';
+          dbPhone = dbUser.phone || '';
+          dbAvatar = dbUser.avatar_url || '';
+        }
+      } catch {
+        // Bỏ qua lỗi truy vấn phụ, dùng metadata
+      }
+
+      const meta = user.user_metadata || {};
+      const fallbackName =
+        meta.full_name || meta.name || user.email?.split('@')[0] || 'Khách hàng';
+      const fallbackAvatar =
+        meta.avatar_url || meta.picture || meta.avatar || undefined;
+
       return {
         id: user.id,
-        name: user.user_metadata?.name || user.email?.split('@')[0] || 'Khách hàng',
-        phone: user.user_metadata?.phone || '0901234567',
+        name: dbName || fallbackName,
+        phone: dbPhone || meta.phone || '',
         email: user.email,
-        avatar: user.user_metadata?.avatar,
+        avatar: dbAvatar || fallbackAvatar,
       };
     } catch {
       return null;
     }
+  },
+
+  async loginWithGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Không thể đăng nhập bằng tài khoản Google.');
+    }
+
+    return data;
   },
 
   async login(emailOrPhone: string, password?: string) {
@@ -861,6 +1727,25 @@ export const customerService = {
     const qrCodeString = `GSF-ORDER-${generatedOrderCode}-${Date.now()}`;
     const idempotencyKey = crypto.randomUUID();
     const pickupIso = new Date(Date.now() + 3600000).toISOString();
+
+    const isLocalHanoiOrder = order.merchantId.startsWith('store-hn-');
+    if (isLocalHanoiOrder) {
+      const localOrder: Order = {
+        ...order,
+        id: orderId,
+        orderCode: generatedOrderCode,
+        qrCode: qrCodeString,
+        status: 'pending',
+        paymentStatus: 'pending',
+        createdAt: new Date().toISOString(),
+      };
+      try {
+        const key = `gsf_local_orders_${user.id}`;
+        const saved = JSON.parse(localStorage.getItem(key) || '[]');
+        localStorage.setItem(key, JSON.stringify([localOrder, ...saved]));
+      } catch {}
+      return localOrder;
+    }
 
     const { data: rpcResult, error } = await supabase.rpc('place_order', {
       p_id: orderId,

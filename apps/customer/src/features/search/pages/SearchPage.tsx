@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Chip, EmptyState } from '@gosavingfood/ui';
 import { ScreenHeader, SearchField } from '../../../shared/components';
-import { MAPBOX_TOKEN, mapboxService } from '../../../services/mapbox.service';
+import { MAPBOX_TOKEN, calculateDistanceKm, mapboxService } from '../../../services/mapbox.service';
 import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const formatPrice = (price: number) => {
@@ -182,48 +182,21 @@ export function SearchPage({
     return list;
   }, [merchants, bags, query, activeFilter]);
 
-  // Đảm bảo tọa độ các quán hiển thị trong khu vực bản đồ người dùng đang khám phá
+  // Tọa độ các quán hiển thị trên bản đồ (100% tọa độ thực tế, không giả lập offset)
   const effectiveMerchants = useMemo(() => {
     if (!filteredMerchants.length) return [];
     const [centerLng, centerLat] = centerCoords;
 
-    const first = filteredMerchants.find((m) => m.latitude && m.longitude);
-    const needAdapt =
-      !first ||
-      Math.abs(first.latitude! - centerLat) > 0.45 ||
-      Math.abs(first.longitude! - centerLng) > 0.45;
-
-    if (!needAdapt) return filteredMerchants;
-
-    const clusterOffsets = [
-      { dLat: 0.0035, dLng: 0.0032 },
-      { dLat: -0.0052, dLng: 0.0045 },
-      { dLat: -0.0055, dLng: 0.0048 },
-      { dLat: 0.0065, dLng: -0.0055 },
-      { dLat: -0.0088, dLng: -0.0078 },
-      { dLat: -0.0092, dLng: -0.0075 },
-      { dLat: -0.0086, dLng: -0.0082 },
-      { dLat: 0.0125, dLng: 0.0035 },
-      { dLat: 0.0025, dLng: 0.0155 },
-      { dLat: 0.0028, dLng: 0.0158 },
-      { dLat: -0.0185, dLng: -0.0025 },
-    ];
-
-    return filteredMerchants.map((m, idx) => {
-      const offset = clusterOffsets[idx % clusterOffsets.length];
-      const lat = centerLat + offset.dLat;
-      const lng = centerLng + offset.dLng;
-      const distKm = Math.sqrt(
-        Math.pow((lat - centerLat) * 111, 2) +
-          Math.pow((lng - centerLng) * 111 * Math.cos((centerLat * Math.PI) / 180), 2)
-      );
-      return {
-        ...m,
-        latitude: lat,
-        longitude: lng,
-        distance: Math.round(distKm * 1000),
-      };
-    });
+    return filteredMerchants
+      .filter((m) => typeof m.latitude === 'number' && typeof m.longitude === 'number')
+      .map((m) => {
+        const distKm = calculateDistanceKm([centerLng, centerLat], [m.longitude!, m.latitude!]);
+        return {
+          ...m,
+          distance: Math.round(distKm * 1000),
+        };
+      })
+      .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
   }, [filteredMerchants, centerCoords]);
 
   // Cửa hàng đang được chọn (nếu có)
@@ -234,9 +207,10 @@ export function SearchPage({
 
   const merchantsMap = useMemo(() => {
     const map = new Map<string, Merchant>();
+    merchants.forEach((m) => map.set(m.id, m));
     effectiveMerchants.forEach((m) => map.set(m.id, m));
     return map;
-  }, [effectiveMerchants]);
+  }, [merchants, effectiveMerchants]);
 
   const selectedStoreBags = useMemo(
     () => (selectedMerchantId ? bags.filter((b) => b.merchantId === selectedMerchantId) : []),
@@ -246,10 +220,6 @@ export function SearchPage({
   // Lọc danh sách túi theo từ khóa và bộ lọc (cho List View)
   const filteredBags = useMemo(() => {
     let list = bags;
-
-    if (selectedMerchantId) {
-      list = list.filter((b) => b.merchantId === selectedMerchantId);
-    }
 
     if (query.trim()) {
       const q = query.trim().toLocaleLowerCase('vi-VN');
@@ -266,10 +236,25 @@ export function SearchPage({
       );
     } else if (activeFilter === 'rating') {
       list = [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (activeFilter === 'nearest') {
+      list = [...list].sort((a, b) => {
+        const distA = merchantsMap.get(a.merchantId)?.distance ?? 999999;
+        const distB = merchantsMap.get(b.merchantId)?.distance ?? 999999;
+        return distA - distB;
+      });
+    } else if (activeFilter === 'pickup_now') {
+      list = list.filter((b) => b.quantity > 0);
+    } else {
+      // Mặc định: sắp xếp theo khoảng cách từ gần đến xa
+      list = [...list].sort((a, b) => {
+        const distA = merchantsMap.get(a.merchantId)?.distance ?? 999999;
+        const distB = merchantsMap.get(b.merchantId)?.distance ?? 999999;
+        return distA - distB;
+      });
     }
 
     return list;
-  }, [bags, selectedMerchantId, query, activeFilter]);
+  }, [bags, merchantsMap, query, activeFilter]);
 
   const updateUserMarker = useCallback((lngLat: [number, number]) => {
     if (!mapRef.current) return;
@@ -511,7 +496,10 @@ export function SearchPage({
         <button
           type="button"
           className="customer-viewmode-toggle"
-          onClick={() => setViewMode((prev) => (prev === 'map' ? 'list' : 'map'))}
+          onClick={() => {
+            setSelectedMerchantId(null);
+            setViewMode((prev) => (prev === 'map' ? 'list' : 'map'));
+          }}
           aria-label={viewMode === 'map' ? 'Chuyển sang chế độ danh sách' : 'Chuyển sang chế độ bản đồ'}
         >
           {viewMode === 'map' ? (
@@ -702,28 +690,7 @@ export function SearchPage({
             }}
           >
             <div style={{ fontSize: 13, fontWeight: 700, color: '#475569' }}>
-              {selectedMerchantId ? (
-                <span>
-                  Quán: <strong>{selectedMerchant?.name}</strong>{' '}
-                  <button
-                    type="button"
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#10b981',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      marginLeft: 4,
-                    }}
-                    onClick={() => setSelectedMerchantId(null)}
-                  >
-                    (Xem tất cả)
-                  </button>
-                </span>
-              ) : (
-                <span>{filteredBags.length} món & túi cứu trợ</span>
-              )}
+              <span>{filteredBags.length} món & túi cứu trợ quanh bạn</span>
             </div>
           </div>
 

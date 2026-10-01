@@ -26,6 +26,22 @@ button { color: inherit; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 img { display: block; max-width: 100%; }
 
+@keyframes customerSkeletonPulse {
+  0%, 100% {
+    opacity: 1;
+    background-color: #e2e8f0;
+  }
+  50% {
+    opacity: 0.45;
+    background-color: #cbd5e1;
+  }
+}
+
+.customer-skeleton {
+  animation: customerSkeletonPulse 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background-color: #e2e8f0;
+}
+
 .customer-app-shell { position: relative; width: min(100%, 560px); min-height: 100vh; margin: 0 auto; background: var(--color-bg-page); box-shadow: 0 0 30px rgb(25 28 29 / 8%); }
 .customer-main-content { min-height: 100vh; }
 .customer-main-content.has-navigation { padding-bottom: 88px; }
@@ -637,6 +653,13 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 .customer-auth-eye-btn:hover { color: var(--color-text-primary); }
 .customer-auth-error-banner { padding: 10px 12px; border-radius: 11px; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 13px; font-weight: 500; line-height: 1.4; text-align: left; }
 .customer-auth-submit-btn { margin-top: 4px; border-radius: 13px !important; font-size: 15px !important; font-weight: 700 !important; }
+.customer-auth-divider { display: flex; align-items: center; text-align: center; margin: 4px 0; color: var(--color-text-muted, #94a3b8); font-size: 13px; font-weight: 500; }
+.customer-auth-divider::before, .customer-auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--color-border-subtle, #e2e8f0); }
+.customer-auth-divider span { padding: 0 10px; text-transform: lowercase; }
+.customer-auth-google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 46px; border-radius: 13px; border: 1px solid var(--color-border-input, #d2ded6); background: #ffffff; color: var(--color-text-primary, #1e293b); font-size: 14.5px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); }
+.customer-auth-google-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07); }
+.customer-auth-google-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+.customer-auth-google-icon { flex-shrink: 0; }
 .customer-auth-footer { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px; color: var(--color-text-secondary); }
 .customer-auth-footer button { padding: 0; border: none; background: none; color: var(--color-primary); font-weight: 750; cursor: pointer; font-size: 13px; font-family: inherit; transition: opacity 0.15s ease; }
 .customer-auth-footer button:hover { opacity: 0.85; text-decoration: underline; }
