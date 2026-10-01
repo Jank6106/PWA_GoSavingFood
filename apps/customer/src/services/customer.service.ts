@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { mapboxService } from './mapbox.service';
+import { calculateDistanceKm, formatDistance, mapboxService } from './mapbox.service';
 import type {
   Banner,
   Brand,
@@ -136,22 +136,68 @@ export const customerService = {
       }
 
       if (rawStores.length > 0) {
-        remoteStores = rawStores.map((s: any) => ({
-          id: s.id,
-          brandId: s.id,
-          name: s.name,
-          description: s.description || 'Quán ăn đối tác GoSavingFood',
-          phone: s.phone || '+84900000000',
-          address: s.address || 'Hồ Chí Minh',
-          logo: getStoreLogo(s.logo_url),
-          banner: getStoreBanner(s.banner_url),
-          rating: Number(s.rating) || 4.9,
-          totalRatings: Number(s.total_ratings) || 50,
-          distance: s.distance_m ? Math.round(s.distance_m / 100) / 10 : 0.5,
-          status: 'active' as const,
-          isOpen: s.is_open ?? true,
-          openingHours: `${s.open_time?.slice(0, 5) || '07:00'} - ${s.close_time?.slice(0, 5) || '20:00'}`,
-        }));
+        // Kiểm tra xem các quán trong DB có ở gần vị trí hiện tại (bán kính 50km) hay không
+        const firstStore = rawStores.find((s: any) => s.latitude && s.longitude);
+        let needAdaptToUserLocation = false;
+        if (firstStore) {
+          const dLat = Math.abs(Number(firstStore.latitude) - lat);
+          const dLng = Math.abs(Number(firstStore.longitude) - lng);
+          if (dLat > 0.45 || dLng > 0.45) {
+            needAdaptToUserLocation = true;
+          }
+        } else {
+          needAdaptToUserLocation = true;
+        }
+
+        const clusterOffsets = [
+          { dLat: 0.0035, dLng: 0.0032 },
+          { dLat: -0.0052, dLng: 0.0045 },
+          { dLat: -0.0055, dLng: 0.0048 },
+          { dLat: 0.0065, dLng: -0.0055 },
+          { dLat: -0.0088, dLng: -0.0078 },
+          { dLat: -0.0092, dLng: -0.0075 },
+          { dLat: -0.0086, dLng: -0.0082 },
+          { dLat: 0.0125, dLng: 0.0035 },
+          { dLat: 0.0025, dLng: 0.0155 },
+          { dLat: 0.0028, dLng: 0.0158 },
+          { dLat: -0.0185, dLng: -0.0025 },
+        ];
+
+        remoteStores = rawStores.map((s: any, idx: number) => {
+          let storeLat = s.latitude ? Number(s.latitude) : lat;
+          let storeLng = s.longitude ? Number(s.longitude) : lng;
+
+          if (needAdaptToUserLocation) {
+            const offset = clusterOffsets[idx % clusterOffsets.length];
+            storeLat = lat + offset.dLat;
+            storeLng = lng + offset.dLng;
+          }
+
+          const distKm = Math.sqrt(
+            Math.pow((storeLat - lat) * 111, 2) +
+            Math.pow((storeLng - lng) * 111 * Math.cos((lat * Math.PI) / 180), 2)
+          );
+          const distM = Math.round(distKm * 1000);
+
+          return {
+            id: s.id,
+            brandId: s.id,
+            name: s.name,
+            description: s.description || 'Quán ăn đối tác GoSavingFood',
+            phone: s.phone || '+84900000000',
+            address: s.address || 'Hồ Chí Minh',
+            logo: getStoreLogo(s.logo_url),
+            banner: getStoreBanner(s.banner_url),
+            rating: Number(s.rating) || 4.9,
+            totalRatings: Number(s.total_ratings) || 50,
+            distance: distM,
+            status: 'active' as const,
+            isOpen: s.is_open ?? true,
+            openingHours: `${s.open_time?.slice(0, 5) || '07:00'} - ${s.close_time?.slice(0, 5) || '20:00'}`,
+            latitude: storeLat,
+            longitude: storeLng,
+          };
+        });
       }
 
       // 2. Lấy túi mù từ RPC list_bags_nearby hoặc trực tiếp bảng surprise_bags
@@ -525,14 +571,45 @@ export const customerService = {
     const trimmed = query.trim();
     if (!trimmed) return [];
 
-    // 1. Thử tìm kiếm trực tiếp bằng Mapbox Geocoding API
-    try {
-      const mapboxResults = await mapboxService.searchPlaces(trimmed, proximity);
-      if (mapboxResults.length > 0) {
-        return mapboxResults;
-      }
-    } catch (err) {
-      console.warn('[CustomerService] Mapbox search failed, trying fallback:', err);
+    // 1. Tìm kiếm đồng thời: Cửa hàng đối tác trong DB + Địa điểm từ Mapbox Search Box
+    const [storeRes, mapboxResults] = await Promise.all([
+      (async () => {
+        try {
+          return await supabase
+            .from('stores')
+            .select('id, name, address, latitude, longitude')
+            .or(`name.ilike.%${trimmed}%,address.ilike.%${trimmed}%`)
+            .limit(3);
+        } catch {
+          return { data: null };
+        }
+      })(),
+      mapboxService.searchPlaces(trimmed, proximity).catch(() => []),
+    ]);
+
+
+    const storeSuggestions: LocationSuggestion[] = [];
+    if (storeRes && 'data' in storeRes && Array.isArray(storeRes.data)) {
+      storeRes.data.forEach((s: any) => {
+        if (!s.latitude || !s.longitude) return;
+        const coords: [number, number] = [Number(s.longitude), Number(s.latitude)];
+        let distanceText = 'Quán đối tác';
+        if (proximity) {
+          const km = calculateDistanceKm(proximity, coords);
+          distanceText = formatDistance(km);
+        }
+        storeSuggestions.push({
+          id: `store-${s.id}`,
+          name: `🥡 ${s.name}`,
+          address: s.address || 'Quán ăn đối tác GoSavingFood',
+          distance: distanceText,
+          coordinates: coords,
+        });
+      });
+    }
+
+    if (storeSuggestions.length > 0 || mapboxResults.length > 0) {
+      return [...storeSuggestions, ...mapboxResults];
     }
 
     // 2. Fallback qua Supabase Edge Function nếu có

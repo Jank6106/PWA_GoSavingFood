@@ -13,20 +13,28 @@ const DEFAULT_COORDS: [number, number] = [106.7032, 10.7798];
 
 interface SelectLocationPageProps {
   currentLocation: string;
+  initialCoords?: { lat: number; lng: number } | null;
   onBack: () => void;
   onSelect: (location: string, coords?: { lat: number; lng: number }) => void;
 }
 
 export function SelectLocationPage({
   currentLocation,
+  initialCoords,
   onBack,
   onSelect,
 }: SelectLocationPageProps) {
   const [query, setQuery] = useState('');
   const [locations, setLocations] = useState<LocationSuggestion[]>([]);
   const [selected, setSelected] = useState(currentLocation || 'TP. Hồ Chí Minh');
-  const [selectedCoords, setSelectedCoords] = useState<[number, number]>(DEFAULT_COORDS);
+  const [selectedCoords, setSelectedCoords] = useState<[number, number]>(() => {
+    if (initialCoords && typeof initialCoords.lng === 'number' && typeof initialCoords.lat === 'number') {
+      return [initialCoords.lng, initialCoords.lat];
+    }
+    return DEFAULT_COORDS;
+  });
   const [isLocating, setIsLocating] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -127,9 +135,11 @@ export function SelectLocationPage({
     mapRef.current = map;
 
     map.on('load', () => {
+      map.resize();
       updateUserPin(selectedCoords);
       void loadNearbyStores(selectedCoords);
     });
+
 
     // Cho phép người dùng click bất kỳ vị trí nào trên bản đồ để chọn
     map.on('click', async (e) => {
@@ -155,28 +165,36 @@ export function SelectLocationPage({
     };
   }, []);
 
-  // 4. Tìm kiếm địa điểm với debounce 300ms
+  // 4. Tìm kiếm địa điểm với debounce 250ms
   useEffect(() => {
     const trimmed = query.trim();
     if (!trimmed) {
       setLocations([]);
+      setIsSearching(false);
       return;
     }
 
+    setIsSearching(true);
     const timer = setTimeout(() => {
       let active = true;
-      customerService.searchLocations(trimmed, selectedCoords).then((items) => {
-        if (active) {
-          setLocations(items);
-        }
-      });
+      customerService
+        .searchLocations(trimmed, selectedCoords)
+        .then((items) => {
+          if (active) {
+            setLocations(items);
+            setIsSearching(false);
+          }
+        })
+        .catch(() => {
+          if (active) setIsSearching(false);
+        });
       return () => {
         active = false;
       };
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, selectedCoords]);
 
   // 5. Nút bấm "Dùng vị trí hiện tại" (GPS thật qua navigator.geolocation)
   const handleUseCurrentGPS = () => {
@@ -295,7 +313,12 @@ export function SelectLocationPage({
 
       {/* Danh sách gợi ý tìm kiếm */}
       <div className="customer-location-results">
-        {locations.length > 0 ? (
+        {isSearching ? (
+          <div className="customer-location-loading">
+            <Loader2 size={18} className="animate-spin text-primary" />
+            <span>Đang tìm kiếm “{query}”...</span>
+          </div>
+        ) : locations.length > 0 ? (
           locations.map((location) => {
             const isMatch =
               selected === location.name || selected === location.address;
@@ -315,6 +338,12 @@ export function SelectLocationPage({
               </button>
             );
           })
+        ) : query.trim() ? (
+          <div className="customer-location-empty">
+            <MapPin size={22} className="text-muted" />
+            <span>Không tìm thấy địa điểm “{query}”</span>
+            <small>Hãy thử nhập tên đường, địa danh hoặc ghim trực tiếp trên bản đồ.</small>
+          </div>
         ) : (
           <button type="button" className="is-selected">
             <Navigation size={18} />

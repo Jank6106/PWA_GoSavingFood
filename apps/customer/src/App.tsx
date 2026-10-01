@@ -23,7 +23,9 @@ import { useCart } from './hooks/useCart';
 import { useAuth } from './hooks/useAuth';
 import { useCustomerCatalog } from './hooks/useCustomerCatalog';
 import { customerService } from './services/customer.service';
+import { mapboxService } from './services/mapbox.service';
 import { supabase } from './services/supabase';
+
 import type {
   AppRoute,
   CheckoutDraft,
@@ -39,8 +41,41 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+const STORAGE_LOCATION_KEY = 'gsf_customer_location';
+const STORAGE_COORDS_KEY = 'gsf_customer_coords';
+
 function CustomerApp() {
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(undefined);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_COORDS_KEY);
+      return saved ? JSON.parse(saved) : undefined;
+    } catch {
+      return undefined;
+    }
+  });
+
+  const [location, setLocation] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_LOCATION_KEY);
+      return saved || 'Đang lấy vị trí của bạn...';
+    } catch {
+      return 'Đang lấy vị trí của bạn...';
+    }
+  });
+
+  const updateLocation = (nextLocation: string, nextCoords?: { lat: number; lng: number }) => {
+    setLocation(nextLocation);
+    try {
+      localStorage.setItem(STORAGE_LOCATION_KEY, nextLocation);
+    } catch {}
+    if (nextCoords) {
+      setCoords(nextCoords);
+      try {
+        localStorage.setItem(STORAGE_COORDS_KEY, JSON.stringify(nextCoords));
+      } catch {}
+    }
+  };
+
   const catalog = useCustomerCatalog(coords);
   const cart = useCart();
   const auth = useAuth();
@@ -48,13 +83,44 @@ function CustomerApp() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
-  const [location, setLocation] = useState('Quận 1, TP.HCM');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isStandalone, setIsStandalone] = useState(
     () => window.matchMedia('(display-mode: standalone)').matches
   );
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Tự động xin quyền GPS và lấy vị trí thực tế của thiết bị ngay khi mở app
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      if (location === 'Đang lấy vị trí của bạn...') {
+        updateLocation('Quận 1, TP.HCM', { lat: 10.7798, lng: 106.7032 });
+      }
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        try {
+          const rev = await mapboxService.reverseGeocode(lng, lat);
+          const addr = rev.address || rev.name;
+          updateLocation(addr, { lat, lng });
+        } catch {
+          updateLocation(`Vị trí hiện tại (${lat.toFixed(4)}, ${lng.toFixed(4)})`, { lat, lng });
+        }
+      },
+      (err) => {
+        console.warn('[App] Geolocation denied or unavailable on launch:', err.message);
+        if (location === 'Đang lấy vị trí của bạn...') {
+          updateLocation('Quận 1, TP.HCM', { lat: 10.7798, lng: 106.7032 });
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, []);
+
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -243,7 +309,25 @@ function CustomerApp() {
       if (route.tab === 'orders') return <OrdersPage orders={orders} isAuthenticated={auth.isAuthenticated} onLogin={auth.showAuthModal} onOpenOrder={(order) => push({ name: 'order', id: order.id })} />;
       return <ProfilePage user={auth.user} orders={orders} vouchers={vouchers} isStandalone={isStandalone} onLogin={auth.showAuthModal} onLogout={auth.logout} onOrders={() => openTab('orders')} onNotifications={() => push({ name: 'notifications' })} onLocation={() => push({ name: 'location' })} onInstall={installApp} onUpdateProfile={auth.updateProfile} onDeleteAccount={() => { auth.logout(); window.alert('Tài khoản của bạn đã được xóa thành công khỏi thiết bị.'); }} />;
     }
-    if (route.name === 'search') return <SearchPage bags={catalog.bags} merchants={catalog.merchants} onBack={back} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
+    if (route.name === 'search')
+      return (
+        <SearchPage
+          bags={catalog.bags}
+          merchants={catalog.merchants}
+          currentLocation={location}
+          coords={coords}
+          onBack={back}
+          onOpenBag={(bag) => push({ name: 'bag', id: bag.id })}
+          onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })}
+          onOpenLocation={() => push({ name: 'location' })}
+          onLocationChange={(nextLoc, nextCoords) => {
+            updateLocation(nextLoc, nextCoords);
+          }}
+          onAdd={addToCart}
+        />
+      );
+
+
     if (route.name === 'bags') return <BagsPage bags={catalog.bags} categories={catalog.categories} onBack={back} onOpen={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
     if (route.name === 'bag') return <BagDetailPage bag={selectedBag} merchant={selectedMerchant} onBack={back} onMerchant={() => selectedMerchant && push({ name: 'merchant', id: selectedMerchant.id })} onAdd={addToCart} onBuyNow={buyNow} />;
     if (route.name === 'merchant') return <MerchantDetailPage merchant={selectedMerchant} bags={catalog.bags.filter((bag) => bag.merchantId === route.id)} onBack={back} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
@@ -359,12 +443,10 @@ function CustomerApp() {
       return (
         <SelectLocationPage
           currentLocation={location}
+          initialCoords={coords}
           onBack={back}
           onSelect={(nextLocation, nextCoords) => {
-            setLocation(nextLocation);
-            if (nextCoords) {
-              setCoords(nextCoords);
-            }
+            updateLocation(nextLocation, nextCoords);
             back();
           }}
         />

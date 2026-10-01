@@ -71,7 +71,10 @@ export interface Merchant {
   status: 'active' | 'inactive';
   isOpen: boolean;
   openingHours: string;
+  latitude?: number;
+  longitude?: number;
 }
+
 
 export interface SurpriseBag {
   id: string;

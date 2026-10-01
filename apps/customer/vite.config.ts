@@ -4,8 +4,10 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  envPrefix: ['VITE_', 'MAPBOX_'],
   server: {
     port: 5173,
     strictPort: true,
   },
 })
+

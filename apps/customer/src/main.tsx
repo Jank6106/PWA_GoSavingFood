@@ -5,19 +5,36 @@ import '@gosavingfood/ui/components.css'
 import './index.css'
 import App from './App.tsx'
 
-// Đăng ký Service Worker cho PWA
+// Đăng ký Service Worker cho PWA (chỉ kích hoạt ở production)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((registration) => {
-        console.log('Customer PWA ServiceWorker đăng ký thành công:', registration.scope);
-      })
-      .catch((error) => {
-        console.error('Customer PWA ServiceWorker đăng ký thất bại:', error);
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('Customer PWA ServiceWorker đăng ký thành công:', registration.scope);
+        })
+        .catch((error) => {
+          console.error('Customer PWA ServiceWorker đăng ký thất bại:', error);
+        });
+    });
+  } else {
+    // Trong môi trường dev localhost: Hủy đăng ký và xóa cache để luôn load code mới nhất
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister();
+      }
+    });
+    if ('caches' in window) {
+      caches.keys().then((keys) => {
+        for (const key of keys) {
+          caches.delete(key);
+        }
       });
-  });
+    }
+  }
 }
+
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

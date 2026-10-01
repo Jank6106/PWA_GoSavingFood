@@ -1,4 +1,5 @@
-const CACHE_NAME = 'gsf-customer-v2';
+const CACHE_NAME = 'gsf-customer-v4';
+
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
