@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   Award,
+  ChevronsDown,
   Gift,
   MapPin,
   Search,
@@ -63,6 +64,8 @@ export function HomePage({
     [bags, category]
   );
 
+  const [visibleMerchantCount, setVisibleMerchantCount] = useState(10);
+
   const sortedMerchants = useMemo(() => {
     const getMeters = (d?: number) => {
       if (d === undefined || d === null) return 999999;
@@ -70,6 +73,12 @@ export function HomePage({
     };
     return [...merchants].sort((a, b) => getMeters(a.distance) - getMeters(b.distance));
   }, [merchants]);
+
+  const displayedMerchants = useMemo(
+    () => sortedMerchants.slice(0, visibleMerchantCount),
+    [sortedMerchants, visibleMerchantCount]
+  );
+  const hasMoreMerchants = sortedMerchants.length > visibleMerchantCount;
 
   if (isLoading) {
     return (
@@ -137,7 +146,7 @@ export function HomePage({
           title="Các cửa hàng gần bạn"
         />
         <div className="customer-merchant-list">
-          {sortedMerchants.map((merchant) => {
+          {displayedMerchants.map((merchant) => {
             const merchantBags = bags.filter((bag) => bag.merchantId === merchant.id);
             const lowestPrice =
               merchantBags.length > 0
@@ -153,6 +162,19 @@ export function HomePage({
             );
           })}
         </div>
+
+        {hasMoreMerchants && (
+          <div className="customer-merchant-load-more-wrap">
+            <button
+              type="button"
+              className="customer-merchant-load-more-btn"
+              onClick={() => setVisibleMerchantCount((prev) => prev + 10)}
+            >
+              <span>Xem thêm</span>
+              <ChevronsDown size={20} strokeWidth={2.4} className="customer-load-more-icon" />
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );
