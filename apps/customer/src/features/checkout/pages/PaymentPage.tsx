@@ -332,7 +332,7 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
             transition: 'all 0.2s ease',
           }}
         >
-          <Download size={14} color="#006c40" />
+          <Download size={14} color="#166B4A" />
           <span>Tải ảnh mã QR</span>
         </button>
 

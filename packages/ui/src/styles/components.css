@@ -90,7 +90,7 @@
 }
 
 .gsf-button--secondary:active:not(:disabled) {
-  background-color: #CDE3D6;
+  background-color: #D6E2C8;
   transform: scale(0.99);
 }
 

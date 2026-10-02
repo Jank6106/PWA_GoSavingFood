@@ -75,7 +75,7 @@ export function SelectLocationPage({
           <div style="font-family:sans-serif;padding:4px 6px;">
             <strong style="display:block;font-size:13px;color:#1e293b;margin-bottom:2px;">${store.name}</strong>
             <small style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">${store.address || ''}</small>
-            <span style="font-size:11px;font-weight:700;color:#16a34a;">Cách bạn ~${distanceText}</span>
+            <span style="font-size:11px;font-weight:700;color:#166B4A;">Cách bạn ~${distanceText}</span>
           </div>
         `);
 
