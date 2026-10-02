@@ -1,5 +1,10 @@
 import { supabase } from './supabase';
 import { calculateDistanceKm, formatDistance, mapboxService } from './mapbox.service';
+import {
+  parseIdentifier,
+  isValidEmail,
+  mapSupabaseAuthError,
+} from '../shared/utils/validation';
 import type {
   Banner,
   Brand,
@@ -1550,11 +1555,13 @@ export const customerService = {
     return data;
   },
 
-  async login(emailOrPhone: string, password?: string) {
-    const isEmail = emailOrPhone.includes('@');
-    const email = isEmail
-      ? emailOrPhone.trim()
-      : `${emailOrPhone.trim().replace(/\s+/g, '')}@gosavingfood.vn`;
+  async login(identifier: string, password?: string) {
+    const parsed = parseIdentifier(identifier);
+    if (parsed.type === 'invalid') {
+      throw new Error(parsed.errorMessage || 'Email hoặc số điện thoại không hợp lệ.');
+    }
+
+    const email = parsed.type === 'email' ? parsed.normalized : parsed.syntheticEmail!;
     const pwd = password || 'Password123!';
 
     const { data: signInData, error: signInError } =
@@ -1564,71 +1571,208 @@ export const customerService = {
       });
 
     if (signInError) {
-      if (signInError.message.includes('Invalid login credentials')) {
-        throw new Error('Email/Số điện thoại hoặc mật khẩu không chính xác.');
-      }
-      throw new Error(signInError.message || 'Đăng nhập không thành công.');
+      throw new Error(mapSupabaseAuthError(signInError));
     }
 
     if (signInData.user) {
       const u = signInData.user;
-      return {
+      const meta = u.user_metadata || {};
+      const fullUser: User = {
         id: u.id,
-        name: u.user_metadata?.name || u.email?.split('@')[0] || 'Khách hàng',
-        phone: u.user_metadata?.phone || (isEmail ? '' : emailOrPhone),
+        name: meta.full_name || meta.name || u.email?.split('@')[0] || 'Khách hàng',
+        phone: meta.phone || (parsed.type === 'phone' ? parsed.phoneNational : ''),
         email: u.email,
-        avatar: u.user_metadata?.avatar,
-      } satisfies User;
+        avatar: meta.avatar_url || meta.picture || meta.avatar,
+      };
+
+      // Đảm bảo đồng bộ thông tin vào bảng public.users nếu thiếu
+      try {
+        await supabase.from('users').upsert(
+          {
+            id: u.id,
+            email: u.email,
+            name: fullUser.name,
+            phone: fullUser.phone || null,
+            role: 'customer',
+          },
+          { onConflict: 'id' }
+        );
+      } catch {
+        // Không chặn tiến trình nếu DB RLS hoặc trigger đã tự xử lý
+      }
+
+      return fullUser;
     }
 
     throw new Error('Đăng nhập không thành công.');
   },
 
-  async register(name: string, emailOrPhone: string, password?: string) {
-    const isEmail = emailOrPhone.includes('@');
-    const email = isEmail
-      ? emailOrPhone.trim()
-      : `${emailOrPhone.trim().replace(/\s+/g, '')}@gosavingfood.vn`;
-    const pwd = password || 'Password123!';
+  async register(name: string, identifier: string, password?: string) {
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      throw new Error('Họ và tên phải có ít nhất 2 ký tự.');
+    }
 
+    const parsed = parseIdentifier(identifier);
+    if (parsed.type === 'invalid') {
+      throw new Error(parsed.errorMessage || 'Email hoặc số điện thoại không hợp lệ.');
+    }
+
+    const pwd = password || 'Password123!';
     if (pwd.length < 6) {
       throw new Error('Mật khẩu phải có ít nhất 6 ký tự.');
     }
+
+    const email = parsed.type === 'email' ? parsed.normalized : parsed.syntheticEmail!;
+    const phoneNational = parsed.type === 'phone' ? parsed.phoneNational : '';
+    const phoneE164 = parsed.type === 'phone' ? parsed.phoneE164 : '';
 
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password: pwd,
       options: {
         data: {
-          name: name.trim(),
-          phone: isEmail ? '' : emailOrPhone.trim(),
+          name: trimmedName,
+          full_name: trimmedName,
+          phone: phoneNational,
+          phone_e164: phoneE164,
           role: 'customer',
         },
       },
     });
 
     if (signUpError) {
-      if (
-        signUpError.message.includes('User already registered') ||
-        signUpError.message.includes('already registered')
-      ) {
-        throw new Error('Tài khoản này đã tồn tại. Vui lòng chuyển sang Đăng nhập.');
-      }
-      throw new Error(signUpError.message || 'Đăng ký tài khoản không thành công.');
+      throw new Error(mapSupabaseAuthError(signUpError));
     }
 
     if (signUpData.user) {
       const u = signUpData.user;
-      return {
+      const fullUser: User = {
         id: u.id,
-        name: u.user_metadata?.name || name || 'Khách hàng mới',
-        phone: u.user_metadata?.phone || (isEmail ? '' : emailOrPhone),
+        name: trimmedName,
+        phone: phoneNational || '',
         email: u.email,
-        avatar: u.user_metadata?.avatar,
-      } satisfies User;
+        avatar: undefined,
+      };
+
+      // Đồng bộ thông tin vào public.users
+      try {
+        await supabase.from('users').upsert(
+          {
+            id: u.id,
+            email: u.email,
+            name: trimmedName,
+            phone: phoneNational || null,
+            role: 'customer',
+          },
+          { onConflict: 'id' }
+        );
+      } catch {
+        // Bỏ qua lỗi sync phụ nếu trigger đã xử lý
+      }
+
+      return fullUser;
     }
 
     throw new Error('Đăng ký không thành công.');
+  },
+
+  /**
+   * Cấp độ 2 (Supabase Native Free): Gửi mã OTP 6 số vào Email không cần mật khẩu
+   */
+  async sendEmailOtp(email: string) {
+    const trimmed = email.trim().toLowerCase();
+    if (!isValidEmail(trimmed)) {
+      throw new Error('Vui lòng nhập địa chỉ email hợp lệ để nhận mã OTP.');
+    }
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+      options: {
+        shouldCreateUser: true,
+      },
+    });
+
+    if (error) {
+      throw new Error(mapSupabaseAuthError(error));
+    }
+
+    return true;
+  },
+
+  /**
+   * Cấp độ 2 (Supabase Native Free): Xác thực mã OTP 6 số qua Email
+   */
+  async verifyEmailOtp(email: string, token: string): Promise<User> {
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedToken = token.trim();
+
+    if (!isValidEmail(trimmedEmail)) {
+      throw new Error('Địa chỉ email không hợp lệ.');
+    }
+
+    if (!trimmedToken || trimmedToken.length !== 6 || !/^\d{6}$/.test(trimmedToken)) {
+      throw new Error('Mã OTP gồm đúng 6 chữ số gửi qua email của bạn.');
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: trimmedEmail,
+      token: trimmedToken,
+      type: 'email',
+    });
+
+    if (error) {
+      throw new Error(mapSupabaseAuthError(error));
+    }
+
+    if (data.user) {
+      const u = data.user;
+      const meta = u.user_metadata || {};
+      const fullUser: User = {
+        id: u.id,
+        name: meta.full_name || meta.name || u.email?.split('@')[0] || 'Khách hàng',
+        phone: meta.phone || '',
+        email: u.email,
+        avatar: meta.avatar_url || meta.picture || meta.avatar,
+      };
+
+      try {
+        await supabase.from('users').upsert(
+          {
+            id: u.id,
+            email: u.email,
+            name: fullUser.name,
+            phone: fullUser.phone || null,
+            role: 'customer',
+          },
+          { onConflict: 'id' }
+        );
+      } catch {}
+
+      return fullUser;
+    }
+
+    throw new Error('Xác thực OTP không thành công.');
+  },
+
+  /**
+   * Cấp độ 2 (Supabase Native Free): Gửi email đặt lại mật khẩu
+   */
+  async resetPassword(email: string) {
+    const trimmed = email.trim().toLowerCase();
+    if (!isValidEmail(trimmed)) {
+      throw new Error('Vui lòng nhập địa chỉ email hợp lệ để đặt lại mật khẩu.');
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: window.location.origin,
+    });
+
+    if (error) {
+      throw new Error(mapSupabaseAuthError(error));
+    }
+
+    return true;
   },
 
   async logout() {

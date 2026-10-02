@@ -10,6 +10,9 @@ export interface AuthContextValue {
   login: (identifier: string, password?: string, name?: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   register: (name: string, identifier: string, password?: string) => Promise<void>;
+  sendEmailOtp: (email: string) => Promise<boolean>;
+  verifyEmailOtp: (email: string, token: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<boolean>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
 }

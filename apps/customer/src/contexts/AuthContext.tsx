@@ -123,6 +123,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCachedUser(nextUser);
         setIsAuthOpen(false);
       },
+      sendEmailOtp: async (email: string) => {
+        return await customerService.sendEmailOtp(email);
+      },
+      verifyEmailOtp: async (email: string, token: string) => {
+        const nextUser = await customerService.verifyEmailOtp(email, token);
+        setUser(nextUser);
+        setCachedUser(nextUser);
+        setIsAuthOpen(false);
+      },
+      resetPassword: async (email: string) => {
+        return await customerService.resetPassword(email);
+      },
       logout: () => {
         void customerService.logout();
         setUser(null);
