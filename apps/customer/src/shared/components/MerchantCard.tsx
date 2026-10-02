@@ -1,4 +1,5 @@
-import { ArrowRight, Coffee, Croissant, MapPin, Salad, Store, UtensilsCrossed } from 'lucide-react';
+import { useState } from 'react';
+import { Clock, MapPin, Navigation, Star, Tag } from 'lucide-react';
 import type { Merchant } from '../types/customer.types';
 
 interface MerchantCardProps {
@@ -9,37 +10,103 @@ interface MerchantCardProps {
   onClick: (merchant: Merchant) => void;
 }
 
-const isMediaUrl = (url?: string | null) =>
-  Boolean(url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')));
+const DEFAULT_BANNER =
+  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80';
 
-const getMerchantIcon = (merchant: Merchant) => {
-  const name = merchant.name.toLowerCase();
-  if (name.includes('baguette') || name.includes('bánh')) return Croissant;
-  if (name.includes('coffee') || name.includes('cà phê') || name.includes('trà')) return Coffee;
-  if (name.includes('bowl') || name.includes('salad') || name.includes('green')) return Salad;
-  if (name.includes('bếp') || name.includes('cơm')) return UtensilsCrossed;
-  return Store;
+const formatDistance = (dist?: number) => {
+  if (dist === undefined || dist === null) return null;
+  const meters = dist < 50 ? dist * 1000 : dist;
+  if (meters < 1000) {
+    return `${Math.round(meters)} m`;
+  }
+  return `${(meters / 1000).toFixed(1)} km`;
 };
 
-export function MerchantCard({ merchant, detail, meta, showArrow = true, onClick }: MerchantCardProps) {
-  const Icon = getMerchantIcon(merchant);
-  const hasLogoImage = isMediaUrl(merchant.logo);
+export function MerchantCard({ merchant, meta, onClick }: MerchantCardProps) {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  const rawSrc = merchant.banner || merchant.logo;
+  const imageSrc = !imgFailed && rawSrc ? rawSrc : DEFAULT_BANNER;
+  const distanceText = formatDistance(merchant.distance);
+  const isOpen = merchant.isOpen ?? true;
 
   return (
-    <button type="button" className="customer-merchant-card" onClick={() => onClick(merchant)}>
-      <span className="customer-merchant-logo">
-        {hasLogoImage ? (
-          <img src={merchant.logo} alt={merchant.name} />
-        ) : (
-          <Icon size={24} strokeWidth={1.8} />
-        )}
-      </span>
-      <span>
-        <strong>{merchant.name}</strong>
-        <small><MapPin size={12} /> {detail ?? `★ ${merchant.rating} · ${merchant.distance.toLocaleString('vi-VN')} km`}</small>
-        {meta && <em>{meta}</em>}
-      </span>
-      {showArrow && <ArrowRight size={18} />}
-    </button>
+    <article
+      className="customer-merchant-card"
+      onClick={() => onClick(merchant)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(merchant);
+        }
+      }}
+    >
+      {/* Full-bleed background image with smooth hover scale */}
+      <div className="customer-merchant-card-media">
+        <img
+          src={imageSrc}
+          alt={merchant.name}
+          className="customer-merchant-card-img"
+          loading="lazy"
+          onError={() => setImgFailed(true)}
+        />
+        <div className="customer-merchant-card-scrim" />
+      </div>
+
+      {/* Floating content overlay */}
+      <div className="customer-merchant-card-overlay">
+        {/* Top: Status & Distance */}
+        <div className="customer-merchant-card-top">
+          <span className={`customer-merchant-status-badge ${isOpen ? 'is-open' : 'is-closed'}`}>
+            <span className="customer-merchant-status-dot" />
+            {isOpen ? 'Đang mở cửa' : 'Đã đóng cửa'}
+          </span>
+
+          {distanceText && (
+            <span className="customer-merchant-distance-badge">
+              <Navigation size={11} strokeWidth={2.2} />
+              <span>Cách {distanceText}</span>
+            </span>
+          )}
+        </div>
+
+        {/* Bottom: Store info with guaranteed legibility */}
+        <div className="customer-merchant-card-bottom">
+          <h3 className="customer-merchant-card-title">{merchant.name}</h3>
+
+          <div className="customer-merchant-card-address">
+            <MapPin size={12} strokeWidth={2} className="customer-merchant-card-pin" />
+            <span>{merchant.address}</span>
+          </div>
+
+          <div className="customer-merchant-card-meta-row">
+            {merchant.rating > 0 && (
+              <span className="customer-merchant-chip chip-rating">
+                <Star size={11} fill="#FBBF24" color="#FBBF24" />
+                <strong>{merchant.rating.toFixed(1)}</strong>
+                {merchant.totalRatings ? <span>({merchant.totalRatings})</span> : null}
+              </span>
+            )}
+
+            {merchant.openingHours && (
+              <span className="customer-merchant-chip chip-hours">
+                <Clock size={11} strokeWidth={1.8} />
+                <span>{merchant.openingHours}</span>
+              </span>
+            )}
+
+            {meta && (
+              <span className="customer-merchant-chip chip-deal">
+                <Tag size={11} strokeWidth={2} />
+                <span>{meta}</span>
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }
+

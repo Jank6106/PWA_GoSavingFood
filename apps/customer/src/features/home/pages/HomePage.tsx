@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   Award,
-  Flame,
   Gift,
   MapPin,
   Search,
@@ -64,6 +63,14 @@ export function HomePage({
     [bags, category]
   );
 
+  const sortedMerchants = useMemo(() => {
+    const getMeters = (d?: number) => {
+      if (d === undefined || d === null) return 999999;
+      return d < 50 ? d * 1000 : d;
+    };
+    return [...merchants].sort((a, b) => getMeters(a.distance) - getMeters(b.distance));
+  }, [merchants]);
+
   if (isLoading) {
     return (
       <div className="customer-screen customer-loading-grid">
@@ -104,9 +111,8 @@ export function HomePage({
 
       <section className="customer-content-section">
         <SectionHeading
-          icon={<Gift size={18} strokeWidth={2} />}
+          icon={<Gift size={24} strokeWidth={2.4} />}
           title="Túi bất ngờ"
-          subtitle="Ngon, tiết kiệm và thân thiện môi trường"
           actionLabel="Xem tất cả"
           onAction={onViewAll}
         />
@@ -119,28 +125,29 @@ export function HomePage({
 
       <section className="customer-content-section">
         <SectionHeading
-          icon={<Award size={18} strokeWidth={2} />}
+          icon={<Award size={24} strokeWidth={2.4} />}
           title="Thương hiệu nổi bật"
-          subtitle="Đối tác được yêu thích gần bạn"
         />
         <BrandMarquee brands={brands} onOpenBrand={onOpenBrand} />
       </section>
 
       <section className="customer-content-section">
         <SectionHeading
-          icon={<Flame size={18} strokeWidth={2} />}
-          title="Giải cứu cấp tốc"
-          subtitle="Sắp hết giờ nhận hôm nay"
+          icon={<MapPin size={24} strokeWidth={2.4} />}
+          title="Các cửa hàng gần bạn"
         />
         <div className="customer-merchant-list">
-          {merchants.map((merchant) => {
-            const merchantBag = bags.find((bag) => bag.merchantId === merchant.id);
+          {sortedMerchants.map((merchant) => {
+            const merchantBags = bags.filter((bag) => bag.merchantId === merchant.id);
+            const lowestPrice =
+              merchantBags.length > 0
+                ? Math.min(...merchantBags.map((b) => b.discountPrice))
+                : null;
             return (
               <MerchantCard
                 key={merchant.id}
                 merchant={merchant}
-                detail={`★ ${merchant.rating} · ${merchant.distance.toLocaleString('vi-VN')} km`}
-                meta={merchantBag ? `Từ ${merchantBag.discountPrice.toLocaleString('vi-VN')}đ` : undefined}
+                meta={lowestPrice ? `Từ ${lowestPrice.toLocaleString('vi-VN')}đ` : undefined}
                 onClick={onOpenMerchant}
               />
             );

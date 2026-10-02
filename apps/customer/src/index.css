@@ -115,13 +115,13 @@ img { display: block; max-width: 100%; }
 .customer-location-card strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .customer-location-pin { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 13px; background: var(--color-primary-soft); color: var(--color-primary); }
 
-.customer-content-section { display: flex; flex-direction: column; gap: 13px; }
+.customer-content-section { display: flex; flex-direction: column; gap: 14px; }
 .customer-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.customer-section-heading > div { display: flex; min-width: 0; align-items: center; gap: 8px; }
-.customer-section-heading > div > span { display: inline-grid; width: 28px; height: 28px; place-items: center; border-radius: 8px; background: var(--color-primary-soft); color: var(--color-primary); flex-shrink: 0; }
-.customer-section-heading h2 { margin: 0; font-size: 18px; line-height: 24px; }
+.customer-section-heading > div { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.customer-section-heading > div > span { display: inline-grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; background: var(--color-primary-soft); color: var(--color-primary); flex-shrink: 0; }
+.customer-section-heading h2 { margin: 0; font-size: clamp(23px, 6.2vw, 28px); font-weight: 850; line-height: 1.2; letter-spacing: -0.025em; color: var(--color-text-primary); }
 .customer-section-heading p { margin: 1px 0 0; color: var(--color-text-muted); font-size: 12px; }
-.customer-section-heading > button { flex: 0 0 auto; padding: 6px; border: 0; background: none; color: var(--color-primary); font-size: 12px; font-weight: 800; cursor: pointer; }
+.customer-section-heading > button { flex: 0 0 auto; padding: 6px 4px; border: 0; background: none; color: var(--color-primary); font-size: 14px; font-weight: 800; cursor: pointer; }
 .customer-horizontal-list { display: flex; gap: 12px; margin: 0 -16px; padding: 0 16px 7px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
 
 .customer-bag-card { position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 236px; overflow: hidden; border-radius: 18px; background: #022c1b; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 18px rgba(0, 40, 20, 0.08); cursor: pointer; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease; user-select: none; }
@@ -160,14 +160,242 @@ img { display: block; max-width: 100%; }
 .customer-brand-track strong { max-width: 100%; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .customer-brand-track small { color: #9b6800; font-weight: 800; }
 
-.customer-merchant-list { display: flex; flex-direction: column; gap: 10px; }
-.customer-merchant-card { display: flex; align-items: center; gap: 11px; width: 100%; padding: 12px; border: 1px solid var(--color-border-subtle); border-radius: 17px; background: #fff; text-align: left; cursor: pointer; }
-.customer-merchant-logo { display: grid; width: 50px; height: 50px; flex: 0 0 50px; place-items: center; border-radius: 15px; background: var(--color-primary-soft); color: var(--color-primary); transition: all 0.2s ease; }
-.customer-merchant-card:hover .customer-merchant-logo { background: var(--color-primary); color: #fff; }
-.customer-merchant-card > span:nth-child(2) { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; }
-.customer-merchant-card strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.customer-merchant-card small { display: flex; align-items: center; gap: 3px; overflow: hidden; color: var(--color-text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.customer-merchant-card em { color: var(--color-primary); font-size: 11px; font-style: normal; font-weight: 800; }
+.customer-merchant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.customer-merchant-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 195px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #0d1a13;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.28s ease;
+}
+
+.customer-merchant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.customer-merchant-card:active {
+  transform: scale(0.985);
+}
+
+.customer-merchant-card-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.customer-merchant-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.customer-merchant-card:hover .customer-merchant-card-img {
+  transform: scale(1.05);
+}
+
+/* Multi-stop gradient scrim to guarantee text legibility */
+.customer-merchant-card-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(2, 12, 8, 0.6) 0%,
+    rgba(2, 12, 8, 0.1) 28%,
+    rgba(2, 12, 8, 0.72) 64%,
+    rgba(1, 8, 5, 0.96) 100%
+  );
+  pointer-events: none;
+}
+
+.customer-merchant-card-overlay {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.customer-merchant-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.customer-merchant-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  letter-spacing: 0.01em;
+}
+
+.customer-merchant-status-badge.is-open {
+  background: rgba(22, 107, 74, 0.88);
+  color: #ffffff;
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.customer-merchant-status-badge.is-closed {
+  background: rgba(15, 23, 42, 0.78);
+  color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.customer-merchant-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 7px #34d399;
+}
+
+.customer-merchant-status-badge.is-closed .customer-merchant-status-dot {
+  background: #94a3b8;
+  box-shadow: none;
+}
+
+.customer-merchant-distance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 750;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.customer-merchant-distance-badge svg {
+  color: #6ee7b7;
+}
+
+.customer-merchant-card-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customer-merchant-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.customer-merchant-card-address {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+}
+
+.customer-merchant-card-pin {
+  flex-shrink: 0;
+  color: #6ee7b7;
+}
+
+.customer-merchant-card-address span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-merchant-card-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 3px;
+}
+
+.customer-merchant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.customer-merchant-chip.chip-rating {
+  background: rgba(245, 158, 11, 0.24);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: #fef3c7;
+}
+
+.customer-merchant-chip.chip-rating strong {
+  font-weight: 800;
+  color: #fef08a;
+}
+
+.customer-merchant-chip.chip-rating span {
+  opacity: 0.8;
+  font-size: 10px;
+}
+
+.customer-merchant-chip.chip-hours {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.customer-merchant-chip.chip-deal {
+  background: rgba(16, 185, 129, 0.28);
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  color: #a7f3d0;
+  font-weight: 750;
+}
 
 .customer-screen-header { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 48px; }
 .customer-screen-header .customer-round-button { position: relative; z-index: 2; }
