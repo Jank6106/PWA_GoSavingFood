@@ -60,33 +60,35 @@ export async function fetchStoreProfile(storeId: string): Promise<StoreProfile |
     .eq('id', storeId)
     .maybeSingle();
 
-  if (error) {
-    console.warn('Lấy thông tin store từ Supabase lỗi:', error.message);
+  if (error || !store) {
+    if (error) console.warn('Lấy thông tin store từ Supabase lỗi:', error.message);
     return getCachedStoreProfile(storeId);
   }
-  if (!store) return null;
 
   const profile = mapStoreRow(store);
-
-  const rescuedBags = await fetchCompletedBagQuantity(storeId);
-  profile.totalRescuedBags = rescuedBags;
-  profile.totalCo2SavedKg = Math.round(rescuedBags * CO2_KG_PER_BAG);
-
-  if (store.owner_user_id) {
-    try {
-      const { data: owner } = await supabase
-        .from('users')
-        .select('email, phone')
-        .eq('id', store.owner_user_id)
-        .maybeSingle();
-      if (owner) {
-        profile.email = owner.email || '';
-        if (!profile.phone && owner.phone) profile.phone = owner.phone;
-      }
-    } catch {
-      // Ignore user query failure
-    }
+  const cached = getCachedStoreProfile(storeId);
+  if (cached) {
+    profile.totalRescuedBags = cached.totalRescuedBags;
+    profile.totalCo2SavedKg = cached.totalCo2SavedKg;
+    profile.email = cached.email;
+    if (!profile.phone && cached.phone) profile.phone = cached.phone;
   }
+
+  // Chạy ngầm việc tính túi và thông tin owner song song không gây trễ hiển thị
+  Promise.all([
+    fetchCompletedBagQuantity(storeId).catch(() => 0),
+    store.owner_user_id
+      ? Promise.resolve(supabase.from('users').select('email, phone').eq('id', store.owner_user_id).maybeSingle()).catch(() => ({ data: null }))
+      : Promise.resolve({ data: null }),
+  ]).then(([rescuedBags, ownerRes]) => {
+    profile.totalRescuedBags = rescuedBags;
+    profile.totalCo2SavedKg = Math.round(rescuedBags * CO2_KG_PER_BAG);
+    if (ownerRes && 'data' in ownerRes && ownerRes.data) {
+      profile.email = ownerRes.data.email || '';
+      if (!profile.phone && ownerRes.data.phone) profile.phone = ownerRes.data.phone;
+    }
+    setCachedStoreProfile(storeId, profile);
+  });
 
   setCachedStoreProfile(storeId, profile);
   return profile;

@@ -411,3 +411,15 @@ h1, h2, h3, p { margin: 0; }
 .merchant-notification-modal { width: min(100%, 520px); height: min(640px, 78vh); overflow: hidden; }.merchant-notification-modal .merchant-modal-body { height: calc(100% - 78px); overflow: auto; }
 @media (max-width: 760px) { .merchant-store-status { min-width: auto; width: auto; height: 32px; padding: 0 9px; gap: 5px; }.merchant-store-status span { display: none; }.merchant-store-status b { display: inline; font-size: 11px; }.merchant-inventory-options { align-items: flex-start; flex-direction: column; gap: 6px; } }
 @media (max-width: 480px) { .merchant-time-fields { grid-template-columns: 1fr; }.merchant-form-actions--between > div { width: 100%; flex-direction: column; }.merchant-avatar-edit { width: 58px; height: 58px; border-radius: 17px; }.merchant-notification-modal { height: min(620px, 90vh); } }
+
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.merchant-skeleton {
+  background: linear-gradient(90deg, rgba(0, 86, 57, 0.04) 25%, rgba(0, 86, 57, 0.1) 50%, rgba(0, 86, 57, 0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: 14px;
+}

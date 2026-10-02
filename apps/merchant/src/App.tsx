@@ -12,23 +12,13 @@ import { LoginScreen } from './pages/LoginScreen';
 import { getCachedMerchantUser } from './services/auth.service';
 import type { LoginCredentials, MerchantRegisterInput, NotificationItem, TabRoute } from './types';
 
-// Giải pháp 1: Dynamic Code-Splitting với React.lazy & Suspense
-// Tách các trang lớn (Bags, Orders, Inventory, Analytics, Settings, Setup) thành các chunk riêng biệt
-const BagManagementScreen = lazy(() =>
-  import('./pages/BagManagementScreen').then((m) => ({ default: m.BagManagementScreen }))
-);
-const OrderManagementScreen = lazy(() =>
-  import('./pages/OrderManagementScreen').then((m) => ({ default: m.OrderManagementScreen }))
-);
-const InventoryManagementScreen = lazy(() =>
-  import('./pages/InventoryManagementScreen').then((m) => ({ default: m.InventoryManagementScreen }))
-);
-const AnalyticsScreen = lazy(() =>
-  import('./pages/AnalyticsScreen').then((m) => ({ default: m.AnalyticsScreen }))
-);
-const SettingsScreen = lazy(() =>
-  import('./pages/SettingsScreen').then((m) => ({ default: m.SettingsScreen }))
-);
+import { BagManagementScreen } from './pages/BagManagementScreen';
+import { OrderManagementScreen } from './pages/OrderManagementScreen';
+import { InventoryManagementScreen } from './pages/InventoryManagementScreen';
+import { AnalyticsScreen } from './pages/AnalyticsScreen';
+import { SettingsScreen } from './pages/SettingsScreen';
+
+// FirstTimeSetupScreen chỉ dùng 1 lần cho đối tác mới nên giữ lazy
 const FirstTimeSetupScreen = lazy(() =>
   import('./pages/FirstTimeSetupScreen').then((m) => ({ default: m.FirstTimeSetupScreen }))
 );
@@ -130,17 +120,6 @@ export default function App() {
     setRoute('login');
   };
 
-  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => {
-    const initial = typeof route === 'string' && route !== 'login' && route !== 'setup' ? route : 'bags';
-    return new Set([initial]);
-  });
-
-  useEffect(() => {
-    if (['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(route)) {
-      setVisitedTabs((prev) => (prev.has(route) ? prev : new Set(prev).add(route)));
-    }
-  }, [route]);
-
   if (route === 'login') {
     return (
       <LoginScreen
@@ -179,42 +158,30 @@ export default function App() {
         onProfilePress={() => setRoute('settings')}
       />
       <main className={`merchant-main merchant-main--${route}`}>
-        <Suspense fallback={<ScreenLoadingSkeleton />}>
-          {visitedTabs.has('bags') && (
-            <div style={{ display: route === 'bags' ? 'contents' : 'none' }}>
-              <BagManagementScreen storeId={storeId} />
-            </div>
-          )}
-          {visitedTabs.has('orders') && (
-            <div style={{ display: route === 'orders' ? 'contents' : 'none' }}>
-              <OrderManagementScreen
-                storeId={storeId}
-                targetOrderId={targetOrderId}
-                onClearTargetOrder={() => setTargetOrderId(null)}
-              />
-            </div>
-          )}
-          {visitedTabs.has('inventory') && (
-            <div style={{ display: route === 'inventory' ? 'contents' : 'none' }}>
-              <InventoryManagementScreen storeId={storeId} />
-            </div>
-          )}
-          {visitedTabs.has('analytics') && (
-            <div style={{ display: route === 'analytics' ? 'contents' : 'none' }}>
-              <AnalyticsScreen storeId={storeId} />
-            </div>
-          )}
-          {visitedTabs.has('settings') && (
-            <div style={{ display: route === 'settings' ? 'contents' : 'none' }}>
-              <SettingsScreen
-                storeId={storeId}
-                authLoading={auth.loading}
-                onChangePassword={auth.changePassword}
-                onLogout={handleLogout}
-              />
-            </div>
-          )}
-        </Suspense>
+        <div style={{ display: route === 'bags' ? 'contents' : 'none' }}>
+          <BagManagementScreen storeId={storeId} />
+        </div>
+        <div style={{ display: route === 'orders' ? 'contents' : 'none' }}>
+          <OrderManagementScreen
+            storeId={storeId}
+            targetOrderId={targetOrderId}
+            onClearTargetOrder={() => setTargetOrderId(null)}
+          />
+        </div>
+        <div style={{ display: route === 'inventory' ? 'contents' : 'none' }}>
+          <InventoryManagementScreen storeId={storeId} />
+        </div>
+        <div style={{ display: route === 'analytics' ? 'contents' : 'none' }}>
+          <AnalyticsScreen storeId={storeId} />
+        </div>
+        <div style={{ display: route === 'settings' ? 'contents' : 'none' }}>
+          <SettingsScreen
+            storeId={storeId}
+            authLoading={auth.loading}
+            onChangePassword={auth.changePassword}
+            onLogout={handleLogout}
+          />
+        </div>
       </main>
       <AppTabBar active={route} orderBadge={notifications.unreadCount} onNavigate={setRoute} />
       <NotificationModal

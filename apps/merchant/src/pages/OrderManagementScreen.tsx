@@ -1,5 +1,5 @@
 import { FileSearch } from 'lucide-react';
-import { EmptyState, ErrorState, LoadingSpinner, ToastBar } from '../components/ui';
+import { EmptyState, ErrorState, SkeletonList, ToastBar } from '../components/ui';
 import { OrderCard, OrderDetailsModal, OrderFilterBar, QRScannerModal } from '../components/orders';
 import { useOrders } from '../hooks/useOrders';
 
@@ -49,7 +49,6 @@ export function OrderManagementScreen({
     onOpenQR: openQR,
   };
 
-  if (state.loading && !state.orders.length && !state.hasLoadedOnce) return <LoadingSpinner />;
   if (state.error && !state.allOrders.length) return <ErrorState message={state.error} onRetry={() => void state.loadOrders()} />;
 
   return (
@@ -72,7 +71,9 @@ export function OrderManagementScreen({
         onSearchQueryChange={state.setSearchQuery}
       />
       <div className="merchant-order-grid">
-        {state.orders.length ? (
+        {state.loading && !state.orders.length ? (
+          <SkeletonList count={3} height={140} />
+        ) : state.orders.length ? (
           state.orders.map((order) => (
             <OrderCard
               key={order.id}

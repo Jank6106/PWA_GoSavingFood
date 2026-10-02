@@ -1,6 +1,6 @@
 import { PackageOpen } from 'lucide-react';
 import { BagCard, BagDetailsModal, BagEditorModal, BagFilterBar } from '../components/bags';
-import { Button, EmptyState, ErrorState, LoadingSpinner, ToastBar } from '../components/ui';
+import { Button, EmptyState, ErrorState, SkeletonList, ToastBar } from '../components/ui';
 import { useBags } from '../hooks/useBags';
 
 export function BagManagementScreen({ storeId }: { storeId: string }) {
@@ -12,7 +12,6 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
     state.setIsEditModalOpen(true);
   };
 
-  if (state.loading && !state.allBags.length && !state.hasLoadedOnce) return <LoadingSpinner />;
   if (state.error && !state.allBags.length) return <ErrorState message={state.error} onRetry={() => void state.loadBags()} />;
 
   return (
@@ -36,7 +35,9 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
         onOpenCreateModal={() => state.setIsCreateModalOpen(true)}
       />
       <div className="merchant-list">
-        {state.bags.length ? (
+        {state.loading && !state.allBags.length ? (
+          <SkeletonList count={3} height={120} />
+        ) : state.bags.length ? (
           state.bags.map((bag) => (
             <BagCard
               key={bag.id}
