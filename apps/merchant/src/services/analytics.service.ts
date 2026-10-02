@@ -1,4 +1,4 @@
-import { SEED_ANALYTICS_QUYT } from '../mocks';
+import { SEED_ANALYTICS_QUYT, STORE_ID } from '../mocks';
 import type { AnalyticsMetrics, ReviewItem, RevenueChartPoint } from '../types';
 import { supabase } from './supabase';
 
@@ -41,7 +41,7 @@ export interface CachedAnalyticsData {
   reviews: ReviewItem[];
 }
 
-export function getCachedAnalytics(storeId: string): CachedAnalyticsData {
+export function getCachedAnalytics(storeId: string): CachedAnalyticsData | null {
   if (typeof window !== 'undefined') {
     try {
       const raw = window.localStorage.getItem(`${ANALYTICS_CACHE_PREFIX}${storeId}`);
@@ -53,7 +53,8 @@ export function getCachedAnalytics(storeId: string): CachedAnalyticsData {
       // Ignore parse error
     }
   }
-  return SEED_ANALYTICS_QUYT;
+  if (storeId === STORE_ID) return SEED_ANALYTICS_QUYT;
+  return null;
 }
 
 export function setCachedAnalytics(storeId: string, data: CachedAnalyticsData): void {
@@ -115,7 +116,18 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
   );
 
     if (orders.length === 0 && totalSoldBags === 0) {
-      return SEED_ANALYTICS_QUYT.metrics;
+      if (storeId === STORE_ID) return SEED_ANALYTICS_QUYT.metrics;
+      return {
+        totalRevenue: 0,
+        monthlyRevenue: 0,
+        monthlyGrowthPercent: 0,
+        previousMonthRevenue: 0,
+        totalOrders: 0,
+        totalSoldBags: 0,
+        bagsOnShelf: bagsResult.count || 0,
+        averageRating: Number(storeResult.data?.rating || 0),
+        totalReviewsCount: Number(storeResult.data?.total_ratings || 0),
+      };
     }
 
     return {
@@ -169,7 +181,15 @@ export async function fetchRevenueChart(
 
       const revenueOrders = (data || []).filter((order: any) => isRevenueStatus(order.status));
       if (revenueOrders.length === 0) {
-        return SEED_ANALYTICS_QUYT.chartData;
+        if (storeId === STORE_ID) return SEED_ANALYTICS_QUYT.chartData;
+        if (timeframe === 'week') {
+          return Array.from({ length: 7 }, (_, index) => {
+            const date = new Date(rangeStart);
+            date.setDate(rangeStart.getDate() + index);
+            return { label: DAY_LABELS[date.getDay()], value: 0 };
+          });
+        }
+        return Array.from({ length: 4 }, (_, index) => ({ label: `Tuần ${index + 1}`, value: 0 }));
       }
 
       if (timeframe === 'week') {
@@ -219,8 +239,8 @@ export async function fetchRecentReviews(storeId: string): Promise<ReviewItem[]>
         .limit(6);
 
       if (error || !data || data.length === 0) {
-        if (error) console.warn('Lấy đánh giá gần đây lỗi:', error.message);
-        return SEED_ANALYTICS_QUYT.reviews;
+        if (storeId === STORE_ID) return SEED_ANALYTICS_QUYT.reviews;
+        return [];
       }
 
       return (data || []).map((row: any) => {

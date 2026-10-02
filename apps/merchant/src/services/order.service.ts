@@ -1,4 +1,4 @@
-import { SEED_ORDERS_QUYT } from '../mocks';
+import { SEED_ORDERS_QUYT, STORE_ID } from '../mocks';
 import type { MerchantOrder, OrderStatus } from '../types';
 import { supabase } from './supabase';
 
@@ -87,13 +87,14 @@ export function getCachedMerchantOrders(storeId: string): MerchantOrder[] {
       const raw = window.localStorage.getItem(`${ORDERS_CACHE_PREFIX}${storeId}`);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // Ignore parse error
     }
   }
-  return SEED_ORDERS_QUYT;
+  if (storeId === STORE_ID) return SEED_ORDERS_QUYT;
+  return [];
 }
 
 export function setCachedMerchantOrders(storeId: string, orders: MerchantOrder[]): void {
@@ -136,7 +137,10 @@ export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrde
       }
 
       const remoteOrders = (data || []).map(mapDbOrder);
-      const orders = remoteOrders.length > 0 ? remoteOrders : SEED_ORDERS_QUYT;
+      let orders = remoteOrders;
+      if (orders.length === 0 && storeId === STORE_ID) {
+        orders = SEED_ORDERS_QUYT;
+      }
       setCachedMerchantOrders(storeId, orders);
       return orders;
     } finally {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchMerchantOrders,
   getCachedMerchantOrders,
@@ -45,8 +45,13 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     }
   }, [storeId]);
 
+  const isFetchedRef = useRef(false);
+
   useEffect(() => {
-    void loadOrders();
+    if (!isFetchedRef.current) {
+      isFetchedRef.current = true;
+      void loadOrders();
+    }
 
     // Kích hoạt Supabase Realtime lắng nghe đơn mới & cập nhật đơn hàng
     const channel = subscribeToStoreOrders(storeId, (payload) => {

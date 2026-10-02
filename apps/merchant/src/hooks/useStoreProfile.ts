@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   fetchStoreProfile,
   getCachedStoreProfile,
@@ -31,8 +31,13 @@ export function useStoreProfile(storeId: string) {
     }
   }, [storeId]);
 
+  const isFetchedRef = useRef(false);
+
   useEffect(() => {
-    void loadProfile();
+    if (!isFetchedRef.current) {
+      isFetchedRef.current = true;
+      void loadProfile();
+    }
   }, [loadProfile]);
 
   const saveProfile = async (input: StoreUpdateInput) => {

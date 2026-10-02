@@ -1,4 +1,4 @@
-import { MERCHANT_STORE_ID, SEED_STORE_GOGREEN, SEED_STORE_QUYT } from '../mocks';
+import { MERCHANT_STORE_ID, SEED_STORE_GOGREEN, SEED_STORE_QUYT, STORE_ID } from '../mocks';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../types';
 import { fetchCompletedBagQuantity } from './order.service';
 import { supabase } from './supabase';
@@ -7,7 +7,7 @@ const CO2_KG_PER_BAG = 2.5;
 const STORE_CACHE_PREFIX = 'gsf_merchant_store:';
 const storeInFlight = new Map<string, Promise<StoreProfile | null>>();
 
-export function getCachedStoreProfile(storeId: string): StoreProfile {
+export function getCachedStoreProfile(storeId: string): StoreProfile | null {
   if (typeof window !== 'undefined') {
     try {
       const raw = window.localStorage.getItem(`${STORE_CACHE_PREFIX}${storeId}`);
@@ -20,7 +20,8 @@ export function getCachedStoreProfile(storeId: string): StoreProfile {
     }
   }
   if (storeId === MERCHANT_STORE_ID) return SEED_STORE_GOGREEN;
-  return SEED_STORE_QUYT;
+  if (storeId === STORE_ID) return SEED_STORE_QUYT;
+  return null;
 }
 
 export function setCachedStoreProfile(storeId: string, profile: StoreProfile | null): void {

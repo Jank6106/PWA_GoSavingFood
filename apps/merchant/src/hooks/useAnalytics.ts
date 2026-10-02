@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   exportAnalyticsReport,
   fetchAnalyticsMetrics,
@@ -55,8 +55,13 @@ export function useAnalytics(storeId: string) {
     }
   }, [storeId, timeframe]);
 
+  const isFetchedRef = useRef(false);
+
   useEffect(() => {
-    void loadData();
+    if (!isFetchedRef.current) {
+      isFetchedRef.current = true;
+      void loadData();
+    }
   }, [loadData]);
 
   const exportReport = async () => {

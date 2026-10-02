@@ -3,7 +3,6 @@ import {
   fetchInventoryItems,
   getCachedInventoryItems,
   saveInventoryItems,
-  subscribeInventory,
 } from '../services/inventory.service';
 import { updateBagStatus } from '../services/bag.service';
 import type { InventoryItem, InventoryScheduleFilter } from '../types';
@@ -58,16 +57,13 @@ export function useInventory(storeId: string) {
     }
   }, [storeId]);
 
+  const isFetchedRef = useRef(false);
+
   useEffect(() => {
-    void loadData();
-    const unsubscribe = subscribeInventory(() => {
-      if (!hasUnsavedChangesRef.current) {
-        void loadData();
-      }
-    });
-    return () => {
-      unsubscribe();
-    };
+    if (!isFetchedRef.current) {
+      isFetchedRef.current = true;
+      void loadData();
+    }
   }, [loadData]);
 
   const items = useMemo(() => allItems.filter((item) => (scheduleTab === 'today' ? item.schedule === 'today' : item.appliesTomorrow) && `${item.name} ${item.sku}`.toLocaleLowerCase('vi-VN').includes(searchQuery.toLocaleLowerCase('vi-VN'))), [allItems, scheduleTab, searchQuery]);

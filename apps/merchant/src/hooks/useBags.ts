@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createBagItem,
   deleteBagItem,
@@ -8,7 +8,6 @@ import {
   updateBagQuantity,
   updateBagStatus,
 } from '../services/bag.service';
-import { subscribeInventory } from '../services/inventory.service';
 import type { BagInput, BagItem } from '../types';
 import { useToast } from './useToast';
 
@@ -51,14 +50,12 @@ export function useBags(storeId: string) {
     }
   }, [storeId]);
 
+  const isFetchedRef = useRef(false);
+
   useEffect(() => {
+    if (isFetchedRef.current) return;
+    isFetchedRef.current = true;
     void loadBags();
-    const unsubscribe = subscribeInventory(() => {
-      void loadBags();
-    });
-    return () => {
-      unsubscribe();
-    };
   }, [loadBags]);
 
   const onShelfCount = useMemo(() => allBags.filter((b) => b.status !== 'hidden').length, [allBags]);
