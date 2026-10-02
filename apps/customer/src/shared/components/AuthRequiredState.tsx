@@ -19,7 +19,7 @@ export function AuthRequiredState({
   return (
     <div className="customer-screen customer-gated-screen">
       <div className="customer-gated-logo" aria-hidden="true">
-        <img src="/logo.png" alt="GoSavingFood Logo" className="customer-gated-logo-img" />
+        <img src="/logo.svg" alt="GoSavingFood Logo" className="customer-gated-logo-img" />
       </div>
       <h1 className="customer-gated-title">{title}</h1>
       <Button size="lg" onClick={onLogin} className="customer-gated-btn">

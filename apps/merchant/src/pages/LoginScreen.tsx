@@ -1,4 +1,4 @@
-import { LockKeyhole, ShieldCheck, Store, UserRound } from 'lucide-react';
+import { LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import type { AuthUser, LoginCredentials } from '../types';
 import { Button, Field } from '../components/ui';
@@ -29,7 +29,7 @@ export function LoginScreen({ loading, error, onLogin, onClearError }: LoginScre
       <section className="merchant-auth-card">
         <div className="merchant-auth-brand">
           <span>
-            <Store size={28} />
+            <img src="/logo.svg" alt="GoSavingFood Logo" className="merchant-auth-logo-img" />
           </span>
           <h1>Đăng nhập Đối tác</h1>
           <div>
