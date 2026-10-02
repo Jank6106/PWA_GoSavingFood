@@ -27,7 +27,7 @@ function createSignature(
 }
 
 // In-memory lock để deduplicate concurrent requests cho cùng một orderId (tránh tạo trùng đơn trên PayOS)
-const inFlightRequests = new Map<string, Promise<any>>();
+const inFlightRequests = new Map<string, Promise<unknown>>();
 
 export async function POST(request: Request) {
   try {
@@ -47,17 +47,18 @@ export async function POST(request: Request) {
       try {
         const sharedResult = await inFlightRequests.get(orderId);
         return NextResponse.json(sharedResult, { headers: corsHeaders });
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : 'Payment creation failed';
         return NextResponse.json(
-          { success: false, error: err.message || 'Payment creation failed' },
+          { success: false, error: errMsg },
           { status: 500, headers: corsHeaders }
         );
       }
     }
 
     // 2. NGAY LẬP TỨC đăng ký Promise xử lý vào Map TRƯỚC BẤT KỲ AWAIT NÀO!
-    let resolveInFlight!: (val: any) => void;
-    let rejectInFlight!: (err: any) => void;
+    let resolveInFlight!: (val: unknown) => void;
+    let rejectInFlight!: (err: unknown) => void;
     const inFlightPromise = new Promise((resolve, reject) => {
       resolveInFlight = resolve;
       rejectInFlight = reject;
@@ -115,7 +116,21 @@ export async function POST(request: Request) {
           }
         }
 
-        const payload: Record<string, any> = {
+        interface PaymentItem {
+          name?: string;
+          quantity?: number;
+          price?: number;
+        }
+
+        const payload: {
+          orderCode: number;
+          amount: number;
+          description: string;
+          cancelUrl: string;
+          returnUrl: string;
+          signature?: string;
+          items?: Array<{ name: string; quantity: number; price: number }>;
+        } = {
           orderCode,
           amount: Math.round(amount),
           description: cleanDesc,
@@ -124,7 +139,7 @@ export async function POST(request: Request) {
         };
 
         if (Array.isArray(items) && items.length > 0) {
-          payload.items = items.map((it: any) => ({
+          payload.items = (items as PaymentItem[]).map((it) => ({
             name: String(it.name || 'Món ăn').slice(0, 50),
             quantity: Number(it.quantity || 1),
             price: Number(it.price || amount),
@@ -208,10 +223,11 @@ export async function POST(request: Request) {
     } finally {
       inFlightRequests.delete(orderId);
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Internal Server Error';
     console.error('[PayOS] Create payment error:', err);
     return NextResponse.json(
-      { success: false, error: err.message || 'Internal Server Error' },
+      { success: false, error: errorMsg },
       { status: 500, headers: corsHeaders }
     );
   }

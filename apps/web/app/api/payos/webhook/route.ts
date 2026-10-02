@@ -11,14 +11,14 @@ export async function GET() {
   });
 }
 
-function verifySignature(data: Record<string, any>, signature: string, checksumKey: string): boolean {
+function verifySignature(data: Record<string, unknown>, signature: string, checksumKey: string): boolean {
   try {
     const sortedKeys = Object.keys(data).sort();
     const signData = sortedKeys
       .map((k) => {
-        let val = data[k];
-        if (val === null || val === undefined) val = '';
-        return `${k}=${val}`;
+        const val = data[k];
+        if (val === null || val === undefined) return `${k}=`;
+        return `${k}=${String(val)}`;
       })
       .join('&');
 
@@ -98,8 +98,9 @@ export async function POST(request: Request) {
       success: true,
       result: rpcRes,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[PayOS Webhook] Error processing webhook:', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }

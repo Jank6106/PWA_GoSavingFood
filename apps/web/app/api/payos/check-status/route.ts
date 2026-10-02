@@ -80,10 +80,11 @@ export async function GET(request: Request) {
       },
       { headers: corsHeaders }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[PayOS check-status] error:', err);
     return NextResponse.json(
-      { success: false, error: err.message },
+      { success: false, error: errorMsg },
       { status: 500, headers: corsHeaders }
     );
   }
