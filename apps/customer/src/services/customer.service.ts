@@ -1656,6 +1656,11 @@ export const customerService = {
       throw new Error(mapSupabaseAuthError(signUpError));
     }
 
+    // Nếu identities rỗng, Supabase báo hiệu email này đã tồn tại trong database
+    if (signUpData.user && Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
+      throw new Error('Tài khoản với email này đã tồn tại trên hệ thống. Vui lòng chuyển sang Đăng nhập.');
+    }
+
     // Nếu Supabase Dashboard đang tắt "Confirm email" (Auto-confirm bật), session được tạo ngay:
     if (signUpData.session && signUpData.user) {
       const u = signUpData.user;
