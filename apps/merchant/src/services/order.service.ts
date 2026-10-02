@@ -135,7 +135,8 @@ export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrde
         data = fallbackRes.data;
       }
 
-      const orders = (data || []).map(mapDbOrder);
+      const remoteOrders = (data || []).map(mapDbOrder);
+      const orders = remoteOrders.length > 0 ? remoteOrders : SEED_ORDERS_QUYT;
       setCachedMerchantOrders(storeId, orders);
       return orders;
     } finally {

@@ -23,6 +23,7 @@ interface LoginScreenProps {
   onLogin: (credentials: LoginCredentials) => Promise<AuthUser | null>;
   onRegister?: (input: MerchantRegisterInput) => Promise<AuthUser | null>;
   onClearError: () => void;
+  onExploreDemo?: () => void;
 }
 
 export function LoginScreen({
@@ -31,6 +32,7 @@ export function LoginScreen({
   onLogin,
   onRegister,
   onClearError,
+  onExploreDemo,
 }: LoginScreenProps) {
   const [tab, setTab] = useState<'login' | 'register'>('login');
 
@@ -193,7 +195,30 @@ export function LoginScreen({
               Đăng nhập quản lý
             </Button>
 
-            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+              {onExploreDemo && (
+                <button
+                  type="button"
+                  style={{
+                    background: 'rgba(0, 86, 57, 0.08)',
+                    border: '1px solid rgba(0, 86, 57, 0.25)',
+                    borderRadius: 8,
+                    padding: '8px 14px',
+                    fontSize: 13,
+                    color: 'var(--primary, #005639)',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                  onClick={onExploreDemo}
+                >
+                  🚀 Trải nghiệm ngay giao diện đối tác (Dữ liệu ảo)
+                </button>
+              )}
               <button
                 type="button"
                 style={{
@@ -211,7 +236,7 @@ export function LoginScreen({
                   setLoginPassword('Password123!');
                 }}
               >
-                ⚡ Điền tài khoản demo (Quán mẫu)
+                ⚡ Tự động điền tài khoản demo (Quán mẫu)
               </button>
             </div>
 

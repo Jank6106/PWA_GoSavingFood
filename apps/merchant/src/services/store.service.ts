@@ -81,6 +81,10 @@ export async function fetchStoreProfile(storeId: string): Promise<StoreProfile |
       const profile = mapStoreRow(store);
       const cached = getCachedStoreProfile(storeId);
       if (cached) {
+        if (!profile.coverImage) profile.coverImage = cached.coverImage;
+        if (!profile.logoUrl) profile.logoUrl = cached.logoUrl;
+        if (!profile.avatar) profile.avatar = cached.avatar;
+        if (!profile.description) profile.description = cached.description;
         profile.totalRescuedBags = cached.totalRescuedBags;
         profile.totalCo2SavedKg = cached.totalCo2SavedKg;
         profile.email = cached.email;

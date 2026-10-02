@@ -1,5 +1,6 @@
 import type {
   AnalyticsMetrics,
+  AuthUser,
   BagItem,
   MerchantOrder,
   ReviewItem,
@@ -9,6 +10,13 @@ import type {
 
 export const STORE_ID = 'b0000000-0000-0000-0000-000000000002';
 export const MERCHANT_STORE_ID = '799e644e-2f82-4a85-ba12-b194cf4cc547';
+
+export const DEMO_MERCHANT_USER: AuthUser = {
+  id: '00000000-0000-0000-0000-000000000003',
+  storeId: STORE_ID,
+  displayName: 'Quán Chay Quýt (Demo)',
+  isFirstLogin: false,
+};
 
 export const PRESET_BAG_CATEGORIES = ['Bánh ngọt', 'Món Việt', 'Đồ uống', 'Rau củ', 'Combo bất ngờ'];
 export const PRESET_BAG_IMAGES = [

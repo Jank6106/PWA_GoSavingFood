@@ -58,13 +58,13 @@ function ScreenLoadingSkeleton() {
 export default function App() {
   const auth = useAuth();
 
-  // Giải pháp 2: Render tức thì 0ms dựa vào cached session, không nhấp nháy màn hình Login
+  // Tối ưu như Customer PWA: Khởi tạo ngay lập tức với dữ liệu ảo (0ms), tải ngầm sau
   const [route, setRoute] = useState<'login' | 'setup' | TabRoute>(() => {
     const cached = getCachedMerchantUser();
     if (cached) {
       return cached.isFirstLogin ? 'setup' : 'bags';
     }
-    return 'login';
+    return 'bags';
   });
 
   const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
@@ -128,6 +128,10 @@ export default function App() {
         onLogin={handleLogin}
         onRegister={handleRegister}
         onClearError={auth.clearError}
+        onExploreDemo={() => {
+          auth.exploreDemo();
+          setRoute('bags');
+        }}
       />
     );
   }

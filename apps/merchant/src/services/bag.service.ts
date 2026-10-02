@@ -129,7 +129,9 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
         console.warn('Lấy danh sách bags từ Supabase lỗi:', error.message);
         return getCachedBagItems(storeId);
       }
-      const bags = (data || []).map(mapDbBag);
+      const remoteBags = (data || []).map(mapDbBag);
+      const seedBags = storeId === MERCHANT_STORE_ID ? SEED_BAGS_GOGREEN : SEED_BAGS_QUYT;
+      const bags = remoteBags.length > 0 ? remoteBags : seedBags;
       setCachedBagItems(storeId, bags);
       return bags;
     } finally {

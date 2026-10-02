@@ -114,6 +114,10 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
     0
   );
 
+    if (orders.length === 0 && totalSoldBags === 0) {
+      return SEED_ANALYTICS_QUYT.metrics;
+    }
+
     return {
       totalRevenue,
       monthlyRevenue,
@@ -164,6 +168,9 @@ export async function fetchRevenueChart(
       }
 
       const revenueOrders = (data || []).filter((order: any) => isRevenueStatus(order.status));
+      if (revenueOrders.length === 0) {
+        return SEED_ANALYTICS_QUYT.chartData;
+      }
 
       if (timeframe === 'week') {
         return Array.from({ length: 7 }, (_, index) => {
@@ -211,9 +218,9 @@ export async function fetchRecentReviews(storeId: string): Promise<ReviewItem[]>
         .order('created_at', { ascending: false })
         .limit(6);
 
-      if (error) {
-        console.warn('Lấy đánh giá gần đây lỗi:', error.message);
-        return [];
+      if (error || !data || data.length === 0) {
+        if (error) console.warn('Lấy đánh giá gần đây lỗi:', error.message);
+        return SEED_ANALYTICS_QUYT.reviews;
       }
 
       return (data || []).map((row: any) => {

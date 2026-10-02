@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DEMO_MERCHANT_USER } from '../mocks';
 import {
   changePasswordService,
   completeSetupService,
@@ -13,18 +14,16 @@ import { supabase } from '../services/supabase';
 import type { AuthUser, LoginCredentials, MerchantRegisterInput } from '../types';
 
 export function useAuth() {
-  // Giải pháp 2: Render tức thì 0ms nhờ cache localStorage
-  const [user, setUser] = useState<AuthUser | null>(() => getCachedMerchantUser());
+  // Tối ưu như Customer PWA: Render dữ liệu ảo tức thì 0ms, sau đó load phiên thật ngầm
+  const [user, setUser] = useState<AuthUser | null>(() => getCachedMerchantUser() || DEMO_MERCHANT_USER);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 1. Xác thực ngầm với getSession() siêu tốc không gây giật màn hình
+    // Xác thực ngầm với getSession() siêu tốc không gây gián đoạn
     getCurrentMerchantSession().then((existing) => {
       if (existing) {
         setUser(existing);
-      } else if (getCachedMerchantUser()) {
-        setUser(null);
       }
     });
 
@@ -112,6 +111,10 @@ export function useAuth() {
     setLoading(false);
   };
 
+  const exploreDemo = () => {
+    setUser(DEMO_MERCHANT_USER);
+  };
+
   return {
     user,
     loading,
@@ -121,6 +124,7 @@ export function useAuth() {
     changePassword,
     completeSetup,
     logout,
+    exploreDemo,
     clearError: () => setError(null),
   };
 }
