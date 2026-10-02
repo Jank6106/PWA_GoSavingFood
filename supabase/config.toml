@@ -240,7 +240,7 @@ host = "smtp.resend.com"
 port = 587
 user = "resend"
 pass = "re_CVNpuZje_2BxFW9SeyGX17Mc4nUt9thdR"
-admin_email = "onboarding@resend.dev"
+admin_email = "no-reply@gosavingfood.app"
 sender_name = "GoSavingFood"
 
 [auth.email.template.confirmation]
