@@ -101,15 +101,25 @@ const ORDER_SELECT =
   '*, order_items(*, surprise_bags(image_url)), users!orders_customer_id_fkey(name, phone)';
 
 export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrder[]> {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('orders')
     .select(ORDER_SELECT)
     .eq('store_id', storeId)
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.warn('Lấy danh sách đơn hàng từ Supabase lỗi:', error.message);
-    return getCachedMerchantOrders(storeId);
+    console.warn('Lấy danh sách đơn hàng có users join lỗi, thử fallback:', error.message);
+    const fallbackRes = await supabase
+      .from('orders')
+      .select('*, order_items(*, surprise_bags(image_url))')
+      .eq('store_id', storeId)
+      .order('created_at', { ascending: false });
+
+    if (fallbackRes.error) {
+      console.warn('Lấy danh sách đơn hàng fallback lỗi:', fallbackRes.error.message);
+      return getCachedMerchantOrders(storeId);
+    }
+    data = fallbackRes.data;
   }
 
   const orders = (data || []).map(mapDbOrder);

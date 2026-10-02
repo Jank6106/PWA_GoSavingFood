@@ -73,13 +73,19 @@ export async function fetchStoreProfile(storeId: string): Promise<StoreProfile |
   profile.totalCo2SavedKg = Math.round(rescuedBags * CO2_KG_PER_BAG);
 
   if (store.owner_user_id) {
-    const { data: owner } = await supabase
-      .from('users')
-      .select('email, phone')
-      .eq('id', store.owner_user_id)
-      .maybeSingle();
-    profile.email = owner?.email || '';
-    if (!profile.phone && owner?.phone) profile.phone = owner.phone;
+    try {
+      const { data: owner } = await supabase
+        .from('users')
+        .select('email, phone')
+        .eq('id', store.owner_user_id)
+        .maybeSingle();
+      if (owner) {
+        profile.email = owner.email || '';
+        if (!profile.phone && owner.phone) profile.phone = owner.phone;
+      }
+    } catch {
+      // Ignore user query failure
+    }
   }
 
   setCachedStoreProfile(storeId, profile);

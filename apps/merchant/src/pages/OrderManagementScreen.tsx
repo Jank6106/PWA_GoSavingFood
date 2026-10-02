@@ -50,7 +50,7 @@ export function OrderManagementScreen({
   };
 
   if (state.loading && !state.orders.length) return <LoadingSpinner />;
-  if (state.error) return <ErrorState message={state.error} onRetry={() => void state.loadOrders()} />;
+  if (state.error && !state.allOrders.length) return <ErrorState message={state.error} onRetry={() => void state.loadOrders()} />;
 
   return (
     <>

@@ -15,7 +15,6 @@ import {
   evaluatePasswordStrength,
   isValidEmail,
   isValidVietnamesePhone,
-  parseIdentifier,
 } from '../utils/validation';
 
 interface LoginScreenProps {
@@ -64,12 +63,7 @@ export function LoginScreen({
 
     const trimmed = loginIdentifier.trim();
     if (!trimmed) {
-      return setLocalError('Vui lòng nhập email hoặc số điện thoại.');
-    }
-
-    const parsed = parseIdentifier(trimmed);
-    if (parsed.type === 'invalid') {
-      return setLocalError(parsed.errorMessage || 'Email hoặc số điện thoại không hợp lệ.');
+      return setLocalError('Vui lòng nhập email, số điện thoại hoặc tên đăng nhập.');
     }
 
     if (!loginPassword) {
@@ -198,6 +192,28 @@ export function LoginScreen({
             <Button type="submit" size="large" fullWidth loading={loading}>
               Đăng nhập quản lý
             </Button>
+
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+              <button
+                type="button"
+                style={{
+                  background: 'none',
+                  border: '1px dashed rgba(0, 86, 57, 0.3)',
+                  borderRadius: 8,
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  color: 'var(--primary, #005639)',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+                onClick={() => {
+                  setLoginIdentifier('merchant@gosavingfood.vn');
+                  setLoginPassword('Password123!');
+                }}
+              >
+                ⚡ Điền tài khoản demo (Quán mẫu)
+              </button>
+            </div>
 
             <div className="merchant-auth-link">
               Chưa có tài khoản đối tác?

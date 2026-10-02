@@ -20,7 +20,6 @@ export function useStoreProfile(storeId: string) {
   const { toastMessage, showToast } = useToast();
 
   const loadProfile = useCallback(async () => {
-    if (!profile) setLoading(true);
     setError(null);
     try {
       const data = await fetchStoreProfile(storeId);
@@ -30,13 +29,10 @@ export function useStoreProfile(storeId: string) {
     } finally {
       setLoading(false);
     }
-  }, [storeId, profile]);
+  }, [storeId]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadProfile();
-    }, 0);
-    return () => window.clearTimeout(timer);
+    void loadProfile();
   }, [loadProfile]);
 
   const saveProfile = async (input: StoreUpdateInput) => {

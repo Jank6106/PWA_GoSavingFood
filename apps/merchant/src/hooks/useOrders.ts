@@ -23,21 +23,19 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
   const { toastMessage, showToast } = useToast();
 
   const loadOrders = useCallback(async () => {
-    if (allOrders.length === 0) setLoading(true);
     setError(null);
     try {
-      setAllOrders(await fetchMerchantOrders(storeId));
+      const orders = await fetchMerchantOrders(storeId);
+      setAllOrders(orders);
     } catch {
       setError('Không thể tải danh sách đơn hàng.');
     } finally {
       setLoading(false);
     }
-  }, [storeId, allOrders.length]);
+  }, [storeId]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadOrders();
-    }, 0);
+    void loadOrders();
 
     // Kích hoạt Supabase Realtime lắng nghe đơn mới & cập nhật đơn hàng
     const channel = subscribeToStoreOrders(storeId, (payload) => {
@@ -50,7 +48,6 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     });
 
     return () => {
-      window.clearTimeout(timer);
       void channel.unsubscribe();
     };
   }, [loadOrders, showToast, storeId]);
@@ -60,83 +57,81 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     const findAndSelect = () => {
       const target = allOrders.find(
         (o) =>
-          o.id.toLowerCase() === targetOrderId.toLowerCase() ||
-          o.orderCode.toLowerCase() === targetOrderId.toLowerCase()
+          o.id === targetOrderId ||
+          o.orderCode.toLowerCase() === targetOrderId.toLowerCase() ||
+          targetOrderId.toLowerCase().includes(o.orderCode.toLowerCase())
       );
       if (target) {
-        if (['completed', 'cancelled'].includes(target.status)) {
-          setStatusFilter(target.status);
-        } else {
-          setStatusFilter('all');
-        }
         setSelectedOrder(target);
         setIsDetailModalOpen(true);
-        return true;
       }
-      return false;
     };
-
-    if (!findAndSelect()) {
-      void loadOrders();
-    }
-  }, [targetOrderId, allOrders, loadOrders]);
-
-  const orders = useMemo(
-    () =>
-      allOrders.filter(
-        (order) =>
-          (statusFilter === 'all'
-            ? !['completed', 'cancelled'].includes(order.status)
-            : order.status === statusFilter) &&
-          `${order.orderCode} ${order.customerName} ${order.customerPhone}`
-            .toLocaleLowerCase('vi-VN')
-            .includes(searchQuery.toLocaleLowerCase('vi-VN'))
-      ),
-    [allOrders, statusFilter, searchQuery]
-  );
+    findAndSelect();
+  }, [targetOrderId, allOrders]);
 
   const summary = useMemo(
     () => ({
-      pending: allOrders.filter((order) => order.status === 'pending').length,
-      processing: allOrders.filter((order) => order.status === 'processing').length,
-      confirmed: allOrders.filter((order) => order.status === 'confirmed').length,
-      completed: allOrders.filter((order) => order.status === 'completed').length,
-      cancelled: allOrders.filter((order) => order.status === 'cancelled').length,
+      pending: allOrders.filter((o) => o.status === 'pending').length,
+      processing: allOrders.filter((o) => o.status === 'processing').length,
+      confirmed: allOrders.filter((o) => o.status === 'confirmed').length,
+      completed: allOrders.filter((o) => o.status === 'completed').length,
+      cancelled: allOrders.filter((o) => o.status === 'cancelled').length,
     }),
     [allOrders]
   );
 
-  const transition = async (id: string, status: OrderStatus, message: string): Promise<boolean> => {
+  const orders = useMemo(
+    () =>
+      allOrders.filter((order) => {
+        const matchesQuery =
+          order.orderCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order.bagName.toLowerCase().includes(searchQuery.toLowerCase());
+        if (!matchesQuery) return false;
+        if (statusFilter === 'all') return true;
+        return order.status === statusFilter;
+      }),
+    [allOrders, searchQuery, statusFilter]
+  );
+
+  const replaceOrder = (updated: MerchantOrder) => {
+    setAllOrders((items) => items.map((o) => (o.id === updated.id ? updated : o)));
+    if (selectedOrder?.id === updated.id) {
+      setSelectedOrder(updated);
+    }
+  };
+
+  const transition = async (orderId: string, status: OrderStatus, message: string): Promise<boolean> => {
     setSaving(true);
     try {
-      const updated = await updateMerchantOrderStatus(id, status);
-      setAllOrders((items) =>
-        items.map((order) => (order.id === id ? updated : order))
-      );
-      setSelectedOrder((order) => (order?.id === id ? updated : order));
+      const updated = await updateMerchantOrderStatus(orderId, status);
+      replaceOrder(updated);
       showToast(message);
       return true;
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Không thể cập nhật đơn hàng.');
+    } catch (err: any) {
+      showToast(err.message || 'Thao tác không thành công.');
       return false;
     } finally {
       setSaving(false);
     }
   };
 
-  const completeOrderWithQR = async (id: string, qrCode: string) => {
+  const confirmOrder = (orderId: string) => transition(orderId, 'processing', 'Đã xác nhận đơn hàng');
+  const finishPreparationOrder = (orderId: string) => transition(orderId, 'confirmed', 'Đã chuẩn bị xong, chờ khách đến lấy');
+  const cancelOrder = (orderId: string) => transition(orderId, 'cancelled', 'Đã hủy đơn hàng');
+
+  const completeOrderWithQR = async (orderId: string, qrCode: string): Promise<boolean> => {
     setSaving(true);
     try {
-      const valid = await verifyOrderQR(id, qrCode);
-      if (valid) {
+      const success = await verifyOrderQR(orderId, qrCode);
+      if (success) {
         await loadOrders();
         setIsQRModalOpen(false);
-        setSelectedOrder(null);
-        showToast('Đơn hàng đã hoàn thành');
+        showToast('Xác thực QR thành công! Đơn hàng hoàn tất.');
+        return true;
       }
-      return valid;
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Không thể xác thực mã QR.');
+      return false;
+    } catch {
       return false;
     } finally {
       setSaving(false);
@@ -145,10 +140,11 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
 
   return {
     orders,
+    allOrders,
+    summary,
     loading,
     error,
     saving,
-    summary,
     statusFilter,
     searchQuery,
     selectedOrder,
@@ -160,10 +156,9 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     setSelectedOrder,
     setIsDetailModalOpen,
     setIsQRModalOpen,
-    confirmOrder: (id: string) => transition(id, 'processing', 'Đã xác nhận đơn hàng'),
-    finishPreparationOrder: (id: string) =>
-      transition(id, 'confirmed', 'Đơn hàng đã sẵn sàng để nhận'),
-    cancelOrder: (id: string) => transition(id, 'cancelled', 'Đã hủy đơn hàng'),
+    confirmOrder,
+    finishPreparationOrder,
+    cancelOrder,
     completeOrderWithQR,
     loadOrders,
   };

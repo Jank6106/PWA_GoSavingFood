@@ -13,7 +13,7 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
   };
 
   if (state.loading && !state.allBags.length) return <LoadingSpinner />;
-  if (state.error) return <ErrorState message={state.error} onRetry={() => void state.loadBags()} />;
+  if (state.error && !state.allBags.length) return <ErrorState message={state.error} onRetry={() => void state.loadBags()} />;
 
   return (
     <>

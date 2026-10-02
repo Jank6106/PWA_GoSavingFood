@@ -83,14 +83,10 @@ export default function App() {
   const { toastMessage, showToast } = useToast();
 
   useEffect(() => {
-    if (auth.user) {
-      if (route === 'login') {
-        setRoute(auth.user.isFirstLogin ? 'setup' : 'bags');
-      }
-    } else if (!auth.loading && route !== 'login') {
-      setRoute('login');
+    if (auth.user && route === 'login') {
+      setRoute(auth.user.isFirstLogin ? 'setup' : 'bags');
     }
-  }, [auth.user, auth.loading, route]);
+  }, [auth.user, route]);
 
   const handleNewNotification = useCallback(
     (item: any) => {
