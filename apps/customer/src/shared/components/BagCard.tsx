@@ -8,7 +8,7 @@ interface BagCardProps {
   compact?: boolean;
   distanceLabel?: string;
   onOpen: (bag: SurpriseBag) => void;
-  onAdd: (bag: SurpriseBag) => void;
+  onAdd: (bag: SurpriseBag) => boolean | void;
 }
 
 export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen, onAdd }: BagCardProps) {
@@ -17,9 +17,11 @@ export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onAdd(bag);
-    setAdded(true);
-    window.setTimeout(() => setAdded(false), 1200);
+    const res = onAdd(bag);
+    if (res !== false) {
+      setAdded(true);
+      window.setTimeout(() => setAdded(false), 1200);
+    }
   };
   return (
     <article

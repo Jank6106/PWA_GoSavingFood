@@ -8,7 +8,16 @@ export interface AuthContextValue {
   showAuthModal: () => void;
   hideAuthModal: () => void;
   login: (identifier: string, password?: string, name?: string) => Promise<void>;
-  register: (name: string, identifier: string, password?: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  registerInit: (
+    name: string,
+    email: string,
+    password?: string,
+    phone?: string
+  ) => Promise<{ email: string; autoConfirmed?: boolean; user?: User | null }>;
+  verifyRegisterOtp: (email: string, token: string) => Promise<void>;
+  resendRegisterOtp: (email: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<boolean>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
 }
