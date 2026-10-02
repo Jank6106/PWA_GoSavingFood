@@ -1,23 +1,65 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
+  async redirects() {
     return [
+      // 1. Chuyển hướng www.gosavingfood.app -> gosavingfood.app (Apex)
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "www.gosavingfood.app",
+          },
+        ],
+        destination: "https://gosavingfood.app/:path*",
+        permanent: true,
+      },
+      // 2. Chuyển hướng đường dẫn cũ /customer -> /explore
       {
         source: "/customer",
-        destination: "http://127.0.0.1:5173",
+        destination: "/explore",
+        permanent: true,
       },
       {
         source: "/customer/:path*",
-        destination: "http://127.0.0.1:5173/:path*",
+        destination: "/explore/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
+  async rewrites() {
+    const isProd = process.env.NODE_ENV === "production";
+    const customerTarget =
+      process.env.CUSTOMER_APP_URL || "https://gsf-customer-pwa.vercel.app";
+    const merchantTarget =
+      process.env.MERCHANT_APP_URL || "https://gsf-merchant-pwa.vercel.app";
+
+    return [
+      // /explore -> Customer PWA
+      {
+        source: "/explore",
+        destination: isProd
+          ? `${customerTarget}/explore`
+          : "http://127.0.0.1:5173/explore",
       },
       {
+        source: "/explore/:path*",
+        destination: isProd
+          ? `${customerTarget}/explore/:path*`
+          : "http://127.0.0.1:5173/explore/:path*",
+      },
+      // Fallback dev proxy cho merchant
+      {
         source: "/merchant",
-        destination: "http://127.0.0.1:5174",
+        destination: isProd ? merchantTarget : "http://127.0.0.1:5174",
       },
       {
         source: "/merchant/:path*",
-        destination: "http://127.0.0.1:5174/:path*",
+        destination: isProd
+          ? `${merchantTarget}/:path*`
+          : "http://127.0.0.1:5174/:path*",
       },
     ];
   },

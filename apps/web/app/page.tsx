@@ -17,8 +17,8 @@ const isLocal = () => ["localhost", "127.0.0.1"].includes(window.location.hostna
 
 export default function Home() {
   const local = useSyncExternalStore(subscribe, isLocal, () => false);
-  const customerUrl = local ? "http://localhost:5173" : "https://gsf-customer-pwa.vercel.app";
-  const merchantUrl = local ? "http://localhost:5174" : "https://gsf-merchant-pwa.vercel.app";
+  const customerUrl = "/explore";
+  const merchantUrl = local ? "http://localhost:5174" : "https://merchant.gosavingfood.app";
 
   return (
     <div className="landing-page relative min-h-screen-dynamic bg-[#f8faf7] text-[#0a2e1d] flex flex-col font-sans selection:bg-[#00a854] selection:text-white">
