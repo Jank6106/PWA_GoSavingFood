@@ -1,16 +1,58 @@
-import type { AuthUser, LoginCredentials } from '../types';
+import type { AuthUser, LoginCredentials, MerchantRegisterInput } from '../types';
+import {
+  isValidEmail,
+  mapSupabaseAuthError,
+  parseIdentifier,
+} from '../utils/validation';
 import { supabase } from './supabase';
-import { delay } from './utils';
+import { delay, optimizeImageUrl } from './utils';
 
 const SETUP_KEY_PREFIX = 'gsf-merchant-setup-completed';
-
-
+export const MERCHANT_CACHE_KEY = 'gsf_merchant_cached_user';
 
 const getSetupKey = (userId: string) => `${SETUP_KEY_PREFIX}:${userId}`;
-const isSetupCompleted = (userId: string) =>
-  window.localStorage.getItem(getSetupKey(userId)) === 'true';
+export const isSetupCompleted = (userId: string) =>
+  typeof window !== 'undefined' && window.localStorage.getItem(getSetupKey(userId)) === 'true';
 
-export async function ensureUserStore(user: any, defaultName: string) {
+/**
+ * Đọc session user được cache trong localStorage (0ms sync render)
+ */
+export function getCachedMerchantUser(): AuthUser | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(MERCHANT_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.id === 'string' && typeof parsed.storeId === 'string') {
+      return parsed as AuthUser;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Ghi hoặc xóa cache merchant user
+ */
+export function setCachedMerchantUser(user: AuthUser | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (user) {
+      window.localStorage.setItem(MERCHANT_CACHE_KEY, JSON.stringify(user));
+    } else {
+      window.localStorage.removeItem(MERCHANT_CACHE_KEY);
+    }
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
+export async function ensureUserStore(
+  user: any,
+  defaultName: string,
+  extra?: { address?: string; phone?: string; category?: string }
+) {
   try {
     let { data: store } = await supabase
       .from('stores')
@@ -20,20 +62,30 @@ export async function ensureUserStore(user: any, defaultName: string) {
 
     if (!store) {
       const storeName =
-        user.user_metadata?.name || defaultName || 'Tiệm Bánh & Món Ngon';
+        user.user_metadata?.store_name || user.user_metadata?.name || defaultName || 'Tiệm Bánh & Món Ngon';
+      const storePhone = extra?.phone || user.user_metadata?.phone || '0901234567';
+      const storeAddress = extra?.address || user.user_metadata?.address || '123 Nguyễn Huệ, Quận 1, TP.HCM';
+      const storeCategory = extra?.category || 'bakery';
+
       const { data: newStore, error } = await supabase.rpc('create_store', {
         p_owner_user_id: user.id,
         p_name: storeName,
         p_description: 'Cửa hàng đối tác giảm lãng phí thực phẩm cùng GoSavingFood',
-        p_phone: user.user_metadata?.phone || '0901234567',
-        p_address: '123 Nguyễn Huệ, Quận 1, TP.HCM',
+        p_phone: storePhone,
+        p_address: storeAddress,
         p_latitude: 10.7745,
         p_longitude: 106.7032,
-        p_logo_url:
-          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
-        p_banner_url:
-          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
-        p_food_categories: ['bakery'],
+        p_logo_url: optimizeImageUrl(
+          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5',
+          200,
+          75
+        ),
+        p_banner_url: optimizeImageUrl(
+          'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
+          800,
+          75
+        ),
+        p_food_categories: [storeCategory],
         p_open_time: '08:00:00',
         p_close_time: '22:00:00',
         p_is_open: true,
@@ -41,6 +93,31 @@ export async function ensureUserStore(user: any, defaultName: string) {
 
       if (!error && newStore) {
         store = Array.isArray(newStore) ? newStore[0] : newStore;
+      } else {
+        // Fallback: Nếu RPC lỗi hoặc không tồn tại, thử insert trực tiếp
+        const { data: insertedStore } = await supabase
+          .from('stores')
+          .insert({
+            owner_user_id: user.id,
+            name: storeName,
+            description: 'Cửa hàng đối tác giảm lãng phí thực phẩm cùng GoSavingFood',
+            phone: storePhone,
+            address: storeAddress,
+            latitude: 10.7745,
+            longitude: 106.7032,
+            logo_url: optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 200, 75),
+            banner_url: optimizeImageUrl('https://images.unsplash.com/photo-1504674900247-0877df9cc836', 800, 75),
+            food_categories: [storeCategory],
+            open_time: '08:00:00',
+            close_time: '22:00:00',
+            is_open: true,
+          })
+          .select()
+          .maybeSingle();
+
+        if (insertedStore) {
+          store = insertedStore;
+        }
       }
     }
     return store;
@@ -50,6 +127,9 @@ export async function ensureUserStore(user: any, defaultName: string) {
   }
 }
 
+/**
+ * Đăng nhập Merchant hỗ trợ cả Email lẫn Số điện thoại Việt Nam
+ */
 export async function loginService(credentials: LoginCredentials): Promise<AuthUser> {
   const username = credentials.username.trim();
   const rawPassword = credentials.password;
@@ -58,8 +138,26 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
     throw new Error('Vui lòng nhập đầy đủ thông tin đăng nhập.');
   }
 
-  const isEmail = username.includes('@');
-  const email = isEmail ? username : `${username}@gosavingfood.vn`;
+  const parsed = parseIdentifier(username);
+  if (parsed.type === 'invalid') {
+    throw new Error(parsed.errorMessage || 'Email hoặc số điện thoại không hợp lệ.');
+  }
+
+  let email = parsed.type === 'email' ? parsed.normalized : parsed.syntheticEmail!;
+
+  // Nếu người dùng nhập số điện thoại, tra cứu email thật qua RPC Supabase
+  if (parsed.type === 'phone') {
+    try {
+      const { data: realEmail } = await supabase.rpc('get_email_by_phone', {
+        p_phone: parsed.phoneNational || parsed.raw,
+      });
+      if (realEmail) {
+        email = realEmail;
+      }
+    } catch {
+      // Fallback sang synthetic email
+    }
+  }
 
   const candidatePasswords = [
     rawPassword,
@@ -80,34 +178,135 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
     } else {
       lastError = signInError;
     }
+
+    // Nếu nhập bằng SĐT mà thất bại với email thật, thử thêm synthetic email
+    if (parsed.type === 'phone' && email !== parsed.syntheticEmail && parsed.syntheticEmail) {
+      const { data: fallbackData, error: fallbackError } =
+        await supabase.auth.signInWithPassword({
+          email: parsed.syntheticEmail,
+          password: pwd,
+        });
+
+      if (!fallbackError && fallbackData.user) {
+        user = fallbackData.user;
+        break;
+      }
+    }
   }
 
   if (user) {
-    // Lấy thông tin store thuộc quyền sở hữu của merchant
     const store = await ensureUserStore(user, username);
-    const storeId = store?.id;
+    const storeId = store?.id || 'b0000000-0000-0000-0000-000000000002';
+    const storeName = store?.name || user.user_metadata?.store_name || user.user_metadata?.name || username;
 
-    if (!storeId) {
-      throw new Error('Tài khoản chưa được liên kết với cửa hàng nào. Vui lòng liên hệ Admin.');
-    }
-
-    const storeName = store?.name || username;
-
-    return {
+    const authUser: AuthUser = {
       id: user.id,
       storeId,
       displayName: storeName,
       isFirstLogin: !isSetupCompleted(user.id),
     };
+
+    setCachedMerchantUser(authUser);
+    return authUser;
   }
 
-  if (lastError?.message?.includes('Invalid login credentials')) {
-    throw new Error('Tài khoản hoặc mật khẩu không chính xác. Vui lòng liên hệ Admin nếu bạn chưa được cấp tài khoản.');
+  throw new Error(mapSupabaseAuthError(lastError));
+}
+
+/**
+ * Đăng ký tài khoản Đối tác / Cửa hàng mới
+ */
+export async function registerMerchantService(data: MerchantRegisterInput): Promise<AuthUser> {
+  const trimmedName = data.name.trim();
+  const trimmedStoreName = data.storeName.trim();
+  const trimmedEmail = data.email.trim().toLowerCase();
+  const trimmedAddress = data.address?.trim() || '';
+
+  if (!trimmedName || trimmedName.length < 2) {
+    throw new Error('Họ và tên người đại diện phải có ít nhất 2 ký tự.');
   }
 
-  throw new Error(
-    lastError?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
-  );
+  if (!trimmedStoreName || trimmedStoreName.length < 2) {
+    throw new Error('Tên cửa hàng phải có ít nhất 2 ký tự.');
+  }
+
+  if (!isValidEmail(trimmedEmail)) {
+    throw new Error('Địa chỉ email không đúng định dạng (ví dụ: cuahang@gmail.com).');
+  }
+
+  const parsedPhone = parseIdentifier(data.phone);
+  if (parsedPhone.type !== 'phone') {
+    throw new Error(parsedPhone.errorMessage || 'Số điện thoại không đúng định dạng di động Việt Nam.');
+  }
+
+  const pwd = data.password;
+  if (!pwd || pwd.length < 6) {
+    throw new Error('Mật khẩu phải có ít nhất 6 ký tự.');
+  }
+
+  // 1. Tạo tài khoản trong Supabase Auth
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email: trimmedEmail,
+    password: pwd,
+    options: {
+      data: {
+        name: trimmedName,
+        full_name: trimmedName,
+        store_name: trimmedStoreName,
+        phone: parsedPhone.phoneNational,
+        phone_e164: parsedPhone.phoneE164,
+        role: 'merchant',
+        address: trimmedAddress,
+      },
+    },
+  });
+
+  if (signUpError) {
+    throw new Error(mapSupabaseAuthError(signUpError));
+  }
+
+  if (signUpData.user && Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
+    throw new Error('Email này đã được đăng ký trên hệ thống. Vui lòng chuyển sang tab Đăng nhập.');
+  }
+
+  const createdUser = signUpData.user;
+  if (!createdUser) {
+    throw new Error('Đăng ký không thành công. Vui lòng thử lại.');
+  }
+
+  // 2. Tự động đồng bộ vào bảng users và tạo store mới cho đối tác
+  try {
+    await supabase.from('users').upsert(
+      {
+        id: createdUser.id,
+        email: trimmedEmail,
+        name: trimmedName,
+        phone: parsedPhone.phoneNational,
+        role: 'merchant',
+      },
+      { onConflict: 'id' }
+    );
+  } catch {
+    // Ignore if handled by DB triggers
+  }
+
+  const store = await ensureUserStore(createdUser, trimmedStoreName, {
+    address: trimmedAddress,
+    phone: parsedPhone.phoneNational,
+    category: data.category || 'bakery',
+  });
+
+  const storeId = store?.id || 'b0000000-0000-0000-0000-000000000002';
+
+  const authUser: AuthUser = {
+    id: createdUser.id,
+    storeId,
+    displayName: trimmedStoreName,
+    isFirstLogin: false,
+  };
+
+  setCachedMerchantUser(authUser);
+  return authUser;
 }
 
 export async function changePasswordService(
@@ -132,36 +331,67 @@ export async function changePasswordService(
 
 export async function completeSetupService(userId: string) {
   await delay();
-  window.localStorage.setItem(getSetupKey(userId), 'true');
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(getSetupKey(userId), 'true');
+    const cached = getCachedMerchantUser();
+    if (cached && cached.id === userId) {
+      setCachedMerchantUser({ ...cached, isFirstLogin: false });
+    }
+  }
 }
 
 export async function logoutService() {
+  setCachedMerchantUser(null);
   try {
     await supabase.auth.signOut();
   } catch {
     // ignore
   }
-  await delay(180);
+  await delay(100);
 }
 
-export async function getCurrentMerchantUser(): Promise<AuthUser | null> {
+/**
+ * Tối ưu Supabase Session Cache (Giải pháp 2):
+ * Đọc nhanh từ `getSession()` (đã có sẵn trong bộ nhớ client / localStorage của Supabase)
+ * thay vì chờ network `getUser()`, giúp render UI ngay lập tức trong 0ms.
+ */
+export async function getCurrentMerchantSession(): Promise<AuthUser | null> {
   try {
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return null;
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
 
+    if (error || !session?.user) {
+      setCachedMerchantUser(null);
+      return null;
+    }
+
+    const user = session.user;
+    const cached = getCachedMerchantUser();
+
+    // Nếu đã có cache trùng ID, trả về ngay 0ms
+    if (cached && cached.id === user.id) {
+      return cached;
+    }
+
+    // Nếu chưa có store trong cache, kiểm tra/tạo
     const store = await ensureUserStore(user, 'Quán Của Tôi');
     const storeId = store?.id || 'b0000000-0000-0000-0000-000000000002';
-    const storeName = store?.name || user.user_metadata?.name || 'Cửa hàng của tôi';
+    const storeName = store?.name || user.user_metadata?.store_name || user.user_metadata?.name || 'Cửa hàng của tôi';
 
-    return {
+    const authUser: AuthUser = {
       id: user.id,
       storeId,
       displayName: storeName,
       isFirstLogin: !store && !isSetupCompleted(user.id),
     };
+
+    setCachedMerchantUser(authUser);
+    return authUser;
   } catch {
-    return null;
+    return getCachedMerchantUser();
   }
 }
+
+export const getCurrentMerchantUser = getCurrentMerchantSession;

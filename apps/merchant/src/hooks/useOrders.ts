@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   fetchMerchantOrders,
+  getCachedMerchantOrders,
   subscribeToStoreOrders,
   updateMerchantOrderStatus,
   verifyOrderQR,
@@ -9,8 +10,9 @@ import type { MerchantOrder, OrderStatus, OrderStatusFilter } from '../types';
 import { useToast } from './useToast';
 
 export function useOrders(storeId: string, targetOrderId?: string | null) {
-  const [allOrders, setAllOrders] = useState<MerchantOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  // SWR: Đọc danh sách đơn hàng đã lưu trong cache 0ms
+  const [allOrders, setAllOrders] = useState<MerchantOrder[]>(() => getCachedMerchantOrders(storeId));
+  const [loading, setLoading] = useState(() => allOrders.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('all');
@@ -21,7 +23,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
   const { toastMessage, showToast } = useToast();
 
   const loadOrders = useCallback(async () => {
-    setLoading(true);
+    if (allOrders.length === 0) setLoading(true);
     setError(null);
     try {
       setAllOrders(await fetchMerchantOrders(storeId));
@@ -30,7 +32,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     } finally {
       setLoading(false);
     }
-  }, [storeId]);
+  }, [storeId, allOrders.length]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

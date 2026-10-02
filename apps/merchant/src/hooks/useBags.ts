@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { createBagItem, deleteBagItem, fetchBagItems, updateBagItem, updateBagQuantity, updateBagStatus } from '../services/bag.service';
+import {
+  createBagItem,
+  deleteBagItem,
+  fetchBagItems,
+  getCachedBagItems,
+  updateBagItem,
+  updateBagQuantity,
+  updateBagStatus,
+} from '../services/bag.service';
 import { subscribeInventory } from '../services/inventory.service';
 import type { BagInput, BagItem } from '../types';
 import { useToast } from './useToast';
@@ -7,8 +15,9 @@ import { useToast } from './useToast';
 export type BagStatusFilter = 'all' | 'on_shelf' | 'off_shelf';
 
 export function useBags(storeId: string) {
-  const [allBags, setAllBags] = useState<BagItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // SWR: Render danh sách túi tức thì 0ms từ cache localStorage
+  const [allBags, setAllBags] = useState<BagItem[]>(() => getCachedBagItems(storeId));
+  const [loading, setLoading] = useState(() => allBags.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,11 +29,17 @@ export function useBags(storeId: string) {
   const { toastMessage, showToast } = useToast();
 
   const loadBags = useCallback(async () => {
-    setLoading(true); setError(null);
-    try { setAllBags(await fetchBagItems(storeId)); }
-    catch { setError('Không thể tải danh sách túi hàng.'); }
-    finally { setLoading(false); }
-  }, [storeId]);
+    if (allBags.length === 0) setLoading(true);
+    setError(null);
+    try {
+      const items = await fetchBagItems(storeId);
+      setAllBags(items);
+    } catch {
+      setError('Không thể tải danh sách túi hàng.');
+    } finally {
+      setLoading(false);
+    }
+  }, [storeId, allBags.length]);
 
   useEffect(() => {
     void loadBags();

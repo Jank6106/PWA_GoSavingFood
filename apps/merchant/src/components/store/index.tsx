@@ -1,5 +1,6 @@
 import { Clock, Headphones, ImageUp, KeyRound, LogOut, MapPin, Pencil, Phone, Save, Send, ShoppingBag, Star, X } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
+import { optimizeImageUrl } from '../../services/utils';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../../types';
 import { Button, Field, Modal, TextAreaField } from '../ui';
 
@@ -10,14 +11,14 @@ export function StoreCoverHeader({ profile, saving, onSaveImages }: { profile: S
   const changeImage = async (event: ChangeEvent<HTMLInputElement>, field: keyof StoreImageUpdate) => { const image = await readImage(event.target.files?.[0]); if (image) onSaveImages({ [field]: image }); event.target.value = ''; };
   return (
     <section className="merchant-store-cover">
-      <img src={profile.coverImage} alt="Không gian cửa hàng" />
+      <img src={optimizeImageUrl(profile.coverImage, 800, 75)} alt="Không gian cửa hàng" loading="lazy" />
       <label className="merchant-cover-image-action">
         <ImageUp size={15} /> Thay ảnh bìa
         <input type="file" accept="image/*" onChange={(event) => void changeImage(event, 'coverImage')} disabled={saving} />
       </label>
       <div className="merchant-store-cover-overlay">
         <label className="merchant-avatar-edit">
-          {isImage(profile.avatar) ? <img src={profile.avatar} alt="Ảnh đại diện cửa hàng" /> : profile.avatar}
+          {isImage(profile.avatar) ? <img src={optimizeImageUrl(profile.avatar, 160, 80)} alt="Ảnh đại diện cửa hàng" loading="lazy" /> : profile.avatar}
           <span><Pencil size={13} /></span>
           <input type="file" accept="image/*" onChange={(event) => void changeImage(event, 'avatar')} disabled={saving} />
         </label>

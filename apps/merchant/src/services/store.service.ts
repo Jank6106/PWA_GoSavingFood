@@ -3,6 +3,30 @@ import { fetchCompletedBagQuantity } from './order.service';
 import { supabase } from './supabase';
 
 const CO2_KG_PER_BAG = 2.5;
+const STORE_CACHE_PREFIX = 'gsf_merchant_store:';
+
+export function getCachedStoreProfile(storeId: string): StoreProfile | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(`${STORE_CACHE_PREFIX}${storeId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setCachedStoreProfile(storeId: string, profile: StoreProfile | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (profile) {
+      window.localStorage.setItem(`${STORE_CACHE_PREFIX}${storeId}`, JSON.stringify(profile));
+    } else {
+      window.localStorage.removeItem(`${STORE_CACHE_PREFIX}${storeId}`);
+    }
+  } catch {
+    // Ignore storage quota
+  }
+}
 
 const mapStoreRow = (store: any): StoreProfile => ({
   id: store.id,
@@ -38,7 +62,7 @@ export async function fetchStoreProfile(storeId: string): Promise<StoreProfile |
 
   if (error) {
     console.warn('Lấy thông tin store từ Supabase lỗi:', error.message);
-    return null;
+    return getCachedStoreProfile(storeId);
   }
   if (!store) return null;
 
@@ -58,6 +82,7 @@ export async function fetchStoreProfile(storeId: string): Promise<StoreProfile |
     if (!profile.phone && owner?.phone) profile.phone = owner.phone;
   }
 
+  setCachedStoreProfile(storeId, profile);
   return profile;
 }
 export async function updateStoreProfile(

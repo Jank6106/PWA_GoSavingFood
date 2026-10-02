@@ -38,9 +38,15 @@ h1, h2, h3, p { margin: 0; }
 
 /* Auth and setup */
 .merchant-auth-page { display: grid; min-height: 100vh; place-items: center; padding: 24px; background: radial-gradient(circle at top, #e7f8ee 0, var(--page) 40%); }
-.merchant-auth-card, .merchant-setup-card { width: min(100%, 440px); padding: 36px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); box-shadow: 0 12px 36px rgba(0, 86, 57, .1); }
-.merchant-setup-card { width: min(100%, 460px); }
-.merchant-auth-brand { display: flex; align-items: center; flex-direction: column; margin-bottom: 28px; text-align: center; }
+.merchant-auth-card, .merchant-setup-card { width: min(100%, 460px); padding: 36px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); box-shadow: 0 12px 36px rgba(0, 86, 57, .1); }
+.merchant-setup-card { width: min(100%, 480px); }
+.merchant-auth-tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--primary-soft); border: 1.5px solid var(--border); border-radius: 14px; padding: 4px; margin-bottom: 22px; gap: 4px; }
+.merchant-auth-tab { padding: 10px 14px; border-radius: 10px; border: none; background: transparent; font-size: 13.5px; font-weight: 750; color: var(--text-secondary); cursor: pointer; transition: all .18s ease; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.merchant-auth-tab:hover { color: var(--primary); }
+.merchant-auth-tab.is-active { background: var(--primary); color: #fff; box-shadow: 0 3px 10px rgba(0, 86, 57, .2); }
+.merchant-auth-link { margin-top: 14px; text-align: center; font-size: 13px; color: var(--text-secondary); }
+.merchant-auth-link button { background: none; border: none; padding: 0; color: var(--primary); font-weight: 750; cursor: pointer; text-decoration: underline; margin-left: 5px; }
+.merchant-auth-brand { display: flex; align-items: center; flex-direction: column; margin-bottom: 24px; text-align: center; }
 .merchant-auth-brand > span { display: grid; width: 64px; height: 64px; margin-bottom: 14px; place-items: center; border-radius: 20px; background: var(--primary); color: #fff; box-shadow: 0 6px 18px rgba(0, 86, 57, .25); }
 .merchant-auth-brand h1 { font-size: 26px; font-weight: 800; letter-spacing: -.5px; }
 .merchant-auth-brand > div { display: flex; align-items: center; gap: 5px; margin-top: 8px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--primary-soft); font-size: 12px; font-weight: 700; }

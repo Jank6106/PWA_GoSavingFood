@@ -76,6 +76,27 @@ const mapDbOrder = (o: any): MerchantOrder => {
   };
 };
 
+const ORDERS_CACHE_PREFIX = 'gsf_merchant_orders:';
+
+export function getCachedMerchantOrders(storeId: string): MerchantOrder[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(`${ORDERS_CACHE_PREFIX}${storeId}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function setCachedMerchantOrders(storeId: string, orders: MerchantOrder[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`${ORDERS_CACHE_PREFIX}${storeId}`, JSON.stringify(orders));
+  } catch {
+    // Ignore storage quota
+  }
+}
+
 const ORDER_SELECT =
   '*, order_items(*, surprise_bags(image_url)), users!orders_customer_id_fkey(name, phone)';
 
@@ -88,10 +109,12 @@ export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrde
 
   if (error) {
     console.warn('Lấy danh sách đơn hàng từ Supabase lỗi:', error.message);
-    return [];
+    return getCachedMerchantOrders(storeId);
   }
 
-  return (data || []).map(mapDbOrder);
+  const orders = (data || []).map(mapDbOrder);
+  setCachedMerchantOrders(storeId, orders);
+  return orders;
 }
 
 const fetchOrderRow = async (orderId: string) => {

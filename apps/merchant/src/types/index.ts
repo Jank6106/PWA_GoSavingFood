@@ -13,6 +13,16 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface MerchantRegisterInput {
+  name: string;
+  storeName: string;
+  email: string;
+  phone: string;
+  password: string;
+  address?: string;
+  category?: string;
+}
+
 export type BagStatus = 'active' | 'sold_out' | 'hidden';
 
 export interface BagItem {

@@ -1,9 +1,34 @@
 import type { BagInput, BagItem, BagStatus } from '../types';
 import { removeBagFromInventoryShelf, syncBagToInventoryShelf } from './inventory.service';
 import { supabase } from './supabase';
+import { optimizeImageUrl } from './utils';
 
-const DEFAULT_BAG_IMAGE =
-  'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600';
+const DEFAULT_BAG_IMAGE = optimizeImageUrl(
+  'https://images.unsplash.com/photo-1509440159596-0249088772ff',
+  400,
+  75
+);
+
+const BAGS_CACHE_PREFIX = 'gsf_merchant_bags:';
+
+export function getCachedBagItems(storeId: string): BagItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(`${BAGS_CACHE_PREFIX}${storeId}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function setCachedBagItems(storeId: string, bags: BagItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`${BAGS_CACHE_PREFIX}${storeId}`, JSON.stringify(bags));
+  } catch {
+    // Ignore storage quota
+  }
+}
 
 const mapDbBag = (b: any): BagItem => ({
   id: b.id,
@@ -15,8 +40,8 @@ const mapDbBag = (b: any): BagItem => ({
   salePrice: Number(b.discount_price),
   quantity: Number(b.quantity),
   availableQuantity: Number(b.quantity),
-  imageUrl: b.image_url || DEFAULT_BAG_IMAGE,
-  imageUrls: [b.image_url || DEFAULT_BAG_IMAGE],
+  imageUrl: optimizeImageUrl(b.image_url || DEFAULT_BAG_IMAGE, 400, 75),
+  imageUrls: [optimizeImageUrl(b.image_url || DEFAULT_BAG_IMAGE, 400, 75)],
   pickupTimeStart: b.pickup_start?.slice(0, 5) || '18:00',
   pickupTimeEnd: b.pickup_end?.slice(0, 5) || '21:00',
   status: (b.is_available ? (b.quantity > 0 ? 'active' : 'sold_out') : 'hidden') as BagStatus,
@@ -89,9 +114,11 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
 
   if (error) {
     console.warn('Lấy danh sách bags từ Supabase lỗi:', error.message);
-    return [];
+    return getCachedBagItems(storeId);
   }
-  return (data || []).map(mapDbBag);
+  const bags = (data || []).map(mapDbBag);
+  setCachedBagItems(storeId, bags);
+  return bags;
 }
 
 export async function updateBagStatus(bagId: string, status: BagStatus): Promise<BagItem> {
