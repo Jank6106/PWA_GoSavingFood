@@ -1561,14 +1561,39 @@ export const customerService = {
       throw new Error(parsed.errorMessage || 'Email hoặc số điện thoại không hợp lệ.');
     }
 
-    const email = parsed.type === 'email' ? parsed.normalized : parsed.syntheticEmail!;
+    let email = parsed.type === 'email' ? parsed.normalized : parsed.syntheticEmail!;
+    if (parsed.type === 'phone') {
+      try {
+        const { data: realEmail } = await supabase.rpc('get_email_by_phone', {
+          p_phone: parsed.phoneNational || parsed.raw,
+        });
+        if (realEmail) {
+          email = realEmail;
+        }
+      } catch {
+        // Fallback to synthetic email
+      }
+    }
+
     const pwd = password || 'Password123!';
 
-    const { data: signInData, error: signInError } =
+    let { data: signInData, error: signInError } =
       await supabase.auth.signInWithPassword({
         email,
         password: pwd,
       });
+
+    // Fallback: nếu tra ra email nhưng đăng nhập lỗi, thử với synthetic email
+    if (signInError && parsed.type === 'phone' && email !== parsed.syntheticEmail && parsed.syntheticEmail) {
+      const fallback = await supabase.auth.signInWithPassword({
+        email: parsed.syntheticEmail,
+        password: pwd,
+      });
+      if (!fallback.error) {
+        signInData = fallback.data;
+        signInError = null;
+      }
+    }
 
     if (signInError) {
       throw new Error(mapSupabaseAuthError(signInError));
