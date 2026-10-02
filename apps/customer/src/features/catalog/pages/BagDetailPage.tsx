@@ -1,17 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ChevronLeft,
-  ChevronRight,
   Clock3,
   Heart,
   MapPin,
   Share2,
   ShoppingBag,
-  Sparkles,
   Star,
-  Store,
-  ShieldCheck,
-  Leaf,
 } from 'lucide-react';
 import { Button, Dialog, EmptyState } from '@gosavingfood/ui';
 import { QuantityStepper } from '../../../shared/components';
@@ -20,18 +15,6 @@ import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types
 const DEFAULT_COVER =
   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80';
 
-const COMMUNITY_PHOTOS = [
-  'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=300&auto=format&fit=crop&q=80',
-];
 
 const formatDistance = (dist?: number) => {
   if (dist === undefined || dist === null) return '0.5 km';
@@ -50,7 +33,6 @@ interface BagDetailPageProps {
   onAdd: (bag: SurpriseBag, quantity: number) => boolean | void;
   onBuyNow: (bag: SurpriseBag, quantity: number) => void;
   onRequireAuth?: (action?: 'add_to_cart' | 'buy_now', bag?: SurpriseBag, quantity?: number) => void;
-  onOpenReviews?: (merchantId: string) => void;
 }
 
 export function BagDetailPage({
@@ -63,7 +45,6 @@ export function BagDetailPage({
   onAdd,
   onBuyNow,
   onRequireAuth,
-  onOpenReviews,
 }: BagDetailPageProps) {
   const [quantity, setQuantity] = useState(1);
   const [isQuantityOpen, setIsQuantityOpen] = useState(false);
@@ -163,20 +144,12 @@ export function BagDetailPage({
   const totalReviews = merchant?.totalRatings || 175;
   const ratingValue = (bag.rating || merchant?.rating || 4.8).toFixed(1);
 
-  const handleReviewsClick = () => {
-    if (onOpenReviews && (bag.merchantId || merchant?.id)) {
-      onOpenReviews(bag.merchantId || merchant!.id);
-    } else {
-      onMerchant();
-    }
-  };
-
   return (
     <div className="customer-product-screen">
       {/* Toast Notification */}
       {toastMsg && <div className="customer-product-toast">{toastMsg}</div>}
 
-      {/* 1. Edge-to-Edge Hero Image Section */}
+      {/* 1. Edge-to-Edge Hero Image Section (Chỉ ảnh sản phẩm) */}
       <section className="customer-product-hero">
         <img
           src={coverUrl}
@@ -220,35 +193,10 @@ export function BagDetailPage({
             </button>
           </div>
         </div>
-
-        {/* Overlapping Store Avatar Badge on Bottom Right */}
-        <button
-          type="button"
-          className="customer-product-hero-badge"
-          onClick={onMerchant}
-          title={`Xem cửa hàng ${bag.merchantName}`}
-        >
-          <img
-            src={merchantLogo}
-            alt={bag.merchantName}
-            className="customer-product-hero-badge-img"
-          />
-        </button>
       </section>
 
       {/* 2. Main Product Info & Price Card */}
       <section className="customer-product-info-card">
-        {/* Merchant link chip */}
-        <button
-          type="button"
-          className="customer-product-merchant-link"
-          onClick={onMerchant}
-        >
-          <Store size={14} strokeWidth={2.2} />
-          <span>{bag.merchantName}</span>
-          <ChevronRight size={14} />
-        </button>
-
         <h1 className="customer-product-title">{bag.name}</h1>
 
         {/* Rating and Distance Row */}
@@ -325,13 +273,6 @@ export function BagDetailPage({
         <section className="customer-store-section">
           <div className="customer-store-section-header">
             <h2 className="customer-store-section-title">Cửa hàng cung cấp</h2>
-            <button
-              type="button"
-              className="customer-store-link-btn"
-              onClick={onMerchant}
-            >
-              Xem quán
-            </button>
           </div>
 
           <div
@@ -369,131 +310,19 @@ export function BagDetailPage({
         </section>
       )}
 
-      {/* 5. Section: Trong túi bất ngờ có gì? */}
+      {/* 5. Section: Mô tả túi hàng */}
       <section className="customer-store-section">
         <div className="customer-store-section-header">
-          <h2 className="customer-store-section-title">Trong túi bất ngờ có gì?</h2>
+          <h2 className="customer-store-section-title">Mô tả túi hàng</h2>
         </div>
 
         <div className="customer-product-description-wrap">
           <p className="customer-product-description">
-            {bag.description ||
-              'Mỗi túi là một trải nghiệm ẩm thực bất ngờ gồm các phần ăn thơm ngon, tươi mới được đóng gói cẩn thận từ cửa hàng trong ngày hôm nay.'}
-          </p>
-
-          {/* Highlights feature pills */}
-          <div className="customer-product-highlights-grid">
-            <div className="customer-product-highlight-pill">
-              <Sparkles size={16} strokeWidth={2.2} />
-              <div>
-                <strong>Tiết kiệm 50% - 70%</strong>
-                <small>Giá tốt cho thực phẩm chất lượng cao</small>
-              </div>
-            </div>
-
-            <div className="customer-product-highlight-pill">
-              <ShieldCheck size={16} strokeWidth={2.2} />
-              <div>
-                <strong>Tươi ngon trong ngày</strong>
-                <small>Đảm bảo an toàn vệ sinh thực phẩm</small>
-              </div>
-            </div>
-
-            <div className="customer-product-highlight-pill">
-              <Leaf size={16} strokeWidth={2.2} />
-              <div>
-                <strong>Bảo vệ môi trường</strong>
-                <small>Chung tay giảm lãng phí thức ăn</small>
-              </div>
-            </div>
-
-            <div className="customer-product-highlight-pill">
-              <ShoppingBag size={16} strokeWidth={2.2} />
-              <div>
-                <strong>Món ăn bất ngờ</strong>
-                <small>Được chọn lọc theo ngày từ bếp</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. Section: Đánh giá của khách hàng (Matching Store Format) */}
-      <section className="customer-store-section">
-        <div className="customer-store-section-header">
-          <h2 className="customer-store-section-title">Đánh giá của khách hàng</h2>
-          <button
-            type="button"
-            className="customer-store-link-btn"
-            onClick={handleReviewsClick}
-          >
-            Xem tất cả
-          </button>
-        </div>
-
-        <div
-          className="customer-store-ratings-card is-interactive"
-          onClick={handleReviewsClick}
-          role="button"
-          tabIndex={0}
-        >
-          <div className="customer-store-ratings-score">{ratingValue}</div>
-          <div className="customer-store-ratings-detail">
-            <div className="customer-store-stars-row">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <Star
-                  key={s}
-                  size={16}
-                  fill="var(--color-offer-accent)"
-                  color="var(--color-offer-accent)"
-                />
-              ))}
-            </div>
-            <div className="customer-store-ratings-count">
-              Dựa trên {totalReviews} đánh giá
-            </div>
-          </div>
-        </div>
-
-        {/* Featured customer comment */}
-        <div className="customer-product-featured-review">
-          <div className="customer-product-featured-review-header">
-            <div className="customer-product-featured-avatar">L</div>
-            <div className="customer-product-featured-user">
-              <strong>Linh Nguyễn</strong>
-              <div className="customer-product-featured-stars">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star
-                    key={s}
-                    size={12}
-                    fill="var(--color-offer-accent)"
-                    color="var(--color-offer-accent)"
-                  />
-                ))}
-              </div>
-            </div>
-            <span className="customer-product-featured-date">2 ngày trước</span>
-          </div>
-          <p className="customer-product-featured-text">
-            “Đồ ăn vẫn rất nóng hổi và tươi ngon. Phần ăn đầy đặn hơn mình mong đợi nhiều. Rất ủng hộ quán!”
+            {bag.description || 'Chưa có thông tin mô tả cho túi hàng này.'}
           </p>
         </div>
       </section>
 
-      {/* 7. Section: Cộng đồng đã giải cứu (Matching Store Photo Grid) */}
-      <section className="customer-store-section">
-        <div className="customer-store-section-header">
-          <h2 className="customer-store-section-title">Cộng đồng đã giải cứu</h2>
-        </div>
-
-        <div className="customer-store-community-grid">
-          {COMMUNITY_PHOTOS.map((src, i) => (
-            <div key={i} className="customer-store-community-item">
-              <img src={src} alt={`Ảnh cộng đồng giải cứu ${i + 1}`} loading="lazy" />
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* 8. Sticky Bottom Action Bar */}
       <footer className="customer-product-bottom-bar">
@@ -509,7 +338,6 @@ export function BagDetailPage({
             setIsQuantityOpen(true);
           }}
         >
-          <ShoppingBag size={18} />
           <span>Thêm vào giỏ</span>
         </Button>
 
@@ -524,7 +352,7 @@ export function BagDetailPage({
             onBuyNow(bag, 1);
           }}
         >
-          <span>Mua ngay · {bag.discountPrice.toLocaleString('vi-VN')}đ</span>
+          <span>Mua ngay</span>
         </Button>
       </footer>
 

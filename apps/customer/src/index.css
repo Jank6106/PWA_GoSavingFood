@@ -3278,7 +3278,6 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   line-height: 1.35;
   color: var(--color-text-primary, #193B2C);
   letter-spacing: -0.02em;
-  padding-right: 80px;
 }
 
 .customer-product-meta-row {
@@ -3507,64 +3506,18 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   color: var(--color-text-secondary);
 }
 
-/* 5. Section: Trong túi có gì */
+/* 5. Section: Mô tả túi hàng */
 .customer-product-description-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  padding: 0;
 }
 
 .customer-product-description {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 700;
   line-height: 1.6;
-  color: var(--color-text-secondary, #526458);
-}
-
-.customer-product-highlights-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-@media (max-width: 360px) {
-  .customer-product-highlights-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.customer-product-highlight-pill {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
-  border-radius: 14px;
-  background: var(--color-primary-soft, #EEF4E4);
-  border: 1px solid rgba(22, 107, 74, 0.1);
-}
-
-.customer-product-highlight-pill svg {
-  color: var(--color-primary, #166B4A);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.customer-product-highlight-pill div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.customer-product-highlight-pill strong {
-  font-size: 12.5px;
-  font-weight: 800;
   color: var(--color-text-primary, #193B2C);
-}
-
-.customer-product-highlight-pill small {
-  font-size: 11px;
-  color: var(--color-text-secondary, #526458);
-  line-height: 1.35;
+  white-space: pre-line;
 }
 
 /* Featured Review */
@@ -3643,38 +3596,43 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   display: grid;
-  grid-template-columns: 1fr 1.3fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.06);
 }
 
-.customer-product-btn-cart {
+.customer-product-btn-cart,
+.customer-product-btn-buy {
+  height: 48px !important;
   min-height: 48px !important;
   border-radius: 14px !important;
+  font-size: 15px !important;
+  font-weight: 750 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.customer-product-btn-cart:active,
+.customer-product-btn-buy:active {
+  transform: scale(0.98);
+}
+
+.customer-product-btn-cart {
   background: var(--color-primary-soft, #EEF4E4) !important;
   color: var(--color-primary, #166B4A) !important;
   border: 1px solid rgba(22, 107, 74, 0.2) !important;
-  font-weight: 800 !important;
-  font-size: 14px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  cursor: pointer !important;
 }
 
 .customer-product-btn-buy {
-  min-height: 48px !important;
-  border-radius: 14px !important;
   background: var(--color-primary, #166B4A) !important;
   color: #ffffff !important;
-  font-weight: 850 !important;
-  font-size: 14.5px !important;
+  border: 1px solid var(--color-primary, #166B4A) !important;
   box-shadow: 0 4px 14px rgba(22, 107, 74, 0.28) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
 }
 
 .customer-product-skeleton-body {
