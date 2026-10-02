@@ -118,19 +118,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await customerService.loginWithGoogle();
       },
       register: async (name, identifier, password) => {
-        const nextUser = await customerService.register(name, identifier, password);
+        await customerService.registerInit(name, identifier, password);
+      },
+      registerInit: async (name, email, password, phone) => {
+        const res = await customerService.registerInit(name, email, password, phone);
+        return { email: res.email };
+      },
+      verifyRegisterOtp: async (email: string, token: string) => {
+        const nextUser = await customerService.verifyRegisterOtp(email, token);
         setUser(nextUser);
         setCachedUser(nextUser);
         setIsAuthOpen(false);
       },
-      sendEmailOtp: async (email: string) => {
-        return await customerService.sendEmailOtp(email);
-      },
-      verifyEmailOtp: async (email: string, token: string) => {
-        const nextUser = await customerService.verifyEmailOtp(email, token);
-        setUser(nextUser);
-        setCachedUser(nextUser);
-        setIsAuthOpen(false);
+      resendRegisterOtp: async (email: string) => {
+        await customerService.resendRegisterOtp(email);
       },
       resetPassword: async (email: string) => {
         return await customerService.resetPassword(email);

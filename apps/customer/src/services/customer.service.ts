@@ -1607,15 +1607,29 @@ export const customerService = {
     throw new Error('Đăng nhập không thành công.');
   },
 
-  async register(name: string, identifier: string, password?: string) {
+  /**
+   * Bước 1 Đăng ký: Nhập thông tin & Supabase gửi mã OTP 6 số về Email
+   */
+  async registerInit(name: string, email: string, password?: string, phone?: string) {
     const trimmedName = name.trim();
     if (!trimmedName || trimmedName.length < 2) {
       throw new Error('Họ và tên phải có ít nhất 2 ký tự.');
     }
 
-    const parsed = parseIdentifier(identifier);
-    if (parsed.type === 'invalid') {
-      throw new Error(parsed.errorMessage || 'Email hoặc số điện thoại không hợp lệ.');
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!isValidEmail(trimmedEmail)) {
+      throw new Error('Địa chỉ email không đúng định dạng (ví dụ: ten@domain.com).');
+    }
+
+    let phoneNational = '';
+    let phoneE164 = '';
+    if (phone && phone.trim()) {
+      const parsedPhone = parseIdentifier(phone);
+      if (parsedPhone.type !== 'phone') {
+        throw new Error(parsedPhone.errorMessage || 'Số điện thoại không đúng định dạng Việt Nam.');
+      }
+      phoneNational = parsedPhone.phoneNational!;
+      phoneE164 = parsedPhone.phoneE164!;
     }
 
     const pwd = password || 'Password123!';
@@ -1623,12 +1637,9 @@ export const customerService = {
       throw new Error('Mật khẩu phải có ít nhất 6 ký tự.');
     }
 
-    const email = parsed.type === 'email' ? parsed.normalized : parsed.syntheticEmail!;
-    const phoneNational = parsed.type === 'phone' ? parsed.phoneNational : '';
-    const phoneE164 = parsed.type === 'phone' ? parsed.phoneE164 : '';
-
+    // Đăng ký tài khoản. Supabase sẽ gửi mã xác thực OTP 6 số về email của người dùng
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
+      email: trimmedEmail,
       password: pwd,
       options: {
         data: {
@@ -1645,65 +1656,13 @@ export const customerService = {
       throw new Error(mapSupabaseAuthError(signUpError));
     }
 
-    if (signUpData.user) {
-      const u = signUpData.user;
-      const fullUser: User = {
-        id: u.id,
-        name: trimmedName,
-        phone: phoneNational || '',
-        email: u.email,
-        avatar: undefined,
-      };
-
-      // Đồng bộ thông tin vào public.users
-      try {
-        await supabase.from('users').upsert(
-          {
-            id: u.id,
-            email: u.email,
-            name: trimmedName,
-            phone: phoneNational || null,
-            role: 'customer',
-          },
-          { onConflict: 'id' }
-        );
-      } catch {
-        // Bỏ qua lỗi sync phụ nếu trigger đã xử lý
-      }
-
-      return fullUser;
-    }
-
-    throw new Error('Đăng ký không thành công.');
+    return { email: trimmedEmail, user: signUpData.user };
   },
 
   /**
-   * Cấp độ 2 (Supabase Native Free): Gửi mã OTP 6 số vào Email không cần mật khẩu
+   * Bước 2 Đăng ký: Xác thực mã OTP 6 số từ Email để hoàn tất tạo tài khoản
    */
-  async sendEmailOtp(email: string) {
-    const trimmed = email.trim().toLowerCase();
-    if (!isValidEmail(trimmed)) {
-      throw new Error('Vui lòng nhập địa chỉ email hợp lệ để nhận mã OTP.');
-    }
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email: trimmed,
-      options: {
-        shouldCreateUser: true,
-      },
-    });
-
-    if (error) {
-      throw new Error(mapSupabaseAuthError(error));
-    }
-
-    return true;
-  },
-
-  /**
-   * Cấp độ 2 (Supabase Native Free): Xác thực mã OTP 6 số qua Email
-   */
-  async verifyEmailOtp(email: string, token: string): Promise<User> {
+  async verifyRegisterOtp(email: string, token: string): Promise<User> {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedToken = token.trim();
 
@@ -1715,17 +1674,31 @@ export const customerService = {
       throw new Error('Mã OTP gồm đúng 6 chữ số gửi qua email của bạn.');
     }
 
-    const { data, error } = await supabase.auth.verifyOtp({
+    // Thử xác thực với type: 'signup' (mã OTP kích hoạt đăng ký của Supabase)
+    let { data, error } = await supabase.auth.verifyOtp({
       email: trimmedEmail,
       token: trimmedToken,
-      type: 'email',
+      type: 'signup',
     });
+
+    // Fallback: Nếu project cấu hình email OTP dạng 'email'
+    if (error && (error.message.includes('token') || error.message.includes('expired') || error.message.includes('invalid'))) {
+      const fallback = await supabase.auth.verifyOtp({
+        email: trimmedEmail,
+        token: trimmedToken,
+        type: 'email',
+      });
+      if (!fallback.error) {
+        data = fallback.data;
+        error = null;
+      }
+    }
 
     if (error) {
       throw new Error(mapSupabaseAuthError(error));
     }
 
-    if (data.user) {
+    if (data?.user) {
       const u = data.user;
       const meta = u.user_metadata || {};
       const fullUser: User = {
@@ -1747,12 +1720,49 @@ export const customerService = {
           },
           { onConflict: 'id' }
         );
-      } catch {}
+      } catch {
+        // Bỏ qua lỗi phụ nếu trigger cơ sở dữ liệu đã tự xử lý
+      }
 
       return fullUser;
     }
 
     throw new Error('Xác thực OTP không thành công.');
+  },
+
+  /**
+   * Gửi lại mã xác thực OTP đăng ký vào Email
+   */
+  async resendRegisterOtp(email: string) {
+    const trimmed = email.trim().toLowerCase();
+    if (!isValidEmail(trimmed)) {
+      throw new Error('Địa chỉ email không hợp lệ.');
+    }
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: trimmed,
+    });
+
+    if (error) {
+      // Fallback nếu Supabase resend type signup gặp lỗi
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: trimmed,
+        options: { shouldCreateUser: false },
+      });
+      if (otpError) {
+        throw new Error(mapSupabaseAuthError(otpError));
+      }
+    }
+
+    return true;
+  },
+
+  /**
+   * Alias tương thích ngược cho hàm register
+   */
+  async register(name: string, identifier: string, password?: string) {
+    return this.registerInit(name, identifier, password);
   },
 
   /**
