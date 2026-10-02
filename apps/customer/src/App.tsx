@@ -24,6 +24,7 @@ const OrderFeedbackPage = lazy(() => import('./features/orders/pages/OrderFeedba
 const NotificationsPage = lazy(() => import('./features/notifications/pages/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
 const BagsPage = lazy(() => import('./features/catalog/pages/BagsPage').then((m) => ({ default: m.BagsPage })));
 const MerchantDetailPage = lazy(() => import('./features/catalog/pages/MerchantDetailPage').then((m) => ({ default: m.MerchantDetailPage })));
+const MerchantReviewsView = lazy(() => import('./features/catalog/components/MerchantReviewsView').then((m) => ({ default: m.MerchantReviewsView })));
 const BrandDetailPage = lazy(() => import('./features/catalog/pages/BrandDetailPage').then((m) => ({ default: m.BrandDetailPage })));
 
 function ScreenLoadingFallback() {
@@ -284,6 +285,10 @@ function CustomerApp() {
   const back = () => setHistory((current) => (current.length > 1 ? current.slice(0, -1) : current));
   const openTab = (tab: CustomerTab) => setHistory([{ name: 'tabs', tab }]);
   const home = () => openTab('home');
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [history.length]);
   const [directBag, setDirectBag] = useState<SurpriseBag | null>(null);
 
   const selectedBag =
@@ -304,7 +309,10 @@ function CustomerApp() {
     }
   }, [route, selectedBag, directBag]);
 
-  const selectedMerchantId = route.name === 'merchant' ? route.id : selectedBag?.merchantId;
+  const selectedMerchantId =
+    route.name === 'merchant' || route.name === 'merchant_reviews'
+      ? route.id
+      : selectedBag?.merchantId;
   const selectedMerchant =
     catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? null;
   const selectedBrand = route.name === 'brand' ? catalog.brands.find((brand) => brand.id === route.id) ?? null : null;
@@ -584,7 +592,24 @@ function CustomerApp() {
           }}
         />
       );
-    if (route.name === 'merchant') return <MerchantDetailPage merchant={selectedMerchant} bags={catalog.bags.filter((bag) => bag.merchantId === route.id)} onBack={back} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
+    if (route.name === 'merchant')
+      return (
+        <MerchantDetailPage
+          merchant={selectedMerchant}
+          bags={catalog.bags.filter((bag) => bag.merchantId === route.id)}
+          onBack={back}
+          onOpenBag={(bag) => push({ name: 'bag', id: bag.id })}
+          onAdd={addToCart}
+          onOpenReviews={(merchantId) => push({ name: 'merchant_reviews', id: merchantId })}
+        />
+      );
+    if (route.name === 'merchant_reviews')
+      return (
+        <MerchantReviewsView
+          merchant={selectedMerchant}
+          onBack={back}
+        />
+      );
     if (route.name === 'brand') {
       const brandBaseName = selectedBrand ? selectedBrand.name.split(' - ')[0].trim().toLowerCase() : '';
       const brandStores = catalog.merchants.filter(

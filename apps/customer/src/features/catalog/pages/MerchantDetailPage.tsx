@@ -9,6 +9,7 @@ import {
   Store,
 } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
+import { MerchantReviewsView } from '../components/MerchantReviewsView';
 import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 interface MerchantDetailPageProps {
@@ -17,6 +18,7 @@ interface MerchantDetailPageProps {
   onBack: () => void;
   onOpenBag: (bag: SurpriseBag) => void;
   onAdd: (bag: SurpriseBag) => void;
+  onOpenReviews?: (merchantId: string) => void;
 }
 
 const DEFAULT_COVER =
@@ -47,10 +49,21 @@ export function MerchantDetailPage({
   bags,
   onBack,
   onOpenBag,
+  onOpenReviews,
 }: MerchantDetailPageProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showAllAbout, setShowAllAbout] = useState(false);
+  const [viewingAllReviews, setViewingAllReviews] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const handleOpenReviews = () => {
+    if (onOpenReviews && merchant) {
+      onOpenReviews(merchant.id);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      setViewingAllReviews(true);
+    }
+  };
 
   if (!merchant) {
     return (
@@ -63,6 +76,18 @@ export function MerchantDetailPage({
         </div>
         <EmptyState title="Không tìm thấy cửa hàng" />
       </div>
+    );
+  }
+
+  if (viewingAllReviews) {
+    return (
+      <MerchantReviewsView
+        merchant={merchant}
+        onBack={() => {
+          setViewingAllReviews(false);
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }}
+      />
     );
   }
 
@@ -268,17 +293,26 @@ export function MerchantDetailPage({
       <section className="customer-store-section">
         <div className="customer-store-section-header">
           <h2 className="customer-store-section-title">Đánh giá của khách hàng</h2>
-          <button type="button" className="customer-store-link-btn">
+          <button
+            type="button"
+            className="customer-store-link-btn"
+            onClick={handleOpenReviews}
+          >
             Xem tất cả
           </button>
         </div>
 
-        <div className="customer-store-ratings-card">
+        <div
+          className="customer-store-ratings-card is-interactive"
+          onClick={handleOpenReviews}
+          role="button"
+          tabIndex={0}
+        >
           <div className="customer-store-ratings-score">{ratingValue}</div>
           <div className="customer-store-ratings-detail">
             <div className="customer-store-stars-row">
               {[1, 2, 3, 4, 5].map((s) => (
-                <Star key={s} size={16} fill="#f59e0b" color="#f59e0b" />
+                <Star key={s} size={16} fill="var(--color-offer-accent)" color="var(--color-offer-accent)" />
               ))}
             </div>
             <div className="customer-store-ratings-count">

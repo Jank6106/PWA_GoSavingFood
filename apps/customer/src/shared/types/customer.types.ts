@@ -186,6 +186,7 @@ export type AppRoute =
   | { name: 'bags' }
   | { name: 'bag'; id: string }
   | { name: 'merchant'; id: string }
+  | { name: 'merchant_reviews'; id: string }
   | { name: 'brand'; id: string }
   | { name: 'checkout'; buyNowItem?: CartItem }
   | { name: 'payment'; draft: CheckoutDraft; order?: Order; buyNowItem?: CartItem }
