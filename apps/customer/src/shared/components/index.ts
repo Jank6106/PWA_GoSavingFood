@@ -9,6 +9,7 @@ export * from './OrderSummary';
 export * from './PageHeading';
 export * from './PriceDisplay';
 export * from './QuantityStepper';
+export * from './RecommendedBagCard';
 export * from './ScreenHeader';
 export * from './SearchField';
 export * from './SectionHeading';

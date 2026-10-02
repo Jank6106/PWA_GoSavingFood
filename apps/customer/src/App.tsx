@@ -585,7 +585,23 @@ function CustomerApp() {
         />
       );
     if (route.name === 'merchant') return <MerchantDetailPage merchant={selectedMerchant} bags={catalog.bags.filter((bag) => bag.merchantId === route.id)} onBack={back} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
-    if (route.name === 'brand') return <BrandDetailPage brand={selectedBrand} stores={catalog.merchants.filter((merchant) => merchant.brandId === route.id)} onBack={back} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} />;
+    if (route.name === 'brand') {
+      const brandBaseName = selectedBrand ? selectedBrand.name.split(' - ')[0].trim().toLowerCase() : '';
+      const brandStores = catalog.merchants.filter(
+        (merchant) =>
+          merchant.brandId === route.id ||
+          merchant.id === route.id ||
+          (brandBaseName && merchant.name.toLowerCase().includes(brandBaseName))
+      );
+      return (
+        <BrandDetailPage
+          brand={selectedBrand}
+          stores={brandStores}
+          onBack={back}
+          onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })}
+        />
+      );
+    }
     if (route.name === 'checkout' && auth.user) {
       const checkoutItems = route.buyNowItem ? [route.buyNowItem] : cart.items;
       const checkoutSubtotal = route.buyNowItem

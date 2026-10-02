@@ -135,7 +135,7 @@ export function HomePage({
           title="Thương hiệu nổi bật"
           subtitle="Đối tác được yêu thích gần bạn"
         />
-        <div className="customer-brand-track">
+        <div className="customer-brand-grid-track">
           {brands.map((brand) => {
             const BrandIcon = getBrandIcon(brand);
             const isImageLogo = Boolean(
@@ -145,16 +145,29 @@ export function HomePage({
                   brand.logo.startsWith('blob:'))
             );
             return (
-              <button key={brand.id} type="button" onClick={() => onOpenBrand(brand)}>
-                <span className="customer-brand-avatar">
-                  {isImageLogo ? (
-                    <img src={brand.logo} alt={brand.name} />
-                  ) : (
-                    <BrandIcon size={20} strokeWidth={1.9} />
-                  )}
-                </span>
-                <strong>{brand.name}</strong>
-                <small>★ {brand.rating}</small>
+              <button
+                key={brand.id}
+                type="button"
+                className="customer-brand-badge-btn"
+                onClick={() => onOpenBrand(brand)}
+                aria-label={brand.name}
+                title={brand.name}
+              >
+                {isImageLogo ? (
+                  <img
+                    src={brand.logo}
+                    alt={brand.name}
+                    className="customer-brand-badge-img"
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <span className="customer-brand-badge-fallback">
+                    <BrandIcon size={24} strokeWidth={1.8} />
+                  </span>
+                )}
               </button>
             );
           })}
