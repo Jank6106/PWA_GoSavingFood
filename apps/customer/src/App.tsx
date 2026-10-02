@@ -578,6 +578,7 @@ function CustomerApp() {
           }
           onAdd={addToCart}
           onBuyNow={buyNow}
+          onOpenReviews={(merchantId) => push({ name: 'merchant_reviews', id: merchantId })}
           onRequireAuth={(action, bagItem, qty) => {
             const targetBag = bagItem || selectedBag;
             if (targetBag) {

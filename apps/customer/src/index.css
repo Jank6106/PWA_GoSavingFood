@@ -3112,5 +3112,578 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   background: rgba(255, 255, 255, 0.35);
 }
 
+/* ========================================================
+   Customer Product Detail Screen (Phong cách Chi tiết Cửa hàng)
+   ======================================================== */
+.customer-product-screen {
+  min-height: 100vh;
+  padding-bottom: 96px;
+  background: var(--color-bg-page, #F4F1E8);
+  animation: customerProductFadeIn 0.22s ease-out;
+}
+
+@keyframes customerProductFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast */
+.customer-product-toast {
+  position: fixed;
+  top: max(20px, env(safe-area-inset-top) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(22, 107, 74, 0.95);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 750;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+  animation: customerToastSlideDown 0.25s ease;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+/* 1. Hero Image Section */
+.customer-product-hero {
+  position: relative;
+  width: 100%;
+  height: 285px;
+  background: var(--color-bg-muted);
+  overflow: visible;
+}
+
+.customer-product-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.customer-product-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.05) 50%, rgba(0, 0, 0, 0.3) 100%);
+  pointer-events: none;
+}
+
+.customer-product-hero-nav {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.customer-product-round-btn {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.18s ease;
+  padding: 0;
+}
+
+.customer-product-round-btn:active {
+  transform: scale(0.92);
+}
+
+.customer-product-round-btn.is-favorited {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.customer-product-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Overlapping Store Avatar Badge on Bottom Right */
+.customer-product-hero-badge {
+  position: absolute;
+  right: 20px;
+  bottom: -24px;
+  width: 76px;
+  height: 76px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  border: 2px solid #ffffff;
+  padding: 0;
+  z-index: 15;
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.customer-product-hero-badge:hover {
+  transform: scale(1.05);
+}
+
+.customer-product-hero-badge-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 16px;
+}
+
+/* 2. Main Product Info Card */
+.customer-product-info-card {
+  padding: 24px 18px 18px;
+  background: var(--color-bg-card, #ffffff);
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.customer-product-merchant-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--color-primary-soft, #EEF4E4);
+  color: var(--color-primary, #166B4A);
+  border: 1px solid rgba(22, 107, 74, 0.12);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: opacity 0.15s ease;
+}
+
+.customer-product-merchant-link:hover {
+  opacity: 0.85;
+}
+
+.customer-product-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 850;
+  line-height: 1.35;
+  color: var(--color-text-primary, #193B2C);
+  letter-spacing: -0.02em;
+  padding-right: 80px;
+}
+
+.customer-product-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.customer-product-rating-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 750;
+  color: var(--color-text-primary);
+}
+
+.customer-product-meta-dot {
+  color: var(--color-text-muted);
+}
+
+.customer-product-distance {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+/* Price & Discount Row */
+.customer-product-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.customer-product-price {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--color-primary, #166B4A);
+  letter-spacing: -0.02em;
+}
+
+.customer-product-orig-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-muted, #7D8E82);
+  text-decoration: line-through;
+}
+
+.customer-product-discount-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 850;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* Urgency & Stock Banner */
+.customer-product-urgency-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.customer-product-stock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.customer-product-countdown-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--color-primary-soft, #EEF4E4);
+  color: var(--color-primary, #166B4A);
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.customer-product-countdown-pill strong {
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+
+/* 3. Section: Khung giờ nhận túi */
+.customer-product-pickup-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--color-primary-soft, #EEF4E4);
+  border: 1px solid rgba(22, 107, 74, 0.15);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.customer-product-pickup-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--color-primary, #166B4A);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.customer-product-pickup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.customer-product-pickup-time {
+  font-size: 16px;
+  font-weight: 850;
+  color: var(--color-text-primary, #193B2C);
+}
+
+.customer-product-pickup-desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-secondary, #526458);
+}
+
+.customer-product-pickup-addr {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary, #166B4A);
+  margin-top: 4px;
+}
+
+/* 4. Section: Cửa hàng cung cấp (Merchant Card) */
+.customer-product-merchant-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 16px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.customer-product-merchant-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.customer-product-merchant-card:active {
+  transform: scale(0.99);
+}
+
+.customer-product-merchant-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-muted);
+  flex-shrink: 0;
+}
+
+.customer-product-merchant-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.customer-product-merchant-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.customer-product-merchant-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 850;
+  color: var(--color-text-primary, #193B2C);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-product-merchant-addr {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-muted, #7D8E82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-product-merchant-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* 5. Section: Trong túi có gì */
+.customer-product-description-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.customer-product-description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #526458);
+}
+
+.customer-product-highlights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 360px) {
+  .customer-product-highlights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.customer-product-highlight-pill {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--color-primary-soft, #EEF4E4);
+  border: 1px solid rgba(22, 107, 74, 0.1);
+}
+
+.customer-product-highlight-pill svg {
+  color: var(--color-primary, #166B4A);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.customer-product-highlight-pill div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-product-highlight-pill strong {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--color-text-primary, #193B2C);
+}
+
+.customer-product-highlight-pill small {
+  font-size: 11px;
+  color: var(--color-text-secondary, #526458);
+  line-height: 1.35;
+}
+
+/* Featured Review */
+.customer-product-featured-review {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #fafaf9;
+  border: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.customer-product-featured-review-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.customer-product-featured-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary, #166B4A), #1e825b);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.customer-product-featured-user {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.customer-product-featured-user strong {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: var(--color-text-primary);
+}
+
+.customer-product-featured-stars {
+  display: flex;
+  gap: 1px;
+}
+
+.customer-product-featured-date {
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+}
+
+.customer-product-featured-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* 8. Sticky Bottom Bar */
+.customer-product-bottom-bar {
+  position: fixed;
+  z-index: 40;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: min(100%, 560px);
+  margin: 0 auto;
+  padding: 12px 16px max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border-subtle);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 12px;
+  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.06);
+}
+
+.customer-product-btn-cart {
+  min-height: 48px !important;
+  border-radius: 14px !important;
+  background: var(--color-primary-soft, #EEF4E4) !important;
+  color: var(--color-primary, #166B4A) !important;
+  border: 1px solid rgba(22, 107, 74, 0.2) !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+}
+
+.customer-product-btn-buy {
+  min-height: 48px !important;
+  border-radius: 14px !important;
+  background: var(--color-primary, #166B4A) !important;
+  color: #ffffff !important;
+  font-weight: 850 !important;
+  font-size: 14.5px !important;
+  box-shadow: 0 4px 14px rgba(22, 107, 74, 0.28) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+
+.customer-product-skeleton-body {
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
 
 
