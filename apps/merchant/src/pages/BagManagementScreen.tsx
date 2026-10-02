@@ -12,7 +12,7 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
     state.setIsEditModalOpen(true);
   };
 
-  if (state.loading && !state.allBags.length) return <LoadingSpinner />;
+  if (state.loading && !state.allBags.length && !state.hasLoadedOnce) return <LoadingSpinner />;
   if (state.error && !state.allBags.length) return <ErrorState message={state.error} onRetry={() => void state.loadBags()} />;
 
   return (

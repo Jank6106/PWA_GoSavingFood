@@ -130,6 +130,17 @@ export default function App() {
     setRoute('login');
   };
 
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => {
+    const initial = typeof route === 'string' && route !== 'login' && route !== 'setup' ? route : 'bags';
+    return new Set([initial]);
+  });
+
+  useEffect(() => {
+    if (['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(route)) {
+      setVisitedTabs((prev) => (prev.has(route) ? prev : new Set(prev).add(route)));
+    }
+  }, [route]);
+
   if (route === 'login') {
     return (
       <LoginScreen
@@ -169,23 +180,39 @@ export default function App() {
       />
       <main className={`merchant-main merchant-main--${route}`}>
         <Suspense fallback={<ScreenLoadingSkeleton />}>
-          {route === 'bags' && <BagManagementScreen storeId={storeId} />}
-          {route === 'orders' && (
-            <OrderManagementScreen
-              storeId={storeId}
-              targetOrderId={targetOrderId}
-              onClearTargetOrder={() => setTargetOrderId(null)}
-            />
+          {visitedTabs.has('bags') && (
+            <div style={{ display: route === 'bags' ? 'contents' : 'none' }}>
+              <BagManagementScreen storeId={storeId} />
+            </div>
           )}
-          {route === 'inventory' && <InventoryManagementScreen storeId={storeId} />}
-          {route === 'analytics' && <AnalyticsScreen storeId={storeId} />}
-          {route === 'settings' && (
-            <SettingsScreen
-              storeId={storeId}
-              authLoading={auth.loading}
-              onChangePassword={auth.changePassword}
-              onLogout={handleLogout}
-            />
+          {visitedTabs.has('orders') && (
+            <div style={{ display: route === 'orders' ? 'contents' : 'none' }}>
+              <OrderManagementScreen
+                storeId={storeId}
+                targetOrderId={targetOrderId}
+                onClearTargetOrder={() => setTargetOrderId(null)}
+              />
+            </div>
+          )}
+          {visitedTabs.has('inventory') && (
+            <div style={{ display: route === 'inventory' ? 'contents' : 'none' }}>
+              <InventoryManagementScreen storeId={storeId} />
+            </div>
+          )}
+          {visitedTabs.has('analytics') && (
+            <div style={{ display: route === 'analytics' ? 'contents' : 'none' }}>
+              <AnalyticsScreen storeId={storeId} />
+            </div>
+          )}
+          {visitedTabs.has('settings') && (
+            <div style={{ display: route === 'settings' ? 'contents' : 'none' }}>
+              <SettingsScreen
+                storeId={storeId}
+                authLoading={auth.loading}
+                onChangePassword={auth.changePassword}
+                onLogout={handleLogout}
+              />
+            </div>
           )}
         </Suspense>
       </main>

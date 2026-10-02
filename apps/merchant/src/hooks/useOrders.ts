@@ -13,6 +13,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
   // SWR: Đọc danh sách đơn hàng đã lưu trong cache 0ms
   const [allOrders, setAllOrders] = useState<MerchantOrder[]>(() => getCachedMerchantOrders(storeId));
   const [loading, setLoading] = useState(() => allOrders.length === 0);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => allOrders.length > 0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('all');
@@ -22,6 +23,15 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const { toastMessage, showToast } = useToast();
 
+  useEffect(() => {
+    const cached = getCachedMerchantOrders(storeId);
+    if (cached.length > 0) {
+      setAllOrders(cached);
+      setLoading(false);
+      setHasLoadedOnce(true);
+    }
+  }, [storeId]);
+
   const loadOrders = useCallback(async () => {
     setError(null);
     try {
@@ -30,6 +40,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     } catch {
       setError('Không thể tải danh sách đơn hàng.');
     } finally {
+      setHasLoadedOnce(true);
       setLoading(false);
     }
   }, [storeId]);
@@ -143,6 +154,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     allOrders,
     summary,
     loading,
+    hasLoadedOnce,
     error,
     saving,
     statusFilter,

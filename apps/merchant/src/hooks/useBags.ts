@@ -18,6 +18,7 @@ export function useBags(storeId: string) {
   // SWR: Render danh sách túi tức thì 0ms từ cache localStorage
   const [allBags, setAllBags] = useState<BagItem[]>(() => getCachedBagItems(storeId));
   const [loading, setLoading] = useState(() => allBags.length === 0);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => allBags.length > 0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +29,15 @@ export function useBags(storeId: string) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toastMessage, showToast } = useToast();
 
+  useEffect(() => {
+    const cached = getCachedBagItems(storeId);
+    if (cached.length > 0) {
+      setAllBags(cached);
+      setLoading(false);
+      setHasLoadedOnce(true);
+    }
+  }, [storeId]);
+
   const loadBags = useCallback(async () => {
     setError(null);
     try {
@@ -36,6 +46,7 @@ export function useBags(storeId: string) {
     } catch {
       setError('Không thể tải danh sách túi hàng.');
     } finally {
+      setHasLoadedOnce(true);
       setLoading(false);
     }
   }, [storeId]);
@@ -142,6 +153,7 @@ export function useBags(storeId: string) {
     bags,
     allBags,
     loading,
+    hasLoadedOnce,
     error,
     saving,
     searchQuery,

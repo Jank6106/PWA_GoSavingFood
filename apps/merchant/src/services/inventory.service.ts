@@ -1,8 +1,32 @@
 import type { BagItem, InventoryItem } from '../types';
-import { fetchBagItems, updateBagQuantity } from './bag.service';
+import { fetchBagItems, getCachedBagItems, updateBagQuantity } from './bag.service';
 
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((listener) => listener());
+
+const INVENTORY_CACHE_PREFIX = 'gsf_merchant_inventory:';
+
+export function getCachedInventoryItems(storeId: string): InventoryItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(`${INVENTORY_CACHE_PREFIX}${storeId}`);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // fallback
+  }
+  // Fallback nhanh từ cache bags sẵn có
+  const cachedBags = getCachedBagItems(storeId);
+  return cachedBags.filter((bag) => bag.status !== 'hidden').map(toInventoryItem);
+}
+
+export function setCachedInventoryItems(storeId: string, items: InventoryItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`${INVENTORY_CACHE_PREFIX}${storeId}`, JSON.stringify(items));
+  } catch {
+    // Ignore storage quota
+  }
+}
 
 const toInventoryItem = (bag: BagItem): InventoryItem => ({
   id: bag.id,
@@ -24,7 +48,9 @@ const toInventoryItem = (bag: BagItem): InventoryItem => ({
 
 export async function fetchInventoryItems(storeId: string): Promise<InventoryItem[]> {
   const bags = await fetchBagItems(storeId);
-  return bags.filter((bag) => bag.status !== 'hidden').map(toInventoryItem);
+  const items = bags.filter((bag) => bag.status !== 'hidden').map(toInventoryItem);
+  setCachedInventoryItems(storeId, items);
+  return items;
 }
 
 export async function updateStockQuantity(

@@ -29,6 +29,33 @@ const initialsOf = (name: string) =>
     .join('')
     .toUpperCase() || 'KH';
 
+const ANALYTICS_CACHE_PREFIX = 'gsf_merchant_analytics:';
+
+export interface CachedAnalyticsData {
+  metrics: AnalyticsMetrics;
+  chartData: RevenueChartPoint[];
+  reviews: ReviewItem[];
+}
+
+export function getCachedAnalytics(storeId: string): CachedAnalyticsData | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(`${ANALYTICS_CACHE_PREFIX}${storeId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setCachedAnalytics(storeId: string, data: CachedAnalyticsData): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`${ANALYTICS_CACHE_PREFIX}${storeId}`, JSON.stringify(data));
+  } catch {
+    // Ignore storage quota
+  }
+}
+
 export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsMetrics> {
   const [ordersResult, soldResult, storeResult, bagsResult] = await Promise.all([
     supabase.from('orders').select('id, status, final_amount, created_at').eq('store_id', storeId),

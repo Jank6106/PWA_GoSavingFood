@@ -49,7 +49,7 @@ export function OrderManagementScreen({
     onOpenQR: openQR,
   };
 
-  if (state.loading && !state.orders.length) return <LoadingSpinner />;
+  if (state.loading && !state.orders.length && !state.hasLoadedOnce) return <LoadingSpinner />;
   if (state.error && !state.allOrders.length) return <ErrorState message={state.error} onRetry={() => void state.loadOrders()} />;
 
   return (
