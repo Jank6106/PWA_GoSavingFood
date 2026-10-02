@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         const cleanDesc = (description || `GSF ${String(orderCode).slice(-4)}`)
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-zA-Z0-9 ]/g, '')
+          .replace(/[^a-zA-Z0-9 -]/g, '')
           .trim()
           .slice(0, 25);
 
@@ -169,6 +169,9 @@ export async function POST(request: Request) {
           paymentLinkId,
         } = payosData.data;
 
+        const cleanAccountNumber =
+          String(accountNumber || '8823316420').replace(/^[A-Za-z0-9]*?(?=\d{8,})/, '') || '8823316420';
+
         // Cập nhật thông tin PayOS vào Supabase orders
         if (supabaseAdmin) {
           await supabaseAdmin
@@ -188,7 +191,7 @@ export async function POST(request: Request) {
           paymentLinkId,
           checkoutUrl,
           qrCode,
-          accountNumber,
+          accountNumber: cleanAccountNumber,
           accountName,
           bin,
           amount,

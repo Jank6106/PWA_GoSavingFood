@@ -4,10 +4,6 @@ import {
   Clock3,
   Copy,
   Download,
-  ExternalLink,
-  ShieldCheck,
-  Smartphone,
-  X,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@gosavingfood/ui';
@@ -25,22 +21,10 @@ interface PaymentPageProps {
   onConfirm: () => void;
 }
 
-const POPULAR_BANKS = [
-  { id: 'mb', name: 'MB Bank', scheme: 'mbbank://', icon: '🏦' },
-  { id: 'vcb', name: 'Vietcombank', scheme: 'vietcombank://', icon: '🏛️' },
-  { id: 'tcb', name: 'Techcombank', scheme: 'techcombank://', icon: '🔴' },
-  { id: 'tpb', name: 'TPBank', scheme: 'tpbank://', icon: '🟣' },
-  { id: 'momo', name: 'MoMo', scheme: 'momo://', icon: '👛' },
-  { id: 'bidv', name: 'BIDV', scheme: 'bidvsmartbanking://', icon: '🔵' },
-  { id: 'vpbank', name: 'VPBank', scheme: 'vpbankneo://', icon: '🟢' },
-  { id: 'acb', name: 'ACB', scheme: 'acbapp://', icon: '🔷' },
-];
-
 export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfirm }: PaymentPageProps) {
   const [timeLeft, setTimeLeft] = useState(900); // 15 phút đếm ngược
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isBankListOpen, setIsBankListOpen] = useState(false);
   const [isImgError, setIsImgError] = useState(false);
   const [payosData, setPayosData] = useState<{
     orderCode: number;
@@ -55,13 +39,16 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
   const payosPromiseRef = useRef<Promise<any> | null>(null);
   const payosRequestedOrderIdRef = useRef<string | null>(null);
 
-  const orderSuffix = draft.phone ? draft.phone.slice(-4) : '9999';
-  const defaultTransferContent = `GSF ${orderSuffix}`;
-  
-  // Dùng dữ liệu chính thức từ PayOS hoặc tài khoản BIDV mặc định đã liên kết
-  const transferContent = payosData?.description || defaultTransferContent;
-  const bankAccount = payosData?.accountNumber || '8823316420';
-  const bankName = 'BIDV (Ngân hàng TMCP Đầu tư và Phát triển VN)';
+  // Mã đơn hàng chính thức dùng làm nội dung chuyển khoản
+  const orderCode =
+    order?.orderCode ||
+    (order?.id ? `GSF-${order.id.slice(0, 6).toUpperCase()}` : 'GSF-ORDER');
+
+  const transferContent = orderCode;
+  const rawAccount = payosData?.accountNumber || '8823316420';
+  // Chỉ giữ lại số tài khoản ngân hàng thực tế (loại bỏ tiền tố như V3CAS)
+  const bankAccount = rawAccount.replace(/^[A-Za-z0-9]*?(?=\d{8,})/, '') || '8823316420';
+  const bankName = 'BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam';
   const accountHolder = payosData?.accountName || 'NGUYEN HUU DANH';
 
   // Link VietQR Pro chuẩn Napas 24/7 từ VietQR API
@@ -85,7 +72,7 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
       paymentPromise = customerService.createPayOSPayment({
         orderId: order.id,
         amount: total,
-        description: defaultTransferContent,
+        description: orderCode,
         items: order.items?.map((it) => ({
           name: it.bagName,
           quantity: it.quantity,
@@ -151,7 +138,7 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
     };
   }, [order?.id, draft.paymentMethod, onConfirm]);
 
-  // 3. Tự động kiểm tra trạng thái thanh toán từ PayOS (Polling mỗi 3 giây - hoạt động ngay cả khi chưa có Webhook URL)
+  // 3. Tự động kiểm tra trạng thái thanh toán từ PayOS (Polling mỗi 3 giây)
   useEffect(() => {
     const orderCode = payosData?.orderCode;
     if (!orderCode || draft.paymentMethod === 'cash') return;
@@ -219,21 +206,11 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('Đã lưu ảnh QR vào máy! Mở app ngân hàng quét từ ảnh nhé.');
+      showToast('Đã lưu ảnh QR vào máy!');
     } catch {
       window.open(qrImageUrl, '_blank');
       showToast('Đang mở ảnh QR để bạn tải về.');
     }
-  };
-
-  const handleSelectBank = (bank: (typeof POPULAR_BANKS)[0]) => {
-    handleCopy(bankAccount, 'stk');
-    showToast(`Đã chép STK! Đang mở ứng dụng ${bank.name}...`);
-    setIsBankListOpen(false);
-
-    setTimeout(() => {
-      window.location.href = bank.scheme;
-    }, 350);
   };
 
   const minutes = Math.floor(timeLeft / 60);
@@ -261,98 +238,122 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
 
   return (
     <div className="customer-screen customer-payment-screen">
-      <ScreenHeader
-        title="Thanh toán đơn hàng"
-        subtitle={
-          draft.paymentMethod === 'momo'
-            ? 'Chuyển khoản MoMo / VietQR'
-            : 'Chuyển khoản VietQR Pro (PayOS 24/7)'
-        }
-        onBack={onBack}
-      />
+      {/* 1. Header "Thanh toán" */}
+      <ScreenHeader title="Thanh toán" onBack={onBack} />
 
-      {/* Thông báo đếm ngược thanh toán */}
-      <div className="customer-payment-timer-banner">
-        <div className="customer-payment-timer-left">
-          <Clock3 size={16} />
-          <span>Vui lòng chuyển khoản trong:</span>
+      {/* 2. Khung thẻ thanh toán chính */}
+      <section className="customer-payment-card" style={{ position: 'relative' }}>
+        {/* Thời gian nhỏ còn lại ở góc */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '14px',
+            right: '14px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '3px 8px',
+            background: '#fffbeb',
+            border: '1px solid #fde68a',
+            borderRadius: '20px',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            color: '#b45309',
+          }}
+        >
+          <Clock3 size={13} />
+          <span>{timeFormatted}</span>
         </div>
-        <span className="customer-payment-timer-countdown">{timeFormatted}</span>
-      </div>
 
-      {/* Thẻ chính hiển thị mã VietQR & Số tiền */}
-      <section className="customer-payment-card">
-        <div className="customer-payment-amount-box">
-          <span className="customer-payment-amount-label">Số tiền cần thanh toán</span>
-          <span className="customer-payment-amount-value">
-            {total.toLocaleString('vi-VN')}đ
+        {/* Số tiền thanh toán */}
+        <div style={{ marginTop: '4px', textAlign: 'center' }}>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'var(--color-text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
+          >
+            Số tiền thanh toán
           </span>
+          <div
+            style={{
+              fontSize: '26px',
+              fontWeight: 800,
+              color: 'var(--color-primary)',
+              lineHeight: 1.2,
+              marginTop: '2px',
+            }}
+          >
+            {total.toLocaleString('vi-VN')}đ
+          </div>
         </div>
 
-        {/* Khung mã QR VietQR */}
-        <div className="customer-payment-qr-wrap">
+        {/* Mã QR */}
+        <div className="customer-payment-qr-wrap" style={{ padding: '8px', marginTop: '2px' }}>
           {payosData?.qrCode ? (
-            <div style={{ padding: '8px', background: '#fff', borderRadius: '12px' }}>
-              <QRCodeSVG value={payosData.qrCode} size={210} level="M" />
+            <div style={{ padding: '6px', background: '#fff', borderRadius: '12px' }}>
+              <QRCodeSVG value={payosData.qrCode} size={200} level="M" />
             </div>
           ) : !isImgError ? (
             <img
               src={qrImageUrl}
-              alt="Mã VietQR thanh toán tự động"
+              alt="Mã VietQR"
               className="customer-payment-qr-img"
+              style={{ width: '200px', height: 'auto', borderRadius: '12px' }}
               onError={() => setIsImgError(true)}
             />
           ) : (
-            <div style={{ padding: '8px', background: '#fff', borderRadius: '12px' }}>
-              <QRCodeSVG value={fallbackQrData} size={210} level="M" />
+            <div style={{ padding: '6px', background: '#fff', borderRadius: '12px' }}>
+              <QRCodeSVG value={fallbackQrData} size={200} level="M" />
             </div>
           )}
-          <span className="customer-payment-qr-hint">
-            Quét bằng bất kỳ App Ngân Hàng hoặc MoMo
-          </span>
         </div>
 
-        {/* Nút hành động 1-chạm tối ưu cho điện thoại */}
-        <div className="customer-pay-actions-grid">
-          <button
-            type="button"
-            className="customer-pay-action-btn primary"
-            onClick={() => setIsBankListOpen(true)}
-          >
-            <div className="customer-pay-action-icon">
-              <Smartphone size={20} color="#006c40" />
-            </div>
-            <strong className="customer-pay-action-title">Mở App Ngân Hàng</strong>
-            <span className="customer-pay-action-desc">Tự mở app có trên máy</span>
-          </button>
+        {/* 3. Nút tải ảnh kích thước vừa phải ngay dưới qr */}
+        <button
+          type="button"
+          onClick={handleDownloadQr}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            padding: '7px 16px',
+            borderRadius: '10px',
+            border: '1px solid #dce5df',
+            background: '#f8faf9',
+            color: 'var(--color-text-primary)',
+            fontSize: '12.5px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <Download size={14} color="#006c40" />
+          <span>Tải ảnh mã QR</span>
+        </button>
 
-          <button
-            type="button"
-            className="customer-pay-action-btn secondary"
-            onClick={handleDownloadQr}
-          >
-            <div className="customer-pay-action-icon">
-              <Download size={20} color="#3e4941" />
-            </div>
-            <strong className="customer-pay-action-title">Lưu mã QR</strong>
-            <span className="customer-pay-action-desc">Quét từ thư viện ảnh</span>
-          </button>
-        </div>
-
-        {/* Thẻ thông tin tài khoản chuyển khoản (1-Tap Copy) */}
-        <div className="customer-bank-info-card">
+        {/* 4. Thông tin chuyển khoản gồm: ngân hàng, stk (cho phép copy), Chủ tài khoản, Nội dung chuyển khoản (Mã đơn) */}
+        <div className="customer-bank-info-card" style={{ width: '100%', marginTop: '6px' }}>
           <div className="customer-bank-info-header">
             <span>Thông tin chuyển khoản</span>
-            <small style={{ color: '#006c40', display: 'flex', alignItems: 'center', gap: '3px' }}>
-              <ShieldCheck size={14} /> PayOS Tự động duyệt
-            </small>
           </div>
           <div className="customer-bank-info-list">
+            {/* Ngân hàng */}
             <div className="customer-bank-info-row">
               <span className="customer-bank-info-label">Ngân hàng</span>
-              <span className="customer-bank-info-val">{bankName}</span>
+              <div className="customer-bank-info-val-wrap">
+                <span className="customer-bank-info-val" style={{ textAlign: 'right' }}>
+                  {bankName}
+                </span>
+                <div style={{ width: 28, flexShrink: 0 }} />
+              </div>
             </div>
 
+            {/* Số tài khoản */}
             <div className="customer-bank-info-row">
               <span className="customer-bank-info-label">Số tài khoản</span>
               <div className="customer-bank-info-val-wrap">
@@ -361,135 +362,42 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
                   type="button"
                   className={`customer-copy-btn ${copiedField === 'stk' ? 'copied' : ''}`}
                   onClick={() => handleCopy(bankAccount, 'stk')}
+                  title="Sao chép số tài khoản"
+                  aria-label="Sao chép số tài khoản"
                 >
-                  {copiedField === 'stk' ? <Check size={12} /> : <Copy size={12} />}
-                  {copiedField === 'stk' ? 'Đã chép' : 'Chép'}
+                  {copiedField === 'stk' ? <Check size={14} /> : <Copy size={14} />}
                 </button>
               </div>
             </div>
 
+            {/* Chủ tài khoản */}
             <div className="customer-bank-info-row">
               <span className="customer-bank-info-label">Chủ tài khoản</span>
-              <span className="customer-bank-info-val">{accountHolder}</span>
-            </div>
-
-            <div className="customer-bank-info-row">
-              <span className="customer-bank-info-label">Số tiền</span>
               <div className="customer-bank-info-val-wrap">
-                <span className="customer-bank-info-val">{total.toLocaleString('vi-VN')}đ</span>
-                <button
-                  type="button"
-                  className={`customer-copy-btn ${copiedField === 'amount' ? 'copied' : ''}`}
-                  onClick={() => handleCopy(total.toString(), 'amount')}
-                >
-                  {copiedField === 'amount' ? <Check size={12} /> : <Copy size={12} />}
-                  {copiedField === 'amount' ? 'Đã chép' : 'Chép'}
-                </button>
+                <span className="customer-bank-info-val">{accountHolder}</span>
+                <div style={{ width: 28, flexShrink: 0 }} />
               </div>
             </div>
 
+            {/* Nội dung chuyển khoản */}
             <div className="customer-bank-info-row">
-              <span className="customer-bank-info-label">Nội dung CK</span>
+              <span className="customer-bank-info-label">Nội dung CK (Mã đơn)</span>
               <div className="customer-bank-info-val-wrap">
-                <span className="customer-bank-info-val highlight">{transferContent}</span>
+                <span className="customer-bank-info-val">{transferContent}</span>
                 <button
                   type="button"
                   className={`customer-copy-btn ${copiedField === 'content' ? 'copied' : ''}`}
                   onClick={() => handleCopy(transferContent, 'content')}
+                  title="Sao chép mã đơn"
+                  aria-label="Sao chép mã đơn"
                 >
-                  {copiedField === 'content' ? <Check size={12} /> : <Copy size={12} />}
-                  {copiedField === 'content' ? 'Đã chép' : 'Chép'}
+                  {copiedField === 'content' ? <Check size={14} /> : <Copy size={14} />}
                 </button>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Thanh trạng thái tự động xác nhận qua PayOS Realtime */}
-        <div className="customer-realtime-status-card">
-          <div className="customer-status-pulse-dot" />
-          <div className="customer-realtime-status-text">
-            <strong>Đang chờ tín hiệu chuyển khoản...</strong>
-            <p>
-              Hệ thống tự động duyệt đơn ngay khi ngân hàng báo có tiền. Quý khách không cần chụp ảnh
-              hóa đơn.
-            </p>
-          </div>
-        </div>
-
-        {/* Nút thanh toán trên web PayOS (tùy chọn) */}
-        {payosData?.checkoutUrl && (
-          <a
-            href={payosData.checkoutUrl}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '12px',
-              color: '#006c40',
-              fontWeight: 600,
-              textDecoration: 'none',
-              padding: '6px 12px',
-            }}
-          >
-            <ExternalLink size={14} /> Mở cổng thanh toán PayOS trên trình duyệt
-          </a>
-        )}
-
-        {/* Nút hành động hoàn tất đặt hàng */}
-        <Button fullWidth size="lg" isLoading={isSubmitting} onClick={onConfirm}>
-          Tôi đã chuyển khoản xong
-        </Button>
       </section>
-
-      {/* Modal / Bottom Sheet chọn App Ngân Hàng */}
-      {isBankListOpen && (
-        <div className="customer-bank-modal-backdrop" onClick={() => setIsBankListOpen(false)}>
-          <div
-            className="customer-bank-modal-content"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="customer-bank-modal-header">
-              <h3>Chọn App Ngân Hàng của bạn</h3>
-              <button
-                type="button"
-                className="customer-bank-modal-close"
-                onClick={() => setIsBankListOpen(false)}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <p className="customer-bank-modal-sub">
-              Hệ thống sẽ sao chép số tài khoản và mở ứng dụng đã cài đặt trên điện thoại của bạn.
-            </p>
-
-            <div className="customer-bank-grid">
-              {POPULAR_BANKS.map((bank) => (
-                <button
-                  key={bank.id}
-                  type="button"
-                  className="customer-bank-item"
-                  onClick={() => handleSelectBank(bank)}
-                >
-                  <div className="customer-bank-logo-wrap">{bank.icon}</div>
-                  <span className="customer-bank-name">{bank.name}</span>
-                </button>
-              ))}
-            </div>
-
-            <Button
-              fullWidth
-              variant="outline"
-              size="md"
-              onClick={() => setIsBankListOpen(false)}
-            >
-              Đóng
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Toast thông báo nhanh */}
       {toastMessage && (
