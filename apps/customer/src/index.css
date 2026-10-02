@@ -692,21 +692,428 @@ img { display: block; max-width: 100%; }
 .customer-review-card { padding: 15px; border: 1px solid var(--color-border-subtle); border-radius: 17px; background: #fff; }.customer-review-card > div { display: flex; align-items: center; gap: 9px; }.customer-review-avatar { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 50%; background: var(--color-primary-soft); color: var(--color-primary); font-weight: 900; }.customer-review-card > div > div { display: flex; flex: 1; flex-direction: column; }.customer-review-card > div > div span { color: #d98b00; font-size: 11px; letter-spacing: .06em; }.customer-review-card small { color: var(--color-text-muted); }.customer-review-card p { margin: 10px 0 0; color: var(--color-text-secondary); font-size: 13px; line-height: 20px; }
 .customer-detail-actions { position: fixed; z-index: 40; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: 1fr 1.2fr; gap: 10px; width: min(100%, 560px); margin: 0 auto; padding: 12px 16px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border-subtle); background: rgb(255 255 255 / 96%); backdrop-filter: blur(14px); }.customer-quantity-modal { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: center; }.customer-quantity-modal img { width: 72px; height: 72px; border-radius: 14px; object-fit: cover; }.customer-quantity-modal > div:nth-child(2) { display: flex; flex-direction: column; gap: 4px; }.customer-quantity-modal small { color: var(--color-text-muted); }.customer-quantity-modal .customer-stepper { grid-column: 1 / -1; justify-content: center; padding-top: 10px; }.customer-quantity-modal .customer-stepper button { width: 42px; height: 42px; }
 
-.customer-merchant-hero { position: relative; min-height: 310px; padding: 12px 16px 24px; color: #fff; overflow: hidden; background: linear-gradient(135deg, #166B4A, #193B2C); }
-.customer-merchant-hero-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-.customer-merchant-hero.has-cover::after { position: absolute; inset: 0; background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.72)); content: ""; z-index: 1; pointer-events: none; }
-.customer-merchant-hero > *:not(.customer-merchant-hero-cover) { position: relative; z-index: 2; }
-.customer-merchant-hero .customer-screen-header h1 { color: #fff; }
-.customer-merchant-hero .customer-round-button { border-color: rgb(255 255 255 / 25%); background: rgb(255 255 255 / 12%); color: #fff; }
-.customer-merchant-hero > div:last-child { display: flex; align-items: center; flex-direction: column; padding-top: 28px; text-align: center; }
-.customer-merchant-hero > div:last-child > span { display: grid; width: 74px; height: 74px; place-items: center; border: 3px solid rgb(255 255 255 / 25%); border-radius: 23px; background: #fff; font-size: 39px; }
-.customer-merchant-hero h1 { margin: 12px 0 5px; font-size: 23px; }
-.customer-merchant-hero p { max-width: 390px; margin: 0; color: rgb(255 255 255 / 75%); font-size: 13px; line-height: 20px; }
-.customer-merchant-hero > div:last-child > div { display: flex; gap: 8px; margin-top: 14px; }
-.customer-merchant-hero > div:last-child strong { display: flex; align-items: center; gap: 3px; padding: 6px 9px; border-radius: 12px; background: rgb(255 255 255 / 12%); font-size: 11px; }
-.customer-store-facts { display: flex; flex-direction: column; gap: 9px; padding: 14px; border: 1px solid var(--color-border-subtle); border-radius: 17px; background: #fff; }
-.customer-store-facts span { display: flex; align-items: flex-start; gap: 7px; color: var(--color-text-secondary); font-size: 12px; }
-.customer-store-facts svg { flex: 0 0 auto; color: var(--color-primary); }
+/* ==========================================================================
+   Store Detail View (Redesigned matching reference format)
+   ========================================================================== */
+.customer-store-view {
+  min-height: 100vh;
+  background: var(--color-bg-page);
+  padding-bottom: 50px;
+}
+
+.customer-store-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary-active);
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 750;
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  animation: storeToastIn 0.25s ease;
+  pointer-events: none;
+}
+
+@keyframes storeToastIn {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* 1. Hero Cover Header */
+.customer-store-hero {
+  position: relative;
+  width: 100%;
+  height: 255px;
+  background: var(--color-primary-active);
+  overflow: visible;
+}
+
+.customer-store-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.customer-store-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.05) 45%, rgba(0, 0, 0, 0.25) 100%);
+  pointer-events: none;
+}
+
+.customer-store-hero-nav {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.customer-store-circle-btn {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+  padding: 0;
+}
+
+.customer-store-circle-btn:active {
+  transform: scale(0.92);
+}
+
+.customer-store-circle-btn.is-fav {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--color-error);
+}
+
+.customer-store-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Floating Store Logo Badge (Avatar tràn viền) */
+.customer-store-floating-logo {
+  position: absolute;
+  right: 20px;
+  bottom: -28px;
+  width: 86px;
+  height: 86px;
+  border-radius: 20px;
+  background: var(--color-bg-card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  border: none;
+  padding: 0;
+  z-index: 15;
+  display: block;
+  overflow: hidden;
+}
+
+.customer-store-floating-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+  display: block;
+}
+
+.customer-store-logo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: var(--color-primary-soft);
+}
+
+/* 2. Store Info Section */
+.customer-store-info-section {
+  padding: 28px 18px 18px;
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.customer-store-title {
+  margin: 0 0 8px;
+  font-size: 21px;
+  font-weight: 850;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+  padding-right: 92px;
+  letter-spacing: -0.02em;
+}
+
+.customer-store-address-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.customer-store-address-pin {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+}
+
+.customer-store-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--color-text-secondary);
+}
+
+.customer-store-meta-bullet {
+  color: var(--color-border-subtle);
+}
+
+/* 3. Lucky Bags List */
+.customer-store-bags-section {
+  padding: 4px 18px;
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.customer-store-bags-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-store-bag-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 0;
+  border-bottom: 1px dashed var(--color-border-subtle);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.customer-store-bag-row:last-child {
+  border-bottom: none;
+}
+
+.customer-store-bag-thumb-box {
+  width: 88px;
+  height: 88px;
+  flex: 0 0 88px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--color-bg-muted);
+}
+
+.customer-store-bag-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.customer-store-bag-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.customer-store-bag-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 750;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-store-bag-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-error);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.customer-store-bag-time {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.customer-store-bag-time strong {
+  color: var(--color-primary);
+  font-weight: 750;
+}
+
+.customer-store-bag-price-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.customer-store-bag-price {
+  font-size: 15.5px;
+  font-weight: 850;
+  color: var(--color-text-primary);
+}
+
+.customer-store-bag-orig-price {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.customer-store-discount-pill {
+  background: var(--color-error);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 850;
+  padding: 1.5px 6px;
+  border-radius: 5px;
+  letter-spacing: -0.2px;
+}
+
+.customer-store-view-btn {
+  flex-shrink: 0;
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 750;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 12px rgba(22, 107, 74, 0.25);
+}
+
+.customer-store-view-btn:hover {
+  background: var(--color-primary-hover);
+}
+
+.customer-store-view-btn:active {
+  transform: scale(0.95);
+}
+
+.customer-store-empty-bags {
+  padding: 24px 0;
+}
+
+/* Generic Section Styles in Store View */
+.customer-store-section {
+  padding: 20px 18px;
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.customer-store-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.customer-store-section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 850;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.customer-store-link-btn {
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.customer-store-link-btn:hover {
+  opacity: 0.8;
+  color: var(--color-primary-hover);
+}
+
+/* 4. User Ratings Card */
+.customer-store-ratings-card {
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 18px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.customer-store-ratings-score {
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--color-text-primary);
+  letter-spacing: -0.03em;
+}
+
+.customer-store-ratings-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customer-store-stars-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.customer-store-ratings-count {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* 5. Community Grid */
+.customer-store-community-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.customer-store-community-item {
+  aspect-ratio: 1;
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--color-bg-muted);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.customer-store-community-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.customer-store-community-item:hover img {
+  transform: scale(1.08);
+}
+
+/* 6. About Store Paragraphs */
+.customer-store-about-body p {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.customer-store-about-body p:last-child {
+  margin-bottom: 0;
+}
 .customer-brand-hero { display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: 22px; background: linear-gradient(135deg, #003426, #166B4A); color: #fff; }.customer-brand-logo-large { display: grid; width: 78px; height: 78px; flex: 0 0 78px; place-items: center; border-radius: 23px; background: #fff; font-size: 42px; }.customer-brand-hero h1 { margin: 0; font-size: 23px; }.customer-brand-hero p { display: -webkit-box; margin: 5px 0 7px; overflow: hidden; color: rgb(255 255 255 / 76%); font-size: 12px; line-height: 18px; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.customer-brand-hero span { display: flex; align-items: center; gap: 4px; font-size: 11px; }.customer-sustainability-banner { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid #cde3d4; border-radius: 17px; background: var(--color-primary-soft); }.customer-sustainability-banner > span { font-size: 30px; }.customer-sustainability-banner strong { color: var(--color-primary); }.customer-sustainability-banner p { margin: 3px 0 0; color: var(--color-text-secondary); font-size: 12px; }
 
 /* Merchant & Brand Logos */
