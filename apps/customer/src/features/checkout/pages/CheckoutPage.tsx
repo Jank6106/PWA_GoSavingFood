@@ -23,11 +23,12 @@ interface CheckoutPageProps {
   subtotal: number;
   user: User;
   vouchers: Voucher[];
+  isSubmitting?: boolean;
   onBack: () => void;
   onContinue: (draft: CheckoutDraft) => void;
 }
 
-export function CheckoutPage({ items, subtotal, user, vouchers, onBack, onContinue }: CheckoutPageProps) {
+export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = false, onBack, onContinue }: CheckoutPageProps) {
   const defaultPickup = `${items[0]?.bag.pickupStart ?? '18:00'} - ${items[0]?.bag.pickupEnd ?? '20:00'}`;
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone);
@@ -334,8 +335,9 @@ export function CheckoutPage({ items, subtotal, user, vouchers, onBack, onContin
           <Button
             fullWidth
             size="lg"
-            disabled={!name.trim() || !phone.trim()}
-            onClick={() =>
+            disabled={!name.trim() || !phone.trim() || isSubmitting}
+            onClick={() => {
+              if (isSubmitting) return;
               onContinue({
                 customerName: name,
                 phone,
@@ -344,10 +346,10 @@ export function CheckoutPage({ items, subtotal, user, vouchers, onBack, onContin
                 discountAmount,
                 note,
                 paymentMethod: 'banking',
-              })
-            }
+              });
+            }}
           >
-            Tiếp tục thanh toán
+            {isSubmitting ? 'Đang khởi tạo đơn hàng...' : 'Tiếp tục thanh toán'}
           </Button>
         }
       />

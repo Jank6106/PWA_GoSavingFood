@@ -247,6 +247,58 @@ function CustomerApp() {
     }
     push({ name: 'checkout' });
   };
+  const handleCheckoutContinue = async (draft: CheckoutDraft) => {
+    if (!cart.items.length || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const merchant = catalog.merchants.find((item) => item.id === cart.items[0].merchantId);
+      const order: Omit<Order, 'id' | 'orderCode' | 'createdAt'> = {
+        merchantId: cart.items[0].merchantId,
+        merchantName: merchant?.name ?? cart.items[0].bag.merchantName,
+        items: cart.items.map((item) => ({
+          bagId: item.bag.id,
+          bagName: item.bag.name,
+          imageUrl: item.bag.imageUrl,
+          quantity: item.quantity,
+          unitPrice: item.bag.discountPrice,
+          totalPrice: item.bag.discountPrice * item.quantity,
+        })),
+        totalOriginalPrice: cart.summary.original,
+        totalDiscountPrice: cart.summary.subtotal,
+        discountAmount: draft.discountAmount,
+        finalAmount: Math.max(0, cart.summary.subtotal - draft.discountAmount),
+        status: 'pending',
+        paymentMethod: draft.paymentMethod,
+        paymentStatus: 'pending',
+        pickupTime: draft.pickupTime,
+        pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
+        note: draft.note?.trim() || undefined,
+      };
+
+      const created = await customerService.createOrder(order, draft.voucherCode, {
+        name: draft.customerName,
+        phone: draft.phone,
+      });
+
+      setOrders((current) => [created, ...current]);
+      push({ name: 'payment', draft, order: created });
+    } catch (error) {
+      console.warn('Tạo đơn trước lỗi (chuyển sang payment fallback):', error);
+      push({ name: 'payment', draft });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentConfirm = async (draft: CheckoutDraft, existingOrder?: Order) => {
+    if (existingOrder) {
+      cart.clear();
+      setHistory([{ name: 'success', orderId: existingOrder.id }]);
+      return;
+    }
+    await confirmPayment(draft);
+  };
+
   const confirmPayment = async (draft: CheckoutDraft) => {
     if (!cart.items.length) return;
     setIsSubmitting(true);
@@ -332,8 +384,8 @@ function CustomerApp() {
     if (route.name === 'bag') return <BagDetailPage bag={selectedBag} merchant={selectedMerchant} onBack={back} onMerchant={() => selectedMerchant && push({ name: 'merchant', id: selectedMerchant.id })} onAdd={addToCart} onBuyNow={buyNow} />;
     if (route.name === 'merchant') return <MerchantDetailPage merchant={selectedMerchant} bags={catalog.bags.filter((bag) => bag.merchantId === route.id)} onBack={back} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
     if (route.name === 'brand') return <BrandDetailPage brand={selectedBrand} stores={catalog.merchants.filter((merchant) => merchant.brandId === route.id)} onBack={back} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} />;
-    if (route.name === 'checkout' && auth.user) return <CheckoutPage items={cart.items} subtotal={cart.summary.subtotal} user={auth.user} vouchers={vouchers} onBack={back} onContinue={(draft) => push({ name: 'payment', draft })} />;
-    if (route.name === 'payment') return <PaymentPage draft={route.draft} total={Math.max(0, cart.summary.subtotal - route.draft.discountAmount)} isSubmitting={isSubmitting} onBack={back} onConfirm={() => confirmPayment(route.draft)} />;
+    if (route.name === 'checkout' && auth.user) return <CheckoutPage items={cart.items} subtotal={cart.summary.subtotal} user={auth.user} vouchers={vouchers} isSubmitting={isSubmitting} onBack={back} onContinue={handleCheckoutContinue} />;
+    if (route.name === 'payment') return <PaymentPage draft={route.draft} order={route.order} total={Math.max(0, cart.summary.subtotal - route.draft.discountAmount)} isSubmitting={isSubmitting} onBack={back} onConfirm={() => handlePaymentConfirm(route.draft, route.order)} />;
     if (route.name === 'success') {
       if (!selectedOrder) {
         return (

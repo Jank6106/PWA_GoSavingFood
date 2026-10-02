@@ -138,6 +138,9 @@ export interface Order {
     createdAt: string;
   };
   qrCode?: string;
+  paymentOrderCode?: number;
+  paymentLinkId?: string;
+  checkoutUrl?: string;
 }
 
 export interface NotificationItem {
@@ -184,7 +187,7 @@ export type AppRoute =
   | { name: 'merchant'; id: string }
   | { name: 'brand'; id: string }
   | { name: 'checkout' }
-  | { name: 'payment'; draft: CheckoutDraft }
+  | { name: 'payment'; draft: CheckoutDraft; order?: Order }
   | { name: 'success'; orderId: string }
   | { name: 'order'; id: string }
   | { name: 'review'; id: string }

@@ -921,4 +921,54 @@ export const customerService = {
       return false;
     }
   },
+  async createPayOSPayment(params: {
+    orderId: string;
+    amount: number;
+    description?: string;
+    items?: Array<{ name: string; quantity: number; price: number }>;
+  }): Promise<{
+    success: boolean;
+    orderCode: number;
+    paymentLinkId: string;
+    checkoutUrl: string;
+    qrCode: string;
+    accountNumber: string;
+    accountName: string;
+    bin: string;
+    amount: number;
+    description: string;
+  } | null> {
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${apiBase}/api/payos/create-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) {
+        console.warn('[customerService] PayOS create-payment returned non-200:', res.status);
+        return null;
+      }
+      const data = await res.json();
+      if (data.success) {
+        return data;
+      }
+      return null;
+    } catch (err) {
+      console.warn('[customerService] createPayOSPayment error:', err);
+      return null;
+    }
+  },
+
+  async checkPayOSStatus(orderCode: number): Promise<{ paid: boolean; status: string } | null> {
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${apiBase}/api/payos/check-status?orderCode=${orderCode}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data;
+    } catch {
+      return null;
+    }
+  },
 };
