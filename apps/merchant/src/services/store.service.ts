@@ -1,18 +1,26 @@
+import { MERCHANT_STORE_ID, SEED_STORE_GOGREEN, SEED_STORE_QUYT } from '../mocks';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../types';
 import { fetchCompletedBagQuantity } from './order.service';
 import { supabase } from './supabase';
 
 const CO2_KG_PER_BAG = 2.5;
 const STORE_CACHE_PREFIX = 'gsf_merchant_store:';
+const storeInFlight = new Map<string, Promise<StoreProfile | null>>();
 
-export function getCachedStoreProfile(storeId: string): StoreProfile | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(`${STORE_CACHE_PREFIX}${storeId}`);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
+export function getCachedStoreProfile(storeId: string): StoreProfile {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem(`${STORE_CACHE_PREFIX}${storeId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.id) return parsed;
+      }
+    } catch {
+      // Ignore parse error
+    }
   }
+  if (storeId === MERCHANT_STORE_ID) return SEED_STORE_GOGREEN;
+  return SEED_STORE_QUYT;
 }
 
 export function setCachedStoreProfile(storeId: string, profile: StoreProfile | null): void {
@@ -54,44 +62,56 @@ const mapStoreRow = (store: any): StoreProfile => ({
 });
 
 export async function fetchStoreProfile(storeId: string): Promise<StoreProfile | null> {
-  const { data: store, error } = await supabase
-    .from('stores')
-    .select('*')
-    .eq('id', storeId)
-    .maybeSingle();
+  const existing = storeInFlight.get(storeId);
+  if (existing) return existing;
 
-  if (error || !store) {
-    if (error) console.warn('Lấy thông tin store từ Supabase lỗi:', error.message);
-    return getCachedStoreProfile(storeId);
-  }
+  const fetchPromise = (async () => {
+    try {
+      const { data: store, error } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('id', storeId)
+        .maybeSingle();
 
-  const profile = mapStoreRow(store);
-  const cached = getCachedStoreProfile(storeId);
-  if (cached) {
-    profile.totalRescuedBags = cached.totalRescuedBags;
-    profile.totalCo2SavedKg = cached.totalCo2SavedKg;
-    profile.email = cached.email;
-    if (!profile.phone && cached.phone) profile.phone = cached.phone;
-  }
+      if (error || !store) {
+        if (error) console.warn('Lấy thông tin store từ Supabase lỗi:', error.message);
+        return getCachedStoreProfile(storeId);
+      }
 
-  // Chạy ngầm việc tính túi và thông tin owner song song không gây trễ hiển thị
-  Promise.all([
-    fetchCompletedBagQuantity(storeId).catch(() => 0),
-    store.owner_user_id
-      ? Promise.resolve(supabase.from('users').select('email, phone').eq('id', store.owner_user_id).maybeSingle()).catch(() => ({ data: null }))
-      : Promise.resolve({ data: null }),
-  ]).then(([rescuedBags, ownerRes]) => {
-    profile.totalRescuedBags = rescuedBags;
-    profile.totalCo2SavedKg = Math.round(rescuedBags * CO2_KG_PER_BAG);
-    if (ownerRes && 'data' in ownerRes && ownerRes.data) {
-      profile.email = ownerRes.data.email || '';
-      if (!profile.phone && ownerRes.data.phone) profile.phone = ownerRes.data.phone;
+      const profile = mapStoreRow(store);
+      const cached = getCachedStoreProfile(storeId);
+      if (cached) {
+        profile.totalRescuedBags = cached.totalRescuedBags;
+        profile.totalCo2SavedKg = cached.totalCo2SavedKg;
+        profile.email = cached.email;
+        if (!profile.phone && cached.phone) profile.phone = cached.phone;
+      }
+
+      // Chạy ngầm việc tính túi và thông tin owner song song không gây trễ hiển thị
+      Promise.all([
+        fetchCompletedBagQuantity(storeId).catch(() => 0),
+        store.owner_user_id
+          ? Promise.resolve(supabase.from('users').select('email, phone').eq('id', store.owner_user_id).maybeSingle()).catch(() => ({ data: null }))
+          : Promise.resolve({ data: null }),
+      ]).then(([rescuedBags, ownerRes]) => {
+        profile.totalRescuedBags = rescuedBags;
+        profile.totalCo2SavedKg = Math.round(rescuedBags * CO2_KG_PER_BAG);
+        if (ownerRes && 'data' in ownerRes && ownerRes.data) {
+          profile.email = ownerRes.data.email || '';
+          if (!profile.phone && ownerRes.data.phone) profile.phone = ownerRes.data.phone;
+        }
+        setCachedStoreProfile(storeId, profile);
+      });
+
+      setCachedStoreProfile(storeId, profile);
+      return profile;
+    } finally {
+      storeInFlight.delete(storeId);
     }
-    setCachedStoreProfile(storeId, profile);
-  });
+  })();
 
-  setCachedStoreProfile(storeId, profile);
-  return profile;
+  storeInFlight.set(storeId, fetchPromise);
+  return fetchPromise;
 }
 export async function updateStoreProfile(
   storeId: string,

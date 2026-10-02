@@ -1,5 +1,8 @@
+import { SEED_ORDERS_QUYT } from '../mocks';
 import type { MerchantOrder, OrderStatus } from '../types';
 import { supabase } from './supabase';
+
+const ordersInFlight = new Map<string, Promise<MerchantOrder[]>>();
 
 const ORDER_STATUS_FLOW = [
   'pending',
@@ -79,13 +82,18 @@ const mapDbOrder = (o: any): MerchantOrder => {
 const ORDERS_CACHE_PREFIX = 'gsf_merchant_orders:';
 
 export function getCachedMerchantOrders(storeId: string): MerchantOrder[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(`${ORDERS_CACHE_PREFIX}${storeId}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem(`${ORDERS_CACHE_PREFIX}${storeId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // Ignore parse error
+    }
   }
+  return SEED_ORDERS_QUYT;
 }
 
 export function setCachedMerchantOrders(storeId: string, orders: MerchantOrder[]): void {
@@ -101,30 +109,42 @@ const ORDER_SELECT =
   '*, order_items(*, surprise_bags(image_url)), users!orders_customer_id_fkey(name, phone)';
 
 export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrder[]> {
-  let { data, error } = await supabase
-    .from('orders')
-    .select(ORDER_SELECT)
-    .eq('store_id', storeId)
-    .order('created_at', { ascending: false });
+  const existing = ordersInFlight.get(storeId);
+  if (existing) return existing;
 
-  if (error) {
-    console.warn('Lấy danh sách đơn hàng có users join lỗi, thử fallback:', error.message);
-    const fallbackRes = await supabase
-      .from('orders')
-      .select('*, order_items(*, surprise_bags(image_url))')
-      .eq('store_id', storeId)
-      .order('created_at', { ascending: false });
+  const fetchPromise = (async () => {
+    try {
+      let { data, error } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT)
+        .eq('store_id', storeId)
+        .order('created_at', { ascending: false });
 
-    if (fallbackRes.error) {
-      console.warn('Lấy danh sách đơn hàng fallback lỗi:', fallbackRes.error.message);
-      return getCachedMerchantOrders(storeId);
+      if (error) {
+        console.warn('Lấy danh sách đơn hàng có users join lỗi, thử fallback:', error.message);
+        const fallbackRes = await supabase
+          .from('orders')
+          .select('*, order_items(*, surprise_bags(image_url))')
+          .eq('store_id', storeId)
+          .order('created_at', { ascending: false });
+
+        if (fallbackRes.error) {
+          console.warn('Lấy danh sách đơn hàng fallback lỗi:', fallbackRes.error.message);
+          return getCachedMerchantOrders(storeId);
+        }
+        data = fallbackRes.data;
+      }
+
+      const orders = (data || []).map(mapDbOrder);
+      setCachedMerchantOrders(storeId, orders);
+      return orders;
+    } finally {
+      ordersInFlight.delete(storeId);
     }
-    data = fallbackRes.data;
-  }
+  })();
 
-  const orders = (data || []).map(mapDbOrder);
-  setCachedMerchantOrders(storeId, orders);
-  return orders;
+  ordersInFlight.set(storeId, fetchPromise);
+  return fetchPromise;
 }
 
 const fetchOrderRow = async (orderId: string) => {

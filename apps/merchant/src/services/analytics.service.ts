@@ -1,3 +1,4 @@
+import { SEED_ANALYTICS_QUYT } from '../mocks';
 import type { AnalyticsMetrics, ReviewItem, RevenueChartPoint } from '../types';
 import { supabase } from './supabase';
 
@@ -30,6 +31,9 @@ const initialsOf = (name: string) =>
     .toUpperCase() || 'KH';
 
 const ANALYTICS_CACHE_PREFIX = 'gsf_merchant_analytics:';
+const metricsInFlight = new Map<string, Promise<AnalyticsMetrics>>();
+const chartInFlight = new Map<string, Promise<RevenueChartPoint[]>>();
+const reviewsInFlight = new Map<string, Promise<ReviewItem[]>>();
 
 export interface CachedAnalyticsData {
   metrics: AnalyticsMetrics;
@@ -37,14 +41,19 @@ export interface CachedAnalyticsData {
   reviews: ReviewItem[];
 }
 
-export function getCachedAnalytics(storeId: string): CachedAnalyticsData | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(`${ANALYTICS_CACHE_PREFIX}${storeId}`);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
+export function getCachedAnalytics(storeId: string): CachedAnalyticsData {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem(`${ANALYTICS_CACHE_PREFIX}${storeId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.metrics) return parsed;
+      }
+    } catch {
+      // Ignore parse error
+    }
   }
+  return SEED_ANALYTICS_QUYT;
 }
 
 export function setCachedAnalytics(storeId: string, data: CachedAnalyticsData): void {
@@ -57,19 +66,24 @@ export function setCachedAnalytics(storeId: string, data: CachedAnalyticsData): 
 }
 
 export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsMetrics> {
-  const [ordersResult, soldResult, storeResult, bagsResult] = await Promise.all([
-    supabase.from('orders').select('id, status, final_amount, created_at').eq('store_id', storeId),
-    supabase
-      .from('order_items')
-      .select('quantity, orders!inner(store_id, status)')
-      .eq('orders.store_id', storeId),
-    supabase.from('stores').select('rating, total_ratings').eq('id', storeId).maybeSingle(),
-    supabase
-      .from('surprise_bags')
-      .select('id', { count: 'exact', head: true })
-      .eq('store_id', storeId)
-      .eq('is_available', true),
-  ]);
+  const existing = metricsInFlight.get(storeId);
+  if (existing) return existing;
+
+  const fetchPromise = (async () => {
+    try {
+      const [ordersResult, soldResult, storeResult, bagsResult] = await Promise.all([
+        supabase.from('orders').select('id, status, final_amount, created_at').eq('store_id', storeId),
+        supabase
+          .from('order_items')
+          .select('quantity, orders!inner(store_id, status)')
+          .eq('orders.store_id', storeId),
+        supabase.from('stores').select('rating, total_ratings').eq('id', storeId).maybeSingle(),
+        supabase
+          .from('surprise_bags')
+          .select('id', { count: 'exact', head: true })
+          .eq('store_id', storeId)
+          .eq('is_available', true),
+      ]);
 
   if (ordersResult.error) console.warn('Thống kê đơn hàng lỗi:', ordersResult.error.message);
   if (soldResult.error) console.warn('Thống kê túi bán ra lỗi:', soldResult.error.message);
@@ -100,94 +114,127 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
     0
   );
 
-  return {
-    totalRevenue,
-    monthlyRevenue,
-    monthlyGrowthPercent:
-      previousMonthRevenue > 0
-        ? Number((((monthlyRevenue - previousMonthRevenue) / previousMonthRevenue) * 100).toFixed(1))
-        : 0,
-    previousMonthRevenue,
-    totalOrders: orders.length,
-    totalSoldBags,
-    bagsOnShelf: bagsResult.count || 0,
-    averageRating: Number(storeResult.data?.rating || 0),
-    totalReviewsCount: Number(storeResult.data?.total_ratings || 0),
-  };
+    return {
+      totalRevenue,
+      monthlyRevenue,
+      monthlyGrowthPercent:
+        previousMonthRevenue > 0
+          ? Number((((monthlyRevenue - previousMonthRevenue) / previousMonthRevenue) * 100).toFixed(1))
+          : 0,
+      previousMonthRevenue,
+      totalOrders: orders.length,
+      totalSoldBags,
+      bagsOnShelf: bagsResult.count || 0,
+      averageRating: Number(storeResult.data?.rating || 0),
+      totalReviewsCount: Number(storeResult.data?.total_ratings || 0),
+    };
+  } finally {
+    metricsInFlight.delete(storeId);
+  }
+  })();
+
+  metricsInFlight.set(storeId, fetchPromise);
+  return fetchPromise;
 }
+
 export async function fetchRevenueChart(
   storeId: string,
   timeframe: 'week' | 'month'
 ): Promise<RevenueChartPoint[]> {
-  const days = timeframe === 'week' ? 7 : 28;
-  const rangeStart = new Date();
-  rangeStart.setHours(0, 0, 0, 0);
-  rangeStart.setDate(rangeStart.getDate() - (days - 1));
+  const cacheKey = `${storeId}:${timeframe}`;
+  const existing = chartInFlight.get(cacheKey);
+  if (existing) return existing;
 
-  const { data, error } = await supabase
-    .from('orders')
-    .select('status, final_amount, created_at')
-    .eq('store_id', storeId)
-    .gte('created_at', rangeStart.toISOString());
+  const fetchPromise = (async () => {
+    try {
+      const days = timeframe === 'week' ? 7 : 28;
+      const rangeStart = new Date();
+      rangeStart.setHours(0, 0, 0, 0);
+      rangeStart.setDate(rangeStart.getDate() - (days - 1));
 
-  if (error) {
-    console.warn('Lấy dữ liệu biểu đồ doanh thu lỗi:', error.message);
-    return [];
-  }
+      const { data, error } = await supabase
+        .from('orders')
+        .select('status, final_amount, created_at')
+        .eq('store_id', storeId)
+        .gte('created_at', rangeStart.toISOString());
 
-  const revenueOrders = (data || []).filter((order: any) => isRevenueStatus(order.status));
+      if (error) {
+        console.warn('Lấy dữ liệu biểu đồ doanh thu lỗi:', error.message);
+        return [];
+      }
 
-  if (timeframe === 'week') {
-    return Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(rangeStart);
-      date.setDate(rangeStart.getDate() + index);
-      const value = revenueOrders
-        .filter((order: any) => new Date(order.created_at).toDateString() === date.toDateString())
-        .reduce((sum: number, order: any) => sum + Number(order.final_amount || 0), 0);
-      return { label: DAY_LABELS[date.getDay()], value };
-    });
-  }
+      const revenueOrders = (data || []).filter((order: any) => isRevenueStatus(order.status));
 
-  return Array.from({ length: 4 }, (_, index) => {
-    const bucketStart = new Date(rangeStart);
-    bucketStart.setDate(rangeStart.getDate() + index * 7);
-    const bucketEnd = new Date(bucketStart);
-    bucketEnd.setDate(bucketStart.getDate() + 7);
-    const value = revenueOrders
-      .filter((order: any) => {
-        const created = new Date(order.created_at);
-        return created >= bucketStart && created < bucketEnd;
-      })
-      .reduce((sum: number, order: any) => sum + Number(order.final_amount || 0), 0);
-    return { label: `Tuần ${index + 1}`, value };
-  });
+      if (timeframe === 'week') {
+        return Array.from({ length: 7 }, (_, index) => {
+          const date = new Date(rangeStart);
+          date.setDate(rangeStart.getDate() + index);
+          const value = revenueOrders
+            .filter((order: any) => new Date(order.created_at).toDateString() === date.toDateString())
+            .reduce((sum: number, order: any) => sum + Number(order.final_amount || 0), 0);
+          return { label: DAY_LABELS[date.getDay()], value };
+        });
+      }
+
+      return Array.from({ length: 4 }, (_, index) => {
+        const bucketStart = new Date(rangeStart);
+        bucketStart.setDate(rangeStart.getDate() + index * 7);
+        const bucketEnd = new Date(bucketStart);
+        bucketEnd.setDate(bucketStart.getDate() + 7);
+        const value = revenueOrders
+          .filter((order: any) => {
+            const created = new Date(order.created_at);
+            return created >= bucketStart && created < bucketEnd;
+          })
+          .reduce((sum: number, order: any) => sum + Number(order.final_amount || 0), 0);
+        return { label: `Tuần ${index + 1}`, value };
+      });
+    } finally {
+      chartInFlight.delete(cacheKey);
+    }
+  })();
+
+  chartInFlight.set(cacheKey, fetchPromise);
+  return fetchPromise;
 }
 
 export async function fetchRecentReviews(storeId: string): Promise<ReviewItem[]> {
-  const { data, error } = await supabase
-    .from('reviews')
-    .select('id, rating, comment, created_at, users(name)')
-    .eq('store_id', storeId)
-    .order('created_at', { ascending: false })
-    .limit(6);
+  const existing = reviewsInFlight.get(storeId);
+  if (existing) return existing;
 
-  if (error) {
-    console.warn('Lấy đánh giá gần đây lỗi:', error.message);
-    return [];
-  }
+  const fetchPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('id, rating, comment, created_at, users(name)')
+        .eq('store_id', storeId)
+        .order('created_at', { ascending: false })
+        .limit(6);
 
-  return (data || []).map((row: any) => {
-    const customer = Array.isArray(row.users) ? row.users[0] : row.users;
-    const name = customer?.name || 'Khách hàng';
-    return {
-      id: row.id,
-      customerName: name,
-      avatar: initialsOf(name),
-      rating: Number(row.rating || 0),
-      comment: row.comment || '',
-      timeAgo: formatTimeAgo(row.created_at),
-    };
-  });
+      if (error) {
+        console.warn('Lấy đánh giá gần đây lỗi:', error.message);
+        return [];
+      }
+
+      return (data || []).map((row: any) => {
+        const customer = Array.isArray(row.users) ? row.users[0] : row.users;
+        const name = customer?.name || 'Khách hàng';
+        return {
+          id: row.id,
+          customerName: name,
+          avatar: initialsOf(name),
+          rating: Number(row.rating || 0),
+          comment: row.comment || '',
+          timeAgo: formatTimeAgo(row.created_at),
+        };
+      });
+    } finally {
+      reviewsInFlight.delete(storeId);
+    }
+  })();
+
+  reviewsInFlight.set(storeId, fetchPromise);
+  return fetchPromise;
 }
 
 export async function exportAnalyticsReport(storeId: string): Promise<boolean> {

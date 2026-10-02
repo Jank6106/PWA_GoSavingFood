@@ -33,7 +33,6 @@ export function useAnalytics(storeId: string) {
   }, [storeId]);
 
   const loadData = useCallback(async () => {
-    if (!metrics) setLoading(true);
     setError(null);
     try {
       const [nextMetrics, nextChart, nextReviews] = await Promise.all([
@@ -54,13 +53,10 @@ export function useAnalytics(storeId: string) {
     } finally {
       setLoading(false);
     }
-  }, [storeId, timeframe, metrics]);
+  }, [storeId, timeframe]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadData();
-    }, 0);
-    return () => window.clearTimeout(timer);
+    void loadData();
   }, [loadData]);
 
   const exportReport = async () => {

@@ -35,8 +35,10 @@ export function useInventory(storeId: string) {
     }
   }, [storeId]);
 
+  const hasLoadedOnceRef = useRef(allItems.length > 0);
+
   const loadData = useCallback(async (preserveDraft = false) => {
-    if (allItems.length === 0) setLoading(true);
+    if (!hasLoadedOnceRef.current) setLoading(true);
     setError(null);
     try {
       const nextItems = await fetchInventoryItems(storeId);
@@ -50,10 +52,11 @@ export function useInventory(storeId: string) {
     } catch {
       setError('Không thể tải dữ liệu kệ hàng.');
     } finally {
+      hasLoadedOnceRef.current = true;
       setHasLoadedOnce(true);
       setLoading(false);
     }
-  }, [storeId, allItems.length]);
+  }, [storeId]);
 
   useEffect(() => {
     void loadData();

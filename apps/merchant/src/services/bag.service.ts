@@ -1,3 +1,4 @@
+import { MERCHANT_STORE_ID, SEED_BAGS_GOGREEN, SEED_BAGS_QUYT } from '../mocks';
 import type { BagInput, BagItem, BagStatus } from '../types';
 import { removeBagFromInventoryShelf, syncBagToInventoryShelf } from './inventory.service';
 import { supabase } from './supabase';
@@ -10,15 +11,22 @@ const DEFAULT_BAG_IMAGE = optimizeImageUrl(
 );
 
 const BAGS_CACHE_PREFIX = 'gsf_merchant_bags:';
+const bagsInFlight = new Map<string, Promise<BagItem[]>>();
 
 export function getCachedBagItems(storeId: string): BagItem[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(`${BAGS_CACHE_PREFIX}${storeId}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem(`${BAGS_CACHE_PREFIX}${storeId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // Ignore parse error
+    }
   }
+  if (storeId === MERCHANT_STORE_ID) return SEED_BAGS_GOGREEN;
+  return SEED_BAGS_QUYT;
 }
 
 export function setCachedBagItems(storeId: string, bags: BagItem[]): void {
@@ -106,19 +114,31 @@ export function normalizeCategoryToUi(category?: string): string {
 }
 
 export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
-  const { data, error } = await supabase
-    .from('surprise_bags')
-    .select('*')
-    .eq('store_id', storeId)
-    .order('created_at', { ascending: false });
+  const existing = bagsInFlight.get(storeId);
+  if (existing) return existing;
 
-  if (error) {
-    console.warn('Lấy danh sách bags từ Supabase lỗi:', error.message);
-    return getCachedBagItems(storeId);
-  }
-  const bags = (data || []).map(mapDbBag);
-  setCachedBagItems(storeId, bags);
-  return bags;
+  const fetchPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('surprise_bags')
+        .select('*')
+        .eq('store_id', storeId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Lấy danh sách bags từ Supabase lỗi:', error.message);
+        return getCachedBagItems(storeId);
+      }
+      const bags = (data || []).map(mapDbBag);
+      setCachedBagItems(storeId, bags);
+      return bags;
+    } finally {
+      bagsInFlight.delete(storeId);
+    }
+  })();
+
+  bagsInFlight.set(storeId, fetchPromise);
+  return fetchPromise;
 }
 
 export async function updateBagStatus(bagId: string, status: BagStatus): Promise<BagItem> {
