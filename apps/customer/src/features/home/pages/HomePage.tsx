@@ -2,18 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   Award,
-  Coffee,
-  Croissant,
   Flame,
   Gift,
-  Leaf,
   MapPin,
   Search,
-  UtensilsCrossed,
 } from 'lucide-react';
 import { ErrorState, Skeleton } from '@gosavingfood/ui';
 import { BagCard, MerchantCard, SectionHeading } from '../../../shared/components';
-import { CategoryBar, HomeBanner } from '../components';
+import { BrandMarquee, CategoryBar, HomeBanner } from '../components';
 import type { Banner, Brand, Category, FoodCategory, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 interface HomePageProps {
@@ -33,14 +29,6 @@ interface HomePageProps {
   onAdd: (bag: SurpriseBag) => void;
   onViewAll: () => void;
 }
-
-const getBrandIcon = (brand: Brand) => {
-  const catList = brand.categories.join(' ').toLowerCase();
-  if (catList.includes('bánh')) return Croissant;
-  if (catList.includes('uống') || catList.includes('cà phê') || catList.includes('coffee')) return Coffee;
-  if (catList.includes('salad') || catList.includes('healthy') || catList.includes('xanh')) return Leaf;
-  return UtensilsCrossed;
-};
 
 export function HomePage({
   banners,
@@ -135,43 +123,7 @@ export function HomePage({
           title="Thương hiệu nổi bật"
           subtitle="Đối tác được yêu thích gần bạn"
         />
-        <div className="customer-brand-grid-track">
-          {brands.map((brand) => {
-            const BrandIcon = getBrandIcon(brand);
-            const isImageLogo = Boolean(
-              brand.logo &&
-                (brand.logo.startsWith('http') ||
-                  brand.logo.startsWith('data:') ||
-                  brand.logo.startsWith('blob:'))
-            );
-            return (
-              <button
-                key={brand.id}
-                type="button"
-                className="customer-brand-badge-btn"
-                onClick={() => onOpenBrand(brand)}
-                aria-label={brand.name}
-                title={brand.name}
-              >
-                {isImageLogo ? (
-                  <img
-                    src={brand.logo}
-                    alt={brand.name}
-                    className="customer-brand-badge-img"
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <span className="customer-brand-badge-fallback">
-                    <BrandIcon size={24} strokeWidth={1.8} />
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <BrandMarquee brands={brands} onOpenBrand={onOpenBrand} />
       </section>
 
       <section className="customer-content-section">
