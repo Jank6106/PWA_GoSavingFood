@@ -237,11 +237,23 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
 
     setIsSubmitting(true);
     try {
-      await registerInit(regName.trim(), regEmail.trim(), regPassword, regPhone.trim());
+      const res = await registerInit(
+        regName.trim(),
+        regEmail.trim(),
+        regPassword,
+        regPhone.trim()
+      );
+
+      // Nếu Supabase đã tự động kích hoạt tài khoản
+      if (res.autoConfirmed) {
+        handleClose();
+        return;
+      }
+
       setRegisterStep('otp');
       setOtpCountdown(60);
       setSuccessMessage(
-        `Mã xác thực 6 chữ số đã được gửi đến email ${regEmail.trim().toLowerCase()}. Vui lòng kiểm tra hộp thư.`
+        `Mã xác thực 6 chữ số đã được gửi đến email ${regEmail.trim().toLowerCase()}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam).`
       );
     } catch (err: any) {
       setErrorMessage(err.message || 'Không thể đăng ký tài khoản. Vui lòng thử lại.');
@@ -667,6 +679,9 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
                     ? `Gửi lại mã (${otpCountdown}s)`
                     : 'Gửi lại mã mới'}
                 </button>
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
+                💡 <i>Mẹo: Vui lòng kiểm tra kỹ cả mục <b>Thư rác (Spam)</b> hoặc <b>Quảng cáo</b> trong hòm thư của bạn.</i>
               </div>
             </div>
 

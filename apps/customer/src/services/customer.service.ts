@@ -1656,7 +1656,35 @@ export const customerService = {
       throw new Error(mapSupabaseAuthError(signUpError));
     }
 
-    return { email: trimmedEmail, user: signUpData.user };
+    // Nếu Supabase Dashboard đang tắt "Confirm email" (Auto-confirm bật), session được tạo ngay:
+    if (signUpData.session && signUpData.user) {
+      const u = signUpData.user;
+      const fullUser: User = {
+        id: u.id,
+        name: trimmedName,
+        phone: phoneNational || '',
+        email: u.email,
+        avatar: undefined,
+      };
+
+      try {
+        await supabase.from('users').upsert(
+          {
+            id: u.id,
+            email: u.email,
+            name: trimmedName,
+            phone: phoneNational || null,
+            role: 'customer',
+          },
+          { onConflict: 'id' }
+        );
+      } catch {}
+
+      return { email: trimmedEmail, autoConfirmed: true, user: fullUser };
+    }
+
+    // Nếu Supabase bật "Confirm email", Supabase đã gửi mã xác thực token 6 số vào email
+    return { email: trimmedEmail, autoConfirmed: false, user: null };
   },
 
   /**
