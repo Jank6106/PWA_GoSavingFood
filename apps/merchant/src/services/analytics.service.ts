@@ -1,4 +1,4 @@
-import { SEED_ANALYTICS_QUYT, STORE_ID } from '../mocks';
+import { SEED_ANALYTICS_QUYT } from '../mocks';
 import type { AnalyticsMetrics, ReviewItem, RevenueChartPoint } from '../types';
 import { supabase } from './supabase';
 
@@ -41,7 +41,7 @@ export interface CachedAnalyticsData {
   reviews: ReviewItem[];
 }
 
-export function getCachedAnalytics(storeId: string): CachedAnalyticsData | null {
+export function getCachedAnalytics(storeId: string): CachedAnalyticsData {
   if (typeof window !== 'undefined') {
     try {
       const raw = window.localStorage.getItem(`${ANALYTICS_CACHE_PREFIX}${storeId}`);
@@ -53,8 +53,7 @@ export function getCachedAnalytics(storeId: string): CachedAnalyticsData | null 
       // Ignore parse error
     }
   }
-  if (storeId === STORE_ID) return SEED_ANALYTICS_QUYT;
-  return null;
+  return SEED_ANALYTICS_QUYT;
 }
 
 export function setCachedAnalytics(storeId: string, data: CachedAnalyticsData): void {
@@ -116,18 +115,7 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
   );
 
     if (orders.length === 0 && totalSoldBags === 0) {
-      if (storeId === STORE_ID) return SEED_ANALYTICS_QUYT.metrics;
-      return {
-        totalRevenue: 0,
-        monthlyRevenue: 0,
-        monthlyGrowthPercent: 0,
-        previousMonthRevenue: 0,
-        totalOrders: 0,
-        totalSoldBags: 0,
-        bagsOnShelf: bagsResult.count || 0,
-        averageRating: Number(storeResult.data?.rating || 0),
-        totalReviewsCount: Number(storeResult.data?.total_ratings || 0),
-      };
+      return SEED_ANALYTICS_QUYT.metrics;
     }
 
     return {
@@ -181,15 +169,7 @@ export async function fetchRevenueChart(
 
       const revenueOrders = (data || []).filter((order: any) => isRevenueStatus(order.status));
       if (revenueOrders.length === 0) {
-        if (storeId === STORE_ID) return SEED_ANALYTICS_QUYT.chartData;
-        if (timeframe === 'week') {
-          return Array.from({ length: 7 }, (_, index) => {
-            const date = new Date(rangeStart);
-            date.setDate(rangeStart.getDate() + index);
-            return { label: DAY_LABELS[date.getDay()], value: 0 };
-          });
-        }
-        return Array.from({ length: 4 }, (_, index) => ({ label: `Tuần ${index + 1}`, value: 0 }));
+        return SEED_ANALYTICS_QUYT.chartData;
       }
 
       if (timeframe === 'week') {
@@ -239,8 +219,7 @@ export async function fetchRecentReviews(storeId: string): Promise<ReviewItem[]>
         .limit(6);
 
       if (error || !data || data.length === 0) {
-        if (storeId === STORE_ID) return SEED_ANALYTICS_QUYT.reviews;
-        return [];
+        return SEED_ANALYTICS_QUYT.reviews;
       }
 
       return (data || []).map((row: any) => {

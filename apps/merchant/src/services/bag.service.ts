@@ -1,4 +1,4 @@
-import { MERCHANT_STORE_ID, SEED_BAGS_GOGREEN, SEED_BAGS_QUYT, STORE_ID } from '../mocks';
+import { MERCHANT_STORE_ID, SEED_BAGS_GOGREEN, SEED_BAGS_QUYT } from '../mocks';
 import type { BagInput, BagItem, BagStatus } from '../types';
 import { removeBagFromInventoryShelf, syncBagToInventoryShelf } from './inventory.service';
 import { supabase } from './supabase';
@@ -19,15 +19,14 @@ export function getCachedBagItems(storeId: string): BagItem[] {
       const raw = window.localStorage.getItem(`${BAGS_CACHE_PREFIX}${storeId}`);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch {
       // Ignore parse error
     }
   }
   if (storeId === MERCHANT_STORE_ID) return SEED_BAGS_GOGREEN;
-  if (storeId === STORE_ID) return SEED_BAGS_QUYT;
-  return [];
+  return SEED_BAGS_QUYT.map((b) => ({ ...b, storeId }));
 }
 
 export function setCachedBagItems(storeId: string, bags: BagItem[]): void {
@@ -133,8 +132,10 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
       const remoteBags = (data || []).map(mapDbBag);
       let bags = remoteBags;
       if (bags.length === 0) {
-        if (storeId === MERCHANT_STORE_ID) bags = SEED_BAGS_GOGREEN;
-        else if (storeId === STORE_ID) bags = SEED_BAGS_QUYT;
+        bags = (storeId === MERCHANT_STORE_ID ? SEED_BAGS_GOGREEN : SEED_BAGS_QUYT).map((b) => ({
+          ...b,
+          storeId,
+        }));
       }
       setCachedBagItems(storeId, bags);
       return bags;
