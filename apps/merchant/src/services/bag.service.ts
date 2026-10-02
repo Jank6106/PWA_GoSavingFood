@@ -14,19 +14,25 @@ const BAGS_CACHE_PREFIX = 'gsf_merchant_bags:';
 const bagsInFlight = new Map<string, Promise<BagItem[]>>();
 
 export function getCachedBagItems(storeId: string): BagItem[] {
+  const seedTemplate =
+    storeId === MERCHANT_STORE_ID
+      ? SEED_BAGS_GOGREEN
+      : SEED_BAGS_QUYT.map((b) => ({ ...b, storeId }));
+
   if (typeof window !== 'undefined') {
     try {
       const raw = window.localStorage.getItem(`${BAGS_CACHE_PREFIX}${storeId}`);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= seedTemplate.length) {
+          return parsed;
+        }
       }
     } catch {
       // Ignore parse error
     }
   }
-  if (storeId === MERCHANT_STORE_ID) return SEED_BAGS_GOGREEN;
-  return SEED_BAGS_QUYT.map((b) => ({ ...b, storeId }));
+  return seedTemplate;
 }
 
 export function setCachedBagItems(storeId: string, bags: BagItem[]): void {
@@ -130,12 +136,21 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
         return getCachedBagItems(storeId);
       }
       const remoteBags = (data || []).map(mapDbBag);
-      let bags = remoteBags;
-      if (bags.length === 0) {
-        bags = (storeId === MERCHANT_STORE_ID ? SEED_BAGS_GOGREEN : SEED_BAGS_QUYT).map((b) => ({
-          ...b,
-          storeId,
-        }));
+      const seedTemplate =
+        storeId === MERCHANT_STORE_ID
+          ? SEED_BAGS_GOGREEN
+          : SEED_BAGS_QUYT.map((b) => ({ ...b, storeId }));
+
+      let bags: BagItem[];
+      if (remoteBags.length === 0) {
+        bags = seedTemplate;
+      } else {
+        const remoteIds = new Set(remoteBags.map((b) => b.id));
+        const remoteNames = new Set(remoteBags.map((b) => b.name.toLowerCase().trim()));
+        const remainingSeed = seedTemplate.filter(
+          (s) => !remoteIds.has(s.id) && !remoteNames.has(s.name.toLowerCase().trim())
+        );
+        bags = [...remoteBags, ...remainingSeed];
       }
       setCachedBagItems(storeId, bags);
       return bags;

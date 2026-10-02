@@ -82,18 +82,19 @@ const mapDbOrder = (o: any): MerchantOrder => {
 const ORDERS_CACHE_PREFIX = 'gsf_merchant_orders:';
 
 export function getCachedMerchantOrders(storeId: string): MerchantOrder[] {
+  const seedTemplate = SEED_ORDERS_QUYT.map((o) => ({ ...o, storeId }));
   if (typeof window !== 'undefined') {
     try {
       const raw = window.localStorage.getItem(`${ORDERS_CACHE_PREFIX}${storeId}`);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= seedTemplate.length) return parsed;
       }
     } catch {
       // Ignore parse error
     }
   }
-  return SEED_ORDERS_QUYT.map((o) => ({ ...o, storeId }));
+  return seedTemplate;
 }
 
 export function setCachedMerchantOrders(storeId: string, orders: MerchantOrder[]): void {
@@ -136,7 +137,15 @@ export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrde
       }
 
       const remoteOrders = (data || []).map(mapDbOrder);
-      const orders = remoteOrders.length > 0 ? remoteOrders : SEED_ORDERS_QUYT.map((o) => ({ ...o, storeId }));
+      const seedTemplate = SEED_ORDERS_QUYT.map((o) => ({ ...o, storeId }));
+      let orders: MerchantOrder[];
+      if (remoteOrders.length === 0) {
+        orders = seedTemplate;
+      } else {
+        const remoteIds = new Set(remoteOrders.map((o) => o.id));
+        const remainingSeed = seedTemplate.filter((s) => !remoteIds.has(s.id));
+        orders = [...remoteOrders, ...remainingSeed];
+      }
       setCachedMerchantOrders(storeId, orders);
       return orders;
     } finally {
