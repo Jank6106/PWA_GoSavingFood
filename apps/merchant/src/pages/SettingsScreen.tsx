@@ -61,8 +61,18 @@ export function SettingsScreen({
               onDeleteAccount={onDeleteAccount ? () => setIsDeleteModalOpen(true) : undefined}
             />
           </div>
-          <ChangePasswordModal open={state.isPasswordModalOpen} saving={authLoading} onClose={() => state.setIsPasswordModalOpen(false)} onSubmit={changePassword} />
-          <SupportModal open={state.isSupportModalOpen} onClose={() => state.setIsSupportModalOpen(false)} onSuccess={() => state.showToast('Yêu cầu hỗ trợ đã được gửi')} />
+          <ChangePasswordModal
+            open={state.isPasswordModalOpen}
+            saving={authLoading}
+            onClose={() => state.setIsPasswordModalOpen(false)}
+            onSubmit={changePassword}
+          />
+          <SupportModal
+            open={state.isSupportModalOpen}
+            contactPhone={state.profile?.phone}
+            onClose={() => state.setIsSupportModalOpen(false)}
+            onSuccess={() => state.showToast('Yêu cầu hỗ trợ đã được gửi thành công')}
+          />
           {onDeleteAccount && (
             <DeleteMerchantAccountModal
               open={isDeleteModalOpen}

@@ -156,6 +156,7 @@ export default function App() {
       <AppHeader
         storeName={store.profile?.name ?? 'Quán Chay Quýt'}
         isOpen={store.profile?.isOpen ?? true}
+        avatar={store.profile?.avatar}
         unreadCount={notifications.unreadCount}
         onToggleStatus={() => void store.toggleStatus()}
         onNotificationPress={() => notifications.setIsOpen(true)}

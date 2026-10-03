@@ -117,10 +117,10 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     }
   };
 
-  const transition = async (orderId: string, status: OrderStatus, message: string): Promise<boolean> => {
+  const transition = async (orderId: string, status: OrderStatus, message: string, note?: string): Promise<boolean> => {
     setSaving(true);
     try {
-      const updated = await updateMerchantOrderStatus(orderId, status);
+      const updated = await updateMerchantOrderStatus(orderId, status, note);
       replaceOrder(updated);
       showToast(message);
       return true;
@@ -134,7 +134,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
 
   const confirmOrder = (orderId: string) => transition(orderId, 'processing', 'Đã xác nhận đơn hàng');
   const finishPreparationOrder = (orderId: string) => transition(orderId, 'confirmed', 'Đã chuẩn bị xong, chờ khách đến lấy');
-  const cancelOrder = (orderId: string) => transition(orderId, 'cancelled', 'Đã hủy đơn hàng');
+  const cancelOrder = (orderId: string, reason?: string) => transition(orderId, 'cancelled', 'Đã hủy đơn hàng', reason);
 
   const completeOrderWithQR = async (orderId: string, qrCode: string): Promise<boolean> => {
     setSaving(true);

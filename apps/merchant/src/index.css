@@ -203,6 +203,10 @@ h1, h2, h3, p { margin: 0; }
 .merchant-order-customer > span, .merchant-order-detail-head > div > span { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 800; }
 .merchant-order-customer > div, .merchant-order-detail-head > div > div { display: flex; flex-direction: column; gap: 2px; }
 .merchant-order-customer small { display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 11px; }
+.merchant-phone-link { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: var(--primary-soft); color: var(--primary); font-size: 11px; font-weight: 700; text-decoration: none; transition: background 0.15s ease; }
+.merchant-phone-link:hover, .merchant-phone-link:active { background: var(--primary-selected); text-decoration: underline; }
+.merchant-copy-icon-btn { display: inline-flex; align-items: center; justify-content: center; padding: 2px 5px; border: 1px solid var(--border); border-radius: 6px; background: #fff; color: var(--text-secondary); cursor: pointer; transition: all 0.15s ease; }
+.merchant-copy-icon-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
 .merchant-order-product { display: flex; gap: 11px; padding: 10px; border-radius: 12px; background: var(--primary-soft); }
 .merchant-order-product img { width: 62px; height: 62px; border-radius: 10px; object-fit: cover; }
 .merchant-order-product > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }

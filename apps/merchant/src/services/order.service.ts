@@ -193,7 +193,6 @@ export async function updateMerchantOrderStatus(
   status: OrderStatus,
   note?: string
 ): Promise<MerchantOrder> {
-  void note;
   const actorId = await requireUserId();
   const current = await fetchOrderRow(orderId);
   if (!current) throw new Error('Không tìm thấy đơn hàng.');
@@ -215,6 +214,17 @@ export async function updateMerchantOrderStatus(
 
   for (const targetStatus of transitions) {
     await runTransition(orderId, targetStatus, actorId);
+  }
+
+  if (status === 'cancelled' && note) {
+    try {
+      await supabase.rpc('set_order_cancel_reason', {
+        p_order_id: orderId,
+        p_reason: note,
+      });
+    } catch (err) {
+      console.warn('Lưu lý do hủy đơn qua RPC thất bại:', err);
+    }
   }
 
   const updated = await fetchOrderRow(orderId);

@@ -74,6 +74,29 @@ export function useAnalytics(storeId: string) {
     }
   };
 
+  const changeTimeframe = async (nextTimeframe: 'week' | 'month') => {
+    setTimeframe(nextTimeframe);
+    try {
+      const nextChart = await fetchRevenueChart(storeId, nextTimeframe);
+      setChartData(nextChart);
+      if (metrics) {
+        setCachedAnalytics(storeId, {
+          metrics,
+          chartData: nextChart,
+          reviews,
+        });
+      }
+    } catch {
+      showToast('Lỗi cập nhật biểu đồ.');
+    }
+  };
+
+  const refreshData = async () => {
+    setLoading(true);
+    await loadData();
+    showToast('Đã cập nhật dữ liệu thống kê mới nhất');
+  };
+
   return {
     metrics,
     chartData,
@@ -83,8 +106,9 @@ export function useAnalytics(storeId: string) {
     error,
     exporting,
     toastMessage,
-    changeTimeframe: setTimeframe,
+    changeTimeframe,
     exportReport,
     loadData,
+    refreshData,
   };
 }

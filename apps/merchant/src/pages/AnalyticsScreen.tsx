@@ -1,5 +1,6 @@
+import { RotateCcw } from 'lucide-react';
 import { AnalyticsMetricsGrid, RecentReviewsList, RevenueChartCard, RevenueOverviewCard } from '../components/analytics';
-import { ErrorState, SkeletonCard, ToastBar } from '../components/ui';
+import { Button, ErrorState, SkeletonCard, ToastBar } from '../components/ui';
 import { useAnalytics } from '../hooks/useAnalytics';
 
 export function AnalyticsScreen({ storeId }: { storeId: string }) {
@@ -13,6 +14,15 @@ export function AnalyticsScreen({ storeId }: { storeId: string }) {
           <span>Dữ liệu thời gian thực</span>
           <h1>Tổng quan kinh doanh</h1>
         </div>
+        <Button
+          size="small"
+          variant="outline"
+          loading={state.loading}
+          onClick={() => void state.refreshData()}
+          title="Làm mới số liệu"
+        >
+          <RotateCcw size={15} /> Làm mới
+        </Button>
       </div>
       {!state.metrics ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
