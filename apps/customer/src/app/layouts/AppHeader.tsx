@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
+import logoSvg from '../../assets/logo.svg';
+import logoPng from '../../assets/logo.png';
 
 interface AppHeaderProps {
   location?: string;
@@ -29,7 +31,17 @@ export function AppHeader({
     <header className={`customer-header ${isScrolled ? 'is-solid' : 'is-transparent'}`}>
       <div className="customer-brand">
         <div className="customer-logo" aria-hidden="true">
-          <img src="/logo.svg" alt="GoSavingFood Logo" className="customer-logo-img" />
+          <img
+            src={logoSvg}
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (target.src !== logoPng) {
+                target.src = logoPng;
+              }
+            }}
+            alt="GoSavingFood Logo"
+            className="customer-logo-img"
+          />
         </div>
         <div className="customer-brand-name">GoSavingFood</div>
       </div>

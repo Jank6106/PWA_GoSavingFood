@@ -11,6 +11,8 @@ import {
 import { useState, type FormEvent } from 'react';
 import { Button, Field, SelectField } from '../components/ui';
 import type { AuthUser, LoginCredentials, MerchantRegisterInput } from '../types';
+import logoSvg from '../assets/logo.svg';
+import logoPng from '../assets/logo.png';
 import {
   evaluatePasswordStrength,
   isValidEmail,
@@ -130,7 +132,17 @@ export function LoginScreen({
       <section className="merchant-auth-card">
         <div className="merchant-auth-brand">
           <span>
-            <img src="/logo.svg" alt="GoSavingFood Logo" className="merchant-auth-logo-img" />
+            <img
+              src={logoSvg}
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== logoPng) {
+                  target.src = logoPng;
+                }
+              }}
+              alt="GoSavingFood Logo"
+              className="merchant-auth-logo-img"
+            />
           </span>
           <h1>GoSavingFood Đối Tác</h1>
           <div>

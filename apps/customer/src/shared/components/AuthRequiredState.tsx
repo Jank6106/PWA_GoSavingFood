@@ -1,5 +1,7 @@
 import React from 'react';
 import { Button } from '@gosavingfood/ui';
+import logoSvg from '../../assets/logo.svg';
+import logoPng from '../../assets/logo.png';
 
 interface AuthRequiredStateProps {
   title?: string;
@@ -19,7 +21,17 @@ export function AuthRequiredState({
   return (
     <div className="customer-screen customer-gated-screen">
       <div className="customer-gated-logo" aria-hidden="true">
-        <img src="/logo.svg" alt="GoSavingFood Logo" className="customer-gated-logo-img" />
+        <img
+          src={logoSvg}
+          onError={(e) => {
+            const target = e.currentTarget;
+            if (target.src !== logoPng) {
+              target.src = logoPng;
+            }
+          }}
+          alt="GoSavingFood Logo"
+          className="customer-gated-logo-img"
+        />
       </div>
       <h1 className="customer-gated-title">{title}</h1>
       <Button size="lg" onClick={onLogin} className="customer-gated-btn">
