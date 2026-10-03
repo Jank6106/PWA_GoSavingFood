@@ -73,6 +73,43 @@ export default function App() {
   const store = useStoreProfile(storeId);
   const { toastMessage, showToast } = useToast();
 
+  const navigateTo = useCallback((nextRoute: 'login' | 'setup' | TabRoute, pushHistory = true) => {
+    setRoute((current) => {
+      if (current === nextRoute) return current;
+      if (pushHistory && nextRoute !== 'login' && nextRoute !== 'setup') {
+        const url = nextRoute === 'bags' ? window.location.pathname : `${window.location.pathname}?tab=${nextRoute}`;
+        window.history.pushState({ route: nextRoute }, '', url);
+      }
+      return nextRoute;
+    });
+  }, []);
+
+  // Đồng bộ lịch sử điều hướng với trình duyệt cho Merchant PWA
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab') as TabRoute | null;
+    if (tabParam && ['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(tabParam)) {
+      setRoute(tabParam);
+      window.history.replaceState({ route: tabParam }, '', `${window.location.pathname}?tab=${tabParam}`);
+    } else {
+      window.history.replaceState({ route: 'bags' }, '', window.location.pathname);
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state as { route?: 'login' | 'setup' | TabRoute } | null;
+      if (state && state.route) {
+        setRoute(state.route);
+      } else {
+        const p = new URLSearchParams(window.location.search);
+        const t = (p.get('tab') as TabRoute) || 'bags';
+        setRoute(t);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   useEffect(() => {
     if (auth.user && route === 'login') {
       setRoute(auth.user.isFirstLogin ? 'setup' : 'bags');
@@ -91,12 +128,12 @@ export default function App() {
   const handleSelectNotification = useCallback(
     (item: NotificationItem) => {
       notifications.setIsOpen(false);
-      setRoute('orders');
+      navigateTo('orders');
       if (item.orderId) {
         setTargetOrderId(item.orderId);
       }
     },
-    [notifications]
+    [notifications, navigateTo]
   );
 
   const handleLogin = async (credentials: LoginCredentials) => {
@@ -161,9 +198,9 @@ export default function App() {
         unreadCount={notifications.unreadCount}
         onToggleStatus={() => void store.toggleStatus()}
         onNotificationPress={() => notifications.setIsOpen(true)}
-        onProfilePress={() => setRoute('settings')}
+        onProfilePress={() => navigateTo('settings')}
         onScanQRPress={() => {
-          setRoute('orders');
+          navigateTo('orders');
           setIsGlobalQRScannerOpen(true);
         }}
       />
@@ -204,7 +241,7 @@ export default function App() {
           />
         </div>
       </main>
-      <AppTabBar active={route} orderBadge={notifications.unreadCount} onNavigate={setRoute} />
+      <AppTabBar active={route} orderBadge={notifications.unreadCount} onNavigate={navigateTo} />
       <NotificationModal
         open={notifications.isOpen}
         items={notifications.notifications}
