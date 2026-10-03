@@ -68,6 +68,7 @@ export default function App() {
   });
 
   const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
+  const [isGlobalQRScannerOpen, setIsGlobalQRScannerOpen] = useState(false);
   const storeId = auth.user?.storeId ?? STORE_ID;
   const store = useStoreProfile(storeId);
   const { toastMessage, showToast } = useToast();
@@ -161,6 +162,10 @@ export default function App() {
         onToggleStatus={() => void store.toggleStatus()}
         onNotificationPress={() => notifications.setIsOpen(true)}
         onProfilePress={() => setRoute('settings')}
+        onScanQRPress={() => {
+          setRoute('orders');
+          setIsGlobalQRScannerOpen(true);
+        }}
       />
       <main className={`merchant-main merchant-main--${route}`}>
         <div style={{ display: route === 'bags' ? 'contents' : 'none' }}>
@@ -171,6 +176,8 @@ export default function App() {
             storeId={storeId}
             targetOrderId={targetOrderId}
             onClearTargetOrder={() => setTargetOrderId(null)}
+            isGlobalQROpen={isGlobalQRScannerOpen}
+            onCloseGlobalQR={() => setIsGlobalQRScannerOpen(false)}
           />
         </div>
         <div style={{ display: route === 'inventory' ? 'contents' : 'none' }}>

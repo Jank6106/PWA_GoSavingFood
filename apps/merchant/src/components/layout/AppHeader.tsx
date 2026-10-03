@@ -1,4 +1,4 @@
-import { Bell, Store } from 'lucide-react';
+import { Bell, QrCode, Store } from 'lucide-react';
 import { optimizeImageUrl } from '../../services/utils';
 
 interface AppHeaderProps {
@@ -12,6 +12,7 @@ interface AppHeaderProps {
   onToggleStatus: () => void;
   onNotificationPress: () => void;
   onProfilePress: () => void;
+  onScanQRPress?: () => void;
 }
 
 export function AppHeader({
@@ -25,6 +26,7 @@ export function AppHeader({
   onToggleStatus,
   onNotificationPress,
   onProfilePress,
+  onScanQRPress,
 }: AppHeaderProps) {
   const isImageAvatar = avatar && (avatar.startsWith('http') || avatar.startsWith('data:image/'));
 
@@ -49,6 +51,17 @@ export function AppHeader({
               <i />
               <span>Trạng thái:</span>
               <b>{isOpen ? 'Mở cửa' : 'Đóng cửa'}</b>
+            </button>
+          )}
+          {onScanQRPress && (
+            <button
+              type="button"
+              className="merchant-header-icon"
+              aria-label="Quét QR"
+              onClick={onScanQRPress}
+              title="Quét mã QR nhận hàng của khách"
+            >
+              <QrCode size={19} />
             </button>
           )}
           <button

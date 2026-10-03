@@ -1,8 +1,9 @@
-import { AlertTriangle, Check, Clock3, Copy, FileSearch, Phone, Printer, QrCode, Search, WalletCards, XCircle } from 'lucide-react';
+import { AlertTriangle, Camera, Check, Clock3, Copy, FileSearch, KeyRound, Phone, Printer, QrCode, Search, WalletCards, XCircle } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
 import type { MerchantOrder, OrderStatus, OrderStatusFilter, OrderSummaryMetrics } from '../../types';
 import { optimizeImageUrl } from '../../services/utils';
 import { Button, Field, Modal, SelectField, TextAreaField } from '../ui';
+import { CameraQRScanner } from './CameraQRScanner';
 
 const statusMeta: Record<OrderStatus, { label: string; className: string }> = { pending: { label: 'Chờ xác nhận', className: 'pending' }, processing: { label: 'Đang xử lý', className: 'processing' }, confirmed: { label: 'Chờ lấy hàng', className: 'confirmed' }, completed: { label: 'Hoàn thành', className: 'completed' }, cancelled: { label: 'Đã hủy', className: 'cancelled' } };
 export function OrderStatusBadge({ status }: { status: OrderStatus }) { const meta = statusMeta[status]; return <span className={`merchant-order-status merchant-order-status--${meta.className}`}>{meta.label}</span>; }
@@ -324,30 +325,129 @@ export function QRScannerModal({
   onClose: () => void;
   onCompleteQR: (id: string, code: string) => Promise<boolean>;
 }) {
+  const [tab, setTab] = useState<'camera' | 'manual'>('camera');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   if (!order) return null;
 
+  const handleCameraScan = async (decodedText: string) => {
+    setError('');
+    setCode(decodedText);
+    const ok = await onCompleteQR(order.id, decodedText);
+    if (!ok) {
+      setError(`Mã QR "${decodedText}" không khớp với đơn hàng này.`);
+    }
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
-    if (!await onCompleteQR(order.id, code)) setError('Mã QR không khớp với đơn hàng này.');
+    const ok = await onCompleteQR(order.id, code);
+    if (!ok) {
+      setError('Mã QR không khớp với đơn hàng này.');
+    }
+  };
+
+  const handleClose = () => {
+    setError('');
+    setCode('');
+    onClose();
   };
 
   return (
-    <Modal open={open} title="Xác nhận bằng QR" description={`Đơn ${order.orderCode}`} onClose={onClose} size="small">
-      <form className="merchant-qr-form" onSubmit={submit}>
-        <div className="merchant-qr-simulator" onClick={() => setCode(order.qrCode || order.orderCode)} style={{ cursor: 'pointer' }} title="Bấm để giả lập quét mã QR này">
-          <QrCode size={82} />
-          <span>Đưa mã QR của khách vào vùng quét (hoặc bấm để giả lập)</span>
+    <Modal
+      open={open}
+      title="Xác nhận bằng QR"
+      description={`Đơn ${order.orderCode} · ${order.customerName}`}
+      onClose={handleClose}
+      size="small"
+    >
+      <div className="merchant-qr-tab-nav">
+        <button
+          type="button"
+          className={tab === 'camera' ? 'is-active' : ''}
+          onClick={() => {
+            setTab('camera');
+            setError('');
+          }}
+        >
+          <Camera size={15} /> Quét bằng Camera
+        </button>
+        <button
+          type="button"
+          className={tab === 'manual' ? 'is-active' : ''}
+          onClick={() => {
+            setTab('manual');
+            setError('');
+          }}
+        >
+          <KeyRound size={15} /> Nhập mã & Giả lập
+        </button>
+      </div>
+
+      {tab === 'camera' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <CameraQRScanner
+            isScanning={open && tab === 'camera'}
+            onScanSuccess={handleCameraScan}
+          />
+          {error && (
+            <div
+              style={{
+                padding: '10px 14px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: 10,
+                color: '#dc2626',
+                fontSize: 13,
+                textAlign: 'center',
+                fontWeight: 600,
+              }}
+            >
+              {error}
+            </div>
+          )}
+          <div style={{ textAlign: 'center' }}>
+            <small style={{ color: 'var(--text-secondary)', fontSize: 11 }}>
+              Đưa mã QR trên ứng dụng của khách vào khung camera để hoàn tất
+            </small>
+          </div>
         </div>
-        <div className="merchant-divider"><span>hoặc nhập mã thủ công</span></div>
-        <Field label="Mã xác nhận" value={code} onChange={(event) => setCode(event.target.value)} placeholder={order.qrCode} error={error} required />
-        <Button type="submit" fullWidth loading={saving}>Hoàn thành đơn hàng</Button>
-      </form>
+      ) : (
+        <form className="merchant-qr-form" onSubmit={submit}>
+          <div
+            className="merchant-qr-simulator"
+            onClick={() => setCode(order.qrCode || order.orderCode)}
+            style={{ cursor: 'pointer' }}
+            title="Bấm để giả lập quét mã QR này"
+          >
+            <QrCode size={82} />
+            <span>
+              Đưa mã QR của khách vào vùng quét (hoặc <b>bấm vào đây để điền mã giả lập</b>: <code>{order.orderCode}</code>)
+            </span>
+          </div>
+          <div className="merchant-divider">
+            <span>hoặc nhập mã thủ công</span>
+          </div>
+          <Field
+            label="Mã xác nhận"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            placeholder={order.qrCode || order.orderCode}
+            error={error}
+            required
+          />
+          <Button type="submit" fullWidth loading={saving}>
+            Hoàn thành đơn hàng
+          </Button>
+        </form>
+      )}
     </Modal>
   );
 }
 
+export { GlobalQRScannerModal } from './GlobalQRScannerModal';
+export { CameraQRScanner } from './CameraQRScanner';
 export const OrdersEmptyIcon = FileSearch;
+
 
