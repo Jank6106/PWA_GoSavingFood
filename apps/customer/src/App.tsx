@@ -355,7 +355,6 @@ function CustomerApp() {
     }
     push({ name: 'checkout' });
   };
-
   // Tự động điều hướng về đúng trang khách định mua/thêm giỏ hàng và thực hiện tiếp hành động sau khi đăng nhập
   useEffect(() => {
     if (!auth.isAuthenticated || !auth.user || !pendingAuthTarget) return;
@@ -404,6 +403,66 @@ function CustomerApp() {
 
     savePendingAuth(null);
   }, [auth.isAuthenticated, auth.user?.id, pendingAuthTarget, catalog.bags, catalog.isLoading, directBag]);
+
+  const handleCheckoutContinue = async (draft: CheckoutDraft, buyNowItem?: CartItem) => {
+    const orderItems = buyNowItem ? [buyNowItem] : cart.items;
+    if (!orderItems.length || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const merchant = catalog.merchants.find((item) => item.id === orderItems[0].merchantId);
+      const subtotal = buyNowItem
+        ? buyNowItem.bag.discountPrice * buyNowItem.quantity
+        : cart.summary.subtotal;
+      const originalTotal = buyNowItem
+        ? buyNowItem.bag.originalPrice * buyNowItem.quantity
+        : cart.summary.original;
+
+      const order: Omit<Order, 'id' | 'orderCode' | 'createdAt'> = {
+        merchantId: orderItems[0].merchantId,
+        merchantName: merchant?.name ?? orderItems[0].bag.merchantName,
+        items: orderItems.map((item) => ({
+          bagId: item.bag.id,
+          bagName: item.bag.name,
+          imageUrl: item.bag.imageUrl,
+          quantity: item.quantity,
+          unitPrice: item.bag.discountPrice,
+          totalPrice: item.bag.discountPrice * item.quantity,
+        })),
+        totalOriginalPrice: originalTotal,
+        totalDiscountPrice: subtotal,
+        discountAmount: draft.discountAmount,
+        finalAmount: Math.max(0, subtotal - draft.discountAmount),
+        status: 'pending',
+        paymentMethod: draft.paymentMethod,
+        paymentStatus: 'pending',
+        pickupTime: draft.pickupTime,
+        pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
+        note: draft.note?.trim() || undefined,
+      };
+
+      const created = await customerService.createOrder(order, draft.voucherCode, {
+        name: draft.customerName,
+        phone: draft.phone,
+      });
+
+      setOrders((current) => [created, ...current]);
+      push({ name: 'payment', draft, order: created, buyNowItem });
+    } catch (error) {
+      console.warn('Tạo đơn trước lỗi (chuyển sang payment fallback):', error);
+      push({ name: 'payment', draft, buyNowItem });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentConfirm = async (draft: CheckoutDraft, existingOrder?: Order, buyNowItem?: CartItem) => {
+    if (existingOrder) {
+      if (!buyNowItem) cart.clear();
+      setHistory([{ name: 'success', orderId: existingOrder.id }]);
+      return;
+    }
+    await confirmPayment(draft, buyNowItem);
+  };
 
   const confirmPayment = async (draft: CheckoutDraft, buyNowItem?: CartItem) => {
     const orderItems = buyNowItem ? [buyNowItem] : cart.items;
@@ -562,10 +621,9 @@ function CustomerApp() {
           subtotal={checkoutSubtotal}
           user={auth.user}
           vouchers={vouchers}
+          isSubmitting={isSubmitting}
           onBack={back}
-          onContinue={(draft) =>
-            push({ name: 'payment', draft, buyNowItem: route.buyNowItem })
-          }
+          onContinue={(draft) => handleCheckoutContinue(draft, route.buyNowItem)}
         />
       );
     }
@@ -578,10 +636,11 @@ function CustomerApp() {
       return (
         <PaymentPage
           draft={route.draft}
+          order={route.order}
           total={totalAmount}
           isSubmitting={isSubmitting}
           onBack={back}
-          onConfirm={() => confirmPayment(route.draft, route.buyNowItem)}
+          onConfirm={() => handlePaymentConfirm(route.draft, route.order, route.buyNowItem)}
         />
       );
     }

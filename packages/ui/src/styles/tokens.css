@@ -4,27 +4,27 @@
  */
 
 :root {
-  /* Brand & Core Colors */
+  /* Brand & Core Colors — based on GoSavingFood palette */
   --color-primary: #166B4A;
-  --color-primary-hover: #11543A;
-  --color-primary-active: #0D3E2B;
-  --color-primary-soft: #E8F4EC;
-  --color-primary-soft-hover: #D8EADF;
+  --color-primary-hover: #12573C;
+  --color-primary-active: #193B2C;
+  --color-primary-soft: #EEF4E4;
+  --color-primary-soft-hover: #E2ECD6;
 
   /* Surfaces & Backgrounds */
-  --color-bg-page: #F7F9F6;
+  --color-bg-page: #F4F1E8;
   --color-bg-card: #FFFFFF;
-  --color-bg-muted: #F0F4F1;
+  --color-bg-muted: #EDEAE1;
 
   /* Text & Content */
-  --color-text-primary: #172B22;
-  --color-text-secondary: #5D6B63;
-  --color-text-muted: #84938B;
+  --color-text-primary: #193B2C;
+  --color-text-secondary: #526458;
+  --color-text-muted: #7D8E82;
   --color-text-white: #FFFFFF;
 
   /* Borders & Dividers */
-  --color-border-subtle: #DDE5DE;
-  --color-border-input: #7C8B81;
+  --color-border-subtle: #D9D5CB;
+  --color-border-input: #9DA79F;
   --color-border-focus: #166B4A;
 
   /* Offer & Accent */
@@ -34,7 +34,7 @@
 
   /* Semantic Feedback */
   --color-success: #166B4A;
-  --color-success-bg: #E8F4EC;
+  --color-success-bg: #EEF4E4;
   --color-warning: #8A4B08;
   --color-warning-bg: #FFF4E5;
   --color-error: #B42318;
@@ -81,8 +81,8 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-subtle: 0 2px 12px rgba(23, 43, 34, 0.06);
-  --shadow-dropdown: 0 4px 20px rgba(23, 43, 34, 0.08);
+  --shadow-subtle: 0 2px 12px rgba(25, 59, 44, 0.06);
+  --shadow-dropdown: 0 4px 20px rgba(25, 59, 44, 0.08);
 
   /* Transitions */
   --transition-fast: 150ms ease-in-out;

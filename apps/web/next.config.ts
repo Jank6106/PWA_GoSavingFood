@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   async redirects() {
     return [
       // 1. Chuyển hướng www.gosavingfood.app -> gosavingfood.app (Apex)

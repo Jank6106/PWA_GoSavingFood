@@ -130,7 +130,7 @@ export function LoginScreen({
       <section className="merchant-auth-card">
         <div className="merchant-auth-brand">
           <span>
-            <Store size={30} />
+            <img src="/logo.svg" alt="GoSavingFood Logo" className="merchant-auth-logo-img" />
           </span>
           <h1>GoSavingFood Đối Tác</h1>
           <div>

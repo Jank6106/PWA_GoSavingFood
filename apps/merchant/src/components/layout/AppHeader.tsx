@@ -1,4 +1,4 @@
-import { Bell, QrCode, Store } from 'lucide-react';
+import { Bell, QrCode } from 'lucide-react';
 import { optimizeImageUrl } from '../../services/utils';
 
 interface AppHeaderProps {
@@ -34,7 +34,7 @@ export function AppHeader({
     <header className="merchant-app-header">
       <div className="merchant-app-header-inner">
         <div className="merchant-header-brand">
-          <span><Store size={21} /></span>
+          <span><img src="/logo.svg" alt="GoSavingFood Logo" className="merchant-header-logo-img" /></span>
           <div>
             <strong>{title ?? storeName}</strong>
             {subtitle && <small>{subtitle}</small>}
