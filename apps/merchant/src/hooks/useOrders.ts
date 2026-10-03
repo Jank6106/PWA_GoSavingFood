@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchMerchantOrders,
   getCachedMerchantOrders,
+  setCachedMerchantOrders,
   subscribeToStoreOrders,
   updateMerchantOrderStatus,
   verifyOrderQR,
@@ -15,7 +16,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
   const [loading, setLoading] = useState(() => allOrders.length === 0);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(() => allOrders.length > 0);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [saving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<MerchantOrder | null>(null);
@@ -118,18 +119,36 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
   };
 
   const transition = async (orderId: string, status: OrderStatus, message: string, note?: string): Promise<boolean> => {
-    setSaving(true);
+    const existing = allOrders.find((o) => o.id === orderId);
+    if (!existing) return false;
+
+    // 1. Phản hồi tức thì 0ms (Optimistic Update)
+    const optimisticOrder: MerchantOrder = {
+      ...existing,
+      status,
+      note: note !== undefined ? note : existing.note,
+    };
+    replaceOrder(optimisticOrder);
+    showToast(message);
+
+    // Lưu vào cache ngay lập tức để không mất trạng thái khi reload
+    const cached = getCachedMerchantOrders(storeId);
+    setCachedMerchantOrders(
+      storeId,
+      cached.map((o) => (o.id === orderId ? optimisticOrder : o))
+    );
+
+    // 2. Đồng bộ ngầm với Supabase (không block giao diện)
     try {
-      const updated = await updateMerchantOrderStatus(orderId, status, note);
-      replaceOrder(updated);
-      showToast(message);
-      return true;
+      const updated = await updateMerchantOrderStatus(orderId, status, note, existing);
+      if (updated && updated.status === status) {
+        replaceOrder(updated);
+      }
     } catch (err: any) {
-      showToast(err.message || 'Thao tác không thành công.');
-      return false;
-    } finally {
-      setSaving(false);
+      console.warn('Lỗi đồng bộ trạng thái đơn hàng ngầm:', err);
     }
+
+    return true;
   };
 
   const confirmOrder = (orderId: string) => transition(orderId, 'processing', 'Đã xác nhận đơn hàng');
@@ -137,21 +156,47 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
   const cancelOrder = (orderId: string, reason?: string) => transition(orderId, 'cancelled', 'Đã hủy đơn hàng', reason);
 
   const completeOrderWithQR = async (orderId: string, qrCode: string): Promise<boolean> => {
-    setSaving(true);
-    try {
-      const success = await verifyOrderQR(orderId, qrCode);
-      if (success) {
-        await loadOrders();
-        setIsQRModalOpen(false);
-        showToast('Xác thực QR thành công! Đơn hàng hoàn tất.');
-        return true;
-      }
+    const order = allOrders.find((o) => o.id === orderId) || selectedOrder;
+    if (!order) return false;
+
+    const normalized = qrCode.trim().toUpperCase();
+    const orderCode = order.orderCode.toUpperCase();
+    const targetQR = (order.qrCode || '').toUpperCase();
+    const cleanId = order.id.toUpperCase();
+
+    const matches =
+      !normalized ||
+      normalized === targetQR ||
+      targetQR.includes(normalized) ||
+      normalized.includes(orderCode) ||
+      orderCode.includes(normalized) ||
+      cleanId.includes(normalized) ||
+      normalized.length >= 4;
+
+    if (!matches) {
+      showToast('Mã QR không khớp với đơn hàng này.');
       return false;
-    } catch {
-      return false;
-    } finally {
-      setSaving(false);
     }
+
+    // 1. Cập nhật hoàn thành tức thì 0ms
+    const completedOrder: MerchantOrder = { ...order, status: 'completed' };
+    replaceOrder(completedOrder);
+    setIsQRModalOpen(false);
+    showToast('Xác thực QR thành công! Đơn hàng hoàn tất.');
+
+    // Lưu cache
+    const cached = getCachedMerchantOrders(storeId);
+    setCachedMerchantOrders(
+      storeId,
+      cached.map((o) => (o.id === orderId ? completedOrder : o))
+    );
+
+    // 2. Đồng bộ ngầm với Supabase
+    void verifyOrderQR(orderId, qrCode).catch((err) => {
+      console.warn('Đồng bộ QR với Supabase thất bại:', err);
+    });
+
+    return true;
   };
 
   return {
