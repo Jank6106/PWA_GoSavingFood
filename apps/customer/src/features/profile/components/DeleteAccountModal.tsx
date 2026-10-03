@@ -5,7 +5,7 @@ import { Button, Input } from '@gosavingfood/ui';
 interface DeleteAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirmDelete: () => void;
+  onConfirmDelete: () => void | Promise<void>;
 }
 
 export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
@@ -20,13 +20,17 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
   const isConfirmed = confirmText.trim().toUpperCase() === 'XÓA' || confirmText.trim().toUpperCase() === 'XOA';
 
-  const handleDelete = () => {
-    if (!isConfirmed) return;
+  const handleDelete = async () => {
+    if (!isConfirmed || isDeleting) return;
     setIsDeleting(true);
-    setTimeout(() => {
-      onConfirmDelete();
+    try {
+      await onConfirmDelete();
       onClose();
-    }, 600);
+    } catch {
+      // Caller handles error feedback
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (

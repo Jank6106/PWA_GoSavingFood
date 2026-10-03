@@ -397,3 +397,43 @@ export async function getCurrentMerchantSession(): Promise<AuthUser | null> {
 }
 
 export const getCurrentMerchantUser = getCurrentMerchantSession;
+
+export async function deleteMerchantAccountService(
+  userId?: string,
+  identifier?: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    let res = await supabase.rpc('delete_user_account', userId ? { p_user_id: userId } : {});
+    let result = res.data as { success?: boolean; error?: string; message?: string } | null;
+
+    if ((!result || !result.success) && identifier) {
+      const idRes = await supabase.rpc('delete_user_by_identifier', { p_identifier: identifier });
+      if (idRes.data && (idRes.data as any).success) {
+        result = idRes.data as any;
+      }
+    }
+
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+
+    setCachedMerchantUser(null);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(MERCHANT_CACHE_KEY);
+      } catch {}
+    }
+
+    return {
+      success: result?.success ?? true,
+      message: result?.message || 'Tài khoản đối tác đã được xóa vĩnh viễn khỏi hệ thống.',
+    };
+  } catch (err: any) {
+    console.warn('Lỗi khi xóa tài khoản merchant:', err);
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    setCachedMerchantUser(null);
+    return { success: false, message: err?.message || 'Không thể xóa tài khoản. Vui lòng thử lại.' };
+  }
+}

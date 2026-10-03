@@ -3,6 +3,7 @@ import { DEMO_MERCHANT_USER } from '../mocks';
 import {
   changePasswordService,
   completeSetupService,
+  deleteMerchantAccountService,
   getCachedMerchantUser,
   getCurrentMerchantSession,
   loginService,
@@ -111,6 +112,17 @@ export function useAuth() {
     setLoading(false);
   };
 
+  const deleteAccount = async () => {
+    setLoading(true);
+    try {
+      const res = await deleteMerchantAccountService(user?.id);
+      setUser(null);
+      return res;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const exploreDemo = () => {
     setUser(DEMO_MERCHANT_USER);
   };
@@ -124,6 +136,7 @@ export function useAuth() {
     changePassword,
     completeSetup,
     logout,
+    deleteAccount,
     exploreDemo,
     clearError: () => setError(null),
   };

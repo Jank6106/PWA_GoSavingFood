@@ -39,7 +39,7 @@ interface ProfilePageProps {
   onNotifications?: () => void;
   onLocation?: () => void;
   onInstall?: () => void;
-  onDeleteAccount?: () => void;
+  onDeleteAccount?: () => void | Promise<void>;
 }
 
 export function ProfilePage(props: ProfilePageProps) {
@@ -463,10 +463,10 @@ export function ProfilePage(props: ProfilePageProps) {
       <DeleteAccountModal
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
-        onConfirmDelete={() => {
+        onConfirmDelete={async () => {
           localStorage.removeItem('gsf_notifications_enabled');
           if (props.onDeleteAccount) {
-            props.onDeleteAccount();
+            await props.onDeleteAccount();
           } else {
             props.onLogout();
           }

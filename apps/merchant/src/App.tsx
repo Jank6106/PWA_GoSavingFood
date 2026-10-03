@@ -184,6 +184,15 @@ export default function App() {
             authLoading={auth.loading}
             onChangePassword={auth.changePassword}
             onLogout={handleLogout}
+            onDeleteAccount={async () => {
+              const res = await auth.deleteAccount();
+              if (res.success) {
+                showToast('Tài khoản đối tác đã được xóa vĩnh viễn khỏi hệ thống.');
+                setRoute('login');
+              } else {
+                showToast(res.message || 'Không thể xóa tài khoản. Vui lòng thử lại.');
+              }
+            }}
           />
         </div>
       </main>

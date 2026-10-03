@@ -19,6 +19,7 @@ export interface AuthContextValue {
   resendRegisterOtp: (email: string) => Promise<void>;
   resetPassword: (email: string) => Promise<boolean>;
   logout: () => void;
+  deleteAccount: () => Promise<{ success: boolean; message?: string }>;
   updateProfile: (updates: Partial<User>) => void;
 }
 

@@ -145,6 +145,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setCachedUser(null);
       },
+      deleteAccount: async () => {
+        const targetId = user?.id;
+        const targetEmail = user?.email;
+        const targetPhone = user?.phone;
+        const res = await customerService.deleteAccount(targetId, targetEmail || targetPhone);
+        setUser(null);
+        setCachedUser(null);
+        return res;
+      },
       updateProfile: (updates: Partial<User>) => {
         setUser((prev) => {
           const updated = prev ? { ...prev, ...updates } : null;

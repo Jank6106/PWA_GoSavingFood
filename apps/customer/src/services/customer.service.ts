@@ -1851,6 +1851,47 @@ export const customerService = {
     }
   },
 
+  async deleteAccount(userId?: string, identifier?: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      // 1. Gọi RPC delete_user_account với userId hiện tại
+      let res = await supabase.rpc('delete_user_account', userId ? { p_user_id: userId } : {});
+      let result = res.data as { success?: boolean; error?: string; message?: string } | null;
+
+      // 2. Nếu RPC bằng ID chưa thành công hoặc không có userId, thử qua identifier (email / phone)
+      if ((!result || !result.success) && identifier) {
+        const idRes = await supabase.rpc('delete_user_by_identifier', { p_identifier: identifier });
+        if (idRes.data && (idRes.data as any).success) {
+          result = idRes.data as any;
+        }
+      }
+
+      // 3. Đăng xuất khỏi Supabase Auth và dọn dẹp bộ nhớ client
+      try {
+        await supabase.auth.signOut();
+      } catch {}
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('gsf_customer_user_cache');
+          localStorage.removeItem('gsf_notifications_enabled');
+          localStorage.removeItem('gsf_customer_orders');
+          localStorage.removeItem('gsf_pending_auth_target');
+        } catch {}
+      }
+
+      return {
+        success: result?.success ?? true,
+        message: result?.message || 'Tài khoản đã được xóa vĩnh viễn khỏi hệ thống.',
+      };
+    } catch (err: any) {
+      console.warn('Lỗi khi xóa tài khoản:', err);
+      try {
+        await supabase.auth.signOut();
+      } catch {}
+      return { success: false, message: err?.message || 'Không thể xóa tài khoản. Vui lòng thử lại.' };
+    }
+  },
+
   async updateOrderNote(orderId: string, note: string) {
     try {
       const { error } = await supabase.rpc('update_order_note', {

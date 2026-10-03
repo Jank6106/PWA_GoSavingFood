@@ -1,4 +1,4 @@
-import { Clock, Headphones, ImageUp, KeyRound, LogOut, MapPin, Pencil, Phone, Save, Send, ShoppingBag, Star, X } from 'lucide-react';
+import { Clock, Headphones, ImageUp, KeyRound, LogOut, MapPin, Pencil, Phone, Save, Send, ShoppingBag, Star, Trash2, X } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { optimizeImageUrl } from '../../services/utils';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../../types';
@@ -58,7 +58,6 @@ export function StoreInfoFormCard({ profile, saving, onSave }: { profile: StoreP
     openingHours: profile.openingHours || '08:00',
     closingHours: profile.closingHours || '22:00',
   });
-
   useEffect(() => {
     setForm({
       name: profile.name,
@@ -69,7 +68,6 @@ export function StoreInfoFormCard({ profile, saving, onSave }: { profile: StoreP
       closingHours: profile.closingHours || '22:00',
     });
   }, [profile]);
-
   const startEditing = () => {
     setForm({
       name: profile.name,
@@ -112,6 +110,82 @@ export function StoreInfoFormCard({ profile, saving, onSave }: { profile: StoreP
   );
 }
 
-export function StoreActionsListCard({ onPassword, onSupport, onLogout }: { onPassword: () => void; onSupport: () => void; onLogout: () => void }) { const actions = [{ icon: KeyRound, label: 'Đổi mật khẩu', detail: 'Cập nhật mật khẩu đăng nhập', action: onPassword }, { icon: Headphones, label: 'Liên hệ hỗ trợ', detail: 'Gửi yêu cầu đến GoSavingFood', action: onSupport }, { icon: LogOut, label: 'Đăng xuất', detail: 'Thoát khỏi tài khoản hiện tại', action: onLogout, danger: true }]; return <section className="merchant-card merchant-settings-actions"><h2>Tài khoản & hỗ trợ</h2>{actions.map(({ icon: Icon, label, detail, action, danger }) => <button type="button" className={danger ? 'is-danger' : ''} onClick={action} key={label}><span><Icon size={19} /></span><div><strong>{label}</strong><small>{detail}</small></div><b>›</b></button>)}</section>; }
+export function StoreActionsListCard({ onPassword, onSupport, onLogout, onDeleteAccount }: { onPassword: () => void; onSupport: () => void; onLogout: () => void; onDeleteAccount?: () => void }) {
+  const actions = [
+    { icon: KeyRound, label: 'Đổi mật khẩu', detail: 'Cập nhật mật khẩu đăng nhập', action: onPassword },
+    { icon: Headphones, label: 'Liên hệ hỗ trợ', detail: 'Gửi yêu cầu đến GoSavingFood', action: onSupport },
+    { icon: LogOut, label: 'Đăng xuất', detail: 'Thoát khỏi tài khoản hiện tại', action: onLogout, danger: true },
+    ...(onDeleteAccount ? [{ icon: Trash2, label: 'Xóa tài khoản đối tác', detail: 'Xóa vĩnh viễn cửa hàng và dữ liệu', action: onDeleteAccount, danger: true }] : []),
+  ];
+  return (
+    <section className="merchant-card merchant-settings-actions">
+      <h2>Tài khoản & hỗ trợ</h2>
+      {actions.map(({ icon: Icon, label, detail, action, danger }) => (
+        <button type="button" className={danger ? 'is-danger' : ''} onClick={action} key={label}>
+          <span><Icon size={19} /></span>
+          <div><strong>{label}</strong><small>{detail}</small></div>
+          <b>›</b>
+        </button>
+      ))}
+    </section>
+  );
+}
+
 export function ChangePasswordModal({ open, saving, onClose, onSubmit }: { open: boolean; saving: boolean; onClose: () => void; onSubmit: (oldPassword: string, newPassword: string) => Promise<boolean> }) { const [oldPassword, setOldPassword] = useState(''); const [newPassword, setNewPassword] = useState(''); const [confirm, setConfirm] = useState(''); const [error, setError] = useState(''); const submit = async (event: FormEvent) => { event.preventDefault(); if (newPassword.length < 6) return setError('Mật khẩu mới cần ít nhất 6 ký tự.'); if (newPassword !== confirm) return setError('Mật khẩu xác nhận chưa khớp.'); if (await onSubmit(oldPassword, newPassword)) onClose(); }; return <Modal open={open} title="Đổi mật khẩu" onClose={onClose} size="small"><form className="merchant-form" onSubmit={submit}><Field label="Mật khẩu hiện tại" isPassword value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} required /><Field label="Mật khẩu mới" isPassword value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /><Field label="Xác nhận mật khẩu" isPassword value={confirm} onChange={(event) => setConfirm(event.target.value)} error={error} required /><Button type="submit" fullWidth loading={saving}>Cập nhật mật khẩu</Button></form></Modal>; }
+
 export function SupportModal({ open, onClose, onSuccess }: { open: boolean; onClose: () => void; onSuccess: () => void }) { const [subject, setSubject] = useState(''); const [description, setDescription] = useState(''); const submit = (event: FormEvent) => { event.preventDefault(); onSuccess(); onClose(); }; return <Modal open={open} title="Liên hệ hỗ trợ" description="Đội ngũ GoSavingFood sẽ phản hồi sớm nhất" onClose={onClose}><form className="merchant-form" onSubmit={submit}><Field label="Chủ đề" value={subject} onChange={(event) => setSubject(event.target.value)} required /><TextAreaField label="Mô tả vấn đề" value={description} onChange={(event) => setDescription(event.target.value)} required /><Button type="submit" fullWidth><Send size={16} /> Gửi yêu cầu</Button></form></Modal>; }
+
+export function DeleteMerchantAccountModal({
+  open,
+  saving,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  saving: boolean;
+  onClose: () => void;
+  onSubmit: () => Promise<void>;
+}) {
+  const [confirmText, setConfirmText] = useState('');
+  const isConfirmed = confirmText.trim().toUpperCase() === 'XÓA' || confirmText.trim().toUpperCase() === 'XOA';
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!isConfirmed) return;
+    await onSubmit();
+    onClose();
+  };
+
+  return (
+    <Modal
+      open={open}
+      title="Xóa tài khoản đối tác"
+      description="Hành động này mang tính vĩnh viễn và không thể khôi phục"
+      onClose={onClose}
+      size="small"
+    >
+      <form className="merchant-form" onSubmit={submit}>
+        <div style={{ padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', color: '#991b1b', fontSize: '13px', lineHeight: 1.5 }}>
+          ⚠️ Khi xóa tài khoản, tất cả dữ liệu sau sẽ bị <strong>xóa vĩnh viễn</strong> khỏi GoSavingFood:
+          <ul style={{ margin: '8px 0 0 16px', padding: 0 }}>
+            <li>Toàn bộ thông tin cửa hàng và hồ sơ đối tác.</li>
+            <li>Toàn bộ danh mục túi hàng cứu trợ đang bán.</li>
+            <li>Lịch sử đơn hàng, thống kê doanh thu và đánh giá.</li>
+            <li>Giải phóng số điện thoại & email để có thể đăng ký lại.</li>
+          </ul>
+        </div>
+        <Field
+          label='Nhập chữ "XÓA" để xác nhận'
+          value={confirmText}
+          placeholder='Nhập "XÓA"'
+          onChange={(e) => setConfirmText(e.target.value)}
+          required
+        />
+        <div className="merchant-form-actions">
+          <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>Hủy</Button>
+          <Button type="submit" variant="danger" loading={saving} disabled={!isConfirmed}><Trash2 size={16} /> Xác nhận xóa</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}

@@ -1,4 +1,12 @@
-import { ChangePasswordModal, StoreActionsListCard, StoreCoverHeader, StoreInfoFormCard, SupportModal } from '../components/store';
+import { useState } from 'react';
+import {
+  ChangePasswordModal,
+  DeleteMerchantAccountModal,
+  StoreActionsListCard,
+  StoreCoverHeader,
+  StoreInfoFormCard,
+  SupportModal,
+} from '../components/store';
 import { ErrorState, SkeletonCard, SkeletonList, ToastBar } from '../components/ui';
 import { useStoreProfile } from '../hooks/useStoreProfile';
 
@@ -7,13 +15,17 @@ export function SettingsScreen({
   authLoading,
   onChangePassword,
   onLogout,
+  onDeleteAccount,
 }: {
   storeId: string;
   authLoading: boolean;
   onChangePassword: (oldPassword: string, newPassword: string) => Promise<boolean>;
   onLogout: () => Promise<void>;
+  onDeleteAccount?: () => Promise<void>;
 }) {
   const state = useStoreProfile(storeId);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
   if (state.error && !state.profile) return <ErrorState message={state.error} onRetry={() => void state.loadProfile()} />;
   const changePassword = async (oldPassword: string, newPassword: string) => {
     const done = await onChangePassword(oldPassword, newPassword);
@@ -42,10 +54,26 @@ export function SettingsScreen({
           <StoreCoverHeader profile={state.profile} saving={state.saving} onSaveImages={(input) => void state.saveImages(input)} />
           <div className="merchant-settings-grid">
             <StoreInfoFormCard profile={state.profile} saving={state.saving} onSave={(input) => void state.saveProfile(input)} />
-            <StoreActionsListCard onPassword={() => state.setIsPasswordModalOpen(true)} onSupport={() => state.setIsSupportModalOpen(true)} onLogout={() => void onLogout()} />
+            <StoreActionsListCard
+              onPassword={() => state.setIsPasswordModalOpen(true)}
+              onSupport={() => state.setIsSupportModalOpen(true)}
+              onLogout={() => void onLogout()}
+              onDeleteAccount={onDeleteAccount ? () => setIsDeleteModalOpen(true) : undefined}
+            />
           </div>
           <ChangePasswordModal open={state.isPasswordModalOpen} saving={authLoading} onClose={() => state.setIsPasswordModalOpen(false)} onSubmit={changePassword} />
           <SupportModal open={state.isSupportModalOpen} onClose={() => state.setIsSupportModalOpen(false)} onSuccess={() => state.showToast('Yêu cầu hỗ trợ đã được gửi')} />
+          {onDeleteAccount && (
+            <DeleteMerchantAccountModal
+              open={isDeleteModalOpen}
+              saving={authLoading}
+              onClose={() => setIsDeleteModalOpen(false)}
+              onSubmit={async () => {
+                await onDeleteAccount();
+                setIsDeleteModalOpen(false);
+              }}
+            />
+          )}
         </>
       )}
     </>
