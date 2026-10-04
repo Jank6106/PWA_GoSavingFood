@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle2, History, Sparkles, X } from 'lucide-react';
 import { Badge, Button } from '@gosavingfood/ui';
+import logoImg from '../../../assets/logo.png';
 
 interface VersionHistoryModalProps {
   isOpen: boolean;
@@ -111,7 +112,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
           {/* Current Version Card */}
           <div className="customer-version-current-card">
             <div className="customer-version-app-icon" style={{ overflow: 'hidden', padding: 0 }}>
-              <img src="/logo.png" alt="GoSavingFood" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '14px' }} />
+              <img src={logoImg} alt="GoSavingFood" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '14px' }} />
             </div>
             <div className="customer-version-app-info">
               <div className="customer-version-app-badge-row">

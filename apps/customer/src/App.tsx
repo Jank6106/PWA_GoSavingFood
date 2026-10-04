@@ -80,6 +80,82 @@ function loadStoredHistory(): AppRoute[] {
   return [{ name: 'tabs', tab: 'home' }];
 }
 
+function getRouteUrl(route: AppRoute): string {
+  const pathname = window.location.pathname;
+  switch (route.name) {
+    case 'tabs':
+      return route.tab === 'home' ? pathname : `${pathname}?tab=${route.tab}`;
+    case 'search':
+      return `${pathname}?view=search`;
+    case 'bags':
+      return `${pathname}?view=bags`;
+    case 'bag':
+      return `${pathname}?view=bag&id=${encodeURIComponent(route.id)}`;
+    case 'merchant':
+      return `${pathname}?view=merchant&id=${encodeURIComponent(route.id)}`;
+    case 'brand':
+      return `${pathname}?view=brand&id=${encodeURIComponent(route.id)}`;
+    case 'checkout':
+      return `${pathname}?view=checkout`;
+    case 'payment':
+      return `${pathname}?view=payment`;
+    case 'success':
+      return `${pathname}?view=success&orderId=${encodeURIComponent(route.orderId)}`;
+    case 'order':
+      return `${pathname}?view=order&id=${encodeURIComponent(route.id)}`;
+    case 'review':
+      return `${pathname}?view=review&id=${encodeURIComponent(route.id)}`;
+    case 'report':
+      return `${pathname}?view=report&id=${encodeURIComponent(route.id)}`;
+    case 'notifications':
+      return `${pathname}?view=notifications`;
+    case 'location':
+      return `${pathname}?view=location`;
+    default:
+      return pathname;
+  }
+}
+
+function parseRouteFromUrl(): AppRoute | null {
+  try {
+    const search = window.location.search;
+    if (!search) return null;
+    const params = new URLSearchParams(search);
+    const view = params.get('view');
+    const tab = params.get('tab') as CustomerTab | null;
+    const id = params.get('id');
+    const orderId = params.get('orderId');
+
+    if (view === 'search') return { name: 'search' };
+    if (view === 'bags') return { name: 'bags' };
+    if (view === 'bag' && id) return { name: 'bag', id };
+    if (view === 'merchant' && id) return { name: 'merchant', id };
+    if (view === 'brand' && id) return { name: 'brand', id };
+    if (view === 'checkout') return { name: 'checkout' };
+    if (view === 'success' && orderId) return { name: 'success', orderId };
+    if (view === 'order' && id) return { name: 'order', id };
+    if (view === 'review' && id) return { name: 'review', id };
+    if (view === 'report' && id) return { name: 'report', id };
+    if (view === 'notifications') return { name: 'notifications' };
+    if (view === 'location') return { name: 'location' };
+    if (tab && ['home', 'cart', 'orders', 'profile'].includes(tab)) {
+      return { name: 'tabs', tab };
+    }
+  } catch {}
+  return null;
+}
+
+function loadInitialHistory(): AppRoute[] {
+  const fromUrl = parseRouteFromUrl();
+  if (fromUrl) {
+    if (fromUrl.name === 'tabs' && fromUrl.tab === 'home') {
+      return [fromUrl];
+    }
+    return [{ name: 'tabs', tab: 'home' }, fromUrl];
+  }
+  return loadStoredHistory();
+}
+
 function CustomerApp() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(() => {
     try {
@@ -115,7 +191,7 @@ function CustomerApp() {
   const auth = useAuth();
   const catalog = useCustomerCatalog(coords);
   const cart = useCart(auth.user?.id);
-  const [history, setHistory] = useState<AppRoute[]>(loadStoredHistory);
+  const [history, setHistory] = useState<AppRoute[]>(loadInitialHistory);
   const [pendingAuthTarget, setPendingAuthTarget] = useState<PendingAuthTarget | null>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_PENDING_AUTH_KEY);
@@ -280,16 +356,107 @@ function CustomerApp() {
     };
   }, [auth.user?.id]);
 
-  const route = history[history.length - 1];
+  const route = history[history.length - 1] || { name: 'tabs', tab: 'home' };
   const activeTab: CustomerTab = route.name === 'tabs' ? route.tab : 'home';
-  const push = (nextRoute: AppRoute) => setHistory((current) => [...current, nextRoute]);
-  const back = () => setHistory((current) => (current.length > 1 ? current.slice(0, -1) : current));
-  const openTab = (tab: CustomerTab) => setHistory([{ name: 'tabs', tab }]);
+
+  const push = (nextRoute: AppRoute) => {
+    setHistory((current) => {
+      const nextHistory = [...current, nextRoute];
+      const url = getRouteUrl(nextRoute);
+      window.history.pushState(
+        { route: nextRoute, index: nextHistory.length - 1 },
+        '',
+        url
+      );
+      return nextHistory;
+    });
+  };
+
+  const back = () => {
+    if (history.length > 1) {
+      window.history.back();
+    } else {
+      openTab('home');
+    }
+  };
+
+  const openTab = (tab: CustomerTab) => {
+    setHistory((current) => {
+      const active = current[current.length - 1];
+      if (active && active.name === 'tabs' && active.tab === tab) {
+        return current;
+      }
+      const nextRoute: AppRoute = { name: 'tabs', tab };
+      const nextHistory = [...current, nextRoute];
+      const url = getRouteUrl(nextRoute);
+      window.history.pushState(
+        { route: nextRoute, index: nextHistory.length - 1 },
+        '',
+        url
+      );
+      return nextHistory;
+    });
+  };
+
   const home = () => openTab('home');
+
+  const resetToSuccess = (orderId: string) => {
+    const successRoute: AppRoute = { name: 'success', orderId };
+    const nextHistory: AppRoute[] = [{ name: 'tabs', tab: 'home' }, successRoute];
+    window.history.replaceState(
+      { route: successRoute, index: 1 },
+      '',
+      getRouteUrl(successRoute)
+    );
+    setHistory(nextHistory);
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [history.length]);
+
+  // Đồng bộ với History API của trình duyệt (Bắt sự kiện Back / Forward hoặc cử chỉ vuốt)
+  useEffect(() => {
+    const initialRoute = history[history.length - 1] || { name: 'tabs', tab: 'home' };
+    window.history.replaceState(
+      { route: initialRoute, index: history.length - 1 },
+      '',
+      getRouteUrl(initialRoute)
+    );
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state as { route?: AppRoute; index?: number } | null;
+
+      setHistory((current) => {
+        if (state && typeof state.index === 'number') {
+          if (state.index < current.length - 1) {
+            // Người dùng bấm Back: lùi về route tương ứng
+            return current.slice(0, state.index + 1);
+          }
+          if (state.route && state.index >= current.length) {
+            // Người dùng bấm Forward
+            return [...current, state.route];
+          }
+        }
+
+        if (current.length > 1) {
+          return current.slice(0, -1);
+        }
+
+        if (state && state.route) {
+          return [state.route];
+        }
+
+        const urlRoute = parseRouteFromUrl();
+        return [urlRoute || { name: 'tabs', tab: 'home' }];
+      });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
   const [directBag, setDirectBag] = useState<SurpriseBag | null>(null);
 
   const selectedBag =
@@ -478,7 +645,7 @@ function CustomerApp() {
   const handlePaymentConfirm = async (draft: CheckoutDraft, existingOrder?: Order, buyNowItem?: CartItem) => {
     if (existingOrder) {
       if (!buyNowItem) cart.clear();
-      setHistory([{ name: 'success', orderId: existingOrder.id }]);
+      resetToSuccess(existingOrder.id);
       return;
     }
     await confirmPayment(draft, buyNowItem);
@@ -528,7 +695,7 @@ function CustomerApp() {
       if (!buyNowItem) {
         cart.clear();
       }
-      setHistory([{ name: 'success', orderId: created.id }]);
+      resetToSuccess(created.id);
     } catch (error) {
       window.alert(
         error instanceof Error
@@ -555,7 +722,30 @@ function CustomerApp() {
       if (route.tab === 'home') return <HomePage {...catalog} location={location} onSearch={() => push({ name: 'search' })} onLocation={() => push({ name: 'location' })} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })} onAdd={addToCart} onViewAll={() => push({ name: 'bags' })} />;
       if (route.tab === 'cart') return <CartPage items={cart.items} isAuthenticated={auth.isAuthenticated} {...cart.summary} onLogin={auth.showAuthModal} onExplore={home} onCheckout={startCheckout} onUpdate={cart.updateQuantity} onRemove={cart.removeItem} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} />;
       if (route.tab === 'orders') return <OrdersPage orders={orders} isAuthenticated={auth.isAuthenticated} onLogin={auth.showAuthModal} onOpenOrder={(order) => push({ name: 'order', id: order.id })} />;
-      return <ProfilePage user={auth.user} orders={orders} vouchers={vouchers} isStandalone={isStandalone} onLogin={auth.showAuthModal} onLogout={auth.logout} onOrders={() => openTab('orders')} onNotifications={() => push({ name: 'notifications' })} onLocation={() => push({ name: 'location' })} onInstall={installApp} onUpdateProfile={auth.updateProfile} onDeleteAccount={() => { auth.logout(); window.alert('Tài khoản của bạn đã được xóa thành công khỏi thiết bị.'); }} />;
+      return (
+        <ProfilePage
+          user={auth.user}
+          orders={orders}
+          vouchers={vouchers}
+          isStandalone={isStandalone}
+          onLogin={auth.showAuthModal}
+          onLogout={auth.logout}
+          onOrders={() => openTab('orders')}
+          onNotifications={() => push({ name: 'notifications' })}
+          onLocation={() => push({ name: 'location' })}
+          onInstall={installApp}
+          onUpdateProfile={auth.updateProfile}
+          onDeleteAccount={async () => {
+            const res = await auth.deleteAccount();
+            if (res.success) {
+              setToastMessage('Tài khoản của bạn đã được xóa vĩnh viễn khỏi hệ thống.');
+              openTab('home');
+            } else {
+              window.alert(res.message || 'Không thể xóa tài khoản. Vui lòng thử lại.');
+            }
+          }}
+        />
+      );
     }
     if (route.name === 'search')
       return (

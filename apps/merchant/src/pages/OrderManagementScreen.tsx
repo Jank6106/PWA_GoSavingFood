@@ -1,26 +1,62 @@
-import { FileSearch } from 'lucide-react';
-import { EmptyState, ErrorState, LoadingSpinner, ToastBar } from '../components/ui';
-import { OrderCard, OrderDetailsModal, OrderFilterBar, QRScannerModal } from '../components/orders';
+import { useEffect, useState } from 'react';
+import { FileSearch, QrCode } from 'lucide-react';
+import { Button, EmptyState, ErrorState, SkeletonList, ToastBar } from '../components/ui';
+import { CancelOrderModal, GlobalQRScannerModal, OrderCard, OrderDetailsModal, OrderFilterBar, QRScannerModal } from '../components/orders';
 import { useOrders } from '../hooks/useOrders';
+import { useToast } from '../hooks/useToast';
+import type { MerchantOrder } from '../types';
 
 interface OrderManagementScreenProps {
   storeId: string;
   targetOrderId?: string | null;
   onClearTargetOrder?: () => void;
+  isGlobalQROpen?: boolean;
+  onCloseGlobalQR?: () => void;
 }
 
 export function OrderManagementScreen({
   storeId,
   targetOrderId,
   onClearTargetOrder,
+  isGlobalQROpen,
+  onCloseGlobalQR,
 }: OrderManagementScreenProps) {
   const state = useOrders(storeId, targetOrderId);
+  const { toastMessage: copyToastMessage, showToast } = useToast();
+  const [cancellingOrder, setCancellingOrder] = useState<MerchantOrder | null>(null);
+  const [isGlobalQRModalOpen, setIsGlobalQRModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isGlobalQROpen) {
+      setIsGlobalQRModalOpen(true);
+    }
+  }, [isGlobalQROpen]);
+
   const openQR = (order: typeof state.selectedOrder) => {
     if (!order) return;
     state.setSelectedOrder(order);
     state.setIsDetailModalOpen(false);
     state.setIsQRModalOpen(true);
   };
+
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      showToast(`Đã sao chép mã đơn: ${code}`);
+    } catch {
+      showToast(`Mã đơn: ${code}`);
+    }
+  };
+
+  const handleCopyReceipt = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Đã sao chép thông tin chi tiết đơn hàng');
+    } catch {
+      showToast('Không thể sao chép');
+    }
+  };
+
   const actions = {
     onConfirm: async (id: string) => {
       const ok = await state.confirmOrder(id);
@@ -38,19 +74,28 @@ export function OrderManagementScreen({
         onClearTargetOrder?.();
       }
     },
-    onCancel: async (id: string) => {
-      const ok = await state.cancelOrder(id);
-      if (ok) {
-        state.setIsDetailModalOpen(false);
-        state.setStatusFilter('all');
-        onClearTargetOrder?.();
-      }
+    onCancelRequest: (order: MerchantOrder) => {
+      setCancellingOrder(order);
     },
     onOpenQR: openQR,
+    onOpenDetails: (order: MerchantOrder) => {
+      state.setSelectedOrder(order);
+      state.setIsDetailModalOpen(true);
+    },
+    onCopyCode: handleCopyCode,
   };
 
-  if (state.loading && !state.orders.length) return <LoadingSpinner />;
-  if (state.error) return <ErrorState message={state.error} onRetry={() => void state.loadOrders()} />;
+  const handleConfirmCancel = async (orderId: string, reason: string) => {
+    const ok = await state.cancelOrder(orderId, reason);
+    if (ok) {
+      state.setIsDetailModalOpen(false);
+      state.setStatusFilter('all');
+      setCancellingOrder(null);
+      onClearTargetOrder?.();
+    }
+  };
+
+  if (state.error && !state.allOrders.length) return <ErrorState message={state.error} onRetry={() => void state.loadOrders()} />;
 
   return (
     <>
@@ -60,9 +105,19 @@ export function OrderManagementScreen({
           <span>Hôm nay</span>
           <h1>Quản lý đơn hàng</h1>
         </div>
-        <strong>
-          {state.summary.pending + state.summary.processing + state.summary.confirmed} đơn
-        </strong>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Button
+            size="small"
+            variant="primary"
+            onClick={() => setIsGlobalQRModalOpen(true)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <QrCode size={16} /> Quét QR giao món
+          </Button>
+          <strong>
+            {state.summary.pending + state.summary.processing + state.summary.confirmed} đơn
+          </strong>
+        </div>
       </div>
       <OrderFilterBar
         statusFilter={state.statusFilter}
@@ -72,7 +127,9 @@ export function OrderManagementScreen({
         onSearchQueryChange={state.setSearchQuery}
       />
       <div className="merchant-order-grid">
-        {state.orders.length ? (
+        {state.loading && !state.orders.length ? (
+          <SkeletonList count={3} height={140} />
+        ) : state.orders.length ? (
           state.orders.map((order) => (
             <OrderCard
               key={order.id}
@@ -92,6 +149,7 @@ export function OrderManagementScreen({
           />
         )}
       </div>
+      <ToastBar message={copyToastMessage} />
       <OrderDetailsModal
         order={state.selectedOrder}
         open={state.isDetailModalOpen}
@@ -100,6 +158,14 @@ export function OrderManagementScreen({
           onClearTargetOrder?.();
         }}
         actions={actions}
+        onCopyReceipt={handleCopyReceipt}
+      />
+      <CancelOrderModal
+        order={cancellingOrder}
+        open={Boolean(cancellingOrder)}
+        saving={state.saving}
+        onClose={() => setCancellingOrder(null)}
+        onConfirmCancel={handleConfirmCancel}
       />
       <QRScannerModal
         order={state.selectedOrder}
@@ -116,6 +182,26 @@ export function OrderManagementScreen({
             onClearTargetOrder?.();
           }
           return ok;
+        }}
+      />
+      <GlobalQRScannerModal
+        open={isGlobalQRModalOpen || Boolean(isGlobalQROpen)}
+        allOrders={state.allOrders}
+        onClose={() => {
+          setIsGlobalQRModalOpen(false);
+          onCloseGlobalQR?.();
+        }}
+        onCompleteQR={async (id, code) => {
+          const ok = await state.completeOrderWithQR(id, code);
+          if (ok) {
+            state.setStatusFilter('all');
+            onClearTargetOrder?.();
+          }
+          return ok;
+        }}
+        onOpenOrderDetails={(order) => {
+          state.setSelectedOrder(order);
+          state.setIsDetailModalOpen(true);
         }}
       />
     </>

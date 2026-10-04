@@ -1,14 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { fetchInventoryItems, saveInventoryItems, subscribeInventory } from '../services/inventory.service';
+import {
+  fetchInventoryItems,
+  getCachedInventoryItems,
+  saveInventoryItems,
+} from '../services/inventory.service';
 import { updateBagStatus } from '../services/bag.service';
 import type { InventoryItem, InventoryScheduleFilter } from '../types';
 import { useToast } from './useToast';
 
 export function useInventory(storeId: string) {
-  const [allItems, setAllItems] = useState<InventoryItem[]>([]);
-  const [savedItems, setSavedItems] = useState<InventoryItem[]>([]);
+  // SWR: Đọc dữ liệu kệ hàng từ cache hoặc túi hàng ngay lập tức (0ms)
+  const [allItems, setAllItems] = useState<InventoryItem[]>(() => getCachedInventoryItems(storeId));
+  const [savedItems, setSavedItems] = useState<InventoryItem[]>(() => allItems);
   const [removedBagIds, setRemovedBagIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => allItems.length === 0);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => allItems.length > 0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [scheduleTab, setScheduleTab] = useState<InventoryScheduleFilter>('today');
@@ -18,8 +24,21 @@ export function useInventory(storeId: string) {
   hasUnsavedChangesRef.current = hasUnsavedChanges;
   const { toastMessage: saveSuccessMessage, showToast } = useToast();
 
+  useEffect(() => {
+    const cached = getCachedInventoryItems(storeId);
+    if (cached.length > 0) {
+      setAllItems(cached);
+      setSavedItems(cached);
+      setLoading(false);
+      setHasLoadedOnce(true);
+    }
+  }, [storeId]);
+
+  const hasLoadedOnceRef = useRef(allItems.length > 0);
+
   const loadData = useCallback(async (preserveDraft = false) => {
-    setLoading(true); setError(null);
+    if (!hasLoadedOnceRef.current) setLoading(true);
+    setError(null);
     try {
       const nextItems = await fetchInventoryItems(storeId);
       if (!preserveDraft) {
@@ -32,20 +51,19 @@ export function useInventory(storeId: string) {
     } catch {
       setError('Không thể tải dữ liệu kệ hàng.');
     } finally {
+      hasLoadedOnceRef.current = true;
+      setHasLoadedOnce(true);
       setLoading(false);
     }
   }, [storeId]);
 
+  const isFetchedRef = useRef(false);
+
   useEffect(() => {
-    void loadData();
-    const unsubscribe = subscribeInventory(() => {
-      if (!hasUnsavedChangesRef.current) {
-        void loadData();
-      }
-    });
-    return () => {
-      unsubscribe();
-    };
+    if (!isFetchedRef.current) {
+      isFetchedRef.current = true;
+      void loadData();
+    }
   }, [loadData]);
 
   const items = useMemo(() => allItems.filter((item) => (scheduleTab === 'today' ? item.schedule === 'today' : item.appliesTomorrow) && `${item.name} ${item.sku}`.toLocaleLowerCase('vi-VN').includes(searchQuery.toLocaleLowerCase('vi-VN'))), [allItems, scheduleTab, searchQuery]);
@@ -95,5 +113,5 @@ export function useInventory(storeId: string) {
     }
   };
 
-  return { items, loading, error, saving, scheduleTab, searchQuery, hasUnsavedChanges, saveSuccessMessage, setScheduleTab, setSearchQuery, changeQuantity, toggleTomorrow, removeFromShelf, cancelChanges, saveChanges, loadData };
+  return { items, loading, hasLoadedOnce, error, saving, scheduleTab, searchQuery, hasUnsavedChanges, saveSuccessMessage, setScheduleTab, setSearchQuery, changeQuantity, toggleTomorrow, removeFromShelf, cancelChanges, saveChanges, loadData };
 }

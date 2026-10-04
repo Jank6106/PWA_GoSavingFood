@@ -727,14 +727,39 @@ export const customerService = {
       throw new Error(parsed.errorMessage || 'Email hoặc số điện thoại không hợp lệ.');
     }
 
-    const email = parsed.type === 'email' ? parsed.normalized : parsed.syntheticEmail!;
+    let email = parsed.type === 'email' ? parsed.normalized : parsed.syntheticEmail!;
+    if (parsed.type === 'phone') {
+      try {
+        const { data: realEmail } = await supabase.rpc('get_email_by_phone', {
+          p_phone: parsed.phoneNational || parsed.raw,
+        });
+        if (realEmail) {
+          email = realEmail;
+        }
+      } catch {
+        // Fallback to synthetic email
+      }
+    }
+
     const pwd = password || 'Password123!';
 
-    const { data: signInData, error: signInError } =
+    let { data: signInData, error: signInError } =
       await supabase.auth.signInWithPassword({
         email,
         password: pwd,
       });
+
+    // Fallback: nếu tra ra email nhưng đăng nhập lỗi, thử với synthetic email
+    if (signInError && parsed.type === 'phone' && email !== parsed.syntheticEmail && parsed.syntheticEmail) {
+      const fallback = await supabase.auth.signInWithPassword({
+        email: parsed.syntheticEmail,
+        password: pwd,
+      });
+      if (!fallback.error) {
+        signInData = fallback.data;
+        signInError = null;
+      }
+    }
 
     if (signInError) {
       throw new Error(mapSupabaseAuthError(signInError));
@@ -989,6 +1014,47 @@ export const customerService = {
       await supabase.auth.signOut();
     } catch (err) {
       console.warn('Đăng xuất lỗi:', err);
+    }
+  },
+
+  async deleteAccount(userId?: string, identifier?: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      // 1. Gọi RPC delete_user_account với userId hiện tại
+      let res = await supabase.rpc('delete_user_account', userId ? { p_user_id: userId } : {});
+      let result = res.data as { success?: boolean; error?: string; message?: string } | null;
+
+      // 2. Nếu RPC bằng ID chưa thành công hoặc không có userId, thử qua identifier (email / phone)
+      if ((!result || !result.success) && identifier) {
+        const idRes = await supabase.rpc('delete_user_by_identifier', { p_identifier: identifier });
+        if (idRes.data && (idRes.data as any).success) {
+          result = idRes.data as any;
+        }
+      }
+
+      // 3. Đăng xuất khỏi Supabase Auth và dọn dẹp bộ nhớ client
+      try {
+        await supabase.auth.signOut();
+      } catch {}
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('gsf_customer_user_cache');
+          localStorage.removeItem('gsf_notifications_enabled');
+          localStorage.removeItem('gsf_customer_orders');
+          localStorage.removeItem('gsf_pending_auth_target');
+        } catch {}
+      }
+
+      return {
+        success: result?.success ?? true,
+        message: result?.message || 'Tài khoản đã được xóa vĩnh viễn khỏi hệ thống.',
+      };
+    } catch (err: any) {
+      console.warn('Lỗi khi xóa tài khoản:', err);
+      try {
+        await supabase.auth.signOut();
+      } catch {}
+      return { success: false, message: err?.message || 'Không thể xóa tài khoản. Vui lòng thử lại.' };
     }
   },
 

@@ -5,7 +5,7 @@ export const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN ||
   import.meta.env.MAPBOX_PUBLIC_TOKEN ||
   import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN ||
-  'pk.eyJ1IjoiZGF2aWRraGFuaCIsImEiOiJjbXVsMjYzbXkyMHliMndvZWZ6cDgxbXpnIn0.DFP-fsuCTdE8VMF8d7PIKA';
+  '';
 
 
 

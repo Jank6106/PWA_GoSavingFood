@@ -681,7 +681,7 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
                 </button>
               </div>
               <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
-                💡 <i>Mẹo: Vui lòng kiểm tra kỹ cả mục <b>Thư rác (Spam)</b> hoặc <b>Quảng cáo</b> trong hòm thư của bạn.</i>
+                💡 <i>Mẹo: Mã OTP có hiệu lực trong <b>5 phút</b>. Vui lòng kiểm tra kỹ cả mục <b>Thư rác (Spam)</b> hoặc <b>Quảng cáo</b>.</i>
               </div>
             </div>
 

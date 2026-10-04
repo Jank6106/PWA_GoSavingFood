@@ -231,15 +231,15 @@ secure_password_change = true
 max_frequency = "1m0s"
 # Number of characters used in the email OTP.
 otp_length = 6
-# Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+# Number of seconds before the email OTP expires (5 minutes).
+otp_expiry = 300
 
 [auth.email.smtp]
 enabled = true
 host = "smtp.resend.com"
 port = 587
 user = "resend"
-pass = "re_CVNpuZje_2BxFW9SeyGX17Mc4nUt9thdR"
+pass = "env(RESEND_SMTP_PASS)"
 admin_email = "no-reply@gosavingfood.app"
 sender_name = "GoSavingFood"
 

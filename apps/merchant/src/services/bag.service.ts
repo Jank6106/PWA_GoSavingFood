@@ -1,9 +1,48 @@
+import { MERCHANT_STORE_ID, SEED_BAGS_GOGREEN, SEED_BAGS_QUYT } from '../mocks';
 import type { BagInput, BagItem, BagStatus } from '../types';
 import { removeBagFromInventoryShelf, syncBagToInventoryShelf } from './inventory.service';
 import { supabase } from './supabase';
+import { optimizeImageUrl } from './utils';
 
-const DEFAULT_BAG_IMAGE =
-  'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600';
+const DEFAULT_BAG_IMAGE = optimizeImageUrl(
+  'https://images.unsplash.com/photo-1509440159596-0249088772ff',
+  400,
+  75
+);
+
+const BAGS_CACHE_PREFIX = 'gsf_merchant_bags:';
+const bagsInFlight = new Map<string, Promise<BagItem[]>>();
+
+export function getCachedBagItems(storeId: string): BagItem[] {
+  const seedTemplate =
+    storeId === MERCHANT_STORE_ID
+      ? SEED_BAGS_GOGREEN
+      : SEED_BAGS_QUYT.map((b) => ({ ...b, storeId }));
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem(`${BAGS_CACHE_PREFIX}${storeId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length >= seedTemplate.length) {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore parse error
+    }
+  }
+  return seedTemplate;
+}
+
+export function setCachedBagItems(storeId: string, bags: BagItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`${BAGS_CACHE_PREFIX}${storeId}`, JSON.stringify(bags));
+  } catch {
+    // Ignore storage quota
+  }
+}
 
 const mapDbBag = (b: any): BagItem => ({
   id: b.id,
@@ -15,8 +54,8 @@ const mapDbBag = (b: any): BagItem => ({
   salePrice: Number(b.discount_price),
   quantity: Number(b.quantity),
   availableQuantity: Number(b.quantity),
-  imageUrl: b.image_url || DEFAULT_BAG_IMAGE,
-  imageUrls: [b.image_url || DEFAULT_BAG_IMAGE],
+  imageUrl: optimizeImageUrl(b.image_url || DEFAULT_BAG_IMAGE, 400, 75),
+  imageUrls: [optimizeImageUrl(b.image_url || DEFAULT_BAG_IMAGE, 400, 75)],
   pickupTimeStart: b.pickup_start?.slice(0, 5) || '18:00',
   pickupTimeEnd: b.pickup_end?.slice(0, 5) || '21:00',
   status: (b.is_available ? (b.quantity > 0 ? 'active' : 'sold_out') : 'hidden') as BagStatus,
@@ -81,17 +120,47 @@ export function normalizeCategoryToUi(category?: string): string {
 }
 
 export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
-  const { data, error } = await supabase
-    .from('surprise_bags')
-    .select('*')
-    .eq('store_id', storeId)
-    .order('created_at', { ascending: false });
+  const existing = bagsInFlight.get(storeId);
+  if (existing) return existing;
 
-  if (error) {
-    console.warn('Lấy danh sách bags từ Supabase lỗi:', error.message);
-    return [];
-  }
-  return (data || []).map(mapDbBag);
+  const fetchPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('surprise_bags')
+        .select('*')
+        .eq('store_id', storeId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Lấy danh sách bags từ Supabase lỗi:', error.message);
+        return getCachedBagItems(storeId);
+      }
+      const remoteBags = (data || []).map(mapDbBag);
+      const seedTemplate =
+        storeId === MERCHANT_STORE_ID
+          ? SEED_BAGS_GOGREEN
+          : SEED_BAGS_QUYT.map((b) => ({ ...b, storeId }));
+
+      let bags: BagItem[];
+      if (remoteBags.length === 0) {
+        bags = seedTemplate;
+      } else {
+        const remoteIds = new Set(remoteBags.map((b) => b.id));
+        const remoteNames = new Set(remoteBags.map((b) => b.name.toLowerCase().trim()));
+        const remainingSeed = seedTemplate.filter(
+          (s) => !remoteIds.has(s.id) && !remoteNames.has(s.name.toLowerCase().trim())
+        );
+        bags = [...remoteBags, ...remainingSeed];
+      }
+      setCachedBagItems(storeId, bags);
+      return bags;
+    } finally {
+      bagsInFlight.delete(storeId);
+    }
+  })();
+
+  bagsInFlight.set(storeId, fetchPromise);
+  return fetchPromise;
 }
 
 export async function updateBagStatus(bagId: string, status: BagStatus): Promise<BagItem> {

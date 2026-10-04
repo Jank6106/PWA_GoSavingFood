@@ -1,17 +1,113 @@
-import { Bell } from 'lucide-react';
+import { Bell, QrCode } from 'lucide-react';
+import { optimizeImageUrl } from '../../services/utils';
+import logoSvg from '../../assets/logo.svg';
+import logoPng from '../../assets/logo.png';
 
 interface AppHeaderProps {
   storeName: string;
   title?: string;
   subtitle?: string;
+  avatar?: string;
   isOpen: boolean;
   unreadCount: number;
   showStatusToggle?: boolean;
   onToggleStatus: () => void;
   onNotificationPress: () => void;
   onProfilePress: () => void;
+  onScanQRPress?: () => void;
 }
 
-export function AppHeader({ storeName, title, subtitle, isOpen, unreadCount, showStatusToggle = true, onToggleStatus, onNotificationPress, onProfilePress }: AppHeaderProps) {
-  return <header className="merchant-app-header"><div className="merchant-app-header-inner"><div className="merchant-header-brand"><span><img src="/logo.svg" alt="GoSavingFood Logo" className="merchant-header-logo-img" /></span><div><strong>{title ?? storeName}</strong>{subtitle && <small>{subtitle}</small>}</div></div><div className="merchant-header-actions">{showStatusToggle && <button type="button" className={`merchant-store-status ${isOpen ? 'is-open' : 'is-closed'}`} onClick={onToggleStatus}><i /><span>Trạng thái:</span><b>{isOpen ? 'Mở cửa' : 'Đóng cửa'}</b></button>}<button type="button" className="merchant-header-icon" aria-label="Thông báo" onClick={onNotificationPress}><Bell size={19} />{unreadCount > 0 && <b>{unreadCount}</b>}</button><button type="button" className="merchant-profile-button" aria-label="Mở trang cá nhân" onClick={onProfilePress}>GS</button></div></div></header>;
+export function AppHeader({
+  storeName,
+  title,
+  subtitle,
+  avatar,
+  isOpen,
+  unreadCount,
+  showStatusToggle = true,
+  onToggleStatus,
+  onNotificationPress,
+  onProfilePress,
+  onScanQRPress,
+}: AppHeaderProps) {
+  const isImageAvatar = avatar && (avatar.startsWith('http') || avatar.startsWith('data:image/'));
+
+  return (
+    <header className="merchant-app-header">
+      <div className="merchant-app-header-inner">
+        <div className="merchant-header-brand">
+          <span>
+            <img
+              src={logoSvg}
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== logoPng) {
+                  target.src = logoPng;
+                }
+              }}
+              alt="GoSavingFood Logo"
+              className="merchant-header-logo-img"
+            />
+          </span>
+          <div>
+            <strong>{title ?? storeName}</strong>
+            {subtitle && <small>{subtitle}</small>}
+          </div>
+        </div>
+        <div className="merchant-header-actions">
+          {showStatusToggle && (
+            <button
+              type="button"
+              className={`merchant-store-status ${isOpen ? 'is-open' : 'is-closed'}`}
+              onClick={onToggleStatus}
+              title={`Cửa hàng đang ${isOpen ? 'Mở cửa' : 'Đóng cửa'}. Bấm để chuyển trạng thái.`}
+            >
+              <i />
+              <span>Trạng thái:</span>
+              <b>{isOpen ? 'Mở cửa' : 'Đóng cửa'}</b>
+            </button>
+          )}
+          {onScanQRPress && (
+            <button
+              type="button"
+              className="merchant-header-icon"
+              aria-label="Quét QR"
+              onClick={onScanQRPress}
+              title="Quét mã QR nhận hàng của khách"
+            >
+              <QrCode size={19} />
+            </button>
+          )}
+          <button
+            type="button"
+            className="merchant-header-icon"
+            aria-label="Thông báo"
+            onClick={onNotificationPress}
+            title="Xem thông báo đơn hàng"
+          >
+            <Bell size={19} />
+            {unreadCount > 0 && <b>{unreadCount}</b>}
+          </button>
+          <button
+            type="button"
+            className="merchant-profile-button"
+            aria-label="Mở trang cài đặt & hồ sơ"
+            title="Cài đặt & Hồ sơ quán"
+            onClick={onProfilePress}
+          >
+            {isImageAvatar ? (
+              <img
+                src={optimizeImageUrl(avatar, 80, 80)}
+                alt={storeName}
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            ) : (
+              avatar || storeName.slice(0, 2).toUpperCase() || 'GS'
+            )}
+          </button>
+        </div>
+      </div>
+    </header>
+  );
 }
+
