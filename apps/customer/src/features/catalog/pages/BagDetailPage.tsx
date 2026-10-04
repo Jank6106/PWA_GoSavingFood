@@ -10,22 +10,16 @@ import {
 } from 'lucide-react';
 import { Button, Dialog, EmptyState } from '@gosavingfood/ui';
 import { QuantityStepper } from '../../../shared/components';
+import { calculateDistanceKm } from '../../../services/mapbox.service';
 import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const DEFAULT_COVER =
   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80';
 
-
-const formatDistance = (dist?: number) => {
-  if (dist === undefined || dist === null) return '0.5 km';
-  const meters = dist < 50 ? dist * 1000 : dist;
-  if (meters < 1000) return `${Math.round(meters)} m`;
-  return `${(meters / 1000).toFixed(1)} km`;
-};
-
 interface BagDetailPageProps {
   bag: SurpriseBag | null;
   merchant: Merchant | null;
+  userCoords?: { lat: number; lng: number } | null;
   isAuthenticated?: boolean;
   isLoading?: boolean;
   onBack: () => void;
@@ -38,6 +32,7 @@ interface BagDetailPageProps {
 export function BagDetailPage({
   bag,
   merchant,
+  userCoords,
   isAuthenticated = false,
   isLoading = false,
   onBack,
@@ -57,14 +52,69 @@ export function BagDetailPage({
     return () => window.clearInterval(timer);
   }, []);
 
+  // Tính toán thời điểm hết hạn thực tế từ backend hoặc khung giờ pickupEnd của hôm nay
+  const targetExpiryMs = useMemo(() => {
+    if (!bag) return 0;
+    // 1. Nếu backend có expiresAt hợp lệ trong vòng 36h tới (không phải mock +7 ngày)
+    if (bag.expiresAt) {
+      const expMs = new Date(bag.expiresAt).getTime();
+      const diff = expMs - Date.now();
+      if (!isNaN(expMs) && diff > 0 && diff < 36 * 3600 * 1000) {
+        return expMs;
+      }
+    }
+
+    // 2. Tính thời điểm hết hạn theo giờ kết thúc nhận (pickupEnd) của ngày hôm nay
+    if (bag.pickupEnd) {
+      const parts = bag.pickupEnd.split(':');
+      const endH = parseInt(parts[0], 10);
+      const endM = parseInt(parts[1], 10) || 0;
+      if (!isNaN(endH)) {
+        const todayEnd = new Date();
+        todayEnd.setHours(endH, endM, 0, 0);
+        return todayEnd.getTime();
+      }
+    }
+
+    return 0;
+  }, [bag?.expiresAt, bag?.pickupEnd]);
+
   const countdown = useMemo(() => {
-    if (!bag || now === 0) return '--:--:--';
-    const remaining = Math.max(0, new Date(bag.expiresAt || (now + 86400000)).getTime() - now);
+    if (!bag || now === 0 || !targetExpiryMs) return '--:--:--';
+    const remaining = targetExpiryMs - now;
+    if (remaining <= 0) {
+      return 'Đã hết hạn';
+    }
     const hours = Math.floor(remaining / 3600000);
     const minutes = Math.floor((remaining % 3600000) / 60000);
     const seconds = Math.floor((remaining % 60000) / 1000);
     return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
-  }, [bag, now]);
+  }, [bag, now, targetExpiryMs]);
+
+  // Tính khoảng cách thực tế từ vị trí đã xác nhận trên Map tới tọa độ của quán
+  const distanceFormatted = useMemo(() => {
+    if (
+      userCoords?.lat != null &&
+      userCoords?.lng != null &&
+      merchant?.latitude != null &&
+      merchant?.longitude != null
+    ) {
+      const km = calculateDistanceKm(
+        [userCoords.lng, userCoords.lat],
+        [merchant.longitude, merchant.latitude]
+      );
+      if (km < 1) {
+        return `${Math.round(km * 1000)} m`;
+      }
+      return `${km.toFixed(1)} km`;
+    }
+    if (merchant?.distance != null && merchant.distance > 0) {
+      const m = merchant.distance < 50 ? merchant.distance * 1000 : merchant.distance;
+      if (m < 1000) return `${Math.round(m)} m`;
+      return `${(m / 1000).toFixed(1)} km`;
+    }
+    return null;
+  }, [userCoords, merchant?.latitude, merchant?.longitude, merchant?.distance]);
 
   const handleToggleFavorite = () => {
     setIsFavorite((prev) => {
@@ -138,9 +188,8 @@ export function BagDetailPage({
       ? Math.round(((bag.originalPrice - bag.discountPrice) / bag.originalPrice) * 100)
       : 0;
 
-  const coverUrl = bag.imageUrl || DEFAULT_COVER;
+  const coverUrl = bag.imageUrl || merchant?.banner || merchant?.logo || DEFAULT_COVER;
   const merchantLogo = merchant?.logo || merchant?.banner || coverUrl;
-  const distanceFormatted = formatDistance(merchant?.distance);
   const totalReviews = merchant?.totalRatings || 175;
   const ratingValue = (bag.rating || merchant?.rating || 4.8).toFixed(1);
 
@@ -206,8 +255,12 @@ export function BagDetailPage({
             <strong>{ratingValue}</strong>
             <span>({totalReviews})</span>
           </div>
-          <span className="customer-product-meta-dot">•</span>
-          <span className="customer-product-distance">{distanceFormatted}</span>
+          {distanceFormatted && (
+            <>
+              <span className="customer-product-meta-dot">•</span>
+              <span className="customer-product-distance">{distanceFormatted}</span>
+            </>
+          )}
         </div>
 
         {/* Price & Discount Row */}
@@ -236,7 +289,13 @@ export function BagDetailPage({
 
           <div className="customer-product-countdown-pill">
             <Clock3 size={14} strokeWidth={2.2} />
-            <span>Hết hạn sau: <strong>{countdown}</strong></span>
+            <span>
+              {countdown === 'Đã hết hạn' ? (
+                <strong style={{ color: '#dc2626' }}>Đã hết hạn nhận</strong>
+              ) : (
+                <>Hết hạn sau: <strong>{countdown}</strong></>
+              )}
+            </span>
           </div>
         </div>
       </section>
@@ -293,7 +352,7 @@ export function BagDetailPage({
               <div className="customer-product-merchant-meta">
                 <Star size={13} fill="var(--color-offer-accent)" color="var(--color-offer-accent)" />
                 <strong>{merchant.rating.toFixed(1)}</strong>
-                <span>• {distanceFormatted}</span>
+                {distanceFormatted && <span>• {distanceFormatted}</span>}
               </div>
             </div>
             <button

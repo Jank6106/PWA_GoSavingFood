@@ -1,7 +1,7 @@
 :root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #193B2C;
-  background: #F4F1E8;
+  background: #FFFFFF;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --primary: #166B4A;
@@ -9,11 +9,11 @@
   --primary-soft: #EEF4E4;
   --primary-selected: #D8ED9B;
   --surface: #ffffff;
-  --page: #F4F1E8;
+  --page: #FFFFFF;
   --text-secondary: #526458;
   --text-muted: #7D8E82;
   --placeholder: #9DA79F;
-  --border: #D9D5CB;
+  --border: #E5E7EB;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
   --amber: #d97706;
@@ -396,7 +396,7 @@ h1, h2, h3, p { margin: 0; }
 .merchant-store-status { display: flex; min-width: 138px; height: 34px; align-items: center; gap: 6px; padding: 0 11px; border: 1px solid rgba(255,255,255,.2); border-radius: 10px; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; font-size: 11px; }
 .merchant-store-status i { width: 7px; height: 7px; border-radius: 50%; background: #6DBF8B; box-shadow: 0 0 0 3px rgba(74,222,128,.14); }
 .merchant-store-status span { color: #D8ED9B; font-weight: 600; }.merchant-store-status b { font-weight: 800; }.merchant-store-status.is-closed i { background: #f59e0b; }
-.merchant-field-control input:disabled, .merchant-field-control textarea:disabled { color: var(--text-secondary); cursor: not-allowed; }.merchant-field:has(input:disabled) .merchant-field-control, .merchant-field:has(textarea:disabled) .merchant-field-control { border-color: #D9D5CB; background: #F4F1E8; }
+.merchant-field-control input:disabled, .merchant-field-control textarea:disabled { color: var(--text-secondary); cursor: not-allowed; }.merchant-field:has(input:disabled) .merchant-field-control, .merchant-field:has(textarea:disabled) .merchant-field-control { border-color: #E5E7EB; background: #F8FAFC; }
 .merchant-form-actions--between > div { display: flex; gap: 8px; }.merchant-time-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .merchant-pricing-field { display: flex; flex-direction: column; gap: 6px; }.merchant-pricing-field > span { font-size: 13px; font-weight: 700; }.merchant-pricing-mode { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--primary-soft); }.merchant-pricing-mode button { min-height: 28px; flex: 1; border: 0; border-radius: 7px; background: transparent; cursor: pointer; color: var(--text-secondary); font-size: 10px; font-weight: 700; }.merchant-pricing-mode button.is-active { background: #fff; color: var(--primary); box-shadow: 0 1px 5px rgba(0,86,57,.12); }
 .merchant-upload-box { display: flex; min-height: 108px; align-items: center; justify-content: center; flex-direction: column; gap: 5px; border: 1.5px dashed #94cbae; border-radius: 14px; background: var(--primary-soft); color: var(--primary); cursor: pointer; text-align: center; }.merchant-upload-box span { font-size: 13px; font-weight: 800; }.merchant-upload-box small { color: var(--text-secondary); font-size: 11px; }.merchant-upload-box input { display: none; }.merchant-upload-preview { display: flex; flex-wrap: wrap; gap: 9px; }.merchant-upload-preview > div { position: relative; width: 82px; height: 64px; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; }.merchant-upload-preview img { width: 100%; height: 100%; object-fit: cover; }.merchant-upload-preview button { position: absolute; top: 3px; right: 3px; display: grid; width: 21px; height: 21px; place-items: center; border: 0; border-radius: 50%; background: rgba(0,61,39,.8); color: #fff; cursor: pointer; }.merchant-upload-preview span { position: absolute; right: 0; bottom: 0; left: 0; padding: 3px; background: rgba(0,61,39,.8); color: #fff; font-size: 9px; font-weight: 700; text-align: center; }

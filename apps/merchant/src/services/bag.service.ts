@@ -184,7 +184,15 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
           : input.pickupTimeEnd,
       is_daily: true,
       is_available: true,
-      expires_at: new Date(Date.now() + 86400000 * 7).toISOString(),
+      expires_at: (() => {
+        const [endH, endM] = (input.pickupTimeEnd || '21:00').split(':').map(Number);
+        const exp = new Date();
+        exp.setHours(endH || 21, endM || 0, 0, 0);
+        if (exp.getTime() <= Date.now()) {
+          exp.setDate(exp.getDate() + 1);
+        }
+        return exp.toISOString();
+      })(),
     })
     .select()
     .single();
@@ -222,6 +230,15 @@ export async function updateBagItem(bagId: string, input: BagInput): Promise<Bag
         input.pickupTimeStart.length === 5 ? `${input.pickupTimeStart}:00` : input.pickupTimeStart,
       pickup_end:
         input.pickupTimeEnd.length === 5 ? `${input.pickupTimeEnd}:00` : input.pickupTimeEnd,
+      expires_at: (() => {
+        const [endH, endM] = (input.pickupTimeEnd || '21:00').split(':').map(Number);
+        const exp = new Date();
+        exp.setHours(endH || 21, endM || 0, 0, 0);
+        if (exp.getTime() <= Date.now()) {
+          exp.setDate(exp.getDate() + 1);
+        }
+        return exp.toISOString();
+      })(),
       updated_at: new Date().toISOString(),
     })
     .eq('id', bagId);

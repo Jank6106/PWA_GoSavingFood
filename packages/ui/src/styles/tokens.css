@@ -12,9 +12,9 @@
   --color-primary-soft-hover: #E2ECD6;
 
   /* Surfaces & Backgrounds */
-  --color-bg-page: #F4F1E8;
+  --color-bg-page: #FFFFFF;
   --color-bg-card: #FFFFFF;
-  --color-bg-muted: #EDEAE1;
+  --color-bg-muted: #F3F4F6;
 
   /* Text & Content */
   --color-text-primary: #193B2C;
@@ -23,8 +23,8 @@
   --color-text-white: #FFFFFF;
 
   /* Borders & Dividers */
-  --color-border-subtle: #D9D5CB;
-  --color-border-input: #9DA79F;
+  --color-border-subtle: #E5E7EB;
+  --color-border-input: #D1D5DB;
   --color-border-focus: #166B4A;
 
   /* Offer & Accent */

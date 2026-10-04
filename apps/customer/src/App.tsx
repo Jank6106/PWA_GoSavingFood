@@ -11,7 +11,7 @@ import { ProfilePage } from './features/profile/pages/ProfilePage';
 import { useCart } from './hooks/useCart';
 import { useAuth } from './hooks/useAuth';
 import { useCustomerCatalog } from './hooks/useCustomerCatalog';
-import { customerService, HANOI_BAGS } from './services/customer.service';
+import { customerService } from './services/customer.service';
 
 // Lazy-load các trang nặng hoặc chứa mapbox-gl để giảm 70% dung lượng bundle ban đầu
 const SearchPage = lazy(() => import('./features/search/pages/SearchPage').then((m) => ({ default: m.SearchPage })));
@@ -43,6 +43,7 @@ import type {
   CartItem,
   CheckoutDraft,
   CustomerTab,
+  Merchant,
   NotificationItem,
   Order,
   SurpriseBag,
@@ -294,7 +295,6 @@ function CustomerApp() {
   const selectedBag =
     route.name === 'bag'
       ? catalog.bags.find((bag) => bag.id === route.id) ??
-        HANOI_BAGS.find((bag) => bag.id === route.id) ??
         directBag ??
         null
       : null;
@@ -309,12 +309,25 @@ function CustomerApp() {
     }
   }, [route, selectedBag, directBag]);
 
+  const [directMerchant, setDirectMerchant] = useState<Merchant | null>(null);
+
   const selectedMerchantId =
     route.name === 'merchant' || route.name === 'merchant_reviews'
       ? route.id
       : selectedBag?.merchantId;
+
+  useEffect(() => {
+    if (selectedMerchantId && !catalog.merchants.some((m) => m.id === selectedMerchantId)) {
+      void customerService.getMerchant(selectedMerchantId).then((res) => {
+        if (res?.merchant) setDirectMerchant(res.merchant);
+      });
+    } else if (!selectedMerchantId && directMerchant) {
+      setDirectMerchant(null);
+    }
+  }, [selectedMerchantId, catalog.merchants, directMerchant]);
+
   const selectedMerchant =
-    catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? null;
+    catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? directMerchant ?? null;
   const selectedBrand = route.name === 'brand' ? catalog.brands.find((brand) => brand.id === route.id) ?? null : null;
   const selectedOrderId = route.name === 'order' || route.name === 'review' || route.name === 'report' ? route.id : route.name === 'success' ? route.orderId : null;
   const selectedOrder = selectedOrderId ? orders.find((order) => order.id.toLowerCase() === selectedOrderId.toLowerCase()) ?? null : null;
@@ -392,7 +405,6 @@ function CustomerApp() {
       }
       const targetBag =
         catalog.bags.find((b) => b.id === bagId) ||
-        HANOI_BAGS.find((b) => b.id === bagId) ||
         directBag;
       if (targetBag) {
         if (action === 'buy_now') {
@@ -570,6 +582,7 @@ function CustomerApp() {
         <BagDetailPage
           bag={selectedBag}
           merchant={selectedMerchant}
+          userCoords={coords}
           isAuthenticated={auth.isAuthenticated}
           isLoading={catalog.isLoading}
           onBack={back}

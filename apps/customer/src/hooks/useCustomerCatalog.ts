@@ -11,24 +11,28 @@ interface CatalogState {
   bags: SurpriseBag[];
 }
 
-const CATALOG_CACHE_KEY = 'gsf_customer_catalog_cache';
+const CATALOG_CACHE_KEY = 'gsf_customer_catalog_cache_v3';
 
-function getInitialCatalog(coords?: { lat: number; lng: number }): CatalogState {
+function getInitialCatalog(): CatalogState {
   try {
+    // Xóa sạch cache cũ nếu chứa mock data cũ
+    localStorage.removeItem('gsf_customer_catalog_cache');
     const raw = localStorage.getItem(CATALOG_CACHE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.bags) && parsed.bags.length > 0) {
+      if (parsed && Array.isArray(parsed.bags)) {
+        parsed.bags = parsed.bags.filter((b: any) => !b.id?.startsWith('bag-hn-'));
+        parsed.merchants = (parsed.merchants || []).filter((m: any) => !m.id?.startsWith('store-hn-'));
         return parsed;
       }
     }
   } catch {}
-  return customerService.getStaticHome(coords);
+  return customerService.getStaticHome();
 }
 
 export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
-  const [catalog, setCatalog] = useState<CatalogState>(() => getInitialCatalog(coords));
-  const [isLoading, setIsLoading] = useState(() => getInitialCatalog(coords).bags.length === 0);
+  const [catalog, setCatalog] = useState<CatalogState>(() => getInitialCatalog());
+  const [isLoading, setIsLoading] = useState(() => getInitialCatalog().bags.length === 0);
   const [error, setError] = useState<string | null>(null);
   const lastFetchTimeRef = useRef<number>(0);
 
