@@ -1256,7 +1256,7 @@ export const customerService = {
     try {
       const apiBase =
         import.meta.env.VITE_API_URL ||
-        (import.meta.env.PROD ? 'https://gsf-landingpage.vercel.app' : '');
+        (import.meta.env.PROD ? 'https://gosavingfood.app' : '');
       const res = await fetch(`${apiBase}/api/payos/create-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1281,7 +1281,7 @@ export const customerService = {
     try {
       const apiBase =
         import.meta.env.VITE_API_URL ||
-        (import.meta.env.PROD ? 'https://gsf-landingpage.vercel.app' : '');
+        (import.meta.env.PROD ? 'https://gosavingfood.app' : '');
       const res = await fetch(`${apiBase}/api/payos/check-status?orderCode=${orderCode}`);
       if (!res.ok) return null;
       const data = await res.json();
