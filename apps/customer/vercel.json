@@ -5,6 +5,7 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/explore/(.*)", "destination": "/$1" },
+    { "source": "/api/:path*", "destination": "https://gsf-landingpage.vercel.app/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
