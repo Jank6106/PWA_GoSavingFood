@@ -24,10 +24,12 @@ export function useScrollVideo(
     let progress = 0;
     let active = true;
     let reduced = false;
+    let priming = false;
+    let primed = false;
 
     const seek = () => {
       frame = 0;
-      if (disposed || reduced || !active || document.hidden || video.seeking || video.readyState < 2 || !Number.isFinite(video.duration)) return;
+      if (disposed || reduced || priming || !active || document.hidden || video.seeking || video.readyState < 1 || !Number.isFinite(video.duration)) return;
       const time = Math.min(target, Math.max(0, video.duration - 1 / 30));
       if (Math.abs(video.currentTime - time) < 1 / 60) return;
       try { video.currentTime = time; } catch { /* A later media readiness event retries the latest target. */ }
@@ -41,8 +43,25 @@ export function useScrollVideo(
       schedule();
     };
     const error = () => { section.dataset.mediaState = "error"; };
+    // Safari can defer decoding a paused preload until a trusted touch starts it.
+    // Retry on later gestures if low-power/autoplay policy rejects the first play.
+    const prime = () => {
+      if (disposed || primed || priming || reduced) return;
+      priming = true;
+      video.play().then(() => {
+        video.pause();
+        priming = false;
+        if (disposed) return;
+        primed = true;
+        schedule();
+      }).catch(() => { priming = false; schedule(); });
+    };
     video.pause();
     video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    document.addEventListener("touchstart", prime, { passive: true });
+    document.addEventListener("pointerdown", prime, { passive: true });
     video.addEventListener("loadeddata", ready);
     video.addEventListener("loadedmetadata", ready);
     video.addEventListener("durationchange", ready);
@@ -96,7 +115,7 @@ export function useScrollVideo(
         progress: 1, ease: "none", onUpdate: render,
         scrollTrigger: {
           trigger: section, start: "top top", end: () => `+=${section.offsetHeight * 3.2}`,
-          pin: true, scrub: 0.45, anticipatePin: 1, invalidateOnRefresh: true,
+          pin: true, scrub: 0.7, anticipatePin: 1, invalidateOnRefresh: true,
           onToggle: self => { active = self.isActive; if (active) schedule(); },
           onRefresh: render,
           onLeave: () => { target = video.duration; active = true; schedule(); },
@@ -120,6 +139,9 @@ export function useScrollVideo(
     document.fonts.ready.then(() => { if (!disposed) ScrollTrigger.refresh(); });
     return () => {
       disposed = true;
+      video.pause();
+      document.removeEventListener("touchstart", prime);
+      document.removeEventListener("pointerdown", prime);
       cancelAnimationFrame(frame);
       media.revert();
       video.removeEventListener("loadeddata", ready);
