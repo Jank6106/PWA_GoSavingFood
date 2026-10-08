@@ -9,7 +9,15 @@ const links = [
   { label: "Tính tác động", href: "#calculator" },
   { label: "Cộng đồng", href: "#community" },
 ];
-export function Navbar({ customerUrl, merchantUrl }: { customerUrl: string; merchantUrl: string }) {
+export function Navbar({
+  customerUrl,
+  merchantUrl,
+  onInstall,
+}: {
+  customerUrl: string;
+  merchantUrl: string;
+  onInstall?: (target: "customer" | "merchant") => void;
+}) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
@@ -51,13 +59,61 @@ export function Navbar({ customerUrl, merchantUrl }: { customerUrl: string; merc
           <span>GoSaving<span>Food</span></span>
         </a>
         <nav aria-label="Điều hướng chính" className="desktop-nav">{links.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}</nav>
-        <div className="nav-actions"><a href={merchantUrl} className="nav-merchant">Dành cho cửa hàng</a><a href={customerUrl} className="nav-cta">Mở ứng dụng <ArrowUpRight size={16} /></a></div>
+        <div className="nav-actions">
+          <a
+            href={merchantUrl}
+            className="nav-merchant"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onInstall) onInstall("merchant");
+              else window.location.assign(merchantUrl);
+            }}
+          >
+            Dành cho cửa hàng
+          </a>
+          <a
+            href={customerUrl}
+            className="nav-cta"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onInstall) onInstall("customer");
+              else window.location.assign(customerUrl);
+            }}
+          >
+            Mở ứng dụng <ArrowUpRight size={16} />
+          </a>
+        </div>
         <button ref={toggle} className="menu-toggle" aria-label={open ? 'Đóng menu' : 'Mở menu'} aria-expanded={open} aria-controls="mobile-navigation" onClick={event => { keyboardOpen.current = event.detail === 0; setOpen(!open); }}>{open ? <X /> : <Menu />}</button>
       </div>
     </header>
     {open && <div ref={drawer} id="mobile-navigation" tabIndex={-1} className="mobile-navigation" role="dialog" aria-modal="true" aria-label="Điều hướng">
       <nav>{links.map((link, i) => <a key={link.href} href={link.href} onClick={() => setOpen(false)} style={{animationDelay:`${i * 55}ms`}}>{link.label}<ArrowUpRight /></a>)}</nav>
-      <div className="mobile-actions"><a className="nav-cta" href={customerUrl}>Mở ứng dụng <ArrowUpRight size={18} /></a><a className="text-link" href={merchantUrl}>Dành cho cửa hàng <ArrowUpRight size={18} /></a></div>
+      <div className="mobile-actions">
+        <a
+          className="nav-cta"
+          href={customerUrl}
+          onClick={(e) => {
+            e.preventDefault();
+            setOpen(false);
+            if (onInstall) onInstall("customer");
+            else window.location.assign(customerUrl);
+          }}
+        >
+          Mở ứng dụng <ArrowUpRight size={18} />
+        </a>
+        <a
+          className="text-link"
+          href={merchantUrl}
+          onClick={(e) => {
+            e.preventDefault();
+            setOpen(false);
+            if (onInstall) onInstall("merchant");
+            else window.location.assign(merchantUrl);
+          }}
+        >
+          Dành cho cửa hàng <ArrowUpRight size={18} />
+        </a>
+      </div>
     </div>}
   </>;
 }

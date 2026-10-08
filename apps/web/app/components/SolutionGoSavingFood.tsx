@@ -14,7 +14,15 @@ const journeys = {
     { title: "Trao món ngon tận tay.", copy: "Quét mã QR khi khách đến lấy. Theo dõi các đơn hàng và lượng thực phẩm được giải cứu trên ứng dụng cửa hàng.", detail: "Một cách khép lại ngày tốt hơn", icon: Leaf },
   ],
 };
-export function SolutionGoSavingFood({ customerUrl, merchantUrl }: { customerUrl: string; merchantUrl: string }) {
+export function SolutionGoSavingFood({
+  customerUrl,
+  merchantUrl,
+  onInstall,
+}: {
+  customerUrl: string;
+  merchantUrl: string;
+  onInstall?: (target: "customer" | "merchant") => void;
+}) {
   const [audience, setAudience] = useState<"consumer" | "merchant">("consumer");
   return <section id="solution" className="solution-section editorial-shell">
     <div className="section-intro" data-reveal><h2>Một bữa ngon.<br /><span>Một lựa chọn tốt.</span></h2><p>GoSavingFood kết nối những món ngon chưa bán hết với người đang cần chúng. Bắt đầu từ ba bước nhỏ.</p></div>
@@ -27,6 +35,18 @@ export function SolutionGoSavingFood({ customerUrl, merchantUrl }: { customerUrl
         <span className="journey-number">0{i + 1}</span><div><h3>{step.title}</h3><p>{step.copy}</p></div><div className="journey-detail"><step.icon size={36} strokeWidth={1.3} /><span>{step.detail}</span></div>
       </article>)}
     </div>
-    <a className="editorial-button" href={audience === 'consumer' ? customerUrl : merchantUrl}>{audience === 'consumer' ? 'Tìm món ngon gần tôi' : 'Đăng ký cửa hàng'}<ArrowUpRight size={20} /></a>
+    <a
+      className="editorial-button"
+      href={audience === 'consumer' ? customerUrl : merchantUrl}
+      onClick={(e) => {
+        e.preventDefault();
+        const target = audience === "consumer" ? "customer" : "merchant";
+        if (onInstall) onInstall(target);
+        else window.location.assign(audience === "consumer" ? customerUrl : merchantUrl);
+      }}
+    >
+      {audience === 'consumer' ? 'Tìm món ngon gần tôi' : 'Đăng ký cửa hàng'}
+      <ArrowUpRight size={20} />
+    </a>
   </section>;
 }

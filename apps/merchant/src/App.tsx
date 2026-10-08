@@ -120,6 +120,31 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Hỗ trợ tự động kích hoạt cài đặt PWA khi mở từ Landing Page với ?install=true
+  useEffect(() => {
+    const handleInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      const promptEvent = event as any;
+      if (new URLSearchParams(window.location.search).has('install')) {
+        promptEvent.prompt?.().catch(() => {});
+      }
+    };
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+
+    if (new URLSearchParams(window.location.search).has('install')) {
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS) {
+        window.setTimeout(() => {
+          showToast('Nhấn nút Chia sẻ ⎋ và chọn "Thêm vào MH chính" ➕ để cài đặt GoSavingFood Cửa Hàng');
+        }, 1000);
+      }
+    }
+
+    return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+  }, [showToast]);
+
   useEffect(() => {
     if (auth.user && route === 'login') {
       setRoute(auth.user.isFirstLogin ? 'setup' : 'bags');

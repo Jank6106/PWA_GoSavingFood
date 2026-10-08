@@ -269,9 +269,25 @@ function CustomerApp() {
 
     const handleInstallPrompt = (event: Event) => {
       event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
+      const promptEvent = event as BeforeInstallPromptEvent;
+      setInstallPrompt(promptEvent);
+      if (new URLSearchParams(window.location.search).has('install')) {
+        promptEvent.prompt().catch(() => {});
+      }
     };
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+
+    if (new URLSearchParams(window.location.search).has('install')) {
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS) {
+        window.setTimeout(() => {
+          setToastMessage('Nhấn nút Chia sẻ ⎋ và chọn "Thêm vào MH chính" ➕ để cài đặt GoSavingFood');
+        }, 1000);
+      }
+    }
+
     return () => {
       active = false;
       window.clearTimeout(timer);

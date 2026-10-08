@@ -44,25 +44,25 @@ const nextConfig: NextConfig = {
       {
         source: "/explore",
         destination: isProd
-          ? `${customerTarget}/explore`
-          : "http://127.0.0.1:5173/explore",
+          ? `${customerTarget}/explore/`
+          : "http://localhost:5173/explore/",
       },
       {
         source: "/explore/:path*",
         destination: isProd
           ? `${customerTarget}/explore/:path*`
-          : "http://127.0.0.1:5173/explore/:path*",
+          : "http://localhost:5173/explore/:path*",
       },
       // Fallback dev proxy cho merchant
       {
         source: "/merchant",
-        destination: isProd ? merchantTarget : "http://127.0.0.1:5174",
+        destination: isProd ? merchantTarget : "http://localhost:5174",
       },
       {
         source: "/merchant/:path*",
         destination: isProd
           ? `${merchantTarget}/:path*`
-          : "http://127.0.0.1:5174/:path*",
+          : "http://localhost:5174/:path*",
       },
     ];
   },
