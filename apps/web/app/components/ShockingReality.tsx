@@ -49,7 +49,7 @@ export const ShockingReality: React.FC = () => {
           >
             <h2 className="text-4xl sm:text-6xl lg:text-7xl font-semibold uppercase tracking-tight text-white leading-tight mb-6 drop-shadow-[0_4px_20px_rgba(0,0,0,0.85)]">
               Vứt Bỏ Đồ Ăn <br />
-              Chính Là <span className="text-rose-400 underline decoration-rose-500/60 decoration-wavy decoration-2">Vứt Tiền Bạc</span> <br />
+              Chính Là <span className="text-rose-400">Vứt Tiền Bạc</span> <br />
               & Hủy Hoại Hành Tinh.
             </h2>
             <p className="text-base sm:text-xl text-slate-200 font-medium leading-relaxed max-w-2xl drop-shadow-md">
