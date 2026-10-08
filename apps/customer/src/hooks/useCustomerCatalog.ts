@@ -37,9 +37,9 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
   const lastFetchTimeRef = useRef<number>(0);
 
   const fetchCatalog = useCallback(async (isInitial = false) => {
-    // Tránh duplicate API calls liên tiếp trong 1.5 giây
+    // Tránh duplicate API calls quá dồn dập
     const now = Date.now();
-    if (!isInitial && now - lastFetchTimeRef.current < 1500) {
+    if (!isInitial && now - lastFetchTimeRef.current < 400) {
       return;
     }
     lastFetchTimeRef.current = now;
@@ -63,14 +63,16 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
   useEffect(() => {
     void fetchCatalog(true);
 
-    // 1. Đồng bộ khi user quay lại tab Customer app (chỉ re-fetch khi đã rời tab hơn 3 phút)
+    // 1. Đồng bộ khi user quay lại tab Customer app (sau khi chuyển tab > 3s)
     const handleFocus = () => {
-      if (Date.now() - lastFetchTimeRef.current > 180000) {
+      if (Date.now() - lastFetchTimeRef.current > 3000) {
+        lastFetchTimeRef.current = 0;
         void fetchCatalog(false);
       }
     };
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && Date.now() - lastFetchTimeRef.current > 180000) {
+      if (document.visibilityState === 'visible' && Date.now() - lastFetchTimeRef.current > 3000) {
+        lastFetchTimeRef.current = 0;
         void fetchCatalog(false);
       }
     };
@@ -84,7 +86,36 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'surprise_bags' },
-        () => {
+        (payload: any) => {
+          // Xử lý tức thì 0ms trên giao diện khi túi bị xóa hoặc gỡ kệ
+          if (payload.eventType === 'DELETE' && payload.old?.id) {
+            setCatalog((current) => {
+              const updated = {
+                ...current,
+                bags: current.bags.filter((b) => b.id !== payload.old.id),
+              };
+              try {
+                localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(updated));
+              } catch {}
+              return updated;
+            });
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            if (payload.new.is_available === false || payload.new.deleted_at != null) {
+              setCatalog((current) => {
+                const updated = {
+                  ...current,
+                  bags: current.bags.filter((b) => b.id !== payload.new.id),
+                };
+                try {
+                  localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(updated));
+                } catch {}
+                return updated;
+              });
+            }
+          }
+
+          // Đồng bộ nền toàn bộ danh mục ngay lập tức
+          lastFetchTimeRef.current = 0;
           void fetchCatalog(false);
         }
       )
@@ -92,6 +123,7 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'stores' },
         () => {
+          lastFetchTimeRef.current = 0;
           void fetchCatalog(false);
         }
       )

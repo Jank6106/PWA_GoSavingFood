@@ -64,8 +64,17 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
       void loadOrders();
     });
 
+    const handleFocus = () => {
+      void loadOrders();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
     return () => {
       void channel.unsubscribe();
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
     };
   }, [loadOrders, showToast, storeId]);
 

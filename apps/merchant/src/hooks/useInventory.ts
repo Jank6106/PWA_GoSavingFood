@@ -3,8 +3,10 @@ import {
   fetchInventoryItems,
   getCachedInventoryItems,
   saveInventoryItems,
+  subscribeInventory,
 } from '../services/inventory.service';
 import { updateBagStatus } from '../services/bag.service';
+import { supabase } from '../services/supabase';
 import type { InventoryItem, InventoryScheduleFilter } from '../types';
 import { useToast } from './useToast';
 
@@ -26,9 +28,9 @@ export function useInventory(storeId: string) {
 
   useEffect(() => {
     const cached = getCachedInventoryItems(storeId);
+    setAllItems(cached);
+    setSavedItems(cached);
     if (cached.length > 0) {
-      setAllItems(cached);
-      setSavedItems(cached);
       setLoading(false);
       setHasLoadedOnce(true);
     }
@@ -64,7 +66,50 @@ export function useInventory(storeId: string) {
       isFetchedRef.current = true;
       void loadData();
     }
-  }, [loadData]);
+
+    // 1. Lắng nghe thông báo khi túi hàng đổi trạng thái ở tab Túi hàng
+    const unsubscribe = subscribeInventory(() => {
+      if (!hasUnsavedChangesRef.current) {
+        const fresh = getCachedInventoryItems(storeId);
+        setAllItems(fresh);
+        setSavedItems(fresh);
+        void loadData();
+      }
+    });
+
+    // 2. Realtime Supabase khi có thay đổi trên bảng surprise_bags
+    const channel = supabase
+      .channel(`merchant-inventory-${storeId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'surprise_bags', filter: `store_id=eq.${storeId}` },
+        () => {
+          if (!hasUnsavedChangesRef.current) {
+            void loadData();
+          }
+        }
+      )
+      .subscribe();
+
+    // 3. Tự động làm mới khi người dùng chuyển qua lại tab
+    const handleFocus = () => {
+      if (!hasUnsavedChangesRef.current) {
+        const fresh = getCachedInventoryItems(storeId);
+        setAllItems(fresh);
+        setSavedItems(fresh);
+        void loadData();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    return () => {
+      unsubscribe();
+      void supabase.removeChannel(channel);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
+  }, [loadData, storeId]);
 
   const items = useMemo(() => allItems.filter((item) => (scheduleTab === 'today' ? item.schedule === 'today' : item.appliesTomorrow) && `${item.name} ${item.sku}`.toLocaleLowerCase('vi-VN').includes(searchQuery.toLocaleLowerCase('vi-VN'))), [allItems, scheduleTab, searchQuery]);
   const changeQuantity = (itemId: string, delta: number) => {

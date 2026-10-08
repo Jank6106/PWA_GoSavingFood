@@ -155,8 +155,8 @@ export const customerService = {
       const [rawStores, bagsSource] = await Promise.all([
         (async () => {
           try {
-            const { data: directStores } = await supabase.from('stores').select('*').limit(50);
-            if (Array.isArray(directStores) && directStores.length > 0) return directStores;
+            const { data: directStores, error: storesErr } = await supabase.from('stores').select('*').limit(50);
+            if (!storesErr && Array.isArray(directStores)) return directStores;
 
             const { data: storesData } = await supabase.rpc('list_stores_nearby', {
               p_lat: lat,
@@ -174,14 +174,14 @@ export const customerService = {
 
         (async () => {
           try {
-            const { data: directBags } = await supabase
+            const { data: directBags, error: bagsErr } = await supabase
               .from('surprise_bags')
               .select('*, stores(id, name, logo_url, banner_url, address, latitude, longitude, rating, total_ratings)')
               .eq('is_available', true)
               .is('deleted_at', null)
               .order('created_at', { ascending: false })
               .limit(50);
-            if (Array.isArray(directBags) && directBags.length > 0) return directBags;
+            if (!bagsErr && Array.isArray(directBags)) return directBags;
 
             const { data: nearbyBags } = await supabase.rpc('list_bags_nearby', {
               p_lat: lat,

@@ -4,10 +4,12 @@ import {
   deleteBagItem,
   fetchBagItems,
   getCachedBagItems,
+  setCachedBagItems,
   updateBagItem,
   updateBagQuantity,
   updateBagStatus,
 } from '../services/bag.service';
+import { supabase } from '../services/supabase';
 import type { BagInput, BagItem } from '../types';
 import { useToast } from './useToast';
 
@@ -53,10 +55,36 @@ export function useBags(storeId: string) {
   const isFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (isFetchedRef.current) return;
-    isFetchedRef.current = true;
-    void loadBags();
-  }, [loadBags]);
+    if (!isFetchedRef.current) {
+      isFetchedRef.current = true;
+      void loadBags();
+    }
+
+    // Realtime cập nhật túi hàng khi có thay đổi từ DB
+    const channel = supabase
+      .channel(`merchant-bags-${storeId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'surprise_bags', filter: `store_id=eq.${storeId}` },
+        () => {
+          void loadBags();
+        }
+      )
+      .subscribe();
+
+    const handleFocus = () => {
+      void loadBags();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    return () => {
+      void supabase.removeChannel(channel);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
+  }, [loadBags, storeId]);
 
   const onShelfCount = useMemo(() => allBags.filter((b) => b.status !== 'hidden').length, [allBags]);
   const offShelfCount = useMemo(() => allBags.filter((b) => b.status === 'hidden').length, [allBags]);
@@ -76,13 +104,21 @@ export function useBags(storeId: string) {
   );
 
   const replaceBag = (updated: BagItem) =>
-    setAllBags((items) => items.map((bag) => (bag.id === updated.id ? updated : bag)));
+    setAllBags((items) => {
+      const next = items.map((bag) => (bag.id === updated.id ? updated : bag));
+      setCachedBagItems(storeId, next);
+      return next;
+    });
 
   const toggleStatus = async (bagId: string) => {
     const current = allBags.find((bag) => bag.id === bagId);
     if (!current) return;
     const nextStatus = current.status === 'hidden' ? (current.availableQuantity ? 'active' : 'sold_out') : 'hidden';
-    setAllBags((items) => items.map((bag) => (bag.id === bagId ? { ...bag, status: nextStatus } : bag)));
+    setAllBags((items) => {
+      const next = items.map((bag) => (bag.id === bagId ? { ...bag, status: nextStatus } : bag));
+      setCachedBagItems(storeId, next);
+      return next;
+    });
     try {
       const updated = await updateBagStatus(bagId, nextStatus);
       replaceBag(updated);
@@ -97,7 +133,11 @@ export function useBags(storeId: string) {
     const current = allBags.find((bag) => bag.id === bagId);
     if (!current) return;
     const nextQuantity = Math.max(0, current.availableQuantity + delta);
-    setAllBags((items) => items.map((bag) => (bag.id === bagId ? { ...bag, availableQuantity: nextQuantity } : bag)));
+    setAllBags((items) => {
+      const next = items.map((bag) => (bag.id === bagId ? { ...bag, availableQuantity: nextQuantity } : bag));
+      setCachedBagItems(storeId, next);
+      return next;
+    });
     try {
       replaceBag(await updateBagQuantity(bagId, nextQuantity));
     } catch {
@@ -109,7 +149,11 @@ export function useBags(storeId: string) {
     setSaving(true);
     try {
       const bag = await createBagItem(storeId, input);
-      setAllBags((items) => [bag, ...items]);
+      setAllBags((items) => {
+        const next = [bag, ...items];
+        setCachedBagItems(storeId, next);
+        return next;
+      });
       setIsCreateModalOpen(false);
       showToast('Đã tạo túi hàng và đưa lên kệ');
     } catch (err: any) {
@@ -137,7 +181,11 @@ export function useBags(storeId: string) {
     setSaving(true);
     try {
       await deleteBagItem(bagId);
-      setAllBags((items) => items.filter((bag) => bag.id !== bagId));
+      setAllBags((items) => {
+        const next = items.filter((bag) => bag.id !== bagId);
+        setCachedBagItems(storeId, next);
+        return next;
+      });
       setIsDetailModalOpen(false);
       setSelectedBag(null);
       showToast('Đã xóa túi hàng');

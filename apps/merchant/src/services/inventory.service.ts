@@ -28,13 +28,6 @@ export function saveTomorrowSettings(storeId: string, settings: Record<string, b
 
 export function getCachedInventoryItems(storeId: string): InventoryItem[] {
   if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(`${INVENTORY_CACHE_PREFIX}${storeId}`);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fallback
-  }
-  // Fallback nhanh từ cache bags sẵn có
   const cachedBags = getCachedBagItems(storeId);
   const tomorrowMap = getTomorrowSettings(storeId);
   return cachedBags.filter((bag) => bag.status !== 'hidden').map((b) => toInventoryItem(b, tomorrowMap));
