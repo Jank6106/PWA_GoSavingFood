@@ -29,13 +29,15 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
   const startOffset = useRef(0);
   const [hasDragged, setHasDragged] = useState(false);
 
-  // Repeat brands to have 2 full seamless sets
+  // Repeat brands so that one half-cycle is wider than any widescreen monitor (> 2000px)
   const displayBrands = useMemo(() => {
     if (!brands || brands.length === 0) return [];
-    if (brands.length >= 6) {
-      return [...brands, ...brands];
+    const repeatCount = Math.max(2, Math.ceil(24 / brands.length));
+    const baseSet: Brand[] = [];
+    for (let i = 0; i < repeatCount; i++) {
+      baseSet.push(...brands);
     }
-    return [...brands, ...brands, ...brands, ...brands];
+    return [...baseSet, ...baseSet];
   }, [brands]);
 
   useEffect(() => {
