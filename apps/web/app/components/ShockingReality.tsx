@@ -20,7 +20,8 @@ export const ShockingReality: React.FC = () => {
       <video
         aria-hidden="true"
         ref={videoRef}
-        src="/media/problem.mp4"
+        src="/media/problem-scrub.mp4"
+        poster="/media/problem-poster.jpg"
         muted
         playsInline
         preload="auto"
@@ -104,3 +105,6 @@ export const ShockingReality: React.FC = () => {
     </section>
   );
 };
+
+
+

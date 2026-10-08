@@ -2,31 +2,31 @@
 name: GoSavingFood Landing
 description: Photographic editorial storytelling for rescuing surplus food.
 colors:
-  paper: "#f4f1e8"
-  ink: "#193b2c"
+  paper: "#fff6e8"
+  ink: "#30251f"
   muted-ink: "#526458"
-  accent: "#00784c"
-  lime: "#d8ed9b"
+  accent: "#c94324"
+  lime: "#ffd278"
   line: "#c8cfc1"
-  forest: "#163e2e"
-  light-ink: "#f4f1e8"
+  forest: "#234638"
+  light-ink: "#fff6e8"
   light-muted: "#c8d8cd"
   flash: "#fffef5"
 typography:
   display:
-    fontFamily: "Manrope, sans-serif"
+    fontFamily: "Be Vietnam Pro Bold, sans-serif"
     fontSize: "clamp(2.6rem, 5.5vw, 5.4rem)"
     fontWeight: 500
     lineHeight: 1.1
     letterSpacing: "-.04em"
   headline:
-    fontFamily: "Manrope, sans-serif"
+    fontFamily: "Be Vietnam Pro Bold, sans-serif"
     fontSize: "clamp(2.6rem, 5.6vw, 5.4rem)"
     fontWeight: 500
     lineHeight: 1.09
     letterSpacing: "-.04em"
   title:
-    fontFamily: "Manrope, sans-serif"
+    fontFamily: "Be Vietnam Pro Bold, sans-serif"
     fontSize: "clamp(1.55rem, 2.7vw, 2.4rem)"
     fontWeight: 500
     letterSpacing: "-.035em"
@@ -88,7 +88,7 @@ The shared navigation retains its existing bright green logo/action treatments. 
 
 ## Typography
 
-Use Manrope for headings, large numbers, quotations and the footer wordmark. Use Be Vietnam Pro for body copy and controls. Both are loaded with `next/font/local`; the font directory includes `Manrope-OFL.txt` and `BeVietnamPro-OFL.txt`. Be Vietnam Pro ships regular, medium, semibold and bold files; Manrope is variable at weights 200–800. Preserve the local files and licenses when distributing the site.
+Use Be Vietnam Pro Bold for headings, large numbers, quotations and the footer wordmark. Use Be Vietnam Pro for body copy and controls. Both are loaded with `next/font/local`; the font directory includes `Be Vietnam Pro Bold-OFL.txt` and `BeVietnamPro-OFL.txt`. Be Vietnam Pro ships regular, medium, semibold and bold files; Be Vietnam Pro Bold is variable at weights 200–800. Preserve the local files and licenses when distributing the site.
 
 The main display and headline roles use weight 500, tight tracking and balanced wrapping. Hero text is limited to 19ch, supporting hero copy to 51ch, workflow copy to 55ch. The bridge statement reaches `clamp(2.6rem,6.3vw,6rem)` with a 1.18 line height. Featured quotations use `clamp(1.6rem,2.8vw,2.5rem)` at 1.45 line height. The calculator uses tabular numerals for changing output. At 600px and below, hero display becomes `clamp(2.25rem,9.8vw,3.6rem)` and section headings become 2.6rem.
 
@@ -133,3 +133,8 @@ Primary actions are pills. Content regions are open, with thin horizontal rules 
 - **Don't** hide essential content behind animation or require movement to operate controls.
 
 
+
+## October 2026 food direction
+Cream #fff6e8, tomato #c94324, butter #ffd278 and basil #234638 form the landing palette. Be Vietnam Pro Bold is the headline face; Barlow Condensed Bold is self-hosted exclusively for the food divider. Hero primary action reads “Trải nghiệm ứng dụng ngay”; header action reads “Mở ứng dụng”. Inline benefits use weight and color, with the hero discount at 1.18 times body size. FoodMarquee sits after feedback and before the dark basil footer, lists 13 categories and loops in 65 seconds. Reduced motion remains static; the loop pauses offscreen. The hero uses a warm directional overlay to preserve natural food colors.
+Palette restored to cream #f4f1e8, forest #163e2e, green #00784c and lime #d8ed9b. Typography and CTA updates retained. All background videos have posters and explicit cover bounds. Problem footage is served as H.264 faststart for cross-browser compatibility.
+Mobile QA update: path-only BrandMark replaces embedded bitmap masks. Feedback uses consistent body-size quotes, footer links form a 2-column grid below 700px. Video scrub uses 960px H.264 with keyframes every 3 frames, 0.7s scroll easing and gesture-based Safari decoder priming. Real iPhone verification remains user-side.

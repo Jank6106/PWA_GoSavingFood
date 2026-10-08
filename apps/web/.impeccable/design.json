@@ -11,7 +11,7 @@
       "forest": { "role": "secondary", "displayName": "Deep forest" }
     },
     "typographyMeta": {
-      "display": { "displayName": "Manrope display", "purpose": "Film headlines; locally hosted variable font." },
+      "display": { "displayName": "Be Vietnam Pro Bold display", "purpose": "Film headlines; locally hosted variable font." },
       "body": { "displayName": "Be Vietnam Pro body", "purpose": "Vietnamese body copy and controls; locally hosted." }
     },
     "shadows": [
@@ -24,7 +24,7 @@
       { "name": "film-scrub", "value": "0.45s", "purpose": "Shared native-scroll clock for video and text; pin distance is 3.2 times section height." },
       { "name": "film-dissolve", "value": "final 12% of scroll progress", "purpose": "Cream dissolve with a sine exposure bloom and video scale up to 1.055 where a dissolve element exists." },
       { "name": "word-scrub", "value": "0.5s", "purpose": "Bridge words fade from 0.2 to 1 with 0.13 stagger." },
-      { "name": "partner-loop", "value": "38s linear infinite", "purpose": "Half-width horizontal travel, paused offscreen or through the pause control." },
+      { "name": "partner-loop", "value": "65s linear infinite", "purpose": "Half-width horizontal travel, paused offscreen; food divider after feedback." },
       { "name": "reduced-motion", "value": "prefers-reduced-motion: reduce", "purpose": "Disable reveals, CSS animation and transitions; show all film panels without pinning. Film pinning also stops at viewport heights at most 540px." }
     ],
     "breakpoints": [
@@ -40,12 +40,12 @@
       "refersTo": "button-primary",
       "description": "Pill action with a modest lift and directional arrow.",
       "html": "<button class=\"ds-editorial-button\">Khám phá món ngon <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg></button>",
-      "css": ".ds-editorial-button{display:inline-flex;gap:28px;align-items:center;justify-content:center;padding:18px 26px;border:0;border-radius:999px;background:var(--ink,#193b2c);color:var(--paper,#f4f1e8);font-family:var(--font-body,sans-serif);font-size:.88rem;font-weight:500;white-space:nowrap;cursor:pointer;transition:background .25s,transform .25s}.ds-editorial-button:hover{background:var(--accent,#00784c);transform:translateY(-2px)}.ds-editorial-button:active{transform:translateY(0)}.ds-editorial-button:focus-visible{outline:2px solid var(--accent,#00784c);outline-offset:6px}.ds-editorial-button svg{transition:transform .35s cubic-bezier(.16,1,.3,1);flex-shrink:0}.ds-editorial-button:hover svg{transform:translate(3px,-3px)}@media(prefers-reduced-motion:reduce){.ds-editorial-button,.ds-editorial-button svg{transition:none}}"
+      "css": ".ds-editorial-button{display:inline-flex;gap:28px;align-items:center;justify-content:center;padding:18px 26px;border:0;border-radius:999px;background:var(--ink,#30251f);color:var(--paper,#fff6e8);font-family:var(--font-body,sans-serif);font-size:.88rem;font-weight:500;white-space:nowrap;cursor:pointer;transition:background .25s,transform .25s}.ds-editorial-button:hover{background:var(--accent,#c94324);transform:translateY(-2px)}.ds-editorial-button:active{transform:translateY(0)}.ds-editorial-button:focus-visible{outline:2px solid var(--accent,#c94324);outline-offset:6px}.ds-editorial-button svg{transition:transform .35s cubic-bezier(.16,1,.3,1);flex-shrink:0}.ds-editorial-button:hover svg{transform:translate(3px,-3px)}@media(prefers-reduced-motion:reduce){.ds-editorial-button,.ds-editorial-button svg{transition:none}}"
     }
   ],
   "narrative": {
     "northStar": "Photographic editorial surplus food landing",
-    "overview": "Food footage, generous cream space, forest typography and lime emphasis. Large balanced headlines set the pace; workflow rows, a split calculator and asymmetric quotations provide distinct reading rhythms. Motion is bold and smooth while native scrolling remains in control. This describes the implemented landing surface, not a new product strategy.",
+    "overview": "Food footage, generous cream space, bold Vietnamese typography, tomato actions and butter emphasis. Large balanced headlines set the pace; workflow rows, a split calculator and asymmetric quotations provide distinct reading rhythms. Motion is bold and smooth while native scrolling remains in control. This describes the implemented landing surface, not a new product strategy.",
     "keyCharacteristics": ["Photographic storytelling", "Open editorial sections", "Locally hosted Vietnamese typography", "Scroll-linked scenes with reduced-motion alternatives"],
     "rules": [
       { "name": "Flat content surfaces", "body": "Use footage, tonal contrast and rules for hierarchy. Reserve the documented floating shadow for the install invitation.", "section": "elevation" }
@@ -54,4 +54,5 @@
     "donts": ["Don't flatten the workflow, calculator and quotations into identical cards.", "Don't introduce ornamental glass panels or gradients throughout the content.", "Don't hide essential content behind animation."]
   }
 }
+
 

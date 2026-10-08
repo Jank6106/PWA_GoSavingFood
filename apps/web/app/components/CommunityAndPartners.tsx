@@ -4,7 +4,6 @@ import React from "react";
 
 
 export const CommunityAndPartners: React.FC = () => {
-  const foods = ["Salad", "Bánh mì", "Cơm văn phòng", "Bánh ngọt", "Rau củ", "Trái cây", "Đồ uống"];
 
   const testimonials = [
     {
@@ -37,14 +36,11 @@ export const CommunityAndPartners: React.FC = () => {
     <div className="editorial-shell">
       <div className="section-intro" data-reveal><h2>Ngon hơn khi<br /><span>cùng nhau.</span></h2><p>Những góc nhìn từ người mua và cửa hàng trên hành trình giảm lãng phí thực phẩm.</p></div>
     </div>
-      <div className="partner-window" aria-label="Các loại đồ ăn">
-        <div className="partner-band">
-          {[0,1].map(copy => <div className="partner-set" key={copy} aria-hidden={copy === 1}>{foods.map(food => <span key={food}>{food}</span>)}</div>)}
-        </div>
-      </div>
     <div className="editorial-shell">
-      <div className="testimonials">{testimonials.map((item,i) => <figure key={item.name} data-reveal className={i === 0 ? 'quote-featured' : ''}><blockquote>{item.content}</blockquote><figcaption><strong>{item.name}</strong><span>{item.role}</span></figcaption></figure>)}</div>
+      <div className="testimonials">{testimonials.map((item,i) => <figure key={item.name} data-reveal className={i === 0 ? 'quote-featured' : ''}><blockquote>{item.content.split(/(60%|30 giây|50–80%)/).map((part,index) => /^(60%|30 giây|50–80%)$/.test(part) ? <strong className="inline-stat" key={index}>{part}</strong> : part)}</blockquote><figcaption><strong>{item.name}</strong><span>{item.role}</span></figcaption></figure>)}</div>
     </div>
   </section>;
 };
+
+
 

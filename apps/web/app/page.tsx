@@ -9,6 +9,7 @@ import { ShockingReality } from "./components/ShockingReality";
 import { SolutionGoSavingFood } from "./components/SolutionGoSavingFood";
 import { ImpactCalculator } from "./components/ImpactCalculator";
 import { CommunityAndPartners } from "./components/CommunityAndPartners";
+import { FoodMarquee } from "./components/FoodMarquee";
 import { Footer } from "./components/Footer";
 
 
@@ -46,6 +47,7 @@ export default function Home() {
         <CommunityAndPartners />
       </main>
 
+      <FoodMarquee />
       {/* 6. Footer */}
       <Footer customerUrl={customerUrl} merchantUrl={merchantUrl} />
 
@@ -54,4 +56,5 @@ export default function Home() {
     </div>
   );
 }
+
 

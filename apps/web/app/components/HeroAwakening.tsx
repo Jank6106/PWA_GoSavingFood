@@ -27,7 +27,8 @@ export const HeroAwakening: React.FC<HeroAwakeningProps> = ({
       <video
         aria-hidden="true"
         ref={videoRef}
-        src="/media/hero.mp4"
+        src="/media/hero-scrub.mp4"
+        poster="/media/hero-poster.jpg"
         muted
         playsInline
         preload="auto"
@@ -64,7 +65,7 @@ export const HeroAwakening: React.FC<HeroAwakeningProps> = ({
             </h1>
 
             <p className="text-sm sm:text-base lg:text-lg text-slate-200 font-medium leading-relaxed max-w-2xl mb-6 drop-shadow-md">
-              Những tiệm bánh, nhà hàng và siêu thị yêu thích quanh bạn vẫn còn rất nhiều món ngon chưa bán hết trước giờ đóng cửa. Hãy giải cứu thực phẩm chất lượng với giá <strong className="text-white font-bold">giảm 50–80%</strong>. Ăn ngon. Ít lãng phí.
+              Những tiệm bánh, nhà hàng và siêu thị yêu thích quanh bạn vẫn còn rất nhiều món ngon chưa bán hết trước giờ đóng cửa. Hãy giải cứu thực phẩm chất lượng với giá <strong className="inline-stat">giảm 50–80%</strong>. Ăn ngon. Ít lãng phí.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pointer-events-auto">
@@ -72,7 +73,7 @@ export const HeroAwakening: React.FC<HeroAwakeningProps> = ({
                 href={customerUrl}
                 className="inline-flex items-center gap-2 rounded-full bg-[#00e676] px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-[#002b1b] shadow-xl shadow-[#00e676]/35 hover:bg-[#69f0ae] hover:scale-105 active:scale-95 transition-all"
               >
-                <span>Khám phá món ngon</span>
+                <span>Trải nghiệm ứng dụng ngay</span>
                 <ArrowRight className="w-4 h-4 stroke-[3]" />
               </a>
 
@@ -118,3 +119,6 @@ export const HeroAwakening: React.FC<HeroAwakeningProps> = ({
     </section>
   );
 };
+
+
+
