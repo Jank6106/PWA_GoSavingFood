@@ -83,8 +83,11 @@ export const optimizeImageUrl = (url?: string | null, width = 480, quality = 75)
 };
 
 const getBagImage = (name: string, url?: string | null) => {
-  if (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:'))) {
+  if (url && (url.startsWith('http') || url.startsWith('blob:'))) {
     return optimizeImageUrl(url, 480, 75);
+  }
+  if (url && url.startsWith('data:') && url.length < 50000) {
+    return url;
   }
   const n = (name || '').toLowerCase();
   if (n.includes('salad'))
@@ -98,15 +101,25 @@ const getBagImage = (name: string, url?: string | null) => {
   return optimizeImageUrl('https://images.unsplash.com/photo-1540420773420-3366772f4999', 480, 75);
 };
 
-const getStoreLogo = (url?: string | null) =>
-  (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')))
-    ? optimizeImageUrl(url, 120, 80)
-    : optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 120, 80);
+const getStoreLogo = (url?: string | null) => {
+  if (url && (url.startsWith('http') || url.startsWith('blob:'))) {
+    return optimizeImageUrl(url, 120, 80);
+  }
+  if (url && url.startsWith('data:') && url.length < 30000) {
+    return url;
+  }
+  return optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 120, 80);
+};
 
-const getStoreBanner = (url?: string | null) =>
-  (url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')))
-    ? optimizeImageUrl(url, 640, 75)
-    : optimizeImageUrl('https://images.unsplash.com/photo-1540420773420-3366772f4999', 640, 75);
+const getStoreBanner = (url?: string | null) => {
+  if (url && (url.startsWith('http') || url.startsWith('blob:'))) {
+    return optimizeImageUrl(url, 640, 75);
+  }
+  if (url && url.startsWith('data:') && url.length < 50000) {
+    return url;
+  }
+  return optimizeImageUrl('https://images.unsplash.com/photo-1540420773420-3366772f4999', 640, 75);
+};
 
 const mapCreateOrderError = (error: { message?: string; details?: string } | null): string => {
   const raw = `${error?.message ?? ''} ${error?.details ?? ''}`;
@@ -132,6 +145,9 @@ const normalizeCategory = (cat?: string | null): Exclude<FoodCategory, 'all'> =>
   return 'other';
 };
 
+let inFlightHomePromise: Promise<any> | null = null;
+let lastHomeCoordsKey = '';
+
 export const customerService = {
   getStaticHome() {
     return {
@@ -146,57 +162,68 @@ export const customerService = {
   async getHome(coords?: { lat: number; lng: number }) {
     const lat = coords?.lat ?? 21.0535;
     const lng = coords?.lng ?? 105.7820;
+    const coordsKey = `${lat.toFixed(3)}_${lng.toFixed(3)}`;
 
-    let remoteStores: Merchant[] = [];
-    let remoteBags: SurpriseBag[] = [];
+    // Tránh duplicate API calls song song khi cùng vị trí
+    if (inFlightHomePromise && lastHomeCoordsKey === coordsKey) {
+      return inFlightHomePromise;
+    }
 
-    try {
-      // Chạy song song cả truy vấn stores và bags từ Supabase để tối ưu tốc độ mạng tối đa
-      const [rawStores, bagsSource] = await Promise.all([
-        (async () => {
-          try {
-            const { data: directStores, error: storesErr } = await supabase.from('stores').select('*').limit(50);
-            if (!storesErr && Array.isArray(directStores)) return directStores;
+    lastHomeCoordsKey = coordsKey;
+    inFlightHomePromise = (async () => {
+      let remoteStores: Merchant[] = [];
+      let remoteBags: SurpriseBag[] = [];
 
-            const { data: storesData } = await supabase.rpc('list_stores_nearby', {
-              p_lat: lat,
-              p_lng: lng,
-              p_radius: 500000,
-              p_category: null,
-              p_page: 1,
-              p_limit: 50,
-            });
-            return Array.isArray(storesData) ? storesData : [];
-          } catch {
-            return [];
-          }
-        })(),
+      try {
+        // Chạy song song cả truy vấn stores và bags từ Supabase với các cột chọn lọc tối ưu băng thông
+        const [rawStores, bagsSource] = await Promise.all([
+          (async () => {
+            try {
+              const { data: directStores, error: storesErr } = await supabase
+                .from('stores')
+                .select('id, name, description, phone, address, logo_url, banner_url, rating, total_ratings, is_open, open_time, close_time, latitude, longitude')
+                .limit(50);
+              if (!storesErr && Array.isArray(directStores)) return directStores;
 
-        (async () => {
-          try {
-            const { data: directBags, error: bagsErr } = await supabase
-              .from('surprise_bags')
-              .select('*, stores(id, name, logo_url, banner_url, address, latitude, longitude, rating, total_ratings)')
-              .eq('is_available', true)
-              .is('deleted_at', null)
-              .order('created_at', { ascending: false })
-              .limit(50);
-            if (!bagsErr && Array.isArray(directBags)) return directBags;
+              const { data: storesData } = await supabase.rpc('list_stores_nearby', {
+                p_lat: lat,
+                p_lng: lng,
+                p_radius: 500000,
+                p_category: null,
+                p_page: 1,
+                p_limit: 50,
+              });
+              return Array.isArray(storesData) ? storesData : [];
+            } catch {
+              return [];
+            }
+          })(),
 
-            const { data: nearbyBags } = await supabase.rpc('list_bags_nearby', {
-              p_lat: lat,
-              p_lng: lng,
-              p_radius: 500000,
-              p_category: null,
-              p_page: 1,
-              p_limit: 50,
-            });
-            return Array.isArray(nearbyBags) ? nearbyBags : [];
-          } catch {
-            return [];
-          }
-        })(),
-      ]);
+          (async () => {
+            try {
+              const { data: directBags, error: bagsErr } = await supabase
+                .from('surprise_bags')
+                .select('id, store_id, name, description, original_price, discount_price, category, image_url, quantity, max_quantity, pickup_start, pickup_end, is_available, expires_at, created_at, stores(id, name, logo_url, banner_url, address, latitude, longitude, rating, total_ratings)')
+                .eq('is_available', true)
+                .is('deleted_at', null)
+                .order('created_at', { ascending: false })
+                .limit(50);
+              if (!bagsErr && Array.isArray(directBags)) return directBags;
+
+              const { data: nearbyBags } = await supabase.rpc('list_bags_nearby', {
+                p_lat: lat,
+                p_lng: lng,
+                p_radius: 500000,
+                p_category: null,
+                p_page: 1,
+                p_limit: 50,
+              });
+              return Array.isArray(nearbyBags) ? nearbyBags : [];
+            } catch {
+              return [];
+            }
+          })(),
+        ]);
 
       if (rawStores.length > 0) {
         remoteStores = rawStores.map((s: any) => {
@@ -279,13 +306,20 @@ export const customerService = {
         'Đồng hành cùng GoSavingFood giảm lãng phí thực phẩm mỗi ngày.',
     }));
 
-    return {
-      banners: HOME_BANNERS,
-      categories: HOME_CATEGORIES,
-      brands,
-      merchants: allStores,
-      bags: allBags,
-    };
+      return {
+        banners: HOME_BANNERS,
+        categories: HOME_CATEGORIES,
+        brands,
+        merchants: allStores,
+        bags: allBags,
+      };
+    })();
+
+    try {
+      return await inFlightHomePromise;
+    } finally {
+      inFlightHomePromise = null;
+    }
   },
 
   async getBag(id: string) {

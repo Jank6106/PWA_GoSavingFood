@@ -80,18 +80,13 @@ export function HomePage({
   );
   const hasMoreMerchants = sortedMerchants.length > visibleMerchantCount;
 
-  if (isLoading) {
-    return (
-      <div className="customer-screen customer-loading-grid">
-        <Skeleton height={190} />
-        <Skeleton height={48} />
-        <Skeleton height={80} />
-        <Skeleton height={240} />
-      </div>
-    );
+  if (error && bags.length === 0 && merchants.length === 0) {
+    return <ErrorState message={error} />;
   }
 
-  if (error) return <ErrorState message={error} />;
+  const isBagsLoading = isLoading && bags.length === 0;
+  const isMerchantsLoading = isLoading && merchants.length === 0;
+  const isBrandsLoading = isLoading && brands.length === 0;
 
   return (
     <div className="customer-screen customer-home-screen">
@@ -122,14 +117,40 @@ export function HomePage({
         <SectionHeading
           icon={<Gift size={24} strokeWidth={2.4} />}
           title="Túi bất ngờ"
-          actionLabel="Xem tất cả"
-          onAction={onViewAll}
+          actionLabel={visibleBags.length > 0 ? "Xem tất cả" : undefined}
+          onAction={visibleBags.length > 0 ? onViewAll : undefined}
         />
-        <div className="customer-horizontal-list">
-          {visibleBags.map((bag) => (
-            <BagCard key={bag.id} bag={bag} compact onOpen={onOpenBag} onAdd={onAdd} />
-          ))}
-        </div>
+        {isBagsLoading ? (
+          <div className="customer-horizontal-list">
+            {[1, 2, 3].map((idx) => (
+              <div
+                key={idx}
+                className="customer-bag-card is-compact"
+                style={{
+                  minWidth: 172,
+                  width: 172,
+                  height: 220,
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  background: 'var(--color-bg-subtle, #f3f4f6)',
+                  pointerEvents: 'none',
+                }}
+              >
+                <Skeleton height="100%" borderRadius="16px" />
+              </div>
+            ))}
+          </div>
+        ) : visibleBags.length > 0 ? (
+          <div className="customer-horizontal-list">
+            {visibleBags.map((bag) => (
+              <BagCard key={bag.id} bag={bag} compact onOpen={onOpenBag} onAdd={onAdd} />
+            ))}
+          </div>
+        ) : (
+          <div style={{ padding: '12px 16px', color: 'var(--color-text-tertiary, #888)', fontSize: 13 }}>
+            Hiện chưa có túi cứu trợ quanh khu vực này.
+          </div>
+        )}
       </section>
 
       <section className="customer-content-section">
@@ -137,7 +158,13 @@ export function HomePage({
           icon={<Award size={24} strokeWidth={2.4} />}
           title="Thương hiệu nổi bật"
         />
-        <BrandMarquee brands={brands} onOpenBrand={onOpenBrand} />
+        {isBrandsLoading ? (
+          <div style={{ height: 48, borderRadius: 12, overflow: 'hidden' }}>
+            <Skeleton height="100%" borderRadius="12px" />
+          </div>
+        ) : (
+          <BrandMarquee brands={brands} onOpenBrand={onOpenBrand} />
+        )}
       </section>
 
       <section className="customer-content-section">
@@ -145,23 +172,47 @@ export function HomePage({
           icon={<MapPin size={24} strokeWidth={2.4} />}
           title="Các cửa hàng gần bạn"
         />
-        <div className="customer-merchant-list">
-          {displayedMerchants.map((merchant) => {
-            const merchantBags = bags.filter((bag) => bag.merchantId === merchant.id);
-            const lowestPrice =
-              merchantBags.length > 0
-                ? Math.min(...merchantBags.map((b) => b.discountPrice))
-                : null;
-            return (
-              <MerchantCard
-                key={merchant.id}
-                merchant={merchant}
-                meta={lowestPrice ? `Từ ${lowestPrice.toLocaleString('vi-VN')}đ` : undefined}
-                onClick={onOpenMerchant}
-              />
-            );
-          })}
-        </div>
+        {isMerchantsLoading ? (
+          <div className="customer-merchant-list">
+            {[1, 2].map((idx) => (
+              <div
+                key={idx}
+                className="customer-merchant-card"
+                style={{
+                  height: 160,
+                  borderRadius: 18,
+                  overflow: 'hidden',
+                  border: 'none',
+                  pointerEvents: 'none',
+                }}
+              >
+                <Skeleton height="100%" borderRadius="18px" />
+              </div>
+            ))}
+          </div>
+        ) : displayedMerchants.length > 0 ? (
+          <div className="customer-merchant-list">
+            {displayedMerchants.map((merchant) => {
+              const merchantBags = bags.filter((bag) => bag.merchantId === merchant.id);
+              const lowestPrice =
+                merchantBags.length > 0
+                  ? Math.min(...merchantBags.map((b) => b.discountPrice))
+                  : null;
+              return (
+                <MerchantCard
+                  key={merchant.id}
+                  merchant={merchant}
+                  meta={lowestPrice ? `Từ ${lowestPrice.toLocaleString('vi-VN')}đ` : undefined}
+                  onClick={onOpenMerchant}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ padding: '12px 16px', color: 'var(--color-text-tertiary, #888)', fontSize: 13 }}>
+            Chưa tìm thấy cửa hàng đối tác quanh đây.
+          </div>
+        )}
 
         {hasMoreMerchants && (
           <div className="customer-merchant-load-more-wrap">

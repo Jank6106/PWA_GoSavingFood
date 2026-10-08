@@ -1,11 +1,15 @@
 import { Clock3, Copy, Eye, EyeOff, ImagePlus, Minus, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES, PRESET_BAG_IMAGES } from '../../mocks';
-import { optimizeImageUrl } from '../../services/utils';
+import { compressImageFile, optimizeImageUrl } from '../../services/utils';
 import type { BagInput, BagItem } from '../../types';
 import { Button, Field, Modal, SelectField, TextAreaField } from '../ui';
 
-const readImageFiles = async (files: FileList) => Promise.all(Array.from(files).filter((file) => file.type.startsWith('image/')).map((file) => new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('Không thể đọc ảnh.')); reader.readAsDataURL(file); })));
+const readImageFiles = async (files: FileList) => {
+  const list = Array.from(files).filter((file) => file.type.startsWith('image/'));
+  const results = await Promise.all(list.map((file) => compressImageFile(file, 800, 0.75)));
+  return results.filter((url): url is string => Boolean(url));
+};
 
 export function BagFilterBar({
   searchQuery,

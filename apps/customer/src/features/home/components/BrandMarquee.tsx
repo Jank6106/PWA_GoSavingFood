@@ -29,10 +29,10 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
   const startOffset = useRef(0);
   const [hasDragged, setHasDragged] = useState(false);
 
-  // Repeat brands so that one half-cycle is wider than any widescreen monitor (> 2000px)
+  // Repeat brands just enough to fill standard viewports cleanly
   const displayBrands = useMemo(() => {
     if (!brands || brands.length === 0) return [];
-    const repeatCount = Math.max(2, Math.ceil(24 / brands.length));
+    const repeatCount = Math.max(2, Math.ceil(10 / brands.length));
     const baseSet: Brand[] = [];
     for (let i = 0; i < repeatCount; i++) {
       baseSet.push(...brands);
@@ -220,6 +220,8 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
                   src={brand.logo}
                   alt={brand.name}
                   className="customer-brand-badge-img"
+                  width={44}
+                  height={44}
                   loading="lazy"
                   draggable={false}
                   onError={(e) => {

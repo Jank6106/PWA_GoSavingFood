@@ -38,6 +38,9 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     try {
       const orders = await fetchMerchantOrders(storeId);
       setAllOrders(orders);
+      try {
+        localStorage.setItem(`gsf_orders_cached_at_${storeId}`, String(Date.now()));
+      } catch {}
     } catch {
       setError('Không thể tải danh sách đơn hàng.');
     } finally {
@@ -51,7 +54,18 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
   useEffect(() => {
     if (!isFetchedRef.current) {
       isFetchedRef.current = true;
-      void loadOrders();
+      // Áp dụng TTL: nếu cache còn mới trong vòng 60s thì không fetch lại ngay
+      let isFresh = false;
+      try {
+        const cachedAt = Number(localStorage.getItem(`gsf_orders_cached_at_${storeId}`) || '0');
+        if (Date.now() - cachedAt < 60000 && allOrders.length > 0) {
+          isFresh = true;
+        }
+      } catch {}
+
+      if (!isFresh) {
+        void loadOrders();
+      }
     }
 
     // Kích hoạt Supabase Realtime lắng nghe đơn mới & cập nhật đơn hàng

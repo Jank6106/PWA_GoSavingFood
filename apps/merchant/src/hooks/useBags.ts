@@ -10,7 +10,7 @@ import {
   updateBagStatus,
 } from '../services/bag.service';
 import { supabase } from '../services/supabase';
-import type { BagInput, BagItem } from '../types';
+import type { BagInput, BagItem, BagStatus } from '../types';
 import { useToast } from './useToast';
 
 export type BagStatusFilter = 'all' | 'on_shelf' | 'off_shelf';
@@ -44,6 +44,9 @@ export function useBags(storeId: string) {
     try {
       const items = await fetchBagItems(storeId);
       setAllBags(items);
+      try {
+        localStorage.setItem(`gsf_bags_cached_at_${storeId}`, String(Date.now()));
+      } catch {}
     } catch {
       setError('Không thể tải danh sách túi hàng.');
     } finally {
@@ -57,7 +60,18 @@ export function useBags(storeId: string) {
   useEffect(() => {
     if (!isFetchedRef.current) {
       isFetchedRef.current = true;
-      void loadBags();
+      // Áp dụng TTL: nếu cache còn mới trong vòng 60s thì không fetch lại ngay
+      let isFresh = false;
+      try {
+        const cachedAt = Number(localStorage.getItem(`gsf_bags_cached_at_${storeId}`) || '0');
+        if (Date.now() - cachedAt < 60000 && allBags.length > 0) {
+          isFresh = true;
+        }
+      } catch {}
+
+      if (!isFresh) {
+        void loadBags();
+      }
     }
 
     // Realtime cập nhật túi hàng khi có thay đổi từ DB
@@ -113,7 +127,7 @@ export function useBags(storeId: string) {
   const toggleStatus = async (bagId: string) => {
     const current = allBags.find((bag) => bag.id === bagId);
     if (!current) return;
-    const nextStatus = current.status === 'hidden' ? (current.availableQuantity ? 'active' : 'sold_out') : 'hidden';
+    const nextStatus: BagStatus = current.status === 'hidden' ? (current.availableQuantity ? 'active' : 'sold_out') : 'hidden';
     setAllBags((items) => {
       const next = items.map((bag) => (bag.id === bagId ? { ...bag, status: nextStatus } : bag));
       setCachedBagItems(storeId, next);

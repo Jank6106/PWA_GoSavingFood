@@ -84,6 +84,16 @@ export default function App() {
     });
   }, []);
 
+  const [visitedTabs, setVisitedTabs] = useState<Record<string, boolean>>(() => ({
+    [route]: true,
+  }));
+
+  useEffect(() => {
+    if (['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(route)) {
+      setVisitedTabs((prev) => (prev[route] ? prev : { ...prev, [route]: true }));
+    }
+  }, [route]);
+
   // Đồng bộ lịch sử điều hướng với trình duyệt cho Merchant PWA
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -205,41 +215,51 @@ export default function App() {
         }}
       />
       <main className={`merchant-main merchant-main--${route}`}>
-        <div style={{ display: route === 'bags' ? 'contents' : 'none' }}>
-          <BagManagementScreen storeId={storeId} />
-        </div>
-        <div style={{ display: route === 'orders' ? 'contents' : 'none' }}>
-          <OrderManagementScreen
-            storeId={storeId}
-            targetOrderId={targetOrderId}
-            onClearTargetOrder={() => setTargetOrderId(null)}
-            isGlobalQROpen={isGlobalQRScannerOpen}
-            onCloseGlobalQR={() => setIsGlobalQRScannerOpen(false)}
-          />
-        </div>
-        <div style={{ display: route === 'inventory' ? 'contents' : 'none' }}>
-          <InventoryManagementScreen storeId={storeId} />
-        </div>
-        <div style={{ display: route === 'analytics' ? 'contents' : 'none' }}>
-          <AnalyticsScreen storeId={storeId} />
-        </div>
-        <div style={{ display: route === 'settings' ? 'contents' : 'none' }}>
-          <SettingsScreen
-            storeId={storeId}
-            authLoading={auth.loading}
-            onChangePassword={auth.changePassword}
-            onLogout={handleLogout}
-            onDeleteAccount={async () => {
-              const res = await auth.deleteAccount();
-              if (res.success) {
-                showToast('Tài khoản đối tác đã được xóa vĩnh viễn khỏi hệ thống.');
-                setRoute('login');
-              } else {
-                showToast(res.message || 'Không thể xóa tài khoản. Vui lòng thử lại.');
-              }
-            }}
-          />
-        </div>
+        {visitedTabs.bags && (
+          <div style={{ display: route === 'bags' ? 'contents' : 'none' }}>
+            <BagManagementScreen storeId={storeId} />
+          </div>
+        )}
+        {visitedTabs.orders && (
+          <div style={{ display: route === 'orders' ? 'contents' : 'none' }}>
+            <OrderManagementScreen
+              storeId={storeId}
+              targetOrderId={targetOrderId}
+              onClearTargetOrder={() => setTargetOrderId(null)}
+              isGlobalQROpen={isGlobalQRScannerOpen}
+              onCloseGlobalQR={() => setIsGlobalQRScannerOpen(false)}
+            />
+          </div>
+        )}
+        {visitedTabs.inventory && (
+          <div style={{ display: route === 'inventory' ? 'contents' : 'none' }}>
+            <InventoryManagementScreen storeId={storeId} />
+          </div>
+        )}
+        {visitedTabs.analytics && (
+          <div style={{ display: route === 'analytics' ? 'contents' : 'none' }}>
+            <AnalyticsScreen storeId={storeId} />
+          </div>
+        )}
+        {visitedTabs.settings && (
+          <div style={{ display: route === 'settings' ? 'contents' : 'none' }}>
+            <SettingsScreen
+              storeId={storeId}
+              authLoading={auth.loading}
+              onChangePassword={auth.changePassword}
+              onLogout={handleLogout}
+              onDeleteAccount={async () => {
+                const res = await auth.deleteAccount();
+                if (res.success) {
+                  showToast('Tài khoản đối tác đã được xóa vĩnh viễn khỏi hệ thống.');
+                  setRoute('login');
+                } else {
+                  showToast(res.message || 'Không thể xóa tài khoản. Vui lòng thử lại.');
+                }
+              }}
+            />
+          </div>
+        )}
       </main>
       <AppTabBar active={route} orderBadge={notifications.unreadCount} onNavigate={navigateTo} />
       <NotificationModal

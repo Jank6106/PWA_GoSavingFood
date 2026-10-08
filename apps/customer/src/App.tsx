@@ -149,22 +149,25 @@ function parseRouteFromUrl(): AppRoute | null {
 }
 
 
+const DEFAULT_COORDS = { lat: 10.7798, lng: 106.7032 };
+const DEFAULT_LOCATION = 'Quận 1, TP.HCM';
+
 function CustomerApp() {
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(() => {
+  const [coords, setCoords] = useState<{ lat: number; lng: number }>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_COORDS_KEY);
-      return saved ? JSON.parse(saved) : undefined;
+      return saved ? JSON.parse(saved) : DEFAULT_COORDS;
     } catch {
-      return undefined;
+      return DEFAULT_COORDS;
     }
   });
 
   const [location, setLocation] = useState<string>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_LOCATION_KEY);
-      return saved || 'Đang lấy vị trí của bạn...';
+      return saved || DEFAULT_LOCATION;
     } catch {
-      return 'Đang lấy vị trí của bạn...';
+      return DEFAULT_LOCATION;
     }
   });
 
@@ -225,14 +228,9 @@ function CustomerApp() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Tự động xin quyền GPS và lấy vị trí thực tế của thiết bị ngay khi mở app
+  // Tối ưu định vị không chặn (Non-blocking): Timeout 2.5s, dùng vị trí sẵn có ngay 0ms
   useEffect(() => {
-    if (!navigator.geolocation) {
-      if (location === 'Đang lấy vị trí của bạn...') {
-        updateLocation('Quận 1, TP.HCM', { lat: 10.7798, lng: 106.7032 });
-      }
-      return;
-    }
+    if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -247,12 +245,9 @@ function CustomerApp() {
         }
       },
       (err) => {
-        console.warn('[App] Geolocation denied or unavailable on launch:', err.message);
-        if (location === 'Đang lấy vị trí của bạn...') {
-          updateLocation('Quận 1, TP.HCM', { lat: 10.7798, lng: 106.7032 });
-        }
+        console.warn('[App] Geolocation non-blocking fallback:', err.message);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 2500, maximumAge: 300000 }
     );
   }, []);
 
@@ -262,12 +257,16 @@ function CustomerApp() {
     return () => window.clearTimeout(timer);
   }, [toastMessage]);
 
+  // Trì hoãn nạp Voucher (Deferred Loading) sau khi Home đã render mượt mà
   useEffect(() => {
     let active = true;
-    customerService.getVouchers().then((nextVouchers) => {
-      if (!active) return;
-      setVouchers(nextVouchers || []);
-    });
+    const timer = window.setTimeout(() => {
+      customerService.getVouchers().then((nextVouchers) => {
+        if (!active) return;
+        setVouchers(nextVouchers || []);
+      });
+    }, 1200);
+
     const handleInstallPrompt = (event: Event) => {
       event.preventDefault();
       setInstallPrompt(event as BeforeInstallPromptEvent);
@@ -275,20 +274,29 @@ function CustomerApp() {
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
     return () => {
       active = false;
+      window.clearTimeout(timer);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
     };
   }, []);
 
+  // Trì hoãn tải Orders & Notifications để nhường băng thông cho màn hình chính khởi động tức thì
   useEffect(() => {
     if (!auth.user) {
       setOrders([]);
       setNotifications([]);
       return;
     }
-    void customerService.getOrders(auth.user.id).then((items) => {
-      setOrders(items || []);
-    });
-    void customerService.getNotifications().then((items) => setNotifications(items || []));
+
+    let active = true;
+    const timer = window.setTimeout(() => {
+      if (!active || !auth.user) return;
+      void customerService.getOrders(auth.user.id).then((items) => {
+        if (active) setOrders(items || []);
+      });
+      void customerService.getNotifications().then((items) => {
+        if (active) setNotifications(items || []);
+      });
+    }, 800);
 
     const channel = customerService.subscribeToCustomerUpdates(
       auth.user.id,
@@ -339,6 +347,8 @@ function CustomerApp() {
     );
 
     return () => {
+      active = false;
+      window.clearTimeout(timer);
       void supabase.removeChannel(channel);
     };
   }, [auth.user?.id]);

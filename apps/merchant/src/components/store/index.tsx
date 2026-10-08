@@ -1,10 +1,10 @@
 import { CheckCircle2, Clock, Headphones, ImageUp, KeyRound, LogOut, Mail, MapPin, MessageSquare, Pencil, Phone, Save, Send, ShoppingBag, Sparkles, Star, Trash2, X } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
-import { optimizeImageUrl } from '../../services/utils';
+import { compressImageFile, optimizeImageUrl } from '../../services/utils';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../../types';
 import { Button, Field, Modal, TextAreaField } from '../ui';
 
-const readImage = (file?: File) => new Promise<string | null>((resolve, reject) => { if (!file) return resolve(null); const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('Không thể đọc ảnh.')); reader.readAsDataURL(file); });
+const readImage = (file?: File) => compressImageFile(file, 800, 0.75);
 const isImage = (value: string) => value.startsWith('data:image/') || value.startsWith('http');
 
 export function StoreCoverHeader({ profile, saving, onSaveImages }: { profile: StoreProfile; saving: boolean; onSaveImages: (input: StoreImageUpdate) => void }) {
