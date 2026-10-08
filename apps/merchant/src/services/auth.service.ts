@@ -56,7 +56,7 @@ export async function ensureUserStore(
   try {
     let { data: store } = await supabase
       .from('stores')
-      .select('*')
+      .select('id, name, owner_user_id')
       .eq('owner_user_id', user.id)
       .maybeSingle();
 

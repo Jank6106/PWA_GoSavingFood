@@ -92,7 +92,7 @@ export async function fetchStoreProfile(storeId: string): Promise<StoreProfile |
     try {
       const { data: store, error } = await supabase
         .from('stores')
-        .select('*')
+        .select('id, owner_user_id, name, description, banner_url, logo_url, address, latitude, longitude, phone, food_categories, open_time, close_time, is_open, rating, created_at, updated_at')
         .eq('id', storeId)
         .maybeSingle();
 

@@ -59,7 +59,7 @@ const mapDbBag = (b: any): BagItem => ({
 const fetchBagRow = async (bagId: string): Promise<BagItem | null> => {
   const { data, error } = await supabase
     .from('surprise_bags')
-    .select('*')
+    .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at')
     .eq('id', bagId)
     .maybeSingle();
   if (error) {
@@ -121,7 +121,7 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
     try {
       const { data, error } = await supabase
         .from('surprise_bags')
-        .select('*')
+        .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at')
         .eq('store_id', storeId)
         .order('created_at', { ascending: false });
 

@@ -85,7 +85,7 @@ export function setCachedMerchantOrders(storeId: string, orders: MerchantOrder[]
 }
 
 const ORDER_SELECT =
-  '*, order_items(*, surprise_bags(image_url)), users!orders_customer_id_fkey(name, phone)';
+  'id, store_id, customer_id, status, payment_status, payment_method, total_original_price, discount_amount, final_amount, pickup_time, qr_code, note, created_at, updated_at, completed_at, cancelled_at, cancel_reason, order_items(id, order_id, bag_id, bag_name, quantity, unit_price, surprise_bags(image_url))';
 
 export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrder[]> {
   const existing = ordersInFlight.get(storeId);
@@ -93,25 +93,15 @@ export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrde
 
   const fetchPromise = (async () => {
     try {
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .select(ORDER_SELECT)
         .eq('store_id', storeId)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Lấy danh sách đơn hàng có users join lỗi, thử fallback:', error.message);
-        const fallbackRes = await supabase
-          .from('orders')
-          .select('*, order_items(*, surprise_bags(image_url))')
-          .eq('store_id', storeId)
-          .order('created_at', { ascending: false });
-
-        if (fallbackRes.error) {
-          console.warn('Lấy danh sách đơn hàng fallback lỗi:', fallbackRes.error.message);
-          return getCachedMerchantOrders(storeId);
-        }
-        data = fallbackRes.data;
+        console.warn('Lấy danh sách đơn hàng từ Supabase lỗi:', error.message);
+        return getCachedMerchantOrders(storeId);
       }
 
       const remoteOrders = (data || []).map(mapDbOrder);

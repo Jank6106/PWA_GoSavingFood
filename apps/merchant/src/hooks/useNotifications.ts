@@ -27,13 +27,22 @@ export function useNotifications(userId: string, onNewNotification?: (item: any)
       void loadNotifications();
     });
 
+    const handleFocus = () => {
+      void loadNotifications();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
     const interval = window.setInterval(() => {
       void loadNotifications();
-    }, 10000);
+    }, 60000);
 
     return () => {
       window.clearTimeout(timer);
       window.clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
       void channel.unsubscribe();
     };
   }, [loadNotifications, onNewNotification, userId]);

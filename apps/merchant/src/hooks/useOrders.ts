@@ -78,8 +78,12 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
       void loadOrders();
     });
 
+    const lastFocusFetchRef = { current: 0 };
     const handleFocus = () => {
-      void loadOrders();
+      if (Date.now() - lastFocusFetchRef.current > 5000) {
+        lastFocusFetchRef.current = Date.now();
+        void loadOrders();
+      }
     };
 
     window.addEventListener('focus', handleFocus);

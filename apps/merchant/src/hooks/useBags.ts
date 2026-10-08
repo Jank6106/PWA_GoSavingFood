@@ -86,8 +86,12 @@ export function useBags(storeId: string) {
       )
       .subscribe();
 
+    const lastFocusFetchRef = { current: 0 };
     const handleFocus = () => {
-      void loadBags();
+      if (Date.now() - lastFocusFetchRef.current > 5000) {
+        lastFocusFetchRef.current = Date.now();
+        void loadBags();
+      }
     };
 
     window.addEventListener('focus', handleFocus);
