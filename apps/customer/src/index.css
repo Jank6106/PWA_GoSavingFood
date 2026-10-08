@@ -1647,9 +1647,6 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 .customer-toast-cta:active { transform: scale(0.95); }
 
 @media (min-width: 700px) {
-  .customer-app-shell { margin-block: 20px; min-height: calc(100vh - 40px); border-radius: 26px; overflow: hidden; }
-  .customer-bottom-nav { bottom: 20px; border-radius: 0 0 26px 26px; }
-  .customer-detail-actions { bottom: 20px; border-radius: 0 0 26px 26px; }
   .customer-toast-popup { top: 34px; }
 }
 
@@ -3817,26 +3814,26 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 /* 2. Home Page Desktop Layout */
 @media (min-width: 768px) {
   .customer-home-screen {
-    padding-top: 0;
+    padding-top: 24px;
     gap: 32px;
   }
 
   .customer-banner-bleed {
-    margin: -64px -24px 0;
-    width: calc(100% + 48px);
-    border-radius: 0 0 24px 24px;
+    margin: 0;
+    width: 100%;
+    border-radius: 24px;
     box-shadow: 0 12px 36px rgba(0, 50, 30, 0.12);
   }
 
   .customer-campaign-slider {
-    border-radius: 0 0 24px 24px !important;
-    min-height: 380px !important;
-    height: 380px;
+    border-radius: 24px !important;
+    min-height: 280px !important;
+    height: 280px;
   }
 
   .customer-campaign {
-    min-height: 380px !important;
-    padding: 86px 40px 36px !important;
+    min-height: 280px !important;
+    padding: 28px 24px !important;
   }
 
   .customer-campaign h1 {
