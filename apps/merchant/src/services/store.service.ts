@@ -1,4 +1,3 @@
-import { MERCHANT_STORE_ID, SEED_STORE_GOGREEN, SEED_STORE_QUYT } from '../mocks';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../types';
 import { fetchCompletedBagQuantity } from './order.service';
 import { supabase } from './supabase';
@@ -6,6 +5,31 @@ import { supabase } from './supabase';
 const CO2_KG_PER_BAG = 2.5;
 const STORE_CACHE_PREFIX = 'gsf_merchant_store:';
 const storeInFlight = new Map<string, Promise<StoreProfile | null>>();
+
+const createEmptyStoreProfile = (storeId: string): StoreProfile => ({
+  id: storeId,
+  userId: '',
+  name: 'Cửa hàng',
+  description: '',
+  coverImage: '',
+  logoUrl: '',
+  avatar: '',
+  address: '',
+  latitude: 0,
+  longitude: 0,
+  phone: '',
+  email: '',
+  category: 'bakery',
+  openingHours: '08:00',
+  closingHours: '22:00',
+  pickupHours: '19:00 - 21:00',
+  isOpen: true,
+  rating: 0,
+  totalRescuedBags: 0,
+  totalCo2SavedKg: 0,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
 
 export function getCachedStoreProfile(storeId: string): StoreProfile {
   if (typeof window !== 'undefined') {
@@ -19,8 +43,7 @@ export function getCachedStoreProfile(storeId: string): StoreProfile {
       // Ignore parse error
     }
   }
-  if (storeId === MERCHANT_STORE_ID) return SEED_STORE_GOGREEN;
-  return { ...SEED_STORE_QUYT, id: storeId };
+  return createEmptyStoreProfile(storeId);
 }
 
 export function setCachedStoreProfile(storeId: string, profile: StoreProfile | null): void {

@@ -1,4 +1,3 @@
-import { SEED_ANALYTICS_QUYT } from '../mocks';
 import type { AnalyticsMetrics, ReviewItem, RevenueChartPoint } from '../types';
 import { supabase } from './supabase';
 
@@ -41,6 +40,24 @@ export interface CachedAnalyticsData {
   reviews: ReviewItem[];
 }
 
+const EMPTY_METRICS: AnalyticsMetrics = {
+  totalRevenue: 0,
+  monthlyRevenue: 0,
+  monthlyGrowthPercent: 0,
+  previousMonthRevenue: 0,
+  totalOrders: 0,
+  totalSoldBags: 0,
+  bagsOnShelf: 0,
+  averageRating: 0,
+  totalReviewsCount: 0,
+};
+
+const EMPTY_ANALYTICS: CachedAnalyticsData = {
+  metrics: EMPTY_METRICS,
+  chartData: [],
+  reviews: [],
+};
+
 export function getCachedAnalytics(storeId: string): CachedAnalyticsData {
   if (typeof window !== 'undefined') {
     try {
@@ -53,7 +70,7 @@ export function getCachedAnalytics(storeId: string): CachedAnalyticsData {
       // Ignore parse error
     }
   }
-  return SEED_ANALYTICS_QUYT;
+  return EMPTY_ANALYTICS;
 }
 
 export function setCachedAnalytics(storeId: string, data: CachedAnalyticsData): void {
@@ -115,7 +132,17 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
   );
 
     if (orders.length === 0 && totalSoldBags === 0) {
-      return SEED_ANALYTICS_QUYT.metrics;
+      return {
+        totalRevenue: 0,
+        monthlyRevenue: 0,
+        monthlyGrowthPercent: 0,
+        previousMonthRevenue: 0,
+        totalOrders: 0,
+        totalSoldBags: 0,
+        bagsOnShelf: bagsResult.count || 0,
+        averageRating: Number(storeResult.data?.rating || 0),
+        totalReviewsCount: Number(storeResult.data?.total_ratings || 0),
+      };
     }
 
     return {
@@ -168,9 +195,6 @@ export async function fetchRevenueChart(
       }
 
       const revenueOrders = (data || []).filter((order: any) => isRevenueStatus(order.status));
-      if (revenueOrders.length === 0) {
-        return SEED_ANALYTICS_QUYT.chartData;
-      }
 
       if (timeframe === 'week') {
         return Array.from({ length: 7 }, (_, index) => {
@@ -219,7 +243,7 @@ export async function fetchRecentReviews(storeId: string): Promise<ReviewItem[]>
         .limit(6);
 
       if (error || !data || data.length === 0) {
-        return SEED_ANALYTICS_QUYT.reviews;
+        return [];
       }
 
       return (data || []).map((row: any) => {

@@ -122,6 +122,16 @@ const mapCreateOrderError = (error: { message?: string; details?: string } | nul
   return 'Không thể tạo đơn hàng. Vui lòng kiểm tra lại rồi thử lại.';
 };
 
+const normalizeCategory = (cat?: string | null): Exclude<FoodCategory, 'all'> => {
+  if (!cat) return 'vegetarian';
+  const c = cat.toLowerCase().trim();
+  if (c === 'bakery' || c.includes('bánh')) return 'bakery';
+  if (c === 'meat' || c.includes('mặn') || c.includes('thịt')) return 'meat';
+  if (c === 'beverage' || c.includes('uống') || c.includes('nước') || c.includes('cà phê')) return 'beverage';
+  if (c === 'vegetarian' || c === 'raw_food' || c.includes('chay') || c.includes('rau') || c.includes('quả') || c.includes('salad')) return 'vegetarian';
+  return 'other';
+};
+
 export const customerService = {
   getStaticHome() {
     return {
@@ -145,17 +155,18 @@ export const customerService = {
       const [rawStores, bagsSource] = await Promise.all([
         (async () => {
           try {
+            const { data: directStores } = await supabase.from('stores').select('*').limit(50);
+            if (Array.isArray(directStores) && directStores.length > 0) return directStores;
+
             const { data: storesData } = await supabase.rpc('list_stores_nearby', {
               p_lat: lat,
               p_lng: lng,
-              p_radius: 50000,
+              p_radius: 500000,
               p_category: null,
               p_page: 1,
-              p_limit: 20,
+              p_limit: 50,
             });
-            if (Array.isArray(storesData) && storesData.length > 0) return storesData;
-            const { data: directStores } = await supabase.from('stores').select('*').limit(30);
-            return Array.isArray(directStores) ? directStores : [];
+            return Array.isArray(storesData) ? storesData : [];
           } catch {
             return [];
           }
@@ -163,23 +174,24 @@ export const customerService = {
 
         (async () => {
           try {
-            const { data: nearbyBags } = await supabase.rpc('list_bags_nearby', {
-              p_lat: lat,
-              p_lng: lng,
-              p_radius: 50000,
-              p_category: null,
-              p_page: 1,
-              p_limit: 30,
-            });
-            if (Array.isArray(nearbyBags) && nearbyBags.length > 0) return nearbyBags;
             const { data: directBags } = await supabase
               .from('surprise_bags')
               .select('*, stores(id, name, logo_url, banner_url, address, latitude, longitude, rating, total_ratings)')
               .eq('is_available', true)
               .is('deleted_at', null)
               .order('created_at', { ascending: false })
-              .limit(30);
-            return Array.isArray(directBags) ? directBags : [];
+              .limit(50);
+            if (Array.isArray(directBags) && directBags.length > 0) return directBags;
+
+            const { data: nearbyBags } = await supabase.rpc('list_bags_nearby', {
+              p_lat: lat,
+              p_lng: lng,
+              p_radius: 500000,
+              p_category: null,
+              p_page: 1,
+              p_limit: 50,
+            });
+            return Array.isArray(nearbyBags) ? nearbyBags : [];
           } catch {
             return [];
           }
@@ -227,7 +239,7 @@ export const customerService = {
           description: b.description || 'Túi cứu trợ thực phẩm xanh',
           originalPrice: Number(b.original_price) || 50000,
           discountPrice: Number(b.discount_price) || 30000,
-          category: (b.category as Exclude<FoodCategory, 'all'>) || 'vegetarian',
+          category: normalizeCategory(b.category),
           imageUrl: b.image_url || getBagImage(b.name, null),
           quantity: Number(b.quantity) || 5,
           maxQuantity: Number(b.max_quantity) || 2,

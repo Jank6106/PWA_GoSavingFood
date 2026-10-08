@@ -1,4 +1,3 @@
-import { MERCHANT_STORE_ID, SEED_BAGS_GOGREEN, SEED_BAGS_QUYT } from '../mocks';
 import type { BagInput, BagItem, BagStatus } from '../types';
 import { removeBagFromInventoryShelf, syncBagToInventoryShelf } from './inventory.service';
 import { supabase } from './supabase';
@@ -14,17 +13,12 @@ const BAGS_CACHE_PREFIX = 'gsf_merchant_bags:';
 const bagsInFlight = new Map<string, Promise<BagItem[]>>();
 
 export function getCachedBagItems(storeId: string): BagItem[] {
-  const seedTemplate =
-    storeId === MERCHANT_STORE_ID
-      ? SEED_BAGS_GOGREEN
-      : SEED_BAGS_QUYT.map((b) => ({ ...b, storeId }));
-
   if (typeof window !== 'undefined') {
     try {
       const raw = window.localStorage.getItem(`${BAGS_CACHE_PREFIX}${storeId}`);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length >= seedTemplate.length) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       }
@@ -32,7 +26,7 @@ export function getCachedBagItems(storeId: string): BagItem[] {
       // Ignore parse error
     }
   }
-  return seedTemplate;
+  return [];
 }
 
 export function setCachedBagItems(storeId: string, bags: BagItem[]): void {
@@ -136,24 +130,8 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
         return getCachedBagItems(storeId);
       }
       const remoteBags = (data || []).map(mapDbBag);
-      const seedTemplate =
-        storeId === MERCHANT_STORE_ID
-          ? SEED_BAGS_GOGREEN
-          : SEED_BAGS_QUYT.map((b) => ({ ...b, storeId }));
-
-      let bags: BagItem[];
-      if (remoteBags.length === 0) {
-        bags = seedTemplate;
-      } else {
-        const remoteIds = new Set(remoteBags.map((b) => b.id));
-        const remoteNames = new Set(remoteBags.map((b) => b.name.toLowerCase().trim()));
-        const remainingSeed = seedTemplate.filter(
-          (s) => !remoteIds.has(s.id) && !remoteNames.has(s.name.toLowerCase().trim())
-        );
-        bags = [...remoteBags, ...remainingSeed];
-      }
-      setCachedBagItems(storeId, bags);
-      return bags;
+      setCachedBagItems(storeId, remoteBags);
+      return remoteBags;
     } finally {
       bagsInFlight.delete(storeId);
     }
