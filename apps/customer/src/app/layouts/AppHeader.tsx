@@ -18,7 +18,7 @@ export function AppHeader({
 
   useEffect(() => {
     const handleScroll = () => {
-      // Khi cuộn quá banner (khoảng 180px), kích hoạt header gốc
+      // Khi cuộn quá banner (khoảng 180px), kích hoạt header nền solid
       setIsScrolled(window.scrollY > 180);
     };
 
@@ -29,31 +29,33 @@ export function AppHeader({
 
   return (
     <header className={`customer-header ${isScrolled ? 'is-solid' : 'is-transparent'}`}>
-      <div className="customer-brand">
-        <div className="customer-logo" aria-hidden="true">
-          <img
-            src={logoSvg}
-            onError={(e) => {
-              const target = e.currentTarget;
-              if (target.src !== logoPng) {
-                target.src = logoPng;
-              }
-            }}
-            alt="GoSavingFood Logo"
-            className="customer-logo-img"
-          />
+      <div className="customer-header-inner">
+        <div className="customer-brand">
+          <div className="customer-logo" aria-hidden="true">
+            <img
+              src={logoSvg}
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== logoPng) {
+                  target.src = logoPng;
+                }
+              }}
+              alt="GoSavingFood Logo"
+              className="customer-logo-img"
+            />
+          </div>
+          <div className="customer-brand-name">GoSavingFood</div>
         </div>
-        <div className="customer-brand-name">GoSavingFood</div>
+        <button
+          type="button"
+          className="customer-round-button"
+          onClick={onNotificationClick}
+          aria-label="Thông báo"
+        >
+          <Bell size={21} />
+          {unreadCount > 0 && <span className="customer-notification-count">{unreadCount}</span>}
+        </button>
       </div>
-      <button
-        type="button"
-        className="customer-round-button"
-        onClick={onNotificationClick}
-        aria-label="Thông báo"
-      >
-        <Bell size={21} />
-        {unreadCount > 0 && <span className="customer-notification-count">{unreadCount}</span>}
-      </button>
     </header>
   );
 }

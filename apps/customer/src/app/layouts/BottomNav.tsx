@@ -17,21 +17,23 @@ const items = [
 export function BottomNav({ activeTab, cartCount, onTabChange }: BottomNavProps) {
   return (
     <nav className="customer-bottom-nav" aria-label="Điều hướng chính">
-      {items.map(({ tab, label, Icon }) => (
-        <button
-          type="button"
-          key={tab}
-          className={activeTab === tab ? 'is-active' : ''}
-          onClick={() => onTabChange(tab)}
-          aria-current={activeTab === tab ? 'page' : undefined}
-        >
-          <span className="customer-nav-icon">
-            <Icon size={22} />
-            {tab === 'cart' && cartCount > 0 && <span>{cartCount}</span>}
-          </span>
-          <small>{label}</small>
-        </button>
-      ))}
+      <div className="customer-bottom-nav-inner">
+        {items.map(({ tab, label, Icon }) => (
+          <button
+            type="button"
+            key={tab}
+            className={activeTab === tab ? 'is-active' : ''}
+            onClick={() => onTabChange(tab)}
+            aria-current={activeTab === tab ? 'page' : undefined}
+          >
+            <span className="customer-nav-icon">
+              <Icon size={22} />
+              {tab === 'cart' && cartCount > 0 && <span>{cartCount}</span>}
+            </span>
+            <small>{label}</small>
+          </button>
+        ))}
+      </div>
     </nav>
   );
 }
