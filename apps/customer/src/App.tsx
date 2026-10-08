@@ -68,15 +68,18 @@ interface PendingAuthTarget {
   timestamp: number;
 }
 
-function loadStoredHistory(): AppRoute[] {
+function loadInitialHistory(): AppRoute[] {
   try {
-    const raw = sessionStorage.getItem(STORAGE_HISTORY_KEY);
-    if (!raw) return [{ name: 'tabs', tab: 'home' }];
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
-    }
+    sessionStorage.removeItem(STORAGE_HISTORY_KEY);
   } catch {}
+
+  const fromUrl = parseRouteFromUrl();
+  if (fromUrl) {
+    if (fromUrl.name === 'tabs' && fromUrl.tab === 'home') {
+      return [fromUrl];
+    }
+    return [{ name: 'tabs', tab: 'home' }, fromUrl];
+  }
   return [{ name: 'tabs', tab: 'home' }];
 }
 
@@ -145,16 +148,6 @@ function parseRouteFromUrl(): AppRoute | null {
   return null;
 }
 
-function loadInitialHistory(): AppRoute[] {
-  const fromUrl = parseRouteFromUrl();
-  if (fromUrl) {
-    if (fromUrl.name === 'tabs' && fromUrl.tab === 'home') {
-      return [fromUrl];
-    }
-    return [{ name: 'tabs', tab: 'home' }, fromUrl];
-  }
-  return loadStoredHistory();
-}
 
 function CustomerApp() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>(() => {
@@ -221,12 +214,6 @@ function CustomerApp() {
       } catch {}
     }
   };
-
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(history));
-    } catch {}
-  }, [history]);
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -387,7 +374,8 @@ function CustomerApp() {
         return current;
       }
       const nextRoute: AppRoute = { name: 'tabs', tab };
-      const nextHistory = [...current, nextRoute];
+      const nextHistory: AppRoute[] =
+        tab === 'home' ? [{ name: 'tabs', tab: 'home' }] : [...current, nextRoute];
       const url = getRouteUrl(nextRoute);
       window.history.pushState(
         { route: nextRoute, index: nextHistory.length - 1 },
