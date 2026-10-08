@@ -18,8 +18,7 @@ export function AppHeader({
 
   useEffect(() => {
     const handleScroll = () => {
-      // Khi cuộn quá banner (khoảng 180px), kích hoạt header nền solid
-      setIsScrolled(window.scrollY > 180);
+      setIsScrolled(window.scrollY > 30);
     };
 
     handleScroll();
