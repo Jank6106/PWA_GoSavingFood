@@ -32,7 +32,7 @@ export function StoreCoverHeader({ profile, saving, onSaveImages }: { profile: S
         <div>
           <ShoppingBag size={20} />
           <span>
-            <strong>{profile.totalRescuedBags.toLocaleString('vi-VN')}</strong>
+            <strong>{(profile.totalRescuedBags ?? 0).toLocaleString('vi-VN')}</strong>
             <small>Túi đã bán</small>
           </span>
         </div>

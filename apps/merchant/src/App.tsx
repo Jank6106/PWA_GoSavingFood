@@ -270,6 +270,7 @@ export default function App() {
           <div style={{ display: route === 'settings' ? 'contents' : 'none' }}>
             <SettingsScreen
               storeId={storeId}
+              storeProfileState={store}
               authLoading={auth.loading}
               onChangePassword={auth.changePassword}
               onLogout={handleLogout}

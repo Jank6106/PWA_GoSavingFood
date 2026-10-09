@@ -10,20 +10,25 @@ import {
 import { ErrorState, SkeletonCard, SkeletonList, ToastBar } from '../components/ui';
 import { useStoreProfile } from '../hooks/useStoreProfile';
 
-export function SettingsScreen({
-  storeId,
-  authLoading,
-  onChangePassword,
-  onLogout,
-  onDeleteAccount,
-}: {
+interface SettingsScreenProps {
   storeId: string;
+  storeProfileState?: ReturnType<typeof useStoreProfile>;
   authLoading: boolean;
   onChangePassword: (oldPassword: string, newPassword: string) => Promise<boolean>;
   onLogout: () => Promise<void>;
   onDeleteAccount?: () => Promise<void>;
-}) {
-  const state = useStoreProfile(storeId);
+}
+
+export function SettingsScreen({
+  storeId,
+  storeProfileState,
+  authLoading,
+  onChangePassword,
+  onLogout,
+  onDeleteAccount,
+}: SettingsScreenProps) {
+  const localState = useStoreProfile(storeId);
+  const state = storeProfileState ?? localState;
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   if (state.error && !state.profile) return <ErrorState message={state.error} onRetry={() => void state.loadProfile()} />;

@@ -44,8 +44,9 @@ export function useStoreProfile(storeId: string) {
   // Lắng nghe Realtime trên bảng stores để đồng bộ trạng thái đóng/mở tức thì
   useEffect(() => {
     if (!storeId) return;
+    const channelId = `merchant-store-status-${storeId}-${Math.random().toString(36).slice(2, 8)}`;
     const channel = supabase
-      .channel(`merchant-store-status-${storeId}`)
+      .channel(channelId)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'stores', filter: `id=eq.${storeId}` },
