@@ -11,7 +11,7 @@ import {
   Star,
   X,
 } from 'lucide-react';
-import { Chip, EmptyState } from '@gosavingfood/ui';
+import { EmptyState } from '@gosavingfood/ui';
 import { ScreenHeader, SearchField } from '../../../shared/components';
 import { MAPBOX_TOKEN, calculateDistanceKm, mapboxService } from '../../../services/mapbox.service';
 import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
@@ -49,14 +49,6 @@ interface SearchPageProps {
   onLocationChange?: (location: string, coords: { lat: number; lng: number }) => void;
 }
 
-const filterOptions = [
-  { id: 'all', label: 'Tất cả' },
-  { id: 'in_stock', label: 'Còn hàng' },
-  { id: 'pickup_now', label: 'Lấy ngay' },
-  { id: 'nearest', label: 'Gần nhất' },
-  { id: 'discount', label: 'Giảm nhiều' },
-  { id: 'rating', label: 'Đánh giá cao' },
-];
 
 const DEFAULT_CENTER: [number, number] = [106.7032, 10.7798];
 
@@ -143,7 +135,6 @@ export function SearchPage({
   // Chế độ xem: 'map' (bản đồ full) hoặc 'list' (danh sách món/quán gợi ý)
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [query, setQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [clusterModalStores, setClusterModalStores] = useState<Merchant[] | null>(null);
 
@@ -159,28 +150,15 @@ export function SearchPage({
     return DEFAULT_CENTER;
   }, [coords]);
 
-  // Lọc danh sách quán theo từ khóa và bộ lọc
+  // Lọc danh sách quán theo từ khóa
   const filteredMerchants = useMemo(() => {
-    let list = merchants;
+    if (!query.trim()) return merchants;
 
-    if (query.trim()) {
-      const q = query.trim().toLocaleLowerCase('vi-VN');
-      list = list.filter((m) =>
-        `${m.name} ${m.address}`.toLocaleLowerCase('vi-VN').includes(q)
-      );
-    }
-
-    if (activeFilter === 'in_stock') {
-      const merchantsWithStock = new Set(
-        bags.filter((b) => b.quantity > 0).map((b) => b.merchantId)
-      );
-      list = list.filter((m) => merchantsWithStock.has(m.id));
-    } else if (activeFilter === 'rating') {
-      list = [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    }
-
-    return list;
-  }, [merchants, bags, query, activeFilter]);
+    const q = query.trim().toLocaleLowerCase('vi-VN');
+    return merchants.filter((m) =>
+      `${m.name} ${m.address}`.toLocaleLowerCase('vi-VN').includes(q)
+    );
+  }, [merchants, query]);
 
   // Tọa độ các quán hiển thị trên bản đồ (100% tọa độ thực tế, không giả lập offset)
   const effectiveMerchants = useMemo(() => {
@@ -217,7 +195,7 @@ export function SearchPage({
     [bags, selectedMerchantId]
   );
 
-  // Lọc danh sách túi theo từ khóa và bộ lọc (cho List View)
+  // Lọc danh sách túi theo từ khóa (cho List View)
   const filteredBags = useMemo(() => {
     let list = bags;
 
@@ -228,33 +206,13 @@ export function SearchPage({
       );
     }
 
-    if (activeFilter === 'in_stock') {
-      list = list.filter((b) => b.quantity > 0);
-    } else if (activeFilter === 'discount') {
-      list = [...list].sort(
-        (a, b) => b.originalPrice - b.discountPrice - (a.originalPrice - a.discountPrice)
-      );
-    } else if (activeFilter === 'rating') {
-      list = [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (activeFilter === 'nearest') {
-      list = [...list].sort((a, b) => {
-        const distA = merchantsMap.get(a.merchantId)?.distance ?? 999999;
-        const distB = merchantsMap.get(b.merchantId)?.distance ?? 999999;
-        return distA - distB;
-      });
-    } else if (activeFilter === 'pickup_now') {
-      list = list.filter((b) => b.quantity > 0);
-    } else {
-      // Mặc định: sắp xếp theo khoảng cách từ gần đến xa
-      list = [...list].sort((a, b) => {
-        const distA = merchantsMap.get(a.merchantId)?.distance ?? 999999;
-        const distB = merchantsMap.get(b.merchantId)?.distance ?? 999999;
-        return distA - distB;
-      });
-    }
-
-    return list;
-  }, [bags, merchantsMap, query, activeFilter]);
+    // Mặc định: sắp xếp theo khoảng cách từ gần đến xa
+    return [...list].sort((a, b) => {
+      const distA = merchantsMap.get(a.merchantId)?.distance ?? 999999;
+      const distB = merchantsMap.get(b.merchantId)?.distance ?? 999999;
+      return distA - distB;
+    });
+  }, [bags, merchantsMap, query]);
 
   const updateUserMarker = useCallback((lngLat: [number, number]) => {
     if (!mapRef.current) return;
@@ -477,18 +435,6 @@ export function SearchPage({
         trailing={<SlidersHorizontal size={19} />}
       />
 
-      {/* Dải Filter chips nhanh (Còn hàng, Lấy ngay, Gần nhất...) */}
-      <div className="customer-category-track" style={{ marginTop: 8 }}>
-        {filterOptions.map((opt) => (
-          <Chip
-            key={opt.id}
-            selected={activeFilter === opt.id}
-            onClick={() => setActiveFilter(opt.id)}
-          >
-            {opt.label}
-          </Chip>
-        ))}
-      </div>
 
       {/* VÙNG NỘI DUNG CHÍNH (Chứa toggle button và 2 view map/list) */}
       <div className="customer-search-content-area">
