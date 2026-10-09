@@ -234,33 +234,6 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
     }
   };
 
-  const [isCheckingManual, setIsCheckingManual] = useState(false);
-
-  const handleManualCheck = async (simulate = false) => {
-    const currentOrderCode = payosData?.orderCode;
-    if (!currentOrderCode) {
-      showToast('Đang kết nối cổng thanh toán PayOS...');
-      return;
-    }
-    setIsCheckingManual(true);
-    try {
-      showToast('Đang kiểm tra trạng thái thanh toán...');
-      const check = await customerService.checkPayOSStatus(currentOrderCode, simulate);
-      if (check?.paid) {
-        showToast('Thanh toán thành công! Đang chuyển trang...');
-        setTimeout(() => {
-          onConfirm();
-        }, 500);
-      } else {
-        showToast('Chưa ghi nhận tiền về từ ngân hàng. Vui lòng thử lại sau vài giây.');
-      }
-    } catch {
-      showToast('Không thể kiểm tra lúc này, vui lòng thử lại.');
-    } finally {
-      setIsCheckingManual(false);
-    }
-  };
-
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
@@ -448,41 +421,6 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
           </div>
         </div>
       </section>
-
-      {/* Nút hỗ trợ xác nhận thanh toán */}
-      <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '420px', margin: '16px auto 0' }}>
-        <Button
-          fullWidth
-          size="lg"
-          disabled={isCheckingManual}
-          onClick={() => void handleManualCheck(false)}
-        >
-          {isCheckingManual ? 'Đang kiểm tra giao dịch...' : 'Tôi đã chuyển khoản (Kiểm tra ngay)'}
-        </Button>
-
-        {import.meta.env.DEV && (
-          <button
-            type="button"
-            onClick={() => void handleManualCheck(true)}
-            style={{
-              padding: '9px 14px',
-              borderRadius: '10px',
-              border: '1px dashed #d97706',
-              background: '#fffbeb',
-              color: '#b45309',
-              fontSize: '12.5px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-            }}
-          >
-            ⚡ [Dev Test] Xác nhận thanh toán thành công ngay
-          </button>
-        )}
-      </div>
 
       {/* Toast thông báo nhanh */}
       {toastMessage && (

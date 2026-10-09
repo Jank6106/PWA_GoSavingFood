@@ -23,28 +23,6 @@ export async function GET(request: Request) {
       );
     }
 
-    const simulate = searchParams.get('simulate') === 'true';
-    if (simulate) {
-      const supabaseUrl = process.env.SUPABASE_URL;
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      if (supabaseUrl && serviceRoleKey) {
-        const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-        await supabaseAdmin.rpc('confirm_payos_payment', {
-          p_order_code: Number(orderCode),
-          p_payment_link_id: `simulated_link_${Date.now()}`,
-        });
-      }
-      return NextResponse.json(
-        {
-          success: true,
-          paid: true,
-          status: 'PAID',
-          simulated: true,
-        },
-        { headers: corsHeaders }
-      );
-    }
-
     const clientId = process.env.PAYOS_CLIENT_ID;
     const apiKey = process.env.PAYOS_API_KEY;
 

@@ -11,8 +11,8 @@ const UI_TO_DB_TARGET: Record<Exclude<OrderStatus, 'pending'>, string> = {
 };
 
 const mapDbStatusToUi = (status: string): OrderStatus => {
-  if (status === 'paid' || status === 'confirmed') return 'pending';
-  if (status === 'preparing') return 'processing';
+  if (status === 'paid' || status === 'pending') return 'pending';
+  if (status === 'preparing' || status === 'confirmed') return 'processing';
   if (status === 'ready_for_pickup') return 'confirmed';
   if (status === 'completed' || status === 'picked_up') return 'completed';
   if (status === 'cancelled' || status === 'expired') return 'cancelled';

@@ -11,26 +11,26 @@ interface OrdersPageProps {
   onOpenOrder: (order: Order) => void;
 }
 
-const filters: Array<{ id: 'all' | OrderStatus; label: string }> = [
+const filters: Array<{ id: 'all' | 'pending' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled'; label: string }> = [
   { id: 'all', label: 'Tất cả' },
-  { id: 'pending', label: 'Đang xử lý' },
-  { id: 'confirmed', label: 'Đã xác nhận' },
+  { id: 'pending', label: 'Chờ xác nhận' },
+  { id: 'preparing', label: 'Đang xử lý' },
   { id: 'ready_for_pickup', label: 'Chờ lấy' },
   { id: 'completed', label: 'Hoàn thành' },
   { id: 'cancelled', label: 'Đã hủy' },
 ];
 
 export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: OrdersPageProps) {
-  const [filter, setFilter] = useState<'all' | OrderStatus>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled'>('all');
   const visibleOrders = useMemo(
     () =>
       orders.filter((order) => {
         if (filter === 'all') return true;
         if (filter === 'pending') {
-          return order.status === 'pending_payment' || order.status === 'pending';
+          return order.status === 'paid' || order.status === 'pending_payment' || order.status === 'pending';
         }
-        if (filter === 'confirmed') {
-          return order.status === 'paid' || order.status === 'confirmed' || order.status === 'preparing';
+        if (filter === 'preparing') {
+          return order.status === 'preparing' || order.status === 'confirmed';
         }
         if (filter === 'ready_for_pickup') {
           return order.status === 'ready_for_pickup';

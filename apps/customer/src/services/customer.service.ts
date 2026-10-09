@@ -1338,13 +1338,12 @@ export const customerService = {
     }
   },
 
-  async checkPayOSStatus(orderCode: number, simulate = false): Promise<{ paid: boolean; status: string } | null> {
+  async checkPayOSStatus(orderCode: number): Promise<{ paid: boolean; status: string } | null> {
     try {
       const apiBase =
         import.meta.env.VITE_API_URL ||
         (import.meta.env.PROD ? 'https://gosavingfood.app' : '');
-      const simParam = simulate ? '&simulate=true' : '';
-      const res = await fetch(`${apiBase}/api/payos/check-status?orderCode=${orderCode}${simParam}`);
+      const res = await fetch(`${apiBase}/api/payos/check-status?orderCode=${orderCode}`);
       if (!res.ok) return null;
       const data = await res.json();
       return data;
