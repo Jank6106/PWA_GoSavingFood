@@ -245,11 +245,12 @@ export function SearchPage({
       if (cluster.count === 1) {
         const store = cluster.stores[0];
         const storeBags = bags.filter((b) => b.merchantId === store.id);
+        const isStoreClosed = store.isOpen === false;
 
         const el = document.createElement('div');
         el.className = `gsf-yindii-store-marker ${
           selectedMerchantId === store.id ? 'is-active' : ''
-        }`;
+        } ${isStoreClosed ? 'is-closed' : ''}`;
 
         const logoUrl =
           store.logo ||
@@ -259,7 +260,9 @@ export function SearchPage({
           <img src="${logoUrl}" alt="${store.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
           <div class="gsf-yindii-store-fallback" style="display:none;">${store.name.charAt(0).toUpperCase()}</div>
           ${
-            storeBags.length > 0
+            isStoreClosed
+              ? '<span class="gsf-yindii-store-badge is-closed">Đóng</span>'
+              : storeBags.length > 0
               ? `<span class="gsf-yindii-store-badge">${storeBags.length}</span>`
               : ''
           }
@@ -424,7 +427,7 @@ export function SearchPage({
       {/* Header thanh tìm kiếm phong cách Yindii */}
       <ScreenHeader
         title="Tìm quanh bạn"
-        subtitle={`${merchants.length} cửa hàng đang mở`}
+        subtitle={`${merchants.filter((m) => m.isOpen !== false).length} cửa hàng đang mở`}
         onBack={onBack}
       />
 
@@ -521,8 +524,15 @@ export function SearchPage({
                         ? `Cách ~${(selectedMerchant.distance / 1000).toFixed(1)} km`
                         : 'Gần đây'}
                     </span>
-                    <span style={{ color: '#10b981', fontWeight: 700 }}>
-                      • Còn {selectedStoreBags.length} túi
+                    <span
+                      style={{
+                        color: selectedMerchant.isOpen === false ? '#ef4444' : '#10b981',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {selectedMerchant.isOpen === false
+                        ? '• Tạm đóng cửa'
+                        : `• Còn ${selectedStoreBags.length} túi`}
                     </span>
                   </div>
                 </div>
@@ -685,6 +695,21 @@ export function SearchPage({
                       <div>
                         <h3 className="customer-yindii-item-store">
                           {bag.merchantName || store?.name || 'Cửa hàng đối tác'}
+                          {store?.isOpen === false && (
+                            <span
+                              style={{
+                                marginLeft: 6,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: '#ef4444',
+                                background: '#fee2e2',
+                                padding: '1px 6px',
+                                borderRadius: 6,
+                              }}
+                            >
+                              Tạm đóng
+                            </span>
+                          )}
                         </h3>
                         <p className="customer-yindii-item-bag">{bag.name}</p>
                         {discountPct > 0 && (

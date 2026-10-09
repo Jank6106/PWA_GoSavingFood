@@ -168,7 +168,20 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'stores' },
-        () => {
+        (payload: any) => {
+          if (payload.new && payload.new.id) {
+            setCatalog((current) => {
+              const nextIsOpen = payload.new.is_open ?? true;
+              const updatedMerchants = current.merchants.map((m) =>
+                m.id === payload.new.id ? { ...m, isOpen: nextIsOpen } : m
+              );
+              const nextCatalog = { ...current, merchants: updatedMerchants };
+              try {
+                localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(nextCatalog));
+              } catch {}
+              return nextCatalog;
+            });
+          }
           lastFetchTimeRef.current = 0;
           void fetchCatalog(false);
         }

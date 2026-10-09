@@ -1776,6 +1776,17 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   line-height: 1.2;
 }
+.gsf-yindii-store-badge.is-closed {
+  background: #64748b;
+  color: #f8fafc;
+  font-size: 9px;
+  padding: 1px 5px;
+}
+.gsf-yindii-store-marker.is-closed {
+  outline-color: #94a3b8;
+  filter: grayscale(0.5);
+  opacity: 0.88;
+}
 
 /* Cluster Marker (Yindii green circle with number) */
 .gsf-yindii-cluster-marker {

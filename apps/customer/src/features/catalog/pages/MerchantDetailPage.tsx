@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   ChevronLeft,
+  Clock,
   Heart,
   MapPin,
   Share2,
@@ -202,9 +203,15 @@ export function MerchantDetailPage({
 
       {/* 2. Store Info Section */}
       <section className="customer-store-info-section">
-        <h1 className="customer-store-title">{merchant.name}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+          <h1 className="customer-store-title" style={{ margin: 0 }}>{merchant.name}</h1>
+          <span className={`customer-merchant-status-badge ${merchant.isOpen !== false ? 'is-open' : 'is-closed'}`}>
+            <span className="customer-merchant-status-dot" />
+            {merchant.isOpen !== false ? 'Đang mở cửa' : 'Đã đóng cửa'}
+          </span>
+        </div>
 
-        <div className="customer-store-address-row">
+        <div className="customer-store-address-row" style={{ marginTop: 8 }}>
           <MapPin size={15} strokeWidth={2} className="customer-store-address-pin" />
           <span>{merchant.address}</span>
         </div>
@@ -217,6 +224,27 @@ export function MerchantDetailPage({
           <span className="customer-store-meta-bullet">•</span>
           <span>{distanceFormatted}</span>
         </div>
+
+        {merchant.isOpen === false && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: '10px 14px',
+              borderRadius: 12,
+              background: '#fef2f2',
+              border: '1px solid #fee2e2',
+              color: '#991b1b',
+              fontSize: 13,
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <Clock size={16} />
+            <span>Cửa hàng hiện đang tạm đóng cửa. Quý khách vui lòng quay lại sau!</span>
+          </div>
+        )}
       </section>
 
       {/* 3. Lucky Bags List Section */}

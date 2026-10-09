@@ -344,7 +344,16 @@ export function BagDetailPage({
               <img src={merchantLogo} alt={merchant.name} />
             </div>
             <div className="customer-product-merchant-info">
-              <h3 className="customer-product-merchant-name">{merchant.name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <h3 className="customer-product-merchant-name">{merchant.name}</h3>
+                <span
+                  className={`customer-merchant-status-badge ${merchant.isOpen !== false ? 'is-open' : 'is-closed'}`}
+                  style={{ padding: '2px 8px', fontSize: 10 }}
+                >
+                  <span className="customer-merchant-status-dot" style={{ width: 5, height: 5 }} />
+                  {merchant.isOpen !== false ? 'Mở cửa' : 'Đóng cửa'}
+                </span>
+              </div>
               <p className="customer-product-merchant-addr">
                 <MapPin size={13} strokeWidth={2.2} />
                 <span>{merchant.address}</span>
@@ -382,37 +391,56 @@ export function BagDetailPage({
         </div>
       </section>
 
-
       {/* 8. Sticky Bottom Action Bar */}
       <footer className="customer-product-bottom-bar">
-        <Button
-          variant="outline"
-          size="lg"
-          className="customer-product-btn-cart"
-          onClick={() => {
-            if (!isAuthenticated) {
-              onRequireAuth?.('add_to_cart', bag, 1);
-              return;
-            }
-            setIsQuantityOpen(true);
-          }}
-        >
-          <span>Thêm vào giỏ</span>
-        </Button>
+        {merchant?.isOpen === false ? (
+          <div
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              background: '#fef2f2',
+              border: '1px solid #fee2e2',
+              borderRadius: 14,
+              textAlign: 'center',
+              color: '#991b1b',
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
+            ⚠️ Quán hiện đang tạm đóng cửa — Chưa thể đặt hàng
+          </div>
+        ) : (
+          <>
+            <Button
+              variant="outline"
+              size="lg"
+              className="customer-product-btn-cart"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  onRequireAuth?.('add_to_cart', bag, 1);
+                  return;
+                }
+                setIsQuantityOpen(true);
+              }}
+            >
+              <span>Thêm vào giỏ</span>
+            </Button>
 
-        <Button
-          size="lg"
-          className="customer-product-btn-buy"
-          onClick={() => {
-            if (!isAuthenticated) {
-              onRequireAuth?.('buy_now', bag, 1);
-              return;
-            }
-            onBuyNow(bag, 1);
-          }}
-        >
-          <span>Mua ngay</span>
-        </Button>
+            <Button
+              size="lg"
+              className="customer-product-btn-buy"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  onRequireAuth?.('buy_now', bag, 1);
+                  return;
+                }
+                onBuyNow(bag, 1);
+              }}
+            >
+              <span>Mua ngay</span>
+            </Button>
+          </>
+        )}
       </footer>
 
       {/* Quantity Stepper Dialog */}

@@ -6,6 +6,7 @@ import {
   updateStoreImages,
   updateStoreProfile,
 } from '../services/store.service';
+import { supabase } from '../services/supabase';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../types';
 import { useToast } from './useToast';
 
@@ -40,6 +41,29 @@ export function useStoreProfile(storeId: string) {
     }
   }, [loadProfile]);
 
+  // Lắng nghe Realtime trên bảng stores để đồng bộ trạng thái đóng/mở tức thì
+  useEffect(() => {
+    if (!storeId) return;
+    const channel = supabase
+      .channel(`merchant-store-status-${storeId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'stores', filter: `id=eq.${storeId}` },
+        (payload: any) => {
+          if (payload.new && typeof payload.new.is_open === 'boolean') {
+            setProfile((current) =>
+              current ? { ...current, isOpen: payload.new.is_open } : null
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [storeId]);
+
   const saveProfile = async (input: StoreUpdateInput) => {
     setSaving(true);
     try {
@@ -66,12 +90,15 @@ export function useStoreProfile(storeId: string) {
 
   const toggleStatus = async () => {
     const previous = profile;
-    if (profile) setProfile({ ...profile, isOpen: !profile.isOpen });
+    const nextIsOpen = profile ? !profile.isOpen : true;
+    if (profile) setProfile({ ...profile, isOpen: nextIsOpen });
     try {
-      setProfile(await toggleStoreOpenStatus(storeId));
-      showToast(profile?.isOpen ? 'Cửa hàng đang tạm đóng' : 'Cửa hàng đã mở cửa');
+      const updated = await toggleStoreOpenStatus(storeId, nextIsOpen);
+      if (updated) setProfile(updated);
+      showToast(nextIsOpen ? 'Cửa hàng đã mở cửa' : 'Cửa hàng đang tạm đóng');
     } catch {
       setProfile(previous);
+      showToast('Không thể cập nhật trạng thái cửa hàng.');
     }
   };
 

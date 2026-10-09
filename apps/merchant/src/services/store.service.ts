@@ -179,32 +179,45 @@ export async function updateStoreProfile(
   return fetchStoreProfile(storeId);
 }
 
-export async function toggleStoreOpenStatus(storeId: string): Promise<StoreProfile | null> {
-  const { data: store, error: readError } = await supabase
-    .from('stores')
-    .select('is_open')
-    .eq('id', storeId)
-    .maybeSingle();
+export async function toggleStoreOpenStatus(
+  storeId: string,
+  nextIsOpen?: boolean
+): Promise<StoreProfile | null> {
+  // 1. Ưu tiên gọi RPC toggle_store_status (SECURITY DEFINER) đảm bảo ghi nhận vào DB
+  const { error: rpcError } = await supabase.rpc('toggle_store_status', {
+    p_store_id: storeId,
+    p_is_open: nextIsOpen ?? null,
+  });
 
-  if (readError || !store) {
-    console.warn('Đọc trạng thái store lỗi:', readError?.message);
-    throw new Error('Không thể xác định trạng thái cửa hàng.');
+  if (rpcError) {
+    console.warn('Gọi RPC toggle_store_status lỗi, thử fallback update:', rpcError.message);
+    const { data: store } = await supabase
+      .from('stores')
+      .select('is_open')
+      .eq('id', storeId)
+      .maybeSingle();
+
+    const targetStatus = nextIsOpen ?? !(store?.is_open ?? true);
+    const { error: updateError } = await supabase
+      .from('stores')
+      .update({
+        is_open: targetStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', storeId);
+
+    if (updateError) {
+      console.warn('Đổi trạng thái đóng/mở store trên Supabase lỗi:', updateError.message);
+      throw new Error('Không thể đổi trạng thái cửa hàng.');
+    }
   }
 
-  const { error } = await supabase
-    .from('stores')
-    .update({
-      is_open: !store.is_open,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', storeId);
-
-  if (error) {
-    console.warn('Đổi trạng thái đóng/mở store trên Supabase lỗi:', error.message);
-    throw new Error('Không thể đổi trạng thái cửa hàng.');
+  // 2. Tải lại profile mới nhất từ DB và lưu cache
+  const updated = await fetchStoreProfile(storeId);
+  if (updated) {
+    setCachedStoreProfile(storeId, updated);
   }
-
-  return fetchStoreProfile(storeId);
+  return updated;
 }
 
 export async function updateStoreImages(
