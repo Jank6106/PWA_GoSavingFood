@@ -417,23 +417,23 @@ export function QRScannerModal({
         <form className="merchant-qr-form" onSubmit={submit}>
           <div
             className="merchant-qr-simulator"
-            onClick={() => setCode(order.qrCode || order.orderCode)}
+            onClick={() => setCode(order.pickupToken || order.qrCode || order.orderCode)}
             style={{ cursor: 'pointer' }}
             title="Bấm để giả lập quét mã QR này"
           >
             <QrCode size={82} />
             <span>
-              Đưa mã QR của khách vào vùng quét (hoặc <b>bấm vào đây để điền mã giả lập</b>: <code>{order.orderCode}</code>)
+              Đưa mã QR bảo mật của khách vào vùng quét (hoặc <b>bấm vào đây để điền mã giả lập</b>: <code>{order.pickupToken ? `${order.pickupToken.slice(0, 8)}...` : order.orderCode}</code>)
             </span>
           </div>
           <div className="merchant-divider">
             <span>hoặc nhập mã thủ công</span>
           </div>
           <Field
-            label="Mã xác nhận"
+            label="Mã xác nhận bảo mật"
             value={code}
             onChange={(event) => setCode(event.target.value)}
-            placeholder={order.qrCode || order.orderCode}
+            placeholder={order.pickupToken || order.orderCode}
             error={error}
             required
           />

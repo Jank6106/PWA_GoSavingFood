@@ -488,8 +488,8 @@ export const customerService = {
           discountAmount: Number(o.discount_amount) || 0,
           finalAmount: Number(o.final_amount) || 0,
           status: o.status === 'picked_up' ? 'completed' : o.status,
-          paymentMethod: o.payment_method || 'cash',
-          paymentStatus: o.payment_status || (o.status === 'pending' ? 'pending' : 'success'),
+          paymentMethod: o.payment_method === 'cash' ? 'payos_vietqr' : (o.payment_method || 'payos_vietqr'),
+          paymentStatus: o.payment_status || (o.status === 'pending_payment' ? 'pending' : 'success'),
           pickupTime: o.pickup_time || '11:00 - 14:00',
           pickupAddress: o.stores?.address || 'Hà Nội',
           createdAt: o.created_at,
@@ -499,6 +499,8 @@ export const customerService = {
           cancelReason: o.cancel_reason || undefined,
           note: o.note || undefined,
           qrCode: o.qr_code || `GSF-ORDER-${o.id}`,
+          pickupToken: o.pickup_token || undefined,
+          paymentExpiresAt: o.payment_expires_at || undefined,
         }));
         return [...localOrders, ...remoteOrders];
       }
@@ -1247,17 +1249,30 @@ export const customerService = {
       throw new Error(mapCreateOrderError(error));
     }
 
-    const createdId = (rpcResult as { order_id?: string } | null)?.order_id || orderId;
+    const createdId = (rpcResult as { order_id?: string; pickup_token?: string } | null)?.order_id || orderId;
+    const pickupToken = (rpcResult as { pickup_token?: string } | null)?.pickup_token;
 
     return {
       ...order,
       id: createdId,
       orderCode: generatedOrderCode,
       qrCode: qrCodeString,
-      status: 'pending',
+      pickupToken: pickupToken || undefined,
+      paymentExpiresAt: new Date(Date.now() + 15 * 60000).toISOString(),
+      status: 'pending_payment',
       paymentStatus: 'pending',
       createdAt: new Date().toISOString(),
     };
+  },
+
+  async cleanupExpiredPendingOrders(): Promise<number> {
+    try {
+      const { data } = await supabase.rpc('cleanup_expired_pending_orders');
+      return (data as any)?.expired_orders_count || 0;
+    } catch (err) {
+      console.warn('cleanupExpiredPendingOrders error:', err);
+      return 0;
+    }
   },
 
   async submitFeedback(
@@ -1323,12 +1338,13 @@ export const customerService = {
     }
   },
 
-  async checkPayOSStatus(orderCode: number): Promise<{ paid: boolean; status: string } | null> {
+  async checkPayOSStatus(orderCode: number, simulate = false): Promise<{ paid: boolean; status: string } | null> {
     try {
       const apiBase =
         import.meta.env.VITE_API_URL ||
         (import.meta.env.PROD ? 'https://gosavingfood.app' : '');
-      const res = await fetch(`${apiBase}/api/payos/check-status?orderCode=${orderCode}`);
+      const simParam = simulate ? '&simulate=true' : '';
+      const res = await fetch(`${apiBase}/api/payos/check-status?orderCode=${orderCode}${simParam}`);
       if (!res.ok) return null;
       const data = await res.json();
       return data;

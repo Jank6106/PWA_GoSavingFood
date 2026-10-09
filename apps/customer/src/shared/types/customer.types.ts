@@ -8,16 +8,19 @@ export type FoodCategory =
   | 'other';
 
 export type OrderStatus =
-  | 'pending'
-  | 'confirmed'
+  | 'pending_payment'
+  | 'paid'
   | 'preparing'
   | 'ready_for_pickup'
-  | 'picked_up'
   | 'completed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'expired'
+  | 'pending'
+  | 'confirmed'
+  | 'picked_up';
 
-export type PaymentMethod = 'banking' | 'momo' | 'cash';
-export type PaymentStatus = 'pending' | 'success' | 'failed';
+export type PaymentMethod = 'payos_vietqr' | 'banking';
+export type PaymentStatus = 'pending' | 'success' | 'refund_pending' | 'refunded' | 'failed';
 export type CustomerTab = 'home' | 'cart' | 'orders' | 'profile';
 
 export interface User {
@@ -139,6 +142,8 @@ export interface Order {
     createdAt: string;
   };
   qrCode?: string;
+  pickupToken?: string;
+  paymentExpiresAt?: string;
   paymentOrderCode?: number;
   paymentLinkId?: string;
   checkoutUrl?: string;

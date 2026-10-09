@@ -1,12 +1,12 @@
 import type { AuthUser } from '../types';
 
-export const STORE_ID = 'b0000000-0000-0000-0000-000000000002';
 export const MERCHANT_STORE_ID = '799e644e-2f82-4a85-ba12-b194cf4cc547';
+export const STORE_ID = MERCHANT_STORE_ID;
 
 export const DEMO_MERCHANT_USER: AuthUser = {
-  id: '00000000-0000-0000-0000-000000000003',
-  storeId: STORE_ID,
-  displayName: 'Cửa hàng Demo',
+  id: '09ce2d9c-7382-4ce2-8299-42effefe6004',
+  storeId: MERCHANT_STORE_ID,
+  displayName: 'GoGreen Bakery',
   isFirstLogin: false,
 };
 

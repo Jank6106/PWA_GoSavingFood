@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "pnpm --parallel -r dev",
+    "dev:turbo": "turbo dev",
+    "dev:customer": "pnpm --filter customer dev",
+    "dev:merchant": "pnpm --filter merchant dev",
+    "dev:web": "pnpm --filter web dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "echo \"Error: no test specified\" && exit 1"

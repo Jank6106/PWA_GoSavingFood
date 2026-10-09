@@ -53,7 +53,9 @@ export function GlobalQRScannerModal({
       const oCode = o.orderCode.toLowerCase();
       const qCode = (o.qrCode || '').toLowerCase();
       const oId = o.id.toLowerCase();
+      const pToken = (o.pickupToken || '').toLowerCase();
       return (
+        (pToken && pToken === clean) ||
         oCode === clean ||
         qCode === clean ||
         oId === clean ||

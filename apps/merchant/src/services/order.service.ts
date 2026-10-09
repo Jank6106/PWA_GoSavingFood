@@ -11,11 +11,11 @@ const UI_TO_DB_TARGET: Record<Exclude<OrderStatus, 'pending'>, string> = {
 };
 
 const mapDbStatusToUi = (status: string): OrderStatus => {
-  if (status === 'confirmed') return 'confirmed';
+  if (status === 'paid' || status === 'confirmed') return 'pending';
   if (status === 'preparing') return 'processing';
   if (status === 'ready_for_pickup') return 'confirmed';
   if (status === 'completed' || status === 'picked_up') return 'completed';
-  if (status === 'cancelled') return 'cancelled';
+  if (status === 'cancelled' || status === 'expired') return 'cancelled';
   return 'pending';
 };
 
@@ -48,6 +48,7 @@ const mapDbOrder = (o: any): MerchantOrder => {
         })
       : 'Chưa cập nhật',
     qrCode: o.qr_code || `GSF-ORDER-${o.id}`,
+    pickupToken: o.pickup_token || undefined,
     note: o.note || undefined,
     items: (o.order_items || []).map((it: any) => ({
       id: it.id,
@@ -85,7 +86,7 @@ export function setCachedMerchantOrders(storeId: string, orders: MerchantOrder[]
 }
 
 const ORDER_SELECT =
-  'id, store_id, customer_id, status, payment_status, payment_method, total_original_price, discount_amount, final_amount, pickup_time, qr_code, note, created_at, updated_at, completed_at, cancelled_at, cancel_reason, order_items(id, order_id, bag_id, bag_name, quantity, unit_price, surprise_bags(image_url))';
+  'id, store_id, customer_id, status, payment_status, payment_method, total_original_price, discount_amount, final_amount, pickup_time, qr_code, pickup_token, note, created_at, updated_at, completed_at, cancelled_at, cancel_reason, order_items(id, order_id, bag_id, bag_name, quantity, unit_price, surprise_bags(image_url))';
 
 export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrder[]> {
   const existing = ordersInFlight.get(storeId);
@@ -97,6 +98,7 @@ export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrde
         .from('orders')
         .select(ORDER_SELECT)
         .eq('store_id', storeId)
+        .neq('status', 'pending_payment')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -231,8 +233,24 @@ export async function updateMerchantOrderStatus(
   return updatedLocal;
 }
 
-export async function verifyOrderQR(orderId: string, code: string): Promise<boolean> {
-  void code;
+export async function verifyOrderQR(orderId: string, code: string, storeId?: string): Promise<boolean> {
+  const cleanCode = code.trim();
+
+  // 1. Nếu mã quét là UUID (pickup_token bảo mật), ưu tiên gọi RPC verify_pickup_qr
+  if (isValidUuid(cleanCode) && storeId) {
+    try {
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc('verify_pickup_qr', {
+        p_token: cleanCode,
+        p_store_id: storeId,
+      });
+      if (!rpcErr && rpcRes?.success) {
+        return true;
+      }
+    } catch (err) {
+      console.warn('verify_pickup_qr error:', err);
+    }
+  }
+
   if (!isValidUuid(orderId)) return true;
 
   try {
@@ -240,19 +258,20 @@ export async function verifyOrderQR(orderId: string, code: string): Promise<bool
       data: { user },
     } = await supabase.auth.getUser();
 
-    // 1. Quick direct update
+    // 2. Cập nhật trực tiếp
     const { error: directErr } = await supabase
       .from('orders')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        pickup_token: null,
       })
       .eq('id', orderId);
 
     if (!directErr) return true;
 
-    // 2. Fallback to RPC transition
+    // 3. Fallback to RPC transition
     if (user) {
       try {
         await supabase.rpc('transition_order_status_transaction', {

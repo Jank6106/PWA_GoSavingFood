@@ -57,12 +57,11 @@ function formatDateTime(dateStr?: string): string {
 
 function getPaymentMethodLabel(method: string): string {
   switch (method) {
+    case 'payos_vietqr':
     case 'banking':
-      return 'Chuyển khoản QR ngân hàng';
+      return 'Chuyển khoản VietQR (PayOS)';
     case 'momo':
       return 'Ví MoMo';
-    case 'cash':
-      return 'Tiền mặt khi nhận';
     default:
       return method;
   }
@@ -117,25 +116,37 @@ export function OrderDetailPage({
   };
 
   const handleConfirmCancel = () => {
+    const isPaidOrder = currentOrder.paymentStatus === 'success';
     const updated: Order = {
       ...currentOrder,
       status: 'cancelled',
       cancelledAt: new Date().toISOString(),
       cancelReason: selectedCancelReason,
+      paymentStatus: isPaidOrder ? 'refund_pending' : currentOrder.paymentStatus,
     };
     setCurrentOrder(updated);
     onUpdateOrder?.(updated);
     onCancelOrder?.(updated.id, updated.cancelReason ?? '');
     setIsCancelModalOpen(false);
-    showToast('Đã hủy đơn hàng và kích hoạt hoàn tiền 100%!');
+    showToast(
+      isPaidOrder
+        ? 'Đã hủy đơn. Yêu cầu hoàn tiền đang được GoSavingFood xử lý!'
+        : 'Đã hủy đơn hàng thành công!'
+    );
   };
 
   const status = currentOrder.status;
+  const isPendingPayment = status === 'pending_payment';
+  const isPaid = status === 'paid';
+  const isPreparing = status === 'preparing';
   const isReady = status === 'ready_for_pickup';
-  const isPending = status === 'pending';
-  const isConfirmedOrPreparing = status === 'confirmed' || status === 'preparing';
+  const isPendingLegacy = status === 'pending';
+  const isConfirmedLegacy = status === 'confirmed';
   const isCompleted = status === 'completed' || (status as string) === 'picked_up';
   const isCancelled = status === 'cancelled';
+  const isExpired = status === 'expired';
+  const isPending = isPendingPayment || isPaid || isPendingLegacy;
+  const canCancel = isPendingPayment || isPaid || isPendingLegacy || isConfirmedLegacy;
 
   const savingsAmount = Math.max(
     0,
@@ -161,30 +172,27 @@ export function OrderDetailPage({
       <section
         className={`customer-order-status-card customer-order-status-card--${status}`}
       >
-
-        {isReady && (
+        {isPendingPayment && (
           <>
-            <h1>Hẹn gặp bạn tại cửa hàng!</h1>
+            <h1>Chờ thanh toán VietQR</h1>
             <p>
-              Đơn hàng đã sẵn sàng. Vui lòng đến cửa hàng đúng khung giờ và xuất trình
-              mã nhận hàng bên dưới.
+              Đơn hàng đang chờ bạn thanh toán. Vui lòng thanh toán trước khi hết hạn 15 phút để quán chuẩn bị món.
             </p>
           </>
         )}
 
-        {isPending && (
+        {isPaid && (
           <>
-            <h1>Đang chờ quán xác nhận đơn</h1>
+            <h1>Đã thanh toán · Chờ quán nhận đơn 🎉</h1>
             <p>
-              Cửa hàng đang kiểm tra thực phẩm trong ca và sẽ xác nhận trong ít
-              phút. Bạn có thể thêm ghi chú hoặc hủy đơn nếu cần.
+              Thanh toán thành công! Quán đã nhận được đơn của bạn và sẽ bấm xác nhận trong ít phút.
             </p>
           </>
         )}
 
-        {isConfirmedOrPreparing && (
+        {isPreparing && (
           <>
-            <h1>Quán đã xác nhận & đang chuẩn bị</h1>
+            <h1>Quán đang chuẩn bị món 🍳</h1>
             <p>
               Cửa hàng đã xác nhận đơn và đang chuẩn bị các phần ăn cho bạn.
               Chúng tôi sẽ thông báo ngay khi đơn hàng sẵn sàng để lấy!
@@ -192,9 +200,38 @@ export function OrderDetailPage({
           </>
         )}
 
+        {isReady && (
+          <>
+            <h1>Hẹn gặp bạn tại cửa hàng! 🛍️</h1>
+            <p>
+              Đơn hàng đã sẵn sàng. Vui lòng đến cửa hàng đúng khung giờ và xuất trình
+              mã nhận hàng bảo mật bên dưới.
+            </p>
+          </>
+        )}
+
+        {isPendingLegacy && (
+          <>
+            <h1>Đang chờ quán xác nhận đơn</h1>
+            <p>
+              Cửa hàng đang kiểm tra thực phẩm trong ca và sẽ xác nhận trong ít
+              phút.
+            </p>
+          </>
+        )}
+
+        {isConfirmedLegacy && (
+          <>
+            <h1>Quán đã xác nhận đơn</h1>
+            <p>
+              Cửa hàng đã xác nhận đơn và đang chuẩn bị các phần ăn cho bạn.
+            </p>
+          </>
+        )}
+
         {isCompleted && (
           <>
-            <h1>Đơn hàng đã hoàn thành</h1>
+            <h1>Đơn hàng đã hoàn thành ✨</h1>
             <p>
               Cảm ơn bạn đã chung tay giải cứu thực phẩm xanh cùng GoSavingFood!
             </p>
@@ -205,8 +242,19 @@ export function OrderDetailPage({
           <>
             <h1>Đơn hàng đã được hủy</h1>
             <p>
-              Đơn hàng này đã bị hủy. Toàn bộ số tiền thanh toán đã được hoàn trả
-              100% về tài khoản của bạn.
+              Đơn hàng này đã bị hủy.
+              {currentOrder.paymentStatus === 'refund_pending'
+                ? ' Yêu cầu hoàn tiền 100% của bạn đã được ghi nhận và đang được xử lý hoàn trả.'
+                : ' Cảm ơn bạn đã quan tâm đến GoSavingFood.'}
+            </p>
+          </>
+        )}
+
+        {isExpired && (
+          <>
+            <h1>Đơn hàng đã hết hạn ⏰</h1>
+            <p>
+              Đơn hàng đã quá thời gian chờ thanh toán 15 phút và tự động hủy để hoàn trả tồn kho.
             </p>
           </>
         )}
@@ -216,11 +264,11 @@ export function OrderDetailPage({
       {isReady && (
         <section className="customer-pickup-code">
           <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-            <QRCodeSVG value={currentOrder.qrCode || currentOrder.orderCode} size={148} level="M" />
+            <QRCodeSVG value={currentOrder.pickupToken || currentOrder.qrCode || currentOrder.id} size={148} level="M" />
           </div>
-          <span>Mã nhận hàng điện tử</span>
+          <span>Mã nhận hàng điện tử (Bảo mật)</span>
           <strong>{currentOrder.orderCode}</strong>
-          <small>Đưa mã này hoặc mã QR cho nhân viên tại quán để lấy món</small>
+          <small>Đưa mã QR bảo mật này cho nhân viên tại quán để đối soát và lấy món</small>
         </section>
       )}
 
@@ -235,12 +283,22 @@ export function OrderDetailPage({
             <p>
               Lý do hủy: {currentOrder.cancelReason || 'Khách hàng yêu cầu hủy đơn'}
             </p>
-            <div className="customer-refund-status-tag">
-              <CheckCircle2 size={12} />
-              <span>
-                Đã hoàn tiền 100% ({currentOrder.finalAmount.toLocaleString('vi-VN')}đ)
-              </span>
-            </div>
+            {currentOrder.paymentStatus === 'refund_pending' && (
+              <div className="customer-refund-status-tag" style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                <CheckCircle2 size={12} />
+                <span>
+                  Yêu cầu hoàn tiền đang xử lý ({currentOrder.finalAmount.toLocaleString('vi-VN')}đ)
+                </span>
+              </div>
+            )}
+            {currentOrder.paymentStatus === 'refunded' && (
+              <div className="customer-refund-status-tag">
+                <CheckCircle2 size={12} />
+                <span>
+                  Đã hoàn tiền 100% ({currentOrder.finalAmount.toLocaleString('vi-VN')}đ)
+                </span>
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -444,8 +502,8 @@ export function OrderDetailPage({
 
       {/* Action buttons based on status */}
       <div className="customer-order-actions-container">
-        {/* If pending: Cancel Order button */}
-        {isPending && (
+        {/* Nút hủy đơn: Chỉ cho phép hủy khi đơn ở pending_payment / paid */}
+        {canCancel && (
           <Button
             fullWidth
             variant="destructive"
@@ -454,6 +512,13 @@ export function OrderDetailPage({
           >
             <Trash2 size={16} /> Hủy đơn hàng này
           </Button>
+        )}
+
+        {/* Thông báo khi quán đã nhận đơn & đang chuẩn bị: Khách không được tự ý hủy */}
+        {(isPreparing || isReady) && (
+          <div style={{ padding: '12px 16px', background: '#f8faf9', border: '1px solid #e2e8e4', borderRadius: '12px', fontSize: '13px', color: '#4b5563', textAlign: 'center', lineHeight: 1.5 }}>
+            Quán đang chuẩn bị hoặc đã sẵn sàng món ăn. Nếu bạn gặp sự cố đột xuất cần hỗ trợ, vui lòng gọi điện thoại trực tiếp cho cửa hàng.
+          </div>
         )}
 
         {/* If cancelled: Reorder button */}

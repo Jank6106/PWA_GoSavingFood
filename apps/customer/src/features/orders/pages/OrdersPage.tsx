@@ -27,16 +27,19 @@ export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: Or
       orders.filter((order) => {
         if (filter === 'all') return true;
         if (filter === 'pending') {
-          return order.status === 'pending';
+          return order.status === 'pending_payment' || order.status === 'pending';
         }
         if (filter === 'confirmed') {
-          return order.status === 'confirmed' || order.status === 'preparing';
+          return order.status === 'paid' || order.status === 'confirmed' || order.status === 'preparing';
         }
         if (filter === 'ready_for_pickup') {
           return order.status === 'ready_for_pickup';
         }
         if (filter === 'completed') {
           return order.status === 'completed' || order.status === 'picked_up';
+        }
+        if (filter === 'cancelled') {
+          return order.status === 'cancelled' || order.status === 'expired';
         }
         return order.status === filter;
       }),

@@ -336,6 +336,7 @@ function CustomerApp() {
                       cancelledAt: orderPayload.new.cancelled_at || order.cancelledAt,
                       cancelReason: orderPayload.new.cancel_reason || order.cancelReason,
                       paymentStatus: orderPayload.new.payment_status || order.paymentStatus,
+                      pickupToken: orderPayload.new.pickup_token || order.pickupToken,
                     }
                   : order
               );
@@ -633,7 +634,7 @@ function CustomerApp() {
         totalDiscountPrice: subtotal,
         discountAmount: draft.discountAmount,
         finalAmount: Math.max(0, subtotal - draft.discountAmount),
-        status: 'pending',
+        status: 'pending_payment',
         paymentMethod: draft.paymentMethod,
         paymentStatus: 'pending',
         pickupTime: draft.pickupTime,
@@ -649,8 +650,12 @@ function CustomerApp() {
       setOrders((current) => [created, ...current]);
       push({ name: 'payment', draft, order: created, buyNowItem });
     } catch (error) {
-      console.warn('Tạo đơn trước lỗi (chuyển sang payment fallback):', error);
-      push({ name: 'payment', draft, buyNowItem });
+      console.error('Tạo đơn hàng trước lỗi:', error);
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : 'Không thể khởi tạo đơn hàng. Vui lòng kiểm tra lại giỏ hàng và thử lại.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -659,6 +664,13 @@ function CustomerApp() {
   const handlePaymentConfirm = async (draft: CheckoutDraft, existingOrder?: Order, buyNowItem?: CartItem) => {
     if (existingOrder) {
       if (!buyNowItem) cart.clear();
+      setOrders((current) =>
+        current.map((o) =>
+          o.id === existingOrder.id
+            ? { ...o, status: 'paid', paymentStatus: 'success' }
+            : o
+        )
+      );
       resetToSuccess(existingOrder.id);
       return;
     }
@@ -693,7 +705,7 @@ function CustomerApp() {
         totalDiscountPrice: subtotal,
         discountAmount: draft.discountAmount,
         finalAmount: Math.max(0, subtotal - draft.discountAmount),
-        status: 'pending',
+        status: 'pending_payment',
         paymentMethod: draft.paymentMethod,
         paymentStatus: 'pending',
         pickupTime: draft.pickupTime,

@@ -345,7 +345,7 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
                 voucherCode: voucher?.code,
                 discountAmount,
                 note,
-                paymentMethod: 'banking',
+                paymentMethod: 'payos_vietqr',
               });
             }}
           >

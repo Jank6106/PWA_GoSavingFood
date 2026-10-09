@@ -73,6 +73,7 @@ export interface MerchantOrder {
   paidAt?: string;
   pickupTime: string;
   qrCode: string;
+  pickupToken?: string;
   note?: string;
   items?: OrderItemDetail[];
 }

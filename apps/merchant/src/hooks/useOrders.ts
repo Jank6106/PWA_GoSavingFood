@@ -71,11 +71,24 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     // Kích hoạt Supabase Realtime lắng nghe đơn mới & cập nhật đơn hàng
     const channel = subscribeToStoreOrders(storeId, (payload) => {
       if (payload.eventType === 'INSERT') {
-        showToast('Có đơn hàng mới vừa được đặt!');
-      } else if (payload.eventType === 'UPDATE' && payload.new?.status === 'cancelled') {
-        showToast('Một đơn hàng vừa được cập nhật sang đã hủy.');
+        // Chỉ thông báo đơn mới khi đã thanh toán thành công, không báo lúc pending_payment!
+        if (payload.new?.payment_status === 'success' || payload.new?.status === 'paid') {
+          showToast('Có đơn hàng mới vừa thanh toán thành công! Vui lòng xác nhận.');
+          void loadOrders();
+        }
+      } else if (payload.eventType === 'UPDATE') {
+        const isPaidNow =
+          payload.new?.payment_status === 'success' || payload.new?.status === 'paid';
+        const wasAlreadyPaid =
+          payload.old?.payment_status === 'success' && payload.old?.status === 'paid';
+
+        if (isPaidNow && !wasAlreadyPaid) {
+          showToast('Có đơn hàng mới vừa thanh toán thành công! Vui lòng xác nhận.');
+        } else if (payload.new?.status === 'cancelled') {
+          showToast('Một đơn hàng vừa được cập nhật sang đã hủy.');
+        }
+        void loadOrders();
       }
-      void loadOrders();
     });
 
     const lastFocusFetchRef = { current: 0 };
@@ -189,10 +202,12 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     const normalized = qrCode.trim().toUpperCase();
     const orderCode = order.orderCode.toUpperCase();
     const targetQR = (order.qrCode || '').toUpperCase();
+    const targetToken = (order.pickupToken || '').toUpperCase();
     const cleanId = order.id.toUpperCase();
 
     const matches =
       !normalized ||
+      (targetToken && normalized === targetToken) ||
       normalized === targetQR ||
       targetQR.includes(normalized) ||
       normalized.includes(orderCode) ||
@@ -218,8 +233,8 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
       cached.map((o) => (o.id === orderId ? completedOrder : o))
     );
 
-    // 2. Đồng bộ ngầm với Supabase
-    void verifyOrderQR(orderId, qrCode).catch((err) => {
+    // 2. Đồng bộ ngầm với Supabase qua verifyOrderQR (kèm storeId đối soát)
+    void verifyOrderQR(orderId, qrCode, storeId).catch((err) => {
       console.warn('Đồng bộ QR với Supabase thất bại:', err);
     });
 

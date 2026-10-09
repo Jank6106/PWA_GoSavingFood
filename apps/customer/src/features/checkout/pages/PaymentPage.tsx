@@ -13,16 +13,28 @@ import { customerService } from '../../../services/customer.service';
 import type { CheckoutDraft, Order } from '../../../shared/types/customer.types';
 
 interface PaymentPageProps {
-  draft: CheckoutDraft;
+  draft?: CheckoutDraft;
   total: number;
-  isSubmitting: boolean;
+  isSubmitting?: boolean;
   order?: Order;
   onBack: () => void;
   onConfirm: () => void;
 }
 
-export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfirm }: PaymentPageProps) {
-  const [timeLeft, setTimeLeft] = useState(900); // 15 phút đếm ngược
+export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProps) {
+  const [timeLeft, setTimeLeft] = useState(() => {
+    if (order?.paymentExpiresAt) {
+      const diff = Math.floor((new Date(order.paymentExpiresAt).getTime() - Date.now()) / 1000);
+      return diff > 0 ? diff : 0;
+    }
+    return 900; // 15 phút đếm ngược
+  });
+  const [isExpired, setIsExpired] = useState(() => {
+    if (order?.paymentExpiresAt) {
+      return new Date(order.paymentExpiresAt).getTime() <= Date.now();
+    }
+    return false;
+  });
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isImgError, setIsImgError] = useState(false);
@@ -44,10 +56,8 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
     order?.orderCode ||
     (order?.id ? `GSF-${order.id.slice(0, 6).toUpperCase()}` : 'GSF-ORDER');
 
-  const transferContent = orderCode;
-  const rawAccount = payosData?.accountNumber || '8823316420';
-  // Chỉ giữ lại số tài khoản ngân hàng thực tế (loại bỏ tiền tố như V3CAS)
-  const bankAccount = rawAccount.replace(/^[A-Za-z0-9]*?(?=\d{8,})/, '') || '8823316420';
+  const transferContent = payosData?.description || orderCode;
+  const bankAccount = payosData?.accountNumber || '8823316420';
   const bankName = 'BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam';
   const accountHolder = payosData?.accountName || 'NGUYEN HUU DANH';
 
@@ -62,7 +72,7 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
 
   // 1. Tự động kết nối tới PayOS khi mở trang thanh toán (chống tạo trùng đơn do StrictMode hoặc re-render)
   useEffect(() => {
-    if (!order?.id || draft.paymentMethod === 'cash') return;
+    if (!order?.id || isExpired) return;
 
     let paymentPromise: Promise<any>;
     if (payosRequestedOrderIdRef.current === order.id && payosPromiseRef.current) {
@@ -103,12 +113,12 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
     return () => {
       isMounted = false;
     };
-  }, [order?.id, draft.paymentMethod]);
+  }, [order?.id, isExpired, total, orderCode, order?.items]);
 
   // 2. Lắng nghe Supabase Realtime tự động xác nhận đơn khi PayOS Webhook báo tiền về
   useEffect(() => {
     const targetOrderId = order?.id;
-    if (!targetOrderId || draft.paymentMethod === 'cash') return;
+    if (!targetOrderId || isExpired) return;
 
     console.log('[PaymentPage] Subscribing to Supabase Realtime for order:', targetOrderId);
     const channel = supabase
@@ -123,7 +133,7 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
         },
         (payload) => {
           console.log('[PaymentPage] Realtime event received:', payload);
-          if (payload.new && payload.new.payment_status === 'success') {
+          if (payload.new && (payload.new.payment_status === 'success' || payload.new.status === 'paid')) {
             showToast('Thanh toán thành công! Đang chuyển trang...');
             setTimeout(() => {
               onConfirm();
@@ -136,18 +146,18 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [order?.id, draft.paymentMethod, onConfirm]);
+  }, [order?.id, isExpired, onConfirm]);
 
   // 3. Tự động kiểm tra trạng thái thanh toán từ PayOS (Polling mỗi 3 giây)
   useEffect(() => {
-    const orderCode = payosData?.orderCode;
-    if (!orderCode || draft.paymentMethod === 'cash') return;
+    const currentOrderCode = payosData?.orderCode;
+    if (!currentOrderCode || isExpired) return;
 
     let isPolling = true;
     const interval = setInterval(async () => {
       if (!isPolling) return;
       try {
-        const check = await customerService.checkPayOSStatus(orderCode);
+        const check = await customerService.checkPayOSStatus(currentOrderCode);
         if (check?.paid && isPolling) {
           console.log('[PaymentPage] PayOS polling detected PAID!');
           isPolling = false;
@@ -166,13 +176,24 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
       isPolling = false;
       clearInterval(interval);
     };
-  }, [payosData?.orderCode, draft.paymentMethod, onConfirm]);
+  }, [payosData?.orderCode, isExpired, onConfirm]);
 
-  // 4. Đếm ngược thời gian thanh toán
+  // 4. Đếm ngược thời gian thanh toán (TTL 15 phút)
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0) {
+      setIsExpired(true);
+      void customerService.cleanupExpiredPendingOrders();
+      return;
+    }
     const timer = setInterval(() => {
-      setTimeLeft((prev) => Math.max(0, prev - 1));
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setIsExpired(true);
+          void customerService.cleanupExpiredPendingOrders();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
@@ -213,23 +234,52 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
     }
   };
 
+  const [isCheckingManual, setIsCheckingManual] = useState(false);
+
+  const handleManualCheck = async (simulate = false) => {
+    const currentOrderCode = payosData?.orderCode;
+    if (!currentOrderCode) {
+      showToast('Đang kết nối cổng thanh toán PayOS...');
+      return;
+    }
+    setIsCheckingManual(true);
+    try {
+      showToast('Đang kiểm tra trạng thái thanh toán...');
+      const check = await customerService.checkPayOSStatus(currentOrderCode, simulate);
+      if (check?.paid) {
+        showToast('Thanh toán thành công! Đang chuyển trang...');
+        setTimeout(() => {
+          onConfirm();
+        }, 500);
+      } else {
+        showToast('Chưa ghi nhận tiền về từ ngân hàng. Vui lòng thử lại sau vài giây.');
+      }
+    } catch {
+      showToast('Không thể kiểm tra lúc này, vui lòng thử lại.');
+    } finally {
+      setIsCheckingManual(false);
+    }
+  };
+
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  // Trường hợp khách chọn thanh toán tiền mặt tại quầy
-  if (draft.paymentMethod === 'cash') {
+  // Trường hợp hết hạn thời gian thanh toán
+  if (isExpired) {
     return (
-      <div className="customer-screen">
-        <ScreenHeader title="Xác nhận thanh toán" onBack={onBack} />
-        <section className="customer-payment-card">
-          <div className="customer-payment-icon">💵</div>
-          <h1>Thanh toán tại cửa hàng</h1>
-          <p>
-            Bạn sẽ thanh toán <strong>{total.toLocaleString('vi-VN')}đ</strong> khi đến nhận món.
+      <div className="customer-screen customer-payment-screen">
+        <ScreenHeader title="Hết hạn thanh toán" onBack={onBack} />
+        <section className="customer-payment-card" style={{ padding: '36px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: '52px', marginBottom: '16px' }}>⏰</div>
+          <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
+            Đơn hàng đã hết thời hạn thanh toán
+          </h2>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '28px' }}>
+            Thời hạn 15 phút cho giao dịch này đã kết thúc. Túi thực phẩm và ưu đãi đã được trả về kệ hàng để cộng đồng tiếp tục giải cứu. Vui lòng quay lại và tiến hành đặt lại.
           </p>
-          <Button fullWidth size="lg" isLoading={isSubmitting} onClick={onConfirm}>
-            Hoàn tất đặt hàng
+          <Button fullWidth size="lg" onClick={onBack}>
+            Quay lại danh mục món ăn
           </Button>
         </section>
       </div>
@@ -398,6 +448,41 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
           </div>
         </div>
       </section>
+
+      {/* Nút hỗ trợ xác nhận thanh toán */}
+      <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '420px', margin: '16px auto 0' }}>
+        <Button
+          fullWidth
+          size="lg"
+          disabled={isCheckingManual}
+          onClick={() => void handleManualCheck(false)}
+        >
+          {isCheckingManual ? 'Đang kiểm tra giao dịch...' : 'Tôi đã chuyển khoản (Kiểm tra ngay)'}
+        </Button>
+
+        {import.meta.env.DEV && (
+          <button
+            type="button"
+            onClick={() => void handleManualCheck(true)}
+            style={{
+              padding: '9px 14px',
+              borderRadius: '10px',
+              border: '1px dashed #d97706',
+              background: '#fffbeb',
+              color: '#b45309',
+              fontSize: '12.5px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+          >
+            ⚡ [Dev Test] Xác nhận thanh toán thành công ngay
+          </button>
+        )}
+      </div>
 
       {/* Toast thông báo nhanh */}
       {toastMessage && (
