@@ -35,9 +35,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     const isProd = process.env.NODE_ENV === "production";
     const customerTarget =
-      process.env.CUSTOMER_APP_URL || "https://gsf-customer-pwa.vercel.app";
+      process.env.CUSTOMER_APP_URL?.trim() || "https://gsf-customer-pwa.vercel.app";
     const merchantTarget =
-      process.env.MERCHANT_APP_URL || "https://gsf-merchant-pwa.vercel.app";
+      process.env.MERCHANT_APP_URL?.trim() || "https://gsf-merchant-pwa.vercel.app";
 
     return [
       // /explore -> Customer PWA
