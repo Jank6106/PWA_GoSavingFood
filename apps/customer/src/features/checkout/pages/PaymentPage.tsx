@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   Check,
   Clock3,
   Copy,
   Download,
+  Loader2,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { Button } from '@gosavingfood/ui';
 import { ScreenHeader } from '../../../shared/components';
 import { supabase } from '../../../services/supabase';
@@ -38,6 +40,7 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isImgError, setIsImgError] = useState(false);
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [payosData, setPayosData] = useState<{
     orderCode: number;
     qrCode: string;
@@ -50,6 +53,8 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
 
   const payosPromiseRef = useRef<Promise<any> | null>(null);
   const payosRequestedOrderIdRef = useRef<string | null>(null);
+  const isPaidConfirmedRef = useRef(false);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   // Mã đơn hàng chính thức dùng làm nội dung chuyển khoản
   const orderCode =
@@ -69,6 +74,131 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
   const fallbackQrData =
     payosData?.qrCode ||
     `00020101021238540010A000000727012600069704180112${bankAccount}0208QRIBFTTA5303704540${total}5802VN62180814${transferContent}6304`;
+
+  // Hàm kích hoạt xác nhận thanh toán thành công (đảm bảo chỉ chạy đúng 1 lần)
+  const handlePaymentSuccess = useCallback(() => {
+    if (isPaidConfirmedRef.current) return;
+    isPaidConfirmedRef.current = true;
+    console.log('[PaymentPage] handlePaymentSuccess triggered -> redirecting to success screen');
+    setToastMessage('Thanh toán thành công! Đang chuyển trang...');
+    setTimeout(() => {
+      onConfirm();
+    }, 500);
+  }, [onConfirm]);
+
+  // Hàm chủ động kiểm tra trạng thái thanh toán từ cả DB Supabase và PayOS API
+  const checkCurrentOrderStatus = useCallback(async (isManual = false): Promise<boolean> => {
+    if (isPaidConfirmedRef.current || isExpired) return false;
+    const targetOrderId = order?.id;
+    if (!targetOrderId) return false;
+
+    if (isManual) {
+      setIsCheckingPayment(true);
+    }
+
+    try {
+      // 1. Kiểm tra trực tiếp bảng orders trên Supabase (siêu nhanh ~50ms)
+      // Dành cho trường hợp Webhook PayOS đã cập nhật DB trong lúc app đang chạy ngầm
+      const { data: dbOrder, error: dbError } = await supabase
+        .from('orders')
+        .select('id, payment_status, status')
+        .eq('id', targetOrderId)
+        .maybeSingle();
+
+      if (!dbError && dbOrder) {
+        const isDbPaid =
+          dbOrder.payment_status === 'success' ||
+          dbOrder.status === 'paid' ||
+          dbOrder.status === 'confirmed' ||
+          dbOrder.status === 'ready' ||
+          dbOrder.status === 'completed';
+
+        if (isDbPaid) {
+          console.log('[PaymentPage] DB query confirmed order is PAID:', dbOrder);
+          handlePaymentSuccess();
+          return true;
+        }
+      }
+
+      // 2. Tra cứu trực tiếp với PayOS qua API check-status
+      // Dành cho trường hợp Webhook PayOS chưa kịp gọi về hoặc bị trễ mạng
+      const orderCodeNum =
+        payosData?.orderCode ||
+        (order?.orderCode && !isNaN(Number(order.orderCode)) ? Number(order.orderCode) : null);
+
+      if (orderCodeNum) {
+        const check = await customerService.checkPayOSStatus(orderCodeNum);
+        if (check?.paid) {
+          console.log('[PaymentPage] PayOS API check confirmed order is PAID:', check);
+          handlePaymentSuccess();
+          return true;
+        }
+      }
+
+      if (isManual) {
+        setToastMessage('Hệ thống chưa ghi nhận tiền về. Vui lòng đợi thêm vài giây.');
+        setTimeout(() => setToastMessage(null), 3000);
+      }
+    } catch (err) {
+      console.warn('[PaymentPage] checkCurrentOrderStatus error:', err);
+      if (isManual) {
+        setToastMessage('Lỗi kiểm tra trạng thái thanh toán. Vui lòng thử lại.');
+        setTimeout(() => setToastMessage(null), 3000);
+      }
+    } finally {
+      if (isManual) {
+        setIsCheckingPayment(false);
+      }
+    }
+
+    return false;
+  }, [order?.id, order?.orderCode, payosData?.orderCode, isExpired, handlePaymentSuccess]);
+
+  // Khởi tạo / phục hồi Realtime Subscription
+  const setupRealtimeChannel = useCallback(() => {
+    const targetOrderId = order?.id;
+    if (!targetOrderId || isExpired || isPaidConfirmedRef.current) return;
+
+    if (channelRef.current) {
+      try {
+        supabase.removeChannel(channelRef.current);
+      } catch {}
+      channelRef.current = null;
+    }
+
+    console.log('[PaymentPage] Subscribing to Supabase Realtime for order:', targetOrderId);
+    const channel = supabase
+      .channel(`order-payment-realtime-${targetOrderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${targetOrderId}`,
+        },
+        (payload) => {
+          console.log('[PaymentPage] Realtime event received:', payload);
+          if (payload.new) {
+            const isPaid =
+              payload.new.payment_status === 'success' ||
+              payload.new.status === 'paid' ||
+              payload.new.status === 'confirmed' ||
+              payload.new.status === 'ready' ||
+              payload.new.status === 'completed';
+
+            if (isPaid) {
+              handlePaymentSuccess();
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('[PaymentPage] Realtime subscription status:', status);
+      });
+
+    channelRef.current = channel;
+  }, [order?.id, isExpired, handlePaymentSuccess]);
 
   // 1. Tự động kết nối tới PayOS khi mở trang thanh toán (chống tạo trùng đơn do StrictMode hoặc re-render)
   useEffect(() => {
@@ -117,55 +247,71 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
 
   // 2. Lắng nghe Supabase Realtime tự động xác nhận đơn khi PayOS Webhook báo tiền về
   useEffect(() => {
+    setupRealtimeChannel();
+
+    return () => {
+      if (channelRef.current) {
+        try {
+          supabase.removeChannel(channelRef.current);
+        } catch {}
+        channelRef.current = null;
+      }
+    };
+  }, [setupRealtimeChannel]);
+
+  // 3. Cơ chế phục hồi khi App Active trở lại (Mobile OS background freeze recovery)
+  useEffect(() => {
     const targetOrderId = order?.id;
     if (!targetOrderId || isExpired) return;
 
-    console.log('[PaymentPage] Subscribing to Supabase Realtime for order:', targetOrderId);
-    const channel = supabase
-      .channel(`order-payment-realtime-${targetOrderId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${targetOrderId}`,
-        },
-        (payload) => {
-          console.log('[PaymentPage] Realtime event received:', payload);
-          if (payload.new && (payload.new.payment_status === 'success' || payload.new.status === 'paid')) {
-            showToast('Thanh toán thành công! Đang chuyển trang...');
-            setTimeout(() => {
-              onConfirm();
-            }, 600);
+    const handleAppResumed = async () => {
+      // Khi người dùng chuyển từ App Ngân hàng quay lại Customer PWA
+      if (document.visibilityState === 'visible' && !isPaidConfirmedRef.current) {
+        console.log('[PaymentPage] App resumed from background. Re-checking payment status immediately...');
+
+        // 1. Gọi ngay API kiểm tra trạng thái đơn hàng tức thì (không chờ realtime)
+        const isPaid = await checkCurrentOrderStatus();
+        if (isPaid) return;
+
+        // 2. Tái kết nối hoặc làm mới subscription Supabase Realtime nếu bị ngắt
+        if (channelRef.current) {
+          const state = (channelRef.current as any).state;
+          console.log('[PaymentPage] Realtime channel state on resume:', state);
+          if (state === 'closed' || state === 'errored') {
+            setupRealtimeChannel();
           }
+        } else {
+          setupRealtimeChannel();
         }
-      )
-      .subscribe();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleAppResumed);
+    window.addEventListener('focus', handleAppResumed);
+    window.addEventListener('pageshow', handleAppResumed);
 
     return () => {
-      supabase.removeChannel(channel);
+      document.removeEventListener('visibilitychange', handleAppResumed);
+      window.removeEventListener('focus', handleAppResumed);
+      window.removeEventListener('pageshow', handleAppResumed);
     };
-  }, [order?.id, isExpired, onConfirm]);
+  }, [order?.id, isExpired, checkCurrentOrderStatus, setupRealtimeChannel]);
 
-  // 3. Tự động kiểm tra trạng thái thanh toán từ PayOS (Polling mỗi 3 giây)
+  // 4. Tự động kiểm tra trạng thái thanh toán từ PayOS & DB (Polling mỗi 3 giây)
   useEffect(() => {
     const currentOrderCode = payosData?.orderCode;
-    if (!currentOrderCode || isExpired) return;
+    const targetOrderId = order?.id;
+    if ((!currentOrderCode && !targetOrderId) || isExpired) return;
 
     let isPolling = true;
     const interval = setInterval(async () => {
-      if (!isPolling) return;
+      if (!isPolling || isPaidConfirmedRef.current) return;
       try {
-        const check = await customerService.checkPayOSStatus(currentOrderCode);
-        if (check?.paid && isPolling) {
-          console.log('[PaymentPage] PayOS polling detected PAID!');
+        const isPaid = await checkCurrentOrderStatus();
+        if (isPaid && isPolling) {
+          console.log('[PaymentPage] Polling detected PAID!');
           isPolling = false;
           clearInterval(interval);
-          showToast('Thanh toán thành công! Đang chuyển trang...');
-          setTimeout(() => {
-            onConfirm();
-          }, 600);
         }
       } catch {
         // bỏ qua lỗi mạng tạm thời
@@ -176,7 +322,7 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
       isPolling = false;
       clearInterval(interval);
     };
-  }, [payosData?.orderCode, isExpired, onConfirm]);
+  }, [payosData?.orderCode, order?.id, isExpired, checkCurrentOrderStatus]);
 
   // 4. Đếm ngược thời gian thanh toán (TTL 15 phút)
   useEffect(() => {
@@ -419,6 +565,47 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Nút kiểm tra trạng thái thanh toán chủ động (dành cho khách vừa chuyển khoản trên mobile) */}
+        <div style={{ marginTop: '16px', width: '100%' }}>
+          <Button
+            fullWidth
+            size="lg"
+            variant="primary"
+            disabled={isCheckingPayment}
+            onClick={() => void checkCurrentOrderStatus(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              fontWeight: 700,
+            }}
+          >
+            {isCheckingPayment ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                <span>Đang kiểm tra giao dịch...</span>
+              </>
+            ) : (
+              <>
+                <Check size={18} />
+                <span>Tôi đã chuyển khoản</span>
+              </>
+            )}
+          </Button>
+          <p
+            style={{
+              fontSize: '12px',
+              color: 'var(--color-text-muted)',
+              textAlign: 'center',
+              marginTop: '8px',
+              lineHeight: 1.4,
+            }}
+          >
+            Hệ thống tự động xác nhận đơn khi ngân hàng nhận tiền.
+          </p>
         </div>
       </section>
 

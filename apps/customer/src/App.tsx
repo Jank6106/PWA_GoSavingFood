@@ -369,9 +369,43 @@ function CustomerApp() {
       }
     );
 
+    // Xử lý phục hồi khi App Active trở lại từ nền (Banking App switch)
+    const handleAppVisibility = () => {
+      if (document.visibilityState === 'visible' && auth.user?.id) {
+        void customerService.getOrders(auth.user.id).then((items) => {
+          if (!active || !items) return;
+          setOrders(items);
+          setHistory((currentHistory) => {
+            const currentRoute = currentHistory[currentHistory.length - 1];
+            if (currentRoute?.name === 'payment' && currentRoute.order?.id) {
+              const matchedOrder = items.find((it) => it.id === currentRoute.order?.id);
+              if (
+                matchedOrder &&
+                (matchedOrder.paymentStatus === 'success' ||
+                  matchedOrder.status === 'preparing' ||
+                  matchedOrder.status === 'ready_for_pickup' ||
+                  matchedOrder.status === 'completed' ||
+                  matchedOrder.status === 'picked_up')
+              ) {
+                console.log('[App] App resume detected paid order on payment route -> resetToSuccess');
+                cart.clear();
+                return [{ name: 'success', orderId: matchedOrder.id }];
+              }
+            }
+            return currentHistory;
+          });
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleAppVisibility);
+    window.addEventListener('focus', handleAppVisibility);
+
     return () => {
       active = false;
       window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', handleAppVisibility);
+      window.removeEventListener('focus', handleAppVisibility);
       void supabase.removeChannel(channel);
     };
   }, [auth.user?.id]);
