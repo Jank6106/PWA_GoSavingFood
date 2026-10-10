@@ -25,7 +25,7 @@ interface GlobalQRScannerModalProps {
   onOpenOrderDetails?: (order: MerchantOrder) => void;
 }
 
-export function playScanBeep() {
+function playScanBeep() {
   try {
     const AudioContextClass =
       window.AudioContext ||
@@ -126,6 +126,39 @@ export function GlobalQRScannerModal({
     onClose();
   };
 
+  const handleProcessCode = (code: string) => {
+    const raw = code.trim();
+    if (!raw) return;
+
+    setScannedCode(raw);
+    const clean = raw.toLowerCase();
+
+    // Tìm đơn hàng trùng khớp
+    const match = allOrders.find((o) => {
+      const oCode = o.orderCode.toLowerCase();
+      const qCode = (o.qrCode || '').toLowerCase();
+      const oId = o.id.toLowerCase();
+      const pToken = (o.pickupToken || '').toLowerCase();
+      return (
+        (pToken && pToken === clean) ||
+        oCode === clean ||
+        qCode === clean ||
+        oId === clean ||
+        clean.includes(oCode) ||
+        (qCode && clean.includes(qCode)) ||
+        (clean.length >= 4 && oCode.includes(clean))
+      );
+    });
+
+    if (match) {
+      setMatchedOrder(match);
+      setNotFoundCode(null);
+    } else {
+      setMatchedOrder(null);
+      setNotFoundCode(raw);
+    }
+  };
+
   // Khởi động Camera khi modal mở và chưa có đơn quét trúng
   useEffect(() => {
     if (!open || mode !== 'camera' || matchedOrder || notFoundCode) {
@@ -162,7 +195,9 @@ export function GlobalQRScannerModal({
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
               try {
                 navigator.vibrate(200);
-              } catch {}
+              } catch (err) {
+                void err;
+              }
             }
             playScanBeep();
 
@@ -238,39 +273,6 @@ export function GlobalQRScannerModal({
   // Đổi camera trước/sau
   const toggleFacingMode = () => {
     setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
-  };
-
-  const handleProcessCode = (code: string) => {
-    const raw = code.trim();
-    if (!raw) return;
-
-    setScannedCode(raw);
-    const clean = raw.toLowerCase();
-
-    // Tìm đơn hàng trùng khớp
-    const match = allOrders.find((o) => {
-      const oCode = o.orderCode.toLowerCase();
-      const qCode = (o.qrCode || '').toLowerCase();
-      const oId = o.id.toLowerCase();
-      const pToken = (o.pickupToken || '').toLowerCase();
-      return (
-        (pToken && pToken === clean) ||
-        oCode === clean ||
-        qCode === clean ||
-        oId === clean ||
-        clean.includes(oCode) ||
-        (qCode && clean.includes(qCode)) ||
-        (clean.length >= 4 && oCode.includes(clean))
-      );
-    });
-
-    if (match) {
-      setMatchedOrder(match);
-      setNotFoundCode(null);
-    } else {
-      setMatchedOrder(null);
-      setNotFoundCode(raw);
-    }
   };
 
   const handleConfirmDeliver = async () => {
