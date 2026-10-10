@@ -40,7 +40,20 @@ export default function Home() {
   });
 
   useEffect(() => {
-    setUrls(getAppUrls());
+    const appUrls = getAppUrls();
+    setUrls(appUrls);
+
+    // Nếu người dùng bị redirect về Landing Page kèm OAuth token/code, chuyển hướng ngay về Customer App
+    if (typeof window !== "undefined") {
+      const search = window.location.search;
+      const hash = window.location.hash;
+      const params = new URLSearchParams(search);
+      if (params.has("code") || params.has("error") || hash.includes("access_token")) {
+        const base = appUrls.customerUrl;
+        const target = base.endsWith("/") ? base : `${base}/`;
+        window.location.replace(`${target}${search}${hash}`);
+      }
+    }
   }, []);
 
   const handleInstall = (target: "customer" | "merchant") => {

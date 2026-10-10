@@ -723,6 +723,7 @@ export const customerService = {
       let dbName = '';
       let dbPhone = '';
       let dbAvatar = '';
+      let hasDbUser = false;
       try {
         const { data: dbUser } = await supabase
           .from('users')
@@ -730,6 +731,7 @@ export const customerService = {
           .eq('id', user.id)
           .maybeSingle();
         if (dbUser) {
+          hasDbUser = true;
           dbName = dbUser.name || '';
           dbPhone = dbUser.phone || '';
           dbAvatar = dbUser.avatar_url || '';
@@ -744,6 +746,24 @@ export const customerService = {
       const fallbackAvatar =
         meta.avatar_url || meta.picture || meta.avatar || undefined;
 
+      if (!hasDbUser) {
+        try {
+          await supabase.from('users').upsert(
+            {
+              id: user.id,
+              email: user.email,
+              name: fallbackName,
+              phone: meta.phone || null,
+              avatar_url: fallbackAvatar || null,
+              role: 'customer',
+            },
+            { onConflict: 'id' }
+          );
+        } catch {
+          // Bỏ qua lỗi DB nếu trigger đã tự xử lý
+        }
+      }
+
       return {
         id: user.id,
         name: dbName || fallbackName,
@@ -757,10 +777,18 @@ export const customerService = {
   },
 
   async loginWithGoogle() {
+    const basePath = import.meta.env.BASE_URL || '/explore/';
+    const normalizedBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
+    const redirectUrl = new URL(normalizedBase, window.location.origin).toString();
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: redirectUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     });
 

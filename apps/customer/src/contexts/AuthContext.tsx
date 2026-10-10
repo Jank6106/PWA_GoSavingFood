@@ -27,17 +27,72 @@ function setCachedUser(u: User | null): void {
   } catch {}
 }
 
+function cleanAuthUrl() {
+  if (typeof window === 'undefined') return;
+  try {
+    const url = new URL(window.location.href);
+    const hasAuthParams =
+      url.searchParams.has('code') ||
+      url.searchParams.has('error') ||
+      url.searchParams.has('error_description') ||
+      url.searchParams.has('error_code');
+    const hasAuthHash =
+      url.hash.includes('access_token') ||
+      url.hash.includes('error') ||
+      url.hash.includes('refresh_token');
+
+    if (hasAuthParams || hasAuthHash) {
+      url.searchParams.delete('code');
+      url.searchParams.delete('error');
+      url.searchParams.delete('error_description');
+      url.searchParams.delete('error_code');
+      url.hash = '';
+      const cleanPath = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '');
+      window.history.replaceState({}, '', cleanPath);
+    }
+  } catch {}
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(getCachedUser);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   useEffect(() => {
-    // 1. Kiểm tra session từ local cache của Supabase SDK (cực nhanh, không đợi mạng)
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        const meta = session.user.user_metadata || {};
-        const cached = getCachedUser();
-        if (!cached || cached.id !== session.user.id) {
+    let isMounted = true;
+
+    const initAuth = async () => {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const code = searchParams.get('code');
+        const error = searchParams.get('error') || searchParams.get('error_description');
+
+        if (error) {
+          console.warn('[auth] OAuth error from provider:', error);
+          cleanAuthUrl();
+        }
+
+        // 1. Supabase client với detectSessionInUrl: true tự động hoàn thành PKCE exchange khi getSession() được gọi
+        let { data: { session } } = await supabase.auth.getSession();
+
+        // 2. Nếu getSession() chưa có session mà URL vẫn còn code, thực hiện fallback exchange
+        if (!session && code) {
+          try {
+            const { data: exchangeData, error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
+            if (!exchangeErr && exchangeData?.session) {
+              session = exchangeData.session;
+            }
+          } catch (exchangeErr) {
+            console.warn('[auth] Fallback PKCE exchange warning:', exchangeErr);
+          }
+        }
+
+        // 3. Làm sạch URL sau khi đã hoàn tất xử lý xác thực
+        cleanAuthUrl();
+
+        if (!isMounted) return;
+
+        if (session?.user) {
+          const meta = session.user.user_metadata || {};
           const quickUser: User = {
             id: session.user.id,
             name:
@@ -51,25 +106,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
           setUser(quickUser);
           setCachedUser(quickUser);
-        }
-      } else {
-        setUser(null);
-        setCachedUser(null);
-      }
-    });
 
-    // 2. Refresh profile chi tiết từ DB ở background
-    void customerService.getUser().then((existing) => {
-      if (existing) {
-        setUser(existing);
-        setCachedUser(existing);
+          // Refresh profile chi tiết từ DB ở background
+          void customerService.getUser().then((existing) => {
+            if (existing && isMounted) {
+              setUser(existing);
+              setCachedUser(existing);
+            }
+          });
+        } else {
+          setUser(null);
+          setCachedUser(null);
+        }
+      } catch (err) {
+        console.warn('[auth] Lỗi khởi tạo session:', err);
       }
-    });
+    };
+
+    void initAuth();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
+        cleanAuthUrl();
         const fullUser = await customerService.getUser();
         if (fullUser) {
           setUser(fullUser);

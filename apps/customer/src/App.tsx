@@ -73,6 +73,12 @@ function loadInitialHistory(): AppRoute[] {
     sessionStorage.removeItem(STORAGE_HISTORY_KEY);
   } catch {}
 
+  if (typeof window !== 'undefined' && window.location.pathname.includes('/auth/callback')) {
+    const base = import.meta.env.BASE_URL || '/explore/';
+    const cleanPath = base.endsWith('/') ? base : `${base}/`;
+    window.history.replaceState({}, '', `${cleanPath}${window.location.search}${window.location.hash}`);
+  }
+
   const fromUrl = parseRouteFromUrl();
   if (fromUrl) {
     if (fromUrl.name === 'tabs' && fromUrl.tab === 'home') {
