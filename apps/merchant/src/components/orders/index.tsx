@@ -67,7 +67,6 @@ export function OrderCard({
   onConfirm,
   onFinishPreparation,
   onCancelRequest,
-  onOpenQR,
   onOpenDetails,
   onCopyCode,
 }: { order: MerchantOrder } & OrderActions) {
@@ -138,11 +137,6 @@ export function OrderCard({
           {order.status === 'processing' && (
             <Button size="small" onClick={() => onFinishPreparation(order.id)}>
               Chuẩn bị xong
-            </Button>
-          )}
-          {order.status === 'confirmed' && (
-            <Button size="small" onClick={() => onOpenQR(order)}>
-              <QrCode size={15} /> Quét QR
             </Button>
           )}
         </div>

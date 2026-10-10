@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FileSearch, QrCode } from 'lucide-react';
 import { Button, EmptyState, ErrorState, SkeletonList, ToastBar } from '../components/ui';
-import { CancelOrderModal, GlobalQRScannerModal, OrderCard, OrderDetailsModal, OrderFilterBar, QRScannerModal } from '../components/orders';
+import { CancelOrderModal, GlobalQRScannerModal, OrderCard, OrderDetailsModal, OrderFilterBar } from '../components/orders';
 import { useOrders } from '../hooks/useOrders';
 import { useToast } from '../hooks/useToast';
 import type { MerchantOrder } from '../types';
@@ -36,7 +36,7 @@ export function OrderManagementScreen({
     if (!order) return;
     state.setSelectedOrder(order);
     state.setIsDetailModalOpen(false);
-    state.setIsQRModalOpen(true);
+    setIsGlobalQRModalOpen(true);
   };
 
   const handleCopyCode = async (code: string) => {
@@ -166,23 +166,6 @@ export function OrderManagementScreen({
         saving={state.saving}
         onClose={() => setCancellingOrder(null)}
         onConfirmCancel={handleConfirmCancel}
-      />
-      <QRScannerModal
-        order={state.selectedOrder}
-        open={state.isQRModalOpen}
-        saving={state.saving}
-        onClose={() => {
-          state.setIsQRModalOpen(false);
-          onClearTargetOrder?.();
-        }}
-        onCompleteQR={async (id, code) => {
-          const ok = await state.completeOrderWithQR(id, code);
-          if (ok) {
-            state.setStatusFilter('all');
-            onClearTargetOrder?.();
-          }
-          return ok;
-        }}
       />
       <GlobalQRScannerModal
         open={isGlobalQRModalOpen || Boolean(isGlobalQROpen)}

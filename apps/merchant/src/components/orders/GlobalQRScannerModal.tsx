@@ -1,8 +1,20 @@
-import { useState } from 'react';
-import { Camera, CheckCircle2, AlertTriangle, KeyRound, QrCode, RefreshCw, ShoppingBag, User, Phone, ArrowRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  Flashlight,
+  Keyboard,
+  Phone,
+  QrCode,
+  RefreshCw,
+  ShoppingBag,
+  User,
+  X,
+} from 'lucide-react';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import type { MerchantOrder } from '../../types';
-import { Button, Field, Modal } from '../ui';
-import { CameraQRScanner } from './CameraQRScanner';
+import { Button, Field } from '../ui';
 import { OrderStatusBadge } from './index';
 
 interface GlobalQRScannerModalProps {
@@ -13,6 +25,28 @@ interface GlobalQRScannerModalProps {
   onOpenOrderDetails?: (order: MerchantOrder) => void;
 }
 
+export function playScanBeep() {
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+  } catch {
+    // Ignore audio autoplay restrictions
+  }
+}
+
 export function GlobalQRScannerModal({
   open,
   onClose,
@@ -20,13 +54,62 @@ export function GlobalQRScannerModal({
   onCompleteQR,
   onOpenOrderDetails,
 }: GlobalQRScannerModalProps) {
-  const [activeTab, setActiveTab] = useState<'camera' | 'manual'>('camera');
+  const [mode, setMode] = useState<'camera' | 'manual'>('camera');
   const [manualCode, setManualCode] = useState('');
   const [scannedCode, setScannedCode] = useState('');
   const [matchedOrder, setMatchedOrder] = useState<MerchantOrder | null>(null);
   const [notFoundCode, setNotFoundCode] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+
+  // Camera states
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isStarted, setIsStarted] = useState(false);
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const [hasTorch, setHasTorch] = useState(false);
+  const [isTorchOn, setIsTorchOn] = useState(false);
+
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const isStoppingRef = useRef(false);
+  const containerId = 'merchant-banking-scanner-viewport';
+
+  // Dừng camera và giải phóng MediaStreamTrack triệt để
+  const stopScanner = async () => {
+    if (isStoppingRef.current) return;
+    isStoppingRef.current = true;
+
+    try {
+      // 1. Tắt trực tiếp tất cả MediaStreamTrack của video element để đèn camera tắt ngay lập tức
+      const container = document.getElementById(containerId);
+      if (container) {
+        const videos = container.querySelectorAll('video');
+        videos.forEach((video) => {
+          if (video.srcObject) {
+            const stream = video.srcObject as MediaStream;
+            stream.getTracks().forEach((track) => {
+              track.stop();
+            });
+            video.srcObject = null;
+          }
+        });
+      }
+
+      // 2. Dừng scanner instance
+      if (scannerRef.current) {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+        scannerRef.current.clear();
+        scannerRef.current = null;
+      }
+    } catch (err) {
+      console.warn('Lỗi khi dừng camera:', err);
+    } finally {
+      setIsStarted(false);
+      setIsTorchOn(false);
+      isStoppingRef.current = false;
+    }
+  };
 
   const resetScan = () => {
     setScannedCode('');
@@ -35,10 +118,126 @@ export function GlobalQRScannerModal({
     setIsDone(false);
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
+    await stopScanner();
     resetScan();
     setManualCode('');
+    setMode('camera');
     onClose();
+  };
+
+  // Khởi động Camera khi modal mở và chưa có đơn quét trúng
+  useEffect(() => {
+    if (!open || mode !== 'camera' || matchedOrder || notFoundCode) {
+      void stopScanner();
+      return;
+    }
+
+    let isMounted = true;
+    const startScanner = async () => {
+      try {
+        setCameraError(null);
+        await stopScanner();
+
+        // Tạo instance mới
+        const scanner = new Html5Qrcode(containerId, {
+          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+          verbose: false,
+        });
+        scannerRef.current = scanner;
+
+        const config = {
+          fps: 15,
+          qrbox: { width: 270, height: 270 },
+          aspectRatio: 1.0,
+        };
+
+        await scanner.start(
+          { facingMode },
+          config,
+          (decodedText) => {
+            if (!isMounted || !decodedText) return;
+
+            // Rung nhẹ 200ms chuẩn app ngân hàng
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              try {
+                navigator.vibrate(200);
+              } catch {}
+            }
+            playScanBeep();
+
+            // Tạm dừng camera ngay lập tức để tránh quét lặp lại
+            void stopScanner();
+
+            // Xử lý mã
+            handleProcessCode(decodedText);
+          },
+          () => {
+            // Frame không chứa mã
+          }
+        );
+
+        if (isMounted) {
+          setIsStarted(true);
+          try {
+            const capabilities = scanner.getRunningTrackCapabilities?.() as
+              | MediaTrackCapabilities
+              | undefined;
+            if (capabilities && 'torch' in capabilities) {
+              setHasTorch(true);
+            } else {
+              setHasTorch(false);
+            }
+          } catch {
+            setHasTorch(false);
+          }
+        }
+      } catch (err: unknown) {
+        if (!isMounted) return;
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes('NotAllowedError') || msg.includes('Permission')) {
+          setCameraError(
+            'Chưa cấp quyền truy cập Camera. Vui lòng cấp quyền trong cài đặt trình duyệt để quét mã.'
+          );
+        } else if (msg.includes('NotFoundError') || msg.includes('DevicesNotFoundError')) {
+          setCameraError('Không tìm thấy Camera trên thiết bị của bạn.');
+        } else {
+          setCameraError(
+            'Không thể kết nối Camera. Bạn có thể sử dụng nút "Nhập mã đơn thủ công" bên dưới.'
+          );
+        }
+        setIsStarted(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      void startScanner();
+    }, 100);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+      void stopScanner();
+    };
+  }, [open, mode, facingMode, matchedOrder, notFoundCode]);
+
+  // Bật/tắt đèn Flash
+  const toggleTorch = async () => {
+    if (!scannerRef.current || !hasTorch) return;
+    try {
+      const nextTorch = !isTorchOn;
+      await scannerRef.current.applyVideoConstraints({
+        advanced: [{ torch: nextTorch } as MediaTrackConstraintSet],
+      });
+      setIsTorchOn(nextTorch);
+    } catch {
+      // Flashlight không hỗ trợ ở chế độ hiện tại
+    }
+  };
+
+  // Đổi camera trước/sau
+  const toggleFacingMode = () => {
+    setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
   };
 
   const handleProcessCode = (code: string) => {
@@ -48,7 +247,7 @@ export function GlobalQRScannerModal({
     setScannedCode(raw);
     const clean = raw.toLowerCase();
 
-    // Look for matching order
+    // Tìm đơn hàng trùng khớp
     const match = allOrders.find((o) => {
       const oCode = o.orderCode.toLowerCase();
       const qCode = (o.qrCode || '').toLowerCase();
@@ -82,98 +281,125 @@ export function GlobalQRScannerModal({
       if (ok) {
         setIsDone(true);
         setTimeout(() => {
-          handleClose();
-        }, 1600);
+          void handleClose();
+        }, 1500);
       }
     } finally {
       setIsProcessing(false);
     }
   };
 
+  if (!open) return null;
+
   return (
-    <Modal
-      open={open}
-      title="Quét mã QR nhận hàng"
-      description="Quét mã QR trên điện thoại của khách hàng hoặc nhập mã đơn hàng"
-      onClose={handleClose}
-      size="small"
+    <div
+      className="merchant-banking-scanner-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Quét mã QR nhận hàng"
     >
-      <div className="merchant-qr-modal-content">
-        {!matchedOrder && !notFoundCode && (
-          <div className="merchant-qr-tab-nav">
+      {/* 1. LỚP VIDEO NỀN (Camera Feed phủ toàn màn hình) */}
+      <div id={containerId} className="merchant-banking-video-feed" />
+
+      {/* 2. LỚP OVERLAY KHUNG NGẮM (Viewfinder chuẩn phong cách App Ngân hàng) */}
+      {!matchedOrder && !notFoundCode && mode === 'camera' && !cameraError && (
+        <div className="merchant-banking-viewfinder-layer">
+          <div className="merchant-banking-reticle">
+            {/* 4 góc bo viền neon định vị */}
+            <span className="reticle-corner reticle-corner--tl" />
+            <span className="reticle-corner reticle-corner--tr" />
+            <span className="reticle-corner reticle-corner--bl" />
+            <span className="reticle-corner reticle-corner--br" />
+            {/* Tia quét laser chuyển động */}
+            {isStarted && <div className="merchant-banking-laser" />}
+          </div>
+        </div>
+      )}
+
+      {/* 3. THANH CÔNG CỤ TRÊN CÙNG (Top Bar trong suốt) */}
+      <header className="merchant-banking-top-bar">
+        <button
+          type="button"
+          onClick={handleClose}
+          className="merchant-banking-round-btn"
+          aria-label="Đóng camera"
+          title="Đóng camera (Esc)"
+        >
+          <X size={20} />
+        </button>
+
+        <h1 className="merchant-banking-header-title">Quét mã nhận hàng</h1>
+
+        <div className="merchant-banking-top-actions">
+          {hasTorch && mode === 'camera' && (
             <button
               type="button"
-              className={activeTab === 'camera' ? 'is-active' : ''}
-              onClick={() => setActiveTab('camera')}
+              onClick={toggleTorch}
+              className={`merchant-banking-round-btn ${isTorchOn ? 'is-active' : ''}`}
+              aria-label={isTorchOn ? 'Tắt đèn Flash' : 'Bật đèn Flash'}
+              title="Đèn Flash"
             >
-              <Camera size={15} /> Quét bằng Camera
+              <Flashlight size={19} />
             </button>
+          )}
+
+          {mode === 'camera' && (
             <button
               type="button"
-              className={activeTab === 'manual' ? 'is-active' : ''}
-              onClick={() => setActiveTab('manual')}
+              onClick={toggleFacingMode}
+              className="merchant-banking-round-btn"
+              aria-label="Đổi camera"
+              title="Đổi camera trước/sau"
             >
-              <KeyRound size={15} /> Nhập mã / Giả lập
+              <RefreshCw size={18} />
             </button>
-          </div>
-        )}
+          )}
+        </div>
+      </header>
 
-        {/* 1. Camera Scanning Mode */}
-        {!matchedOrder && !notFoundCode && activeTab === 'camera' && (
-          <div>
-            <CameraQRScanner
-              isScanning={open && activeTab === 'camera' && !matchedOrder && !notFoundCode}
-              onScanSuccess={(decoded) => handleProcessCode(decoded)}
-            />
-            <div style={{ marginTop: 14, textAlign: 'center' }}>
-              <small style={{ color: 'var(--text-secondary)', fontSize: 11 }}>
-                * Hỗ trợ quét trực tiếp qua camera điện thoại / máy tính bảng hoặc webcam
-              </small>
-            </div>
-          </div>
-        )}
-
-        {/* 2. Manual / Simulator Mode */}
-        {!matchedOrder && !notFoundCode && activeTab === 'manual' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {allOrders.filter((o) => ['confirmed', 'processing', 'pending'].includes(o.status)).length > 0 && (
-              <div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  Bấm nhanh đơn đang chờ để giả lập:
-                </span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                  {allOrders
-                    .filter((o) => ['confirmed', 'processing', 'pending'].includes(o.status))
-                    .slice(0, 4)
-                    .map((o) => (
-                      <button
-                        type="button"
-                        key={o.id}
-                        className="merchant-quick-code-chip"
-                        onClick={() => {
-                          setManualCode(o.orderCode);
-                          handleProcessCode(o.orderCode);
-                        }}
-                      >
-                        <QrCode size={13} /> {o.orderCode} ({o.customerName})
-                      </button>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            <Field
-              label="Mã đơn hàng hoặc mã QR"
-              placeholder="Ví dụ: GSF-102948"
-              value={manualCode}
-              onChange={(e) => setManualCode(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleProcessCode(manualCode);
-                }
+      {/* Lỗi Camera */}
+      {cameraError && !matchedOrder && !notFoundCode && (
+        <div className="merchant-banking-error-banner">
+          <AlertTriangle size={32} />
+          <p>{cameraError}</p>
+          <div className="merchant-banking-error-actions">
+            <Button
+              size="small"
+              variant="outline"
+              onClick={() => {
+                setCameraError(null);
+                setFacingMode((f) => f);
               }}
-            />
+            >
+              <RefreshCw size={14} /> Thử lại Camera
+            </Button>
+            <Button size="small" variant="primary" onClick={() => setMode('manual')}>
+              <Keyboard size={14} /> Nhập mã thủ công
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Chế độ nhập mã đơn thủ công / Giả lập */}
+      {mode === 'manual' && !matchedOrder && !notFoundCode && (
+        <div className="merchant-banking-manual-card">
+          <h3>Nhập mã đơn hàng</h3>
+          <p>Nhập mã đơn hàng (hoặc mã nhận hàng 6 ký tự) mà khách cung cấp:</p>
+
+          <Field
+            label="Mã đơn hàng"
+            placeholder="Ví dụ: GSF-102948"
+            value={manualCode}
+            onChange={(e) => setManualCode(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleProcessCode(manualCode);
+              }
+            }}
+          />
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <Button
               type="button"
               fullWidth
@@ -183,150 +409,201 @@ export function GlobalQRScannerModal({
               Kiểm tra & Xác thực mã
             </Button>
           </div>
-        )}
 
-        {/* 3. Not Found State */}
-        {notFoundCode && !matchedOrder && (
-          <div style={{ textAlign: 'center', padding: '16px 8px' }}>
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: '50%',
-                background: '#fef2f2',
-                color: '#dc2626',
-                display: 'grid',
-                placeItems: 'center',
-                margin: '0 auto 12px',
-              }}
-            >
-              <AlertTriangle size={28} />
+          {allOrders.filter((o) => ['confirmed', 'processing', 'pending'].includes(o.status))
+            .length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                Bấm nhanh đơn chờ nhận:
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                {allOrders
+                  .filter((o) => ['confirmed', 'processing', 'pending'].includes(o.status))
+                  .slice(0, 4)
+                  .map((o) => (
+                    <button
+                      type="button"
+                      key={o.id}
+                      className="merchant-quick-code-chip"
+                      onClick={() => {
+                        setManualCode(o.orderCode);
+                        handleProcessCode(o.orderCode);
+                      }}
+                    >
+                      <QrCode size={12} /> {o.orderCode} ({o.customerName})
+                    </button>
+                  ))}
+              </div>
             </div>
-            <strong style={{ fontSize: 16, display: 'block', marginBottom: 6 }}>
-              Không tìm thấy đơn hàng
-            </strong>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
-              Mã vừa quét: <code style={{ fontWeight: 800, background: '#f3f4f6', padding: '2px 6px', borderRadius: 4 }}>{notFoundCode}</code> không trùng khớp với bất kỳ đơn hàng nào của quán hôm nay.
-            </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Button type="button" variant="outline" fullWidth onClick={resetScan}>
-                <RefreshCw size={15} /> Quét lại mã khác
-              </Button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-        {/* 4. Matched Order Preview */}
-        {matchedOrder && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* 4. KHU VỰC HƯỚNG DẪN DƯỚI ĐÁY (Bottom Bar) */}
+      {!matchedOrder && !notFoundCode && (
+        <footer className="merchant-banking-bottom-bar">
+          <p className="merchant-banking-guidance">
+            Di chuyển camera đến mã QR của khách hàng để nhận diện
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setMode((m) => (m === 'camera' ? 'manual' : 'camera'));
+              setCameraError(null);
+            }}
+            className="merchant-banking-switch-mode-btn"
+          >
+            <Keyboard size={15} />
+            <span>{mode === 'camera' ? 'Nhập mã đơn thủ công' : 'Chuyển sang Quét Camera'}</span>
+          </button>
+        </footer>
+      )}
+
+      {/* 5. BOTTOM SHEET XÁC NHẬN ĐƠN HÀNG (Khi quét trúng mã) */}
+      {matchedOrder && (
+        <div className="merchant-banking-sheet-backdrop">
+          <div className="merchant-banking-bottom-sheet">
             {isDone ? (
-              <div style={{ textAlign: 'center', padding: '24px 8px' }}>
-                <CheckCircle2 size={54} color="#16a34a" style={{ margin: '0 auto 12px' }} />
-                <strong style={{ fontSize: 18, color: '#16a34a', display: 'block' }}>
-                  Xác nhận giao hàng thành công!
-                </strong>
-                <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
-                  Đơn hàng {matchedOrder.orderCode} đã hoàn tất.
-                </p>
+              <div className="merchant-banking-success-view">
+                <div className="success-icon-ring">
+                  <CheckCircle2 size={54} color="#00e676" />
+                </div>
+                <h2>Xác nhận bàn giao thành công!</h2>
+                <p>Đơn hàng #{matchedOrder.orderCode} đã hoàn tất trao món cho khách.</p>
               </div>
             ) : (
               <>
-                <div className="merchant-matched-order-card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <QrCode size={18} color="var(--primary)" />
-                      <strong style={{ fontSize: 16 }}>{matchedOrder.orderCode}</strong>
-                    </div>
+                <div className="merchant-banking-sheet-header">
+                  <div className="header-badge-row">
+                    <span className="success-pill">
+                      <Check size={14} /> Đã nhận diện mã
+                    </span>
                     <OrderStatusBadge status={matchedOrder.status} />
                   </div>
+                  <h2 className="order-code-title">Đơn hàng #{matchedOrder.orderCode}</h2>
+                </div>
 
-                  <hr style={{ border: 0, borderTop: '1px dashed #e2e8f0', margin: '10px 0' }} />
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <User size={15} color="var(--text-secondary)" />
-                      <span><b>{matchedOrder.customerName}</b></span>
-                    </div>
-                    {matchedOrder.customerPhone && matchedOrder.customerPhone !== 'Chưa cập nhật' && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Phone size={15} color="var(--text-secondary)" />
-                        <a href={`tel:${matchedOrder.customerPhone}`} style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                          {matchedOrder.customerPhone}
-                        </a>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <ShoppingBag size={15} color="var(--text-secondary)" />
-                      <span>{matchedOrder.quantity}× {matchedOrder.bagName}</span>
+                <div className="merchant-banking-sheet-details">
+                  <div className="detail-row">
+                    <User size={16} className="detail-icon" />
+                    <div>
+                      <strong>{matchedOrder.customerName}</strong>
+                      {matchedOrder.customerPhone &&
+                        matchedOrder.customerPhone !== 'Chưa cập nhật' && (
+                          <a
+                            href={`tel:${matchedOrder.customerPhone}`}
+                            className="phone-link"
+                            title="Gọi điện cho khách"
+                          >
+                            <Phone size={12} /> {matchedOrder.customerPhone}
+                          </a>
+                        )}
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      marginTop: 10,
-                      padding: '8px 10px',
-                      background: '#fff',
-                      borderRadius: 8,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      fontWeight: 700,
-                    }}
-                  >
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Tổng thu tiền:</span>
-                    <span style={{ fontSize: 15, color: 'var(--primary)' }}>
-                      {matchedOrder.price.toLocaleString('vi-VN')}đ
-                    </span>
+                  <div className="detail-row">
+                    <ShoppingBag size={16} className="detail-icon" />
+                    <div>
+                      <strong>
+                        {matchedOrder.quantity}× {matchedOrder.bagName}
+                      </strong>
+                      <span className="price-tag">
+                        {matchedOrder.price.toLocaleString('vi-VN')}đ
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {matchedOrder.status === 'completed' && (
-                  <div style={{ padding: '10px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontSize: 13 }}>
-                    ✓ Đơn hàng này đã được bàn giao và hoàn tất trước đó.
-                  </div>
-                )}
+                <div className="merchant-banking-sheet-actions">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="large"
+                    fullWidth
+                    loading={isProcessing}
+                    onClick={handleConfirmDeliver}
+                    style={{
+                      background: 'linear-gradient(135deg, #008751 0%, #005639 100%)',
+                      fontSize: 15,
+                      fontWeight: 800,
+                      padding: '14px 20px',
+                    }}
+                  >
+                    <Check size={18} /> Bàn giao món cho khách
+                  </Button>
 
-                {matchedOrder.status === 'cancelled' && (
-                  <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', fontSize: 13 }}>
-                    ✕ Đơn hàng này đã bị hủy, không thể giao món.
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-                  {['confirmed', 'processing', 'pending'].includes(matchedOrder.status) && (
-                    <Button
-                      type="button"
-                      fullWidth
-                      loading={isProcessing}
-                      onClick={handleConfirmDeliver}
-                    >
-                      <CheckCircle2 size={17} /> Xác nhận giao món (Hoàn thành)
-                    </Button>
-                  )}
-
-                  {onOpenOrderDetails && (
+                  <div style={{ display: 'flex', gap: 8 }}>
                     <Button
                       type="button"
                       variant="outline"
                       fullWidth
                       onClick={() => {
-                        handleClose();
-                        onOpenOrderDetails(matchedOrder);
+                        resetScan();
+                        setMode('camera');
                       }}
                     >
-                      Xem chi tiết đơn hàng <ArrowRight size={14} />
+                      Quét mã khác
                     </Button>
-                  )}
-
-                  <Button type="button" variant="secondary" fullWidth onClick={resetScan}>
-                    Quét đơn khác
-                  </Button>
+                    {onOpenOrderDetails && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          onOpenOrderDetails(matchedOrder);
+                          void handleClose();
+                        }}
+                      >
+                        Chi tiết
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </>
             )}
           </div>
-        )}
-      </div>
-    </Modal>
+        </div>
+      )}
+
+      {/* 6. BOTTOM SHEET BÁO LỖI KHÔNG TÌM THẤY ĐƠN HÀNG */}
+      {notFoundCode && !matchedOrder && (
+        <div className="merchant-banking-sheet-backdrop">
+          <div className="merchant-banking-bottom-sheet merchant-banking-bottom-sheet--error">
+            <div className="error-icon-circle">
+              <AlertTriangle size={32} />
+            </div>
+            <h2>Không tìm thấy đơn hàng</h2>
+            <p>
+              Mã vừa nhận: <code>{notFoundCode}</code> không trùng khớp với bất kỳ đơn hàng nào của
+              quán hôm nay.
+            </p>
+
+            <div className="merchant-banking-sheet-actions">
+              <Button
+                type="button"
+                variant="primary"
+                fullWidth
+                onClick={() => {
+                  resetScan();
+                  setMode('camera');
+                }}
+              >
+                <RefreshCw size={15} /> Quét lại mã khác
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                fullWidth
+                onClick={() => {
+                  resetScan();
+                  setMode('manual');
+                }}
+              >
+                <Keyboard size={15} /> Thử nhập mã tay
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

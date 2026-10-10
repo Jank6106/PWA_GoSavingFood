@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { QrCode } from 'lucide-react';
 import { AppHeader } from './components/layout/AppHeader';
 import { AppTabBar } from './components/layout/AppTabBar';
 import { NotificationModal } from './components/notifications/NotificationModal';
@@ -25,7 +26,7 @@ const FirstTimeSetupScreen = lazy(() =>
 
 function ScreenLoadingSkeleton() {
   return (
-    <div style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16, width: '100%', maxWidth: 480, margin: '0 auto' }}>
       <div
         style={{
           height: 38,
@@ -58,13 +59,13 @@ function ScreenLoadingSkeleton() {
 export default function App() {
   const auth = useAuth();
 
-  // Tối ưu như Customer PWA: Khởi tạo ngay lập tức với dữ liệu ảo (0ms), tải ngầm sau
+  // Bắt buộc xác thực: nếu không có session đã cache, luôn bắt đầu từ 'login'
   const [route, setRoute] = useState<'login' | 'setup' | TabRoute>(() => {
     const cached = getCachedMerchantUser();
     if (cached) {
       return cached.isFirstLogin ? 'setup' : 'bags';
     }
-    return 'bags';
+    return 'login';
   });
 
   const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
@@ -193,7 +194,16 @@ export default function App() {
     setRoute('login');
   };
 
-  if (route === 'login') {
+  if (auth.initializing) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+        <ScreenLoadingSkeleton />
+      </div>
+    );
+  }
+
+  // Chặn hoàn toàn truy cập dữ liệu cửa hàng/dashboard nếu chưa có phiên đăng nhập
+  if (!auth.user || route === 'login') {
     return (
       <LoginScreen
         loading={auth.loading}
@@ -234,10 +244,6 @@ export default function App() {
         onToggleStatus={() => void store.toggleStatus()}
         onNotificationPress={() => notifications.setIsOpen(true)}
         onProfilePress={() => navigateTo('settings')}
-        onScanQRPress={() => {
-          navigateTo('orders');
-          setIsGlobalQRScannerOpen(true);
-        }}
       />
       <main className={`merchant-main merchant-main--${route}`}>
         {visitedTabs.bags && (
@@ -287,6 +293,19 @@ export default function App() {
           </div>
         )}
       </main>
+      <button
+        type="button"
+        className="merchant-scan-fab"
+        onClick={() => {
+          navigateTo('orders');
+          setIsGlobalQRScannerOpen(true);
+        }}
+        aria-label="Quét mã QR bàn giao đơn"
+        title="Quét mã QR nhận hàng"
+      >
+        <QrCode size={22} />
+        <span>Quét QR</span>
+      </button>
       <AppTabBar active={route} orderBadge={notifications.unreadCount} onNavigate={navigateTo} />
       <NotificationModal
         open={notifications.isOpen}

@@ -15,35 +15,42 @@ import { supabase } from '../services/supabase';
 import type { AuthUser, LoginCredentials, MerchantRegisterInput } from '../types';
 
 export function useAuth() {
-  // Tối ưu như Customer PWA: Render dữ liệu ảo tức thì 0ms, sau đó load phiên thật ngầm
-  const [user, setUser] = useState<AuthUser | null>(() => getCachedMerchantUser() || DEMO_MERCHANT_USER);
+  const [user, setUser] = useState<AuthUser | null>(() => getCachedMerchantUser());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    // Xác thực ngầm với getSession() siêu tốc không gây gián đoạn
-    getCurrentMerchantSession().then((existing) => {
-      if (existing) {
-        setUser(existing);
-      }
-    });
+    let isMounted = true;
+    getCurrentMerchantSession()
+      .then((existing) => {
+        if (isMounted) {
+          setUser(existing);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setInitializing(false);
+        }
+      });
 
-    // 2. Đăng ký lắng nghe sự kiện thay đổi phiên Supabase Auth
+    // Đăng ký lắng nghe sự kiện thay đổi phiên Supabase Auth
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setCachedMerchantUser(null);
-        setUser(null);
+        if (isMounted) setUser(null);
       } else if (event === 'SIGNED_IN' && session?.user) {
         const verified = await getCurrentMerchantSession();
-        if (verified) {
+        if (verified && isMounted) {
           setUser(verified);
         }
       }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -131,6 +138,7 @@ export function useAuth() {
     user,
     loading,
     error,
+    initializing,
     login,
     register,
     changePassword,
