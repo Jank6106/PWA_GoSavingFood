@@ -237,7 +237,8 @@ export default function App() {
     <div className="merchant-app-shell">
       <ToastBar message={toastMessage} />
       <AppHeader
-        storeName={store.profile?.name ?? 'Quán Chay Quýt'}
+        title="GoSavingFood"
+        storeName={store.profile?.name ?? 'GoSavingFood'}
         isOpen={store.profile?.isOpen ?? true}
         avatar={store.profile?.avatar}
         unreadCount={notifications.unreadCount}

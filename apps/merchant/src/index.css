@@ -406,7 +406,7 @@ h1, h2, h3, p { margin: 0; }
   .merchant-auth-page { padding: 0; background: #fff; }
   .merchant-auth-card, .merchant-setup-card { min-height: 100vh; padding: 28px 20px; border: 0; border-radius: 0; box-shadow: none; }
   .merchant-auth-card { display: flex; justify-content: center; flex-direction: column; }
-  .merchant-header-brand strong { max-width: 120px; }
+  .merchant-header-brand strong { max-width: 175px; font-size: 20px; }
   .merchant-header-brand small { display: none; }
   .merchant-tab-bar button small { font-size: 10px; }
   .merchant-screen-heading > strong { display: none; }

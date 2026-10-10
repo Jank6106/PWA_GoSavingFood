@@ -6,7 +6,7 @@ export const STORE_ID = MERCHANT_STORE_ID;
 export const DEMO_MERCHANT_USER: AuthUser = {
   id: '09ce2d9c-7382-4ce2-8299-42effefe6004',
   storeId: MERCHANT_STORE_ID,
-  displayName: 'GoGreen Bakery',
+  displayName: 'GoSavingFood',
   isFirstLogin: false,
 };
 
