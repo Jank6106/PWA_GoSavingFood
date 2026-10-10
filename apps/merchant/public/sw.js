@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gsf-merchant-v2';
+const CACHE_NAME = 'gsf-merchant-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -31,6 +31,22 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  // Với HTML/navigation: Luôn lấy từ network trước để người dùng lập tức nhận bản code mới
+  if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
