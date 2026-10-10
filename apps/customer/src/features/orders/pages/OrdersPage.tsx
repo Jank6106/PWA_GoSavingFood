@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ChevronRight, Clock3, MapPin } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
 import { AuthRequiredState, OrderStatusBadge, PageHeading } from '../../../shared/components';
-import type { Order, OrderStatus } from '../../../shared/types/customer.types';
+import type { Order } from '../../../shared/types/customer.types';
 
 interface OrdersPageProps {
   orders: Order[];
