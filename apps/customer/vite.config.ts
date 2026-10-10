@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react()],
   envPrefix: ['VITE_', 'MAPBOX_'],
   server: {
+    host: true,
     port: 5173,
     strictPort: true,
     proxy: {
