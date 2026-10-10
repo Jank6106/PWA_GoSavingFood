@@ -2,6 +2,7 @@
   "name": "Go Saving Food - Khách Hàng",
   "short_name": "GSF Khách",
   "description": "Nền tảng săn suất ăn giải cứu giá tốt, giảm đến 80% và chống lãng phí thực phẩm",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,19 +11,19 @@
   "theme_color": "#006C40",
   "icons": [
     {
-      "src": "/pwa-192x192.png",
+      "src": "./pwa-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-512x512.png",
+      "src": "./pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-512x512.png",
+      "src": "./pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

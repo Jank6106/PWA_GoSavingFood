@@ -1,9 +1,11 @@
-const CACHE_NAME = 'gsf-customer-v5';
+const CACHE_NAME = 'gsf-customer-v6';
 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
+  './pwa-192x192.png',
+  './pwa-512x512.png',
   './pwa-192x192.svg',
   './pwa-512x512.svg'
 ];

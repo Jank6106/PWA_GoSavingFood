@@ -9,8 +9,9 @@ import App from './App.tsx'
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
     window.addEventListener('load', () => {
+      const swUrl = `${import.meta.env.BASE_URL}sw.js`;
       navigator.serviceWorker
-        .register('/sw.js')
+        .register(swUrl, { scope: import.meta.env.BASE_URL })
         .then((registration) => {
           console.log('Customer PWA ServiceWorker đăng ký thành công:', registration.scope);
         })
