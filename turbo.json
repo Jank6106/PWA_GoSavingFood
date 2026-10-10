@@ -8,7 +8,18 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "DATABASE_URL",
+        "PAYOS_CLIENT_ID",
+        "PAYOS_API_KEY",
+        "PAYOS_CHECKSUM_KEY",
+        "CUSTOMER_APP_URL",
+        "MERCHANT_APP_URL"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
