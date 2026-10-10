@@ -99,7 +99,8 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
           .from('surprise_bags')
           .select('id', { count: 'exact', head: true })
           .eq('store_id', storeId)
-          .eq('is_available', true),
+          .eq('is_available', true)
+          .is('deleted_at', null),
       ]);
 
   if (ordersResult.error) console.warn('Thống kê đơn hàng lỗi:', ordersResult.error.message);

@@ -329,6 +329,7 @@ export const customerService = {
         .select('*, stores(id, name, logo_url, banner_url, address, latitude, longitude, rating, total_ratings)')
         .eq('id', id)
         .eq('is_available', true)
+        .is('deleted_at', null)
         .maybeSingle();
 
       if (data) {
@@ -370,7 +371,8 @@ export const customerService = {
         .from('surprise_bags')
         .select('*')
         .eq('store_id', id)
-        .eq('is_available', true);
+        .eq('is_available', true)
+        .is('deleted_at', null);
 
       if (store) {
         const merchant: Merchant = {

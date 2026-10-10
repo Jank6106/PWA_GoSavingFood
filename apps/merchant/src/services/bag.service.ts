@@ -61,6 +61,7 @@ const fetchBagRow = async (bagId: string): Promise<BagItem | null> => {
     .from('surprise_bags')
     .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at')
     .eq('id', bagId)
+    .is('deleted_at', null)
     .maybeSingle();
   if (error) {
     console.warn('Lấy túi hàng từ Supabase lỗi:', error.message);
@@ -123,6 +124,7 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
         .from('surprise_bags')
         .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at')
         .eq('store_id', storeId)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -301,11 +303,33 @@ export async function updateBagItem(bagId: string, input: BagInput): Promise<Bag
 }
 
 export async function deleteBagItem(bagId: string): Promise<boolean> {
-  const { error } = await supabase.from('surprise_bags').delete().eq('id', bagId);
-  if (error) {
-    console.warn('Xóa túi mù trên Supabase lỗi:', error.message);
-    throw new Error('Không thể xóa túi hàng.');
+  // 1. Thử xóa vĩnh viễn (hard delete)
+  const { error: deleteError } = await supabase.from('surprise_bags').delete().eq('id', bagId);
+
+  if (deleteError) {
+    // 2. Nếu có ràng buộc khóa ngoại (đã có đơn hàng liên kết trong order_items),
+    // chuyển sang xóa mềm: gán deleted_at, is_available = false, quantity = 0 để bảo toàn lịch sử đơn nhưng gỡ hoàn toàn túi khỏi hệ thống
+    if (deleteError.code === '23503' || deleteError.message?.includes('violates foreign key constraint')) {
+      const { error: softDeleteError } = await supabase
+        .from('surprise_bags')
+        .update({
+          deleted_at: new Date().toISOString(),
+          is_available: false,
+          quantity: 0,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', bagId);
+
+      if (softDeleteError) {
+        console.warn('Lỗi khi xóa túi hàng (soft delete):', softDeleteError.message);
+        throw new Error('Không thể xóa túi hàng: ' + softDeleteError.message);
+      }
+    } else {
+      console.warn('Xóa túi mù trên Supabase lỗi:', deleteError.message);
+      throw new Error('Không thể xóa túi hàng: ' + (deleteError.message || 'Lỗi cơ sở dữ liệu'));
+    }
   }
+
   removeBagFromInventoryShelf(bagId);
   return true;
 }

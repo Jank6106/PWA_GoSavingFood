@@ -1,32 +1,17 @@
 import { PackageOpen } from 'lucide-react';
-import { BagCard, BagDetailsModal, BagEditorModal, BagFilterBar } from '../components/bags';
+import { useState } from 'react';
+import { BagCard, BagEditorModal, BagFilterBar, DeleteBagConfirmModal } from '../components/bags';
 import { Button, EmptyState, ErrorState, SkeletonList, ToastBar } from '../components/ui';
 import { useBags } from '../hooks/useBags';
+import type { BagItem } from '../types';
 
 export function BagManagementScreen({ storeId }: { storeId: string }) {
   const state = useBags(storeId);
-  const openEdit = (bag: typeof state.selectedBag) => {
-    if (!bag) return;
-    state.setSelectedBag(bag);
-    state.setIsDetailModalOpen(false);
-    state.setIsEditModalOpen(true);
-  };
+  const [bagToDelete, setBagToDelete] = useState<BagItem | null>(null);
 
-  const handleDuplicateBag = async (bag: typeof state.selectedBag) => {
-    if (!bag) return;
-    state.setIsDetailModalOpen(false);
-    await state.addBag({
-      name: `[Bản sao] ${bag.name}`,
-      category: bag.category,
-      description: bag.description,
-      originalPrice: bag.originalPrice,
-      salePrice: bag.salePrice,
-      quantity: bag.availableQuantity || 5,
-      imageUrl: bag.imageUrl,
-      imageUrls: bag.imageUrls?.length ? bag.imageUrls : [bag.imageUrl],
-      pickupTimeStart: bag.pickupTimeStart,
-      pickupTimeEnd: bag.pickupTimeEnd,
-    });
+  const openEdit = (bag: BagItem) => {
+    state.setSelectedBag(bag);
+    state.setIsEditModalOpen(true);
   };
 
   if (state.error && !state.allBags.length) return <ErrorState message={state.error} onRetry={() => void state.loadBags()} />;
@@ -62,11 +47,8 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
               onToggleStatus={(id) => void state.toggleStatus(id)}
               onIncreaseQuantity={(id) => void state.changeQuantity(id, 1)}
               onDecreaseQuantity={(id) => void state.changeQuantity(id, -1)}
-              onOpenDetails={(item) => {
-                state.setSelectedBag(item);
-                state.setIsDetailModalOpen(true);
-              }}
               onEdit={openEdit}
+              onDelete={(item) => setBagToDelete(item)}
             />
           ))
         ) : (
@@ -98,15 +80,15 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
         onClose={() => state.setIsCreateModalOpen(false)}
         onSubmit={(input) => void state.addBag(input)}
       />
-      <BagDetailsModal
-        bag={state.selectedBag}
-        open={state.isDetailModalOpen}
+      <DeleteBagConfirmModal
+        bag={bagToDelete}
+        open={Boolean(bagToDelete)}
         saving={state.saving}
-        onClose={() => state.setIsDetailModalOpen(false)}
-        onToggleStatus={(id) => void state.toggleStatus(id)}
-        onDelete={(id) => void state.removeBag(id)}
-        onEdit={openEdit}
-        onDuplicate={handleDuplicateBag}
+        onClose={() => setBagToDelete(null)}
+        onConfirm={async (id) => {
+          await state.removeBag(id);
+          setBagToDelete(null);
+        }}
       />
       <BagEditorModal
         key={state.selectedBag?.id ?? 'empty'}

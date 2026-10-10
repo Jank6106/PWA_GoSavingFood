@@ -1,4 +1,4 @@
-import { Clock3, Copy, Eye, EyeOff, ImagePlus, Minus, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
+import { Clock3, Eye, EyeOff, ImagePlus, Minus, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES, PRESET_BAG_IMAGES } from '../../mocks';
 import { compressImageFile, optimizeImageUrl } from '../../services/utils';
@@ -79,15 +79,15 @@ export function BagCard({
   onToggleStatus,
   onIncreaseQuantity,
   onDecreaseQuantity,
-  onOpenDetails,
   onEdit,
+  onDelete,
 }: {
   bag: BagItem;
   onToggleStatus: (id: string) => void;
   onIncreaseQuantity: (id: string) => void;
   onDecreaseQuantity: (id: string) => void;
-  onOpenDetails: (bag: BagItem) => void;
   onEdit: (bag: BagItem) => void;
+  onDelete: (bag: BagItem) => void;
 }) {
   const isOnShelf = bag.status !== 'hidden';
   const statusLabel = isOnShelf
@@ -151,8 +151,13 @@ export function BagCard({
             <Button size="small" variant="outline" onClick={() => onEdit(bag)}>
               <Pencil size={15} /> Sửa
             </Button>
-            <Button size="small" variant="ghost" onClick={() => onOpenDetails(bag)}>
-              Chi tiết
+            <Button
+              size="small"
+              variant="danger"
+              onClick={() => onDelete(bag)}
+              title="Xóa hoàn toàn túi này"
+            >
+              <Trash2 size={15} /> Xóa túi
             </Button>
           </div>
         </footer>
@@ -248,95 +253,67 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   return <Modal open={open} title={bag ? 'Chỉnh sửa túi hàng' : 'Tạo túi hàng mới'} onClose={onClose} size="large"><form className="merchant-form" onSubmit={submit}><Field label="Tên túi hàng" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ví dụ: Túi bánh tươi cuối ngày" required /><div className="merchant-form-grid"><SelectField label="Danh mục" value={category} onChange={(event) => setCategory(event.target.value)}>{PRESET_BAG_CATEGORIES.map((item) => <option key={item}>{item}</option>)}</SelectField><div className="merchant-time-fields"><Field label="Bắt đầu nhận" type="time" value={pickupTimeStart} onChange={(event) => setPickupTimeStart(event.target.value)} required /><Field label="Kết thúc nhận" type="time" value={pickupTimeEnd} onChange={(event) => setPickupTimeEnd(event.target.value)} required /></div></div><TextAreaField label="Mô tả" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Khách hàng có thể nhận được gì?" required /><div className="merchant-form-grid merchant-form-grid--three"><Field label="Giá gốc" type="number" min="0" value={originalPrice} onChange={(event) => handleOriginalPriceChange(event.target.value)} required /><div className="merchant-pricing-field"><span>Giá giải cứu</span><div className="merchant-pricing-mode"><button type="button" className={pricingMode === 'amount' ? 'is-active' : ''} onClick={() => setPricingMode('amount')}>Nhập giá</button><button type="button" className={pricingMode === 'discount' ? 'is-active' : ''} onClick={() => setPricingMode('discount')}>Chiết khấu %</button></div><Field label={pricingMode === 'amount' ? 'Giá cụ thể' : 'Giảm giá'} type="number" min="0" max={pricingMode === 'discount' ? '100' : undefined} value={pricingMode === 'amount' ? salePrice : discountPercent} onChange={(event) => pricingMode === 'amount' ? handleSalePriceChange(event.target.value) : handleDiscountChange(event.target.value)} required /></div><Field label="Số lượng" type="number" min="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} required /></div><label className="merchant-upload-box"><ImagePlus size={22} /><span>Chọn ảnh từ thiết bị</span><small>Có thể chọn nhiều ảnh JPG, PNG hoặc WebP</small><input type="file" accept="image/*" multiple onChange={(event) => void uploadFiles(event)} /></label><div className="merchant-upload-preview">{imageUrls.map((image, index) => <div key={`${image}-${index}`}><img src={optimizeImageUrl(image, 200, 75)} alt={`Ảnh túi hàng ${index + 1}`} loading="lazy" /><button type="button" aria-label="Xóa ảnh" onClick={() => setImageUrls((current) => current.filter((_, imageIndex) => imageIndex !== index))}><X size={14} /></button>{index === 0 && <span>Ảnh bìa</span>}</div>)}</div><div className="merchant-form-actions"><Button type="button" variant="secondary" onClick={onClose}>Hủy</Button><Button type="submit" loading={saving}>{bag ? 'Lưu thay đổi' : 'Tạo túi hàng'}</Button></div></form></Modal>;
 }
 
-export function BagDetailsModal({
+export function DeleteBagConfirmModal({
   bag,
   open,
   saving,
   onClose,
-  onToggleStatus,
-  onDelete,
-  onEdit,
-  onDuplicate,
+  onConfirm,
 }: {
   bag: BagItem | null;
   open: boolean;
   saving: boolean;
   onClose: () => void;
-  onToggleStatus: (id: string) => void;
-  onDelete: (id: string) => void;
-  onEdit: (bag: BagItem) => void;
-  onDuplicate?: (bag: BagItem) => void;
+  onConfirm: (id: string) => Promise<void> | void;
 }) {
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-
-  useEffect(() => {
-    if (!open) {
-      setIsConfirmingDelete(false);
-    }
-  }, [open, bag?.id]);
-
   if (!bag) return null;
-  const isOnShelf = bag.status !== 'hidden';
 
   return (
-    <Modal open={open} title="Chi tiết túi hàng" onClose={onClose}>
-      <div className="merchant-detail-hero">
-        <img src={optimizeImageUrl(bag.imageUrl, 400, 75)} alt={bag.name} loading="lazy" />
-        <span className={`merchant-badge merchant-badge--${bag.status}`}>
-          {bag.status === 'active' ? 'Đang lên kệ' : bag.status === 'hidden' ? 'Đã gỡ kệ' : 'Hết hàng'}
-        </span>
-      </div>
-      <div className="merchant-detail-content">
-        <span className="merchant-eyebrow">{bag.category}</span>
-        <h3>{bag.name}</h3>
-        <p>{bag.description}</p>
-        <dl>
-          <div>
-            <dt>Giá giải cứu</dt>
-            <dd>{bag.salePrice.toLocaleString('vi-VN')}đ</dd>
-          </div>
-          <div>
-            <dt>Còn lại</dt>
-            <dd>{bag.availableQuantity} túi</dd>
-          </div>
-          <div>
-            <dt>Nhận hàng</dt>
-            <dd>{bag.pickupTimeStart}–{bag.pickupTimeEnd}</dd>
-          </div>
-        </dl>
-      </div>
-      <div className="merchant-form-actions merchant-form-actions--between">
-        {isConfirmingDelete ? (
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <Button size="small" variant="secondary" onClick={() => setIsConfirmingDelete(false)}>
-              Không xóa
-            </Button>
-            <Button size="small" variant="danger" loading={saving} onClick={() => onDelete(bag.id)}>
-              <Trash2 size={15} /> Xác nhận xóa
-            </Button>
-          </div>
-        ) : (
-          <Button variant="danger" onClick={() => setIsConfirmingDelete(true)}>
-            <Trash2 size={16} /> Xóa túi
+    <Modal
+      open={open}
+      title="Xóa túi hàng"
+      description={`Túi hàng: ${bag.name}`}
+      onClose={onClose}
+      size="small"
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div
+          style={{
+            padding: '12px',
+            background: 'var(--danger-soft)',
+            border: '1px solid #fca5a5',
+            borderRadius: '10px',
+            color: 'var(--danger)',
+            fontSize: '13px',
+            display: 'flex',
+            gap: 10,
+            alignItems: 'flex-start',
+          }}
+        >
+          <Trash2 size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+          <span>
+            Bạn có chắc chắn muốn xóa hoàn toàn túi <strong>{bag.name}</strong> không? Hành động này sẽ xóa vĩnh viễn túi hàng khỏi hệ thống và không thể khôi phục.
+          </span>
+        </div>
+        <div className="merchant-form-actions">
+          <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
+            Hủy
           </Button>
-        )}
-        <div style={{ display: 'flex', gap: 8 }}>
-          {onDuplicate && (
-            <Button variant="outline" onClick={() => onDuplicate(bag)}>
-              <Copy size={15} /> Nhân bản
-            </Button>
-          )}
-          <Button variant="outline" onClick={() => onEdit(bag)}>
-            <Pencil size={16} /> Chỉnh sửa
-          </Button>
-          <Button variant={isOnShelf ? 'secondary' : 'primary'} onClick={() => onToggleStatus(bag.id)}>
-            {isOnShelf ? <EyeOff size={16} /> : <Eye size={16} />}
-            {isOnShelf ? 'Gỡ khỏi kệ' : 'Đưa lên kệ'}
+          <Button
+            type="button"
+            variant="danger"
+            loading={saving}
+            onClick={() => onConfirm(bag.id)}
+          >
+            <Trash2 size={15} /> Xác nhận xóa
           </Button>
         </div>
       </div>
     </Modal>
   );
 }
+
+/** @deprecated Đã loại bỏ hoàn toàn mục chi tiết túi hàng */
+export const BagDetailsModal = DeleteBagConfirmModal as any;
 
 export const BagEmptyIcon = PackageOpen;

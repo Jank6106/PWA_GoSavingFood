@@ -206,7 +206,9 @@ export function useBags(storeId: string) {
       });
       setIsDetailModalOpen(false);
       setSelectedBag(null);
-      showToast('Đã xóa túi hàng');
+      showToast('Đã xóa hoàn toàn túi hàng');
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi khi xóa túi hàng');
     } finally {
       setSaving(false);
     }
