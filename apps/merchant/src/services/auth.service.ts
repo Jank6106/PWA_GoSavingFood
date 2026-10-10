@@ -48,76 +48,90 @@ export function setCachedMerchantUser(user: AuthUser | null): void {
   }
 }
 
+/**
+ * Kiểm tra tính đầy đủ của hồ sơ cửa hàng theo yêu cầu nghiệp vụ:
+ * 1. Có cờ is_first_login === true trong metadata/store -> chưa hoàn thiện
+ * 2. Thiếu tên cửa hàng (!name hoặc tên placeholder) -> chưa hoàn thiện
+ * 3. Thiếu số điện thoại (!phone) -> chưa hoàn thiện
+ * 4. Thiếu địa chỉ cụ thể (!address) -> chưa hoàn thiện
+ * 5. Thiếu tọa độ vị trí GPS (!latitude || latitude === 0) -> chưa hoàn thiện
+ */
+export function isStoreProfileComplete(store: any, user?: any): boolean {
+  if (!store) return false;
+
+  // Cờ thiết lập lần đầu trong user metadata
+  if (user?.user_metadata?.is_first_login === true) return false;
+
+  // Cờ trong DB stores nếu có
+  if (store.is_first_login === true) return false;
+
+  // Kiểm tra cờ lưu trong localStorage của trình duyệt
+  if (user?.id && !isSetupCompleted(user.id)) return false;
+
+  const hasName = Boolean(
+    store.name &&
+    store.name.trim().length > 0 &&
+    store.name.trim() !== 'Cửa hàng' &&
+    store.name.trim() !== 'Cửa hàng mới' &&
+    store.name.trim() !== 'Tiệm Bánh & Món Ngon' &&
+    store.name.trim() !== 'Quán Của Tôi'
+  );
+
+  const hasPhone = Boolean(store.phone && store.phone.trim().length >= 8);
+  const hasAddress = Boolean(store.address && store.address.trim().length >= 5);
+  const hasCoordinates = Boolean(
+    store.latitude !== null &&
+    store.latitude !== undefined &&
+    Number(store.latitude) !== 0 &&
+    !isNaN(Number(store.latitude))
+  );
+
+  return Boolean(hasName && hasPhone && hasAddress && hasCoordinates);
+}
+
 export async function ensureUserStore(
   user: any,
   defaultName: string,
-  extra?: { address?: string; phone?: string; category?: string }
+  extra?: { address?: string; phone?: string; category?: string; latitude?: number; longitude?: number }
 ) {
   try {
     let { data: store } = await supabase
       .from('stores')
-      .select('id, name, owner_user_id')
+      .select('id, name, owner_user_id, phone, address, latitude, longitude, description')
       .eq('owner_user_id', user.id)
       .maybeSingle();
 
     if (!store) {
       const storeName =
-        user.user_metadata?.store_name || user.user_metadata?.name || defaultName || 'Tiệm Bánh & Món Ngon';
-      const storePhone = extra?.phone || user.user_metadata?.phone || '0901234567';
-      const storeAddress = extra?.address || user.user_metadata?.address || '123 Nguyễn Huệ, Quận 1, TP.HCM';
+        user.user_metadata?.store_name || user.user_metadata?.name || defaultName || 'Cửa hàng mới';
+      const storePhone = extra?.phone || user.user_metadata?.phone || '';
+      const storeAddress = extra?.address || user.user_metadata?.address || '';
       const storeCategory = extra?.category || 'bakery';
+      const storeLat = extra?.latitude ?? null;
+      const storeLng = extra?.longitude ?? null;
 
-      const { data: newStore, error } = await supabase.rpc('create_store', {
-        p_owner_user_id: user.id,
-        p_name: storeName,
-        p_description: 'Cửa hàng đối tác giảm lãng phí thực phẩm cùng GoSavingFood',
-        p_phone: storePhone,
-        p_address: storeAddress,
-        p_latitude: 10.7745,
-        p_longitude: 106.7032,
-        p_logo_url: optimizeImageUrl(
-          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5',
-          200,
-          75
-        ),
-        p_banner_url: optimizeImageUrl(
-          'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
-          800,
-          75
-        ),
-        p_food_categories: [storeCategory],
-        p_open_time: '08:00:00',
-        p_close_time: '22:00:00',
-        p_is_open: true,
-      });
+      const { data: insertedStore } = await supabase
+        .from('stores')
+        .insert({
+          owner_user_id: user.id,
+          name: storeName,
+          description: 'Cửa hàng đối tác giảm lãng phí thực phẩm cùng GoSavingFood',
+          phone: storePhone,
+          address: storeAddress,
+          latitude: storeLat,
+          longitude: storeLng,
+          logo_url: optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 200, 75),
+          banner_url: optimizeImageUrl('https://images.unsplash.com/photo-1504674900247-0877df9cc836', 800, 75),
+          food_categories: [storeCategory],
+          open_time: '07:00:00',
+          close_time: '21:00:00',
+          is_open: true,
+        })
+        .select()
+        .maybeSingle();
 
-      if (!error && newStore) {
-        store = Array.isArray(newStore) ? newStore[0] : newStore;
-      } else {
-        // Fallback: Nếu RPC lỗi hoặc không tồn tại, thử insert trực tiếp
-        const { data: insertedStore } = await supabase
-          .from('stores')
-          .insert({
-            owner_user_id: user.id,
-            name: storeName,
-            description: 'Cửa hàng đối tác giảm lãng phí thực phẩm cùng GoSavingFood',
-            phone: storePhone,
-            address: storeAddress,
-            latitude: 10.7745,
-            longitude: 106.7032,
-            logo_url: optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 200, 75),
-            banner_url: optimizeImageUrl('https://images.unsplash.com/photo-1504674900247-0877df9cc836', 800, 75),
-            food_categories: [storeCategory],
-            open_time: '08:00:00',
-            close_time: '22:00:00',
-            is_open: true,
-          })
-          .select()
-          .maybeSingle();
-
-        if (insertedStore) {
-          store = insertedStore;
-        }
+      if (insertedStore) {
+        store = insertedStore;
       }
     }
     return store;
@@ -198,6 +212,7 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
 
   if (user) {
     const store = await ensureUserStore(user, username);
+    const isComplete = isStoreProfileComplete(store, user);
     const storeId = store?.id || 'b0000000-0000-0000-0000-000000000002';
     const storeName = store?.name || user.user_metadata?.store_name || user.user_metadata?.name || username;
 
@@ -205,7 +220,7 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
       id: user.id,
       storeId,
       displayName: storeName,
-      isFirstLogin: !isSetupCompleted(user.id),
+      isFirstLogin: !isComplete,
     };
 
     setCachedMerchantUser(authUser);
@@ -331,14 +346,27 @@ export async function changePasswordService(
   return true;
 }
 
-export async function completeSetupService(userId: string) {
+export async function completeSetupService(userId: string, storeData?: { name?: string }) {
   await delay();
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(getSetupKey(userId), 'true');
     const cached = getCachedMerchantUser();
     if (cached && cached.id === userId) {
-      setCachedMerchantUser({ ...cached, isFirstLogin: false });
+      setCachedMerchantUser({
+        ...cached,
+        displayName: storeData?.name || cached.displayName,
+        isFirstLogin: false,
+      });
     }
+  }
+
+  // Đánh dấu cờ is_first_login = false trong Supabase Auth metadata
+  try {
+    await supabase.auth.updateUser({
+      data: { is_first_login: false },
+    });
+  } catch (err) {
+    console.warn('[auth.service] completeSetupService metadata update:', err);
   }
 }
 
@@ -372,13 +400,14 @@ export async function getCurrentMerchantSession(): Promise<AuthUser | null> {
     const user = session.user;
     const cached = getCachedMerchantUser();
 
-    // Nếu đã có cache trùng ID, trả về ngay 0ms
+    // Nếu đã có cache trùng ID và đã kiểm tra tính đầy đủ, trả về ngay 0ms
     if (cached && cached.id === user.id) {
       return cached;
     }
 
     // Nếu chưa có store trong cache, kiểm tra/tạo
     const store = await ensureUserStore(user, 'Quán Của Tôi');
+    const isComplete = isStoreProfileComplete(store, user);
     const storeId = store?.id || 'b0000000-0000-0000-0000-000000000002';
     const storeName = store?.name || user.user_metadata?.store_name || user.user_metadata?.name || 'Cửa hàng của tôi';
 
@@ -386,7 +415,7 @@ export async function getCurrentMerchantSession(): Promise<AuthUser | null> {
       id: user.id,
       storeId,
       displayName: storeName,
-      isFirstLogin: !store && !isSetupCompleted(user.id),
+      isFirstLogin: !isComplete,
     };
 
     setCachedMerchantUser(authUser);

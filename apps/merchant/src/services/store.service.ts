@@ -156,6 +156,8 @@ export async function updateStoreProfile(
   if (input.description !== undefined) updatePayload.description = input.description;
   if (input.phone !== undefined) updatePayload.phone = input.phone;
   if (input.address !== undefined) updatePayload.address = input.address;
+  if (input.latitude !== undefined) updatePayload.latitude = input.latitude;
+  if (input.longitude !== undefined) updatePayload.longitude = input.longitude;
   if (input.openingHours !== undefined) {
     updatePayload.open_time = input.openingHours.length === 5 ? `${input.openingHours}:00` : input.openingHours;
   }

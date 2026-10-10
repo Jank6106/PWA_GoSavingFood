@@ -11,7 +11,7 @@ import { useToast } from './hooks/useToast';
 import { STORE_ID } from './mocks';
 import { LoginScreen } from './pages/LoginScreen';
 import { getCachedMerchantUser } from './services/auth.service';
-import type { LoginCredentials, MerchantRegisterInput, NotificationItem, TabRoute } from './types';
+import type { LoginCredentials, NotificationItem, TabRoute } from './types';
 
 import { BagManagementScreen } from './pages/BagManagementScreen';
 import { OrderManagementScreen } from './pages/OrderManagementScreen';
@@ -146,9 +146,23 @@ export default function App() {
     return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
   }, [showToast]);
 
+  // Route Guard: Bảo vệ tuyến đường chặt chẽ
+  // 1. Chưa đăng nhập: Luôn chặn và giữ ở 'login'
+  // 2. Đã đăng nhập nhưng chưa xong Onboarding (isFirstLogin === true): Bắt buộc ở 'setup'
+  // 3. Đã đăng nhập và hoàn thành Onboarding (isFirstLogin === false): Cố vào 'setup'/'login' sẽ tự đẩy về 'bags'
   useEffect(() => {
-    if (auth.user && route === 'login') {
-      setRoute(auth.user.isFirstLogin ? 'setup' : 'bags');
+    if (!auth.user) {
+      if (route !== 'login') setRoute('login');
+    } else if (auth.user.isFirstLogin) {
+      if (route !== 'setup') {
+        console.log('[RouteGuard] Merchant chưa hoàn tất hồ sơ -> chuyển hướng về Onboarding (/setup)');
+        setRoute('setup');
+      }
+    } else {
+      if (route === 'setup' || route === 'login') {
+        console.log('[RouteGuard] Merchant đã có đủ thông tin -> chuyển hướng vào Dashboard (/bags)');
+        setRoute('bags');
+      }
     }
   }, [auth.user, route]);
 
@@ -174,18 +188,15 @@ export default function App() {
 
   const handleLogin = async (credentials: LoginCredentials) => {
     const user = await auth.login(credentials);
-    if (user) setRoute(user.isFirstLogin ? 'setup' : 'bags');
+    if (user) {
+      setRoute(user.isFirstLogin ? 'setup' : 'bags');
+    }
     return user;
   };
 
-  const handleRegister = async (input: MerchantRegisterInput) => {
-    const user = await auth.register(input);
-    if (user) setRoute(user.isFirstLogin ? 'setup' : 'bags');
-    return user;
-  };
-
-  const handleCompleteSetup = async () => {
-    await auth.completeSetup();
+  const handleCompleteSetup = async (storeData?: { name?: string }) => {
+    await auth.completeSetup(storeData);
+    showToast('Chào mừng đối tác đến với GoSavingFood!');
     setRoute('bags');
   };
 
@@ -209,7 +220,6 @@ export default function App() {
         loading={auth.loading}
         error={auth.error}
         onLogin={handleLogin}
-        onRegister={handleRegister}
         onClearError={auth.clearError}
         onExploreDemo={() => {
           auth.exploreDemo();

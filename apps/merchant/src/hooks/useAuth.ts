@@ -101,12 +101,20 @@ export function useAuth() {
     }
   };
 
-  const completeSetup = async () => {
+  const completeSetup = async (storeData?: { name?: string }) => {
     if (!user) return;
     setLoading(true);
     try {
-      await completeSetupService(user.id);
-      setUser((current) => (current ? { ...current, isFirstLogin: false } : current));
+      await completeSetupService(user.id, storeData);
+      setUser((current) =>
+        current
+          ? {
+              ...current,
+              displayName: storeData?.name || current.displayName,
+              isFirstLogin: false,
+            }
+          : current
+      );
     } finally {
       setLoading(false);
     }
