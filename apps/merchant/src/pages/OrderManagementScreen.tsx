@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { FileSearch, QrCode } from 'lucide-react';
-import { Button, EmptyState, ErrorState, SkeletonList, ToastBar } from '../components/ui';
+import { FileSearch } from 'lucide-react';
+import { EmptyState, ErrorState, SkeletonList, ToastBar } from '../components/ui';
 import { CancelOrderModal, GlobalQRScannerModal, OrderCard, OrderDetailsModal, OrderFilterBar } from '../components/orders';
 import { useOrders } from '../hooks/useOrders';
 import { useToast } from '../hooks/useToast';
@@ -105,19 +105,9 @@ export function OrderManagementScreen({
           <span>Hôm nay</span>
           <h1>Quản lý đơn hàng</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Button
-            size="small"
-            variant="primary"
-            onClick={() => setIsGlobalQRModalOpen(true)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            <QrCode size={16} /> Quét QR giao món
-          </Button>
-          <strong>
-            {state.summary.pending + state.summary.processing + state.summary.confirmed} đơn
-          </strong>
-        </div>
+        <strong>
+          {state.summary.pending + state.summary.processing + state.summary.confirmed} đơn
+        </strong>
       </div>
       <OrderFilterBar
         statusFilter={state.statusFilter}
