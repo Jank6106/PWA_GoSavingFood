@@ -84,9 +84,9 @@ export function AppHeader({
           >
             {isImageAvatar ? (
               <img
-                src={optimizeImageUrl(avatar, 80, 80)}
+                src={optimizeImageUrl(avatar, 120, 80)}
                 alt={storeName}
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'contain', display: 'block' }}
               />
             ) : (
               avatar || storeName.slice(0, 2).toUpperCase() || 'GS'
