@@ -11,7 +11,9 @@ interface OrdersPageProps {
   onOpenOrder: (order: Order) => void;
 }
 
-const filters: Array<{ id: 'all' | 'pending' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled'; label: string }> = [
+type FilterId = 'all' | 'pending' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled';
+
+const filters: Array<{ id: FilterId; label: string }> = [
   { id: 'all', label: 'Tất cả' },
   { id: 'pending', label: 'Chờ xác nhận' },
   { id: 'preparing', label: 'Đang xử lý' },
@@ -20,39 +22,126 @@ const filters: Array<{ id: 'all' | 'pending' | 'preparing' | 'ready_for_pickup' 
   { id: 'cancelled', label: 'Đã hủy' },
 ];
 
+const matchesFilter = (order: Order, filterId: FilterId): boolean => {
+  if (filterId === 'all') return true;
+  if (filterId === 'pending') {
+    return order.status === 'paid' || order.status === 'pending';
+  }
+  if (filterId === 'preparing') {
+    return order.status === 'preparing' || order.status === 'confirmed';
+  }
+  if (filterId === 'ready_for_pickup') {
+    return order.status === 'ready_for_pickup';
+  }
+  if (filterId === 'completed') {
+    return order.status === 'completed' || order.status === 'picked_up';
+  }
+  if (filterId === 'cancelled') {
+    return order.status === 'cancelled' || order.status === 'expired';
+  }
+  return false;
+};
+
 export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: OrdersPageProps) {
-  const [filter, setFilter] = useState<'all' | 'pending' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled'>('all');
-  const visibleOrders = useMemo(
-    () =>
-      orders.filter((order) => {
-        if (filter === 'all') return true;
-        if (filter === 'pending') {
-          return order.status === 'paid' || order.status === 'pending_payment' || order.status === 'pending';
-        }
-        if (filter === 'preparing') {
-          return order.status === 'preparing' || order.status === 'confirmed';
-        }
-        if (filter === 'ready_for_pickup') {
-          return order.status === 'ready_for_pickup';
-        }
-        if (filter === 'completed') {
-          return order.status === 'completed' || order.status === 'picked_up';
-        }
-        if (filter === 'cancelled') {
-          return order.status === 'cancelled' || order.status === 'expired';
-        }
-        return order.status === filter;
-      }),
-    [filter, orders]
+  const [filter, setFilter] = useState<FilterId>('all');
+
+  // 1. Loại bỏ hoàn toàn các đơn chưa thanh toán thành công (pending_payment)
+  const validOrders = useMemo(
+    () => orders.filter((order) => order.status !== 'pending_payment'),
+    [orders]
   );
+
+  // 2. Tính toán số lượng đơn thực tế cho từng trạng thái từ danh sách đơn hợp lệ
+  const tabCounts = useMemo(() => {
+    const counts: Record<FilterId, number> = {
+      all: 0,
+      pending: 0,
+      preparing: 0,
+      ready_for_pickup: 0,
+      completed: 0,
+      cancelled: 0,
+    };
+    for (const order of validOrders) {
+      if (matchesFilter(order, 'pending')) counts.pending++;
+      else if (matchesFilter(order, 'preparing')) counts.preparing++;
+      else if (matchesFilter(order, 'ready_for_pickup')) counts.ready_for_pickup++;
+      else if (matchesFilter(order, 'completed')) counts.completed++;
+      else if (matchesFilter(order, 'cancelled')) counts.cancelled++;
+    }
+    return counts;
+  }, [validOrders]);
+
+  // 3. Danh sách đơn hiển thị theo tab hiện tại
+  const visibleOrders = useMemo(
+    () => validOrders.filter((order) => matchesFilter(order, filter)),
+    [filter, validOrders]
+  );
+
   if (!isAuthenticated) return <AuthRequiredState onLogin={onLogin} />;
   return (
     <div className="customer-screen">
       <PageHeading title="Đơn hàng" />
-      <div className="customer-filter-tabs">{filters.map((item) => <button type="button" key={item.id} className={filter === item.id ? 'is-active' : ''} onClick={() => setFilter(item.id)}>{item.label}</button>)}</div>
-      {!visibleOrders.length ? <EmptyState title="Chưa có đơn phù hợp" description="Các đơn của bạn sẽ xuất hiện tại đây." /> : <div className="customer-orders-list">{visibleOrders.map((order) => {
-        return <button key={order.id} type="button" className="customer-order-card" onClick={() => onOpenOrder(order)}><div className="customer-order-card-top"><span><small>{order.orderCode}</small><strong>{order.merchantName}</strong></span><OrderStatusBadge status={order.status} /></div><div className="customer-order-products">{order.items.map((item) => <span key={item.bagId}>{item.quantity}× {item.bagName}</span>)}</div><div className="customer-order-meta"><span><Clock3 size={14} /> {order.pickupTime}</span><span><MapPin size={14} /> {order.pickupAddress}</span></div><div className="customer-order-card-bottom"><span>Tổng cộng <strong>{order.finalAmount.toLocaleString('vi-VN')}đ</strong></span><ChevronRight size={19} /></div></button>;
-      })}</div>}
+      <div className="customer-filter-tabs">
+        {filters.map((item) => {
+          const count = item.id !== 'all' ? tabCounts[item.id] : 0;
+          return (
+            <button
+              type="button"
+              key={item.id}
+              className={filter === item.id ? 'is-active' : ''}
+              onClick={() => setFilter(item.id)}
+            >
+              <span>{item.label}</span>
+              {count > 0 && <span className="customer-tab-badge">{count}</span>}
+            </button>
+          );
+        })}
+      </div>
+      {!visibleOrders.length ? (
+        <EmptyState title="Chưa có đơn phù hợp" description="Các đơn của bạn sẽ xuất hiện tại đây." />
+      ) : (
+        <div className="customer-orders-list">
+          {visibleOrders.map((order) => {
+            return (
+              <button
+                key={order.id}
+                type="button"
+                className="customer-order-card"
+                onClick={() => onOpenOrder(order)}
+              >
+                <div className="customer-order-card-top">
+                  <span>
+                    <small>{order.orderCode}</small>
+                    <strong>{order.merchantName}</strong>
+                  </span>
+                  <OrderStatusBadge status={order.status} />
+                </div>
+                <div className="customer-order-products">
+                  {order.items.map((item) => (
+                    <span key={item.bagId}>
+                      {item.quantity}× {item.bagName}
+                    </span>
+                  ))}
+                </div>
+                <div className="customer-order-meta">
+                  <span>
+                    <Clock3 size={14} /> {order.pickupTime}
+                  </span>
+                  <span>
+                    <MapPin size={14} /> {order.pickupAddress}
+                  </span>
+                </div>
+                <div className="customer-order-card-bottom">
+                  <span>
+                    Tổng cộng <strong>{order.finalAmount.toLocaleString('vi-VN')}đ</strong>
+                  </span>
+                  <ChevronRight size={19} />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

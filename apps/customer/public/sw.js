@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gsf-customer-v6';
+const CACHE_NAME = 'gsf-customer-v7';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -34,6 +34,19 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // Không can thiệp/cache Supabase API (NetworkOnly)
+  if (
+    url.hostname.includes('supabase.co') ||
+    url.pathname.includes('/rest/v1/') ||
+    url.pathname.includes('/auth/v1/') ||
+    url.pathname.includes('/storage/v1/') ||
+    url.pathname.includes('/realtime/v1/')
+  ) {
+    return;
+  }
 
   // Với HTML/navigation: Luôn lấy từ network trước để người dùng lập tức nhận bản code mới
   if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
