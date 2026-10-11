@@ -1,6 +1,6 @@
 {
-  "name": "Go Saving Food - Khách Hàng",
-  "short_name": "GSF Khách",
+  "name": "GSF",
+  "short_name": "GSF",
   "description": "Nền tảng săn suất ăn giải cứu giá tốt, giảm đến 80% và chống lãng phí thực phẩm",
   "id": "./",
   "start_url": "./",

@@ -313,7 +313,4 @@ export function DeleteBagConfirmModal({
   );
 }
 
-/** @deprecated Đã loại bỏ hoàn toàn mục chi tiết túi hàng */
-export const BagDetailsModal = DeleteBagConfirmModal as any;
-
 export const BagEmptyIcon = PackageOpen;

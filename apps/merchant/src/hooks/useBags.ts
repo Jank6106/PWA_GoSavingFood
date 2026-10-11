@@ -26,7 +26,6 @@ export function useBags(storeId: string) {
   const [statusFilter, setStatusFilter] = useState<BagStatusFilter>('all');
   const [selectedBag, setSelectedBag] = useState<BagItem | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toastMessage, showToast } = useToast();
 
@@ -204,7 +203,6 @@ export function useBags(storeId: string) {
         setCachedBagItems(storeId, next);
         return next;
       });
-      setIsDetailModalOpen(false);
       setSelectedBag(null);
       showToast('Đã xóa hoàn toàn túi hàng');
     } catch (err: any) {
@@ -227,14 +225,12 @@ export function useBags(storeId: string) {
     offShelfCount,
     selectedBag,
     isCreateModalOpen,
-    isDetailModalOpen,
     isEditModalOpen,
     toastMessage,
     setSearchQuery,
     setStatusFilter,
     setSelectedBag,
     setIsCreateModalOpen,
-    setIsDetailModalOpen,
     setIsEditModalOpen,
     toggleStatus,
     changeQuantity,
