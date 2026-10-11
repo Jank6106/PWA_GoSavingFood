@@ -19,11 +19,56 @@ interface PaymentPageProps {
   total: number;
   isSubmitting?: boolean;
   order?: Order;
+  orderId?: string;
+  orderCode?: string;
   onBack: () => void;
   onConfirm: () => void;
 }
 
-export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProps) {
+const SESSION_ORDER_ID_KEY = 'gsf_payment_order_id';
+const SESSION_ORDER_CODE_KEY = 'gsf_payment_order_code';
+const SESSION_PAYOS_CODE_KEY = 'gsf_payment_payos_order_code';
+const SESSION_ORDER_TOTAL_KEY = 'gsf_payment_order_total';
+
+export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfirm }: PaymentPageProps) {
+  // 1. Phục hồi state orderId, orderCode, total từ Props -> URL Query -> sessionStorage
+  const [effectiveOrderId] = useState<string>(() => {
+    if (order?.id) return order.id;
+    if (orderId) return orderId;
+    const urlId = new URLSearchParams(window.location.search).get('orderId');
+    if (urlId) return urlId;
+    try {
+      return sessionStorage.getItem(SESSION_ORDER_ID_KEY) || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [effectiveOrderCode] = useState<string>(() => {
+    if (order?.orderCode) return order.orderCode;
+    if (orderCode) return orderCode;
+    const urlCode = new URLSearchParams(window.location.search).get('orderCode');
+    if (urlCode) return urlCode;
+    try {
+      const saved = sessionStorage.getItem(SESSION_ORDER_CODE_KEY);
+      if (saved) return saved;
+    } catch {}
+    if (effectiveOrderId) {
+      return `GSF-${effectiveOrderId.slice(0, 6).toUpperCase()}`;
+    }
+    return 'GSF-ORDER';
+  });
+
+  const [effectiveTotal, setEffectiveTotal] = useState<number>(() => {
+    if (total > 0) return total;
+    if (order?.finalAmount && order.finalAmount > 0) return order.finalAmount;
+    try {
+      const saved = Number(sessionStorage.getItem(SESSION_ORDER_TOTAL_KEY));
+      if (!isNaN(saved) && saved > 0) return saved;
+    } catch {}
+    return 0;
+  });
+
   const [timeLeft, setTimeLeft] = useState(() => {
     if (order?.paymentExpiresAt) {
       const diff = Math.floor((new Date(order.paymentExpiresAt).getTime() - Date.now()) / 1000);
@@ -31,12 +76,14 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
     }
     return 900; // 15 phút đếm ngược
   });
+
   const [isExpired, setIsExpired] = useState(() => {
     if (order?.paymentExpiresAt) {
       return new Date(order.paymentExpiresAt).getTime() <= Date.now();
     }
     return false;
   });
+
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isImgError, setIsImgError] = useState(false);
@@ -56,24 +103,65 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
   const isPaidConfirmedRef = useRef(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Mã đơn hàng chính thức dùng làm nội dung chuyển khoản
-  const orderCode =
-    order?.orderCode ||
-    (order?.id ? `GSF-${order.id.slice(0, 6).toUpperCase()}` : 'GSF-ORDER');
+  // Lưu vào sessionStorage & cập nhật URL Query để giữ trạng thái khi mobile chuyển app ngân hàng
+  useEffect(() => {
+    try {
+      if (effectiveOrderId) sessionStorage.setItem(SESSION_ORDER_ID_KEY, effectiveOrderId);
+      if (effectiveOrderCode) sessionStorage.setItem(SESSION_ORDER_CODE_KEY, effectiveOrderCode);
+      if (effectiveTotal > 0) sessionStorage.setItem(SESSION_ORDER_TOTAL_KEY, String(effectiveTotal));
+    } catch {}
 
-  const transferContent = payosData?.description || orderCode;
+    const url = new URL(window.location.href);
+    let updated = false;
+    if (effectiveOrderId && url.searchParams.get('orderId') !== effectiveOrderId) {
+      url.searchParams.set('orderId', effectiveOrderId);
+      updated = true;
+    }
+    if (effectiveOrderCode && url.searchParams.get('orderCode') !== effectiveOrderCode) {
+      url.searchParams.set('orderCode', effectiveOrderCode);
+      updated = true;
+    }
+    if (updated) {
+      window.history.replaceState(window.history.state, '', url.toString());
+    }
+  }, [effectiveOrderId, effectiveOrderCode, effectiveTotal]);
+
+  // Phục hồi thông tin đơn hàng nếu component bị reload do app ngân hàng chiếm bộ nhớ
+  useEffect(() => {
+    if (!order && effectiveOrderId) {
+      supabase
+        .from('orders')
+        .select('*')
+        .eq('id', effectiveOrderId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            if (data.final_amount && !effectiveTotal) {
+              setEffectiveTotal(data.final_amount);
+            }
+            if (data.payment_expires_at) {
+              const diff = Math.floor((new Date(data.payment_expires_at).getTime() - Date.now()) / 1000);
+              setTimeLeft(diff > 0 ? diff : 0);
+              setIsExpired(new Date(data.payment_expires_at).getTime() <= Date.now());
+            }
+          }
+        });
+    }
+  }, [order, effectiveOrderId, effectiveTotal]);
+
+  const transferContent = payosData?.description || effectiveOrderCode;
   const bankAccount = payosData?.accountNumber || '8823316420';
   const bankName = 'BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam';
   const accountHolder = payosData?.accountName || 'NGUYEN HUU DANH';
 
   // Link VietQR Pro chuẩn Napas 24/7 từ VietQR API
-  const qrImageUrl = `https://img.vietqr.io/image/BIDV-${bankAccount}-compact2.png?amount=${total}&addInfo=${encodeURIComponent(
+  const qrImageUrl = `https://img.vietqr.io/image/BIDV-${bankAccount}-compact2.png?amount=${effectiveTotal}&addInfo=${encodeURIComponent(
     transferContent
   )}&accountName=${encodeURIComponent(accountHolder)}`;
 
   const fallbackQrData =
     payosData?.qrCode ||
-    `00020101021238540010A000000727012600069704180112${bankAccount}0208QRIBFTTA5303704540${total}5802VN62180814${transferContent}6304`;
+    `00020101021238540010A000000727012600069704180112${bankAccount}0208QRIBFTTA5303704540${effectiveTotal}5802VN62180814${transferContent}6304`;
 
   // Hàm kích hoạt xác nhận thanh toán thành công (đảm bảo chỉ chạy đúng 1 lần)
   const handlePaymentSuccess = useCallback(() => {
@@ -83,13 +171,13 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
     setToastMessage('Thanh toán thành công! Đang chuyển trang...');
     setTimeout(() => {
       onConfirm();
-    }, 500);
+    }, 400);
   }, [onConfirm]);
 
   // Hàm chủ động kiểm tra trạng thái thanh toán từ cả DB Supabase và PayOS API
   const checkCurrentOrderStatus = useCallback(async (isManual = false): Promise<boolean> => {
     if (isPaidConfirmedRef.current || isExpired) return false;
-    const targetOrderId = order?.id;
+    const targetOrderId = effectiveOrderId || order?.id;
     if (!targetOrderId) return false;
 
     if (isManual) {
@@ -98,10 +186,9 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
 
     try {
       // 1. Kiểm tra trực tiếp bảng orders trên Supabase (siêu nhanh ~50ms)
-      // Dành cho trường hợp Webhook PayOS đã cập nhật DB trong lúc app đang chạy ngầm
       const { data: dbOrder, error: dbError } = await supabase
         .from('orders')
-        .select('id, payment_status, status')
+        .select('id, payment_status, status, payment_order_code')
         .eq('id', targetOrderId)
         .maybeSingle();
 
@@ -121,18 +208,26 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
       }
 
       // 2. Tra cứu trực tiếp với PayOS qua API check-status
-      // Dành cho trường hợp Webhook PayOS chưa kịp gọi về hoặc bị trễ mạng
-      const orderCodeNum =
-        payosData?.orderCode ||
-        (order?.orderCode && !isNaN(Number(order.orderCode)) ? Number(order.orderCode) : null);
+      let savedCode: number | null = null;
+      try {
+        const s = sessionStorage.getItem(SESSION_PAYOS_CODE_KEY);
+        if (s) savedCode = Number(s);
+      } catch {}
 
-      if (orderCodeNum) {
-        const check = await customerService.checkPayOSStatus(orderCodeNum);
-        if (check?.paid) {
-          console.log('[PaymentPage] PayOS API check confirmed order is PAID:', check);
-          handlePaymentSuccess();
-          return true;
-        }
+      const numericCode =
+        payosData?.orderCode ||
+        (dbOrder?.payment_order_code ? Number(dbOrder.payment_order_code) : null) ||
+        savedCode;
+
+      const check = await customerService.checkPayOSStatus({
+        orderCode: numericCode || undefined,
+        orderId: targetOrderId,
+      });
+
+      if (check?.paid || check?.status === 'PAID') {
+        console.log('[PaymentPage] PayOS API check confirmed order is PAID:', check);
+        handlePaymentSuccess();
+        return true;
       }
 
       if (isManual) {
@@ -152,11 +247,11 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
     }
 
     return false;
-  }, [order?.id, order?.orderCode, payosData?.orderCode, isExpired, handlePaymentSuccess]);
+  }, [effectiveOrderId, order?.id, payosData?.orderCode, isExpired, handlePaymentSuccess]);
 
   // Khởi tạo / phục hồi Realtime Subscription
   const setupRealtimeChannel = useCallback(() => {
-    const targetOrderId = order?.id;
+    const targetOrderId = effectiveOrderId || order?.id;
     if (!targetOrderId || isExpired || isPaidConfirmedRef.current) return;
 
     if (channelRef.current) {
@@ -198,22 +293,23 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
       });
 
     channelRef.current = channel;
-  }, [order?.id, isExpired, handlePaymentSuccess]);
+  }, [effectiveOrderId, order?.id, isExpired, handlePaymentSuccess]);
 
-  // 1. Tự động kết nối tới PayOS khi mở trang thanh toán (chống tạo trùng đơn do StrictMode hoặc re-render)
+  // 1. Tự động kết nối tới PayOS khi mở trang thanh toán
   useEffect(() => {
-    if (!order?.id || isExpired) return;
+    const targetOrderId = effectiveOrderId || order?.id;
+    if (!targetOrderId || isExpired) return;
 
     let paymentPromise: Promise<any>;
-    if (payosRequestedOrderIdRef.current === order.id && payosPromiseRef.current) {
+    if (payosRequestedOrderIdRef.current === targetOrderId && payosPromiseRef.current) {
       paymentPromise = payosPromiseRef.current;
     } else {
-      payosRequestedOrderIdRef.current = order.id;
+      payosRequestedOrderIdRef.current = targetOrderId;
       paymentPromise = customerService.createPayOSPayment({
-        orderId: order.id,
-        amount: total,
-        description: orderCode,
-        items: order.items?.map((it) => ({
+        orderId: targetOrderId,
+        amount: effectiveTotal,
+        description: effectiveOrderCode,
+        items: order?.items?.map((it) => ({
           name: it.bagName,
           quantity: it.quantity,
           price: it.unitPrice,
@@ -228,13 +324,18 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
         if (isMounted && res) {
           console.log('[PaymentPage] PayOS payment link ready:', res);
           setPayosData(res);
+          try {
+            if (res.orderCode) {
+              sessionStorage.setItem(SESSION_PAYOS_CODE_KEY, String(res.orderCode));
+            }
+          } catch {}
         }
       })
       .catch((err) => {
         if (isMounted) {
           console.warn('[PaymentPage] PayOS init fallback:', err);
         }
-        if (payosRequestedOrderIdRef.current === order.id) {
+        if (payosRequestedOrderIdRef.current === targetOrderId) {
           payosPromiseRef.current = null;
           payosRequestedOrderIdRef.current = null;
         }
@@ -243,9 +344,9 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
     return () => {
       isMounted = false;
     };
-  }, [order?.id, isExpired, total, orderCode, order?.items]);
+  }, [effectiveOrderId, order?.id, isExpired, effectiveTotal, effectiveOrderCode, order?.items]);
 
-  // 2. Lắng nghe Supabase Realtime tự động xác nhận đơn khi PayOS Webhook báo tiền về
+  // 2. Lắng nghe Supabase Realtime tự động xác nhận đơn
   useEffect(() => {
     setupRealtimeChannel();
 
@@ -259,24 +360,20 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
     };
   }, [setupRealtimeChannel]);
 
-  // 3. Cơ chế phục hồi khi App Active trở lại (Mobile OS background freeze recovery)
+  // 3. Tự động kiểm tra khi người dùng quay lại App từ app ngân hàng (visibilitychange)
   useEffect(() => {
-    const targetOrderId = order?.id;
+    const targetOrderId = effectiveOrderId || order?.id;
     if (!targetOrderId || isExpired) return;
 
-    const handleAppResumed = async () => {
-      // Khi người dùng chuyển từ App Ngân hàng quay lại Customer PWA
+    const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && !isPaidConfirmedRef.current) {
-        console.log('[PaymentPage] App resumed from background. Re-checking payment status immediately...');
-
-        // 1. Gọi ngay API kiểm tra trạng thái đơn hàng tức thì (không chờ realtime)
+        console.log('[PaymentPage] App became visible. Checking payment status immediately...');
         const isPaid = await checkCurrentOrderStatus();
         if (isPaid) return;
 
-        // 2. Tái kết nối hoặc làm mới subscription Supabase Realtime nếu bị ngắt
+        // Tái kết nối Realtime subscription nếu bị ngắt kết nối trong nền
         if (channelRef.current) {
           const state = (channelRef.current as any).state;
-          console.log('[PaymentPage] Realtime channel state on resume:', state);
           if (state === 'closed' || state === 'errored') {
             setupRealtimeChannel();
           }
@@ -286,22 +383,21 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
       }
     };
 
-    document.addEventListener('visibilitychange', handleAppResumed);
-    window.addEventListener('focus', handleAppResumed);
-    window.addEventListener('pageshow', handleAppResumed);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+    window.addEventListener('pageshow', handleVisibilityChange);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleAppResumed);
-      window.removeEventListener('focus', handleAppResumed);
-      window.removeEventListener('pageshow', handleAppResumed);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+      window.removeEventListener('pageshow', handleVisibilityChange);
     };
-  }, [order?.id, isExpired, checkCurrentOrderStatus, setupRealtimeChannel]);
+  }, [effectiveOrderId, order?.id, isExpired, checkCurrentOrderStatus, setupRealtimeChannel]);
 
-  // 4. Tự động kiểm tra trạng thái thanh toán từ PayOS & DB (Polling mỗi 3 giây)
+  // 4. Polling kiểm tra trạng thái thanh toán từ PayOS & DB mỗi 3 giây
   useEffect(() => {
-    const currentOrderCode = payosData?.orderCode;
-    const targetOrderId = order?.id;
-    if ((!currentOrderCode && !targetOrderId) || isExpired) return;
+    const targetOrderId = effectiveOrderId || order?.id;
+    if (!targetOrderId || isExpired) return;
 
     let isPolling = true;
     const interval = setInterval(async () => {
@@ -313,18 +409,16 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
           isPolling = false;
           clearInterval(interval);
         }
-      } catch {
-        // bỏ qua lỗi mạng tạm thời
-      }
+      } catch {}
     }, 3000);
 
     return () => {
       isPolling = false;
       clearInterval(interval);
     };
-  }, [payosData?.orderCode, order?.id, isExpired, checkCurrentOrderStatus]);
+  }, [effectiveOrderId, order?.id, isExpired, checkCurrentOrderStatus]);
 
-  // 4. Đếm ngược thời gian thanh toán (TTL 15 phút)
+  // 5. Đếm ngược thời gian thanh toán (TTL 15 phút)
   useEffect(() => {
     if (timeLeft <= 0) {
       setIsExpired(true);
@@ -347,8 +441,8 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
+      setToastMessage(null), 3000;
+    });
   };
 
   const handleCopy = (text: string, fieldName: string) => {
@@ -456,7 +550,7 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
               marginTop: '2px',
             }}
           >
-            {total.toLocaleString('vi-VN')}đ
+            {effectiveTotal.toLocaleString('vi-VN')}đ
           </div>
         </div>
 
@@ -481,7 +575,7 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
           )}
         </div>
 
-        {/* 3. Nút tải ảnh kích thước vừa phải ngay dưới qr */}
+        {/* Nút tải ảnh mã QR */}
         <button
           type="button"
           onClick={handleDownloadQr}
@@ -505,12 +599,72 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
           <span>Tải ảnh mã QR</span>
         </button>
 
-        {/* 4. Thông tin chuyển khoản gồm: ngân hàng, stk (cho phép copy), Chủ tài khoản, Nội dung chuyển khoản (Mã đơn) */}
-        <div className="customer-bank-info-card" style={{ width: '100%', marginTop: '6px' }}>
+        {/* Cảnh báo bắt buộc giữ nguyên nội dung chuyển khoản */}
+        <div
+          style={{
+            width: '100%',
+            marginTop: '10px',
+            padding: '9px 12px',
+            background: '#fffbeb',
+            border: '1px solid #fde68a',
+            borderRadius: '10px',
+            fontSize: '12px',
+            fontWeight: 650,
+            color: '#b45309',
+            lineHeight: 1.45,
+            textAlign: 'left',
+          }}
+        >
+          ⚠️ Bắt buộc giữ nguyên nội dung chuyển khoản để hệ thống tự động xác nhận đơn.
+        </div>
+
+        {/* Thông tin chuyển khoản hiển thị rõ ràng */}
+        <div className="customer-bank-info-card" style={{ width: '100%', marginTop: '8px' }}>
           <div className="customer-bank-info-header">
-            <span>Thông tin chuyển khoản</span>
+            <span>Chi tiết chuyển khoản thủ công</span>
           </div>
           <div className="customer-bank-info-list">
+            {/* Số tiền */}
+            <div className="customer-bank-info-row">
+              <span className="customer-bank-info-label">Số tiền</span>
+              <div className="customer-bank-info-val-wrap">
+                <span className="customer-bank-info-val" style={{ fontWeight: 800, color: 'var(--color-primary)' }}>
+                  {effectiveTotal.toLocaleString('vi-VN')}đ
+                </span>
+                <button
+                  type="button"
+                  className={`customer-copy-btn ${copiedField === 'amount' ? 'copied' : ''}`}
+                  onClick={() => handleCopy(String(effectiveTotal), 'amount')}
+                  title="Sao chép số tiền"
+                  aria-label="Sao chép số tiền"
+                >
+                  {copiedField === 'amount' ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Nội dung chuyển khoản */}
+            <div className="customer-bank-info-row" style={{ background: '#f0fdf4', padding: '6px 8px', borderRadius: '8px' }}>
+              <span className="customer-bank-info-label" style={{ fontWeight: 700, color: '#166534' }}>
+                Nội dung chuyển khoản
+              </span>
+              <div className="customer-bank-info-val-wrap">
+                <span className="customer-bank-info-val" style={{ fontWeight: 800, color: '#15803d', letterSpacing: '0.02em' }}>
+                  {transferContent}
+                </span>
+                <button
+                  type="button"
+                  className={`customer-copy-btn ${copiedField === 'content' ? 'copied' : ''}`}
+                  onClick={() => handleCopy(transferContent, 'content')}
+                  title="Sao chép nội dung chuyển khoản"
+                  aria-label="Sao chép nội dung chuyển khoản"
+                  style={{ background: '#dcfce7', borderColor: '#86efac' }}
+                >
+                  {copiedField === 'content' ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+              </div>
+            </div>
+
             {/* Ngân hàng */}
             <div className="customer-bank-info-row">
               <span className="customer-bank-info-label">Ngân hàng</span>
@@ -547,27 +701,10 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
                 <div style={{ width: 28, flexShrink: 0 }} />
               </div>
             </div>
-
-            {/* Nội dung chuyển khoản */}
-            <div className="customer-bank-info-row">
-              <span className="customer-bank-info-label">Nội dung CK (Mã đơn)</span>
-              <div className="customer-bank-info-val-wrap">
-                <span className="customer-bank-info-val">{transferContent}</span>
-                <button
-                  type="button"
-                  className={`customer-copy-btn ${copiedField === 'content' ? 'copied' : ''}`}
-                  onClick={() => handleCopy(transferContent, 'content')}
-                  title="Sao chép mã đơn"
-                  aria-label="Sao chép mã đơn"
-                >
-                  {copiedField === 'content' ? <Check size={14} /> : <Copy size={14} />}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Nút kiểm tra trạng thái thanh toán chủ động (dành cho khách vừa chuyển khoản trên mobile) */}
+        {/* Nút "Tôi đã chuyển tiền - Kiểm tra ngay" */}
         <div style={{ marginTop: '16px', width: '100%' }}>
           <Button
             fullWidth
@@ -581,17 +718,19 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
               justifyContent: 'center',
               gap: '8px',
               fontWeight: 700,
+              fontSize: '15px',
+              padding: '13px 16px',
             }}
           >
             {isCheckingPayment ? (
               <>
                 <Loader2 size={18} className="animate-spin" />
-                <span>Đang kiểm tra giao dịch...</span>
+                <span>Đang kiểm tra thanh toán...</span>
               </>
             ) : (
               <>
                 <Check size={18} />
-                <span>Tôi đã chuyển khoản</span>
+                <span>Tôi đã chuyển tiền - Kiểm tra ngay</span>
               </>
             )}
           </Button>
@@ -604,7 +743,7 @@ export function PaymentPage({ total, order, onBack, onConfirm }: PaymentPageProp
               lineHeight: 1.4,
             }}
           >
-            Hệ thống tự động xác nhận đơn khi ngân hàng nhận tiền.
+            Hệ thống tự động xác nhận đơn ngay khi tiền vào tài khoản.
           </p>
         </div>
       </section>

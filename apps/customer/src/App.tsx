@@ -106,8 +106,14 @@ function getRouteUrl(route: AppRoute): string {
       return `${pathname}?view=brand&id=${encodeURIComponent(route.id)}`;
     case 'checkout':
       return `${pathname}?view=checkout`;
-    case 'payment':
-      return `${pathname}?view=payment`;
+    case 'payment': {
+      const qOrderId = route.order?.id || route.orderId;
+      const qOrderCode = route.order?.orderCode || route.orderCode;
+      const q = new URLSearchParams({ view: 'payment' });
+      if (qOrderId) q.set('orderId', qOrderId);
+      if (qOrderCode) q.set('orderCode', qOrderCode);
+      return `${pathname}?${q.toString()}`;
+    }
     case 'success':
       return `${pathname}?view=success&orderId=${encodeURIComponent(route.orderId)}`;
     case 'order':
@@ -141,6 +147,15 @@ function parseRouteFromUrl(): AppRoute | null {
     if (view === 'merchant' && id) return { name: 'merchant', id };
     if (view === 'brand' && id) return { name: 'brand', id };
     if (view === 'checkout') return { name: 'checkout' };
+    if (view === 'payment') {
+      const qOrderCode = params.get('orderCode') || undefined;
+      return {
+        name: 'payment',
+        orderId: orderId || undefined,
+        orderCode: qOrderCode,
+        draft: undefined,
+      };
+    }
     if (view === 'success' && orderId) return { name: 'success', orderId };
     if (view === 'order' && id) return { name: 'order', id };
     if (view === 'review' && id) return { name: 'review', id };
@@ -915,19 +930,34 @@ function CustomerApp() {
       );
     }
     if (route.name === 'payment') {
+      const qOrderId = route.order?.id || route.orderId;
+      const qOrderCode = route.order?.orderCode || route.orderCode;
+      const matchedOrder = route.order || (qOrderId ? orders.find((o) => o.id === qOrderId) : undefined);
+
       const paymentSubtotal = route.buyNowItem
         ? route.buyNowItem.bag.discountPrice * route.buyNowItem.quantity
-        : cart.summary.subtotal;
-      const totalAmount = Math.max(0, paymentSubtotal - route.draft.discountAmount);
+        : (route.draft?.discountAmount ? cart.summary.subtotal : (matchedOrder?.totalDiscountPrice || 0));
+      const totalAmount = matchedOrder?.finalAmount ?? Math.max(0, paymentSubtotal - (route.draft?.discountAmount || 0));
 
       return (
         <PaymentPage
           draft={route.draft}
-          order={route.order}
+          order={matchedOrder}
+          orderId={qOrderId}
+          orderCode={qOrderCode}
           total={totalAmount}
           isSubmitting={isSubmitting}
           onBack={back}
-          onConfirm={() => handlePaymentConfirm(route.draft, route.order, route.buyNowItem)}
+          onConfirm={() => {
+            const confirmedOrder = matchedOrder || route.order;
+            if (confirmedOrder) {
+              handlePaymentConfirm(route.draft || ({} as any), confirmedOrder, route.buyNowItem);
+            } else if (qOrderId) {
+              resetToSuccess(qOrderId);
+            } else {
+              back();
+            }
+          }}
         />
       );
     }

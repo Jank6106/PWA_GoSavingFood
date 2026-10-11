@@ -1398,12 +1398,25 @@ export const customerService = {
     }
   },
 
-  async checkPayOSStatus(orderCode: number): Promise<{ paid: boolean; status: string } | null> {
+  async checkPayOSStatus(
+    params: { orderCode?: number | string; orderId?: string } | number | string
+  ): Promise<{ success?: boolean; paid: boolean; status: string; updated?: boolean } | null> {
     try {
       const apiBase =
         import.meta.env.VITE_API_URL ||
         (import.meta.env.PROD ? 'https://gosavingfood.app' : '');
-      const res = await fetch(`${apiBase}/api/payos/check-status?orderCode=${orderCode}`);
+
+      let queryString = '';
+      if (typeof params === 'object') {
+        const q = new URLSearchParams();
+        if (params.orderCode) q.set('orderCode', String(params.orderCode));
+        if (params.orderId) q.set('orderId', params.orderId);
+        queryString = q.toString();
+      } else {
+        queryString = `orderCode=${encodeURIComponent(String(params))}`;
+      }
+
+      const res = await fetch(`${apiBase}/api/payos/check-status?${queryString}`);
       if (!res.ok) return null;
       const data = await res.json();
       return data;
