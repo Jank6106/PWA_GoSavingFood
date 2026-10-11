@@ -123,6 +123,8 @@ const getStoreBanner = (url?: string | null) => {
 
 const mapCreateOrderError = (error: { message?: string; details?: string } | null): string => {
   const raw = `${error?.message ?? ''} ${error?.details ?? ''}`;
+  if (raw.includes('UNAUTHORIZED'))
+    return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.';
   if (raw.includes('BAG_UNAVAILABLE')) {
     try {
       if (error?.details) {
@@ -143,6 +145,8 @@ const mapCreateOrderError = (error: { message?: string; details?: string } | nul
   if (raw.includes('VOUCHER_EXPIRED')) return 'Mã giảm giá đã hết hạn sử dụng.';
   if (raw.includes('VOUCHER_USAGE_LIMIT')) return 'Mã giảm giá đã hết lượt sử dụng.';
   if (raw.includes('VOUCHER_INACTIVE')) return 'Mã giảm giá không còn hiệu lực.';
+  if (raw.includes('orders_customer_id_fkey'))
+    return 'Thông tin tài khoản chưa được đồng bộ. Vui lòng tải lại trang và thử lại.';
   return 'Không thể tạo đơn hàng. Vui lòng kiểm tra lại rồi thử lại.';
 };
 
@@ -1232,15 +1236,20 @@ export const customerService = {
       throw new Error('Vui lòng đăng nhập trước khi đặt hàng.');
     }
 
-    if (customerInfo?.name?.trim() || customerInfo?.phone?.trim()) {
-      try {
-        const updates: Record<string, string> = { updated_at: new Date().toISOString() };
-        if (customerInfo.name?.trim()) updates.name = customerInfo.name.trim();
-        if (customerInfo.phone?.trim()) updates.phone = customerInfo.phone.trim();
-        await supabase.from('users').update(updates).eq('id', user.id);
-      } catch (err) {
-        console.warn('Cập nhật thông tin khách hàng vào bảng users lỗi:', err);
-      }
+    try {
+      await supabase.from('users').upsert(
+        {
+          id: user.id,
+          email: user.email || '',
+          name: customerInfo?.name?.trim() || user.user_metadata?.name || 'Khách hàng',
+          phone: customerInfo?.phone?.trim() || user.user_metadata?.phone || null,
+          role: 'customer',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
+    } catch (err) {
+      console.warn('Đồng bộ thông tin khách hàng vào bảng users lỗi:', err);
     }
 
     const orderId = crypto.randomUUID();
