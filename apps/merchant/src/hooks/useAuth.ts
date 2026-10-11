@@ -18,7 +18,7 @@ export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(() => getCachedMerchantUser());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [initializing, setInitializing] = useState(true);
+  const [initializing, setInitializing] = useState(() => !getCachedMerchantUser());
 
   useEffect(() => {
     let isMounted = true;
@@ -41,7 +41,7 @@ export function useAuth() {
       if (event === 'SIGNED_OUT') {
         setCachedMerchantUser(null);
         if (isMounted) setUser(null);
-      } else if (event === 'SIGNED_IN' && session?.user) {
+      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         const verified = await getCurrentMerchantSession();
         if (verified && isMounted) {
           setUser(verified);

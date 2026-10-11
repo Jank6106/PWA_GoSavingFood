@@ -14,6 +14,14 @@ const getSetupKey = (userId: string) => `${SETUP_KEY_PREFIX}:${userId}`;
 export const isSetupCompleted = (userId: string) =>
   typeof window !== 'undefined' && window.localStorage.getItem(getSetupKey(userId)) === 'true';
 
+export const markSetupCompletedLocally = (userId: string) => {
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem(getSetupKey(userId), 'true');
+    } catch {}
+  }
+};
+
 /**
  * Đọc session user được cache trong localStorage (0ms sync render)
  */
@@ -50,23 +58,28 @@ export function setCachedMerchantUser(user: AuthUser | null): void {
 
 /**
  * Kiểm tra tính đầy đủ của hồ sơ cửa hàng theo yêu cầu nghiệp vụ:
- * 1. Có cờ is_first_login === true trong metadata/store -> chưa hoàn thiện
- * 2. Thiếu tên cửa hàng (!name hoặc tên placeholder) -> chưa hoàn thiện
- * 3. Thiếu số điện thoại (!phone) -> chưa hoàn thiện
- * 4. Thiếu địa chỉ cụ thể (!address) -> chưa hoàn thiện
- * 5. Thiếu tọa độ vị trí GPS (!latitude || latitude === 0) -> chưa hoàn thiện
+ * 1. Cờ is_first_login trong user metadata hoặc stores DB
+ * 2. Tính đầy đủ của thông tin cửa hàng thực tế (Tên, SĐT, Địa chỉ, Tọa độ GPS)
  */
 export function isStoreProfileComplete(store: any, user?: any): boolean {
   if (!store) return false;
 
-  // Cờ thiết lập lần đầu trong user metadata
+  // Cờ thiết lập lần đầu trong user metadata nếu được chỉ định rõ là true -> chưa hoàn thiện
   if (user?.user_metadata?.is_first_login === true) return false;
 
-  // Cờ trong DB stores nếu có
+  // Cờ trong DB stores nếu được chỉ định rõ là true -> chưa hoàn thiện
   if (store.is_first_login === true) return false;
 
-  // Kiểm tra cờ lưu trong localStorage của trình duyệt
-  if (user?.id && !isSetupCompleted(user.id)) return false;
+  // Nếu user metadata đã ghi nhận is_first_login === false VÀ cửa hàng có tên -> coi như hoàn tất vĩnh viễn
+  if (user?.user_metadata?.is_first_login === false && store.name && store.name.trim().length > 0) {
+    if (user?.id) markSetupCompletedLocally(user.id);
+    return true;
+  }
+
+  // Nếu đã lưu cờ hoàn tất trong localStorage của trình duyệt này
+  if (user?.id && isSetupCompleted(user.id) && store.name && store.name.trim().length > 0) {
+    return true;
+  }
 
   const hasName = Boolean(
     store.name &&
@@ -86,7 +99,11 @@ export function isStoreProfileComplete(store: any, user?: any): boolean {
     !isNaN(Number(store.latitude))
   );
 
-  return Boolean(hasName && hasPhone && hasAddress && hasCoordinates);
+  const isComplete = Boolean(hasName && hasPhone && hasAddress && hasCoordinates);
+  if (isComplete && user?.id) {
+    markSetupCompletedLocally(user.id);
+  }
+  return isComplete;
 }
 
 export async function ensureUserStore(
@@ -224,6 +241,12 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
     };
 
     setCachedMerchantUser(authUser);
+
+    // Yêu cầu quyền lưu trữ bền vững trên PWA trình duyệt
+    if (typeof window !== 'undefined' && 'storage' in navigator && (navigator.storage as any)?.persist) {
+      (navigator.storage as any).persist().catch(() => {});
+    }
+
     return authUser;
   }
 
@@ -347,9 +370,9 @@ export async function changePasswordService(
 }
 
 export async function completeSetupService(userId: string, storeData?: { name?: string }) {
-  await delay();
+  await delay(100);
   if (typeof window !== 'undefined') {
-    window.localStorage.setItem(getSetupKey(userId), 'true');
+    markSetupCompletedLocally(userId);
     const cached = getCachedMerchantUser();
     if (cached && cached.id === userId) {
       setCachedMerchantUser({
@@ -360,13 +383,33 @@ export async function completeSetupService(userId: string, storeData?: { name?: 
     }
   }
 
-  // Đánh dấu cờ is_first_login = false trong Supabase Auth metadata
+  // 1. Đánh dấu cờ is_first_login = false trong Supabase Auth metadata
   try {
-    await supabase.auth.updateUser({
-      data: { is_first_login: false },
+    const { data: updateData, error: updateError } = await supabase.auth.updateUser({
+      data: {
+        is_first_login: false,
+        setup_completed_at: new Date().toISOString(),
+        ...(storeData?.name ? { store_name: storeData.name } : {}),
+      },
     });
+
+    if (!updateError && updateData?.user) {
+      const cached = getCachedMerchantUser();
+      if (cached) {
+        setCachedMerchantUser({
+          ...cached,
+          displayName: storeData?.name || cached.displayName,
+          isFirstLogin: false,
+        });
+      }
+    }
   } catch (err) {
     console.warn('[auth.service] completeSetupService metadata update:', err);
+  }
+
+  // 2. Yêu cầu quyền lưu trữ bền vững trên PWA trình duyệt
+  if (typeof window !== 'undefined' && 'storage' in navigator && (navigator.storage as any)?.persist) {
+    (navigator.storage as any).persist().catch(() => {});
   }
 }
 
@@ -400,8 +443,14 @@ export async function getCurrentMerchantSession(): Promise<AuthUser | null> {
     const user = session.user;
     const cached = getCachedMerchantUser();
 
-    // Nếu đã có cache trùng ID và đã kiểm tra tính đầy đủ, trả về ngay 0ms
+    // Nếu đã có cache trùng ID:
     if (cached && cached.id === user.id) {
+      // Nếu user metadata đã cập nhật is_first_login = false nhưng cached vẫn mang true, sửa ngay
+      if (user.user_metadata?.is_first_login === false && cached.isFirstLogin) {
+        const updated = { ...cached, isFirstLogin: false };
+        setCachedMerchantUser(updated);
+        return updated;
+      }
       return cached;
     }
 

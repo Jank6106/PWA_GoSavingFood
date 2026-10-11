@@ -198,6 +198,9 @@ export default function App() {
     await auth.completeSetup(storeData);
     showToast('Chào mừng đối tác đến với GoSavingFood!');
     setRoute('bags');
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({ route: 'bags' }, '', window.location.pathname);
+    }
   };
 
   const handleLogout = async () => {
