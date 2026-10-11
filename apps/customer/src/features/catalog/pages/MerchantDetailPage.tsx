@@ -7,11 +7,11 @@ import {
   Share2,
   ShoppingBag,
   Star,
-  Store,
 } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
 import { MerchantReviewsView } from '../components/MerchantReviewsView';
 import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
+import { optimizeImageUrl } from '../../../services/customer.service';
 
 interface MerchantDetailPageProps {
   merchant: Merchant | null;
@@ -23,7 +23,10 @@ interface MerchantDetailPageProps {
 }
 
 const DEFAULT_COVER =
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80';
+  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80';
+
+const DEFAULT_LOGO =
+  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80';
 
 const COMMUNITY_PHOTOS = [
   'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop&q=80',
@@ -56,6 +59,8 @@ export function MerchantDetailPage({
   const [showAllAbout, setShowAllAbout] = useState(false);
   const [viewingAllReviews, setViewingAllReviews] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [coverFailed, setCoverFailed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   const handleOpenReviews = () => {
     if (onOpenReviews && merchant) {
@@ -92,7 +97,10 @@ export function MerchantDetailPage({
     );
   }
 
-  const coverUrl = merchant.banner || merchant.logo || DEFAULT_COVER;
+  const rawCover = merchant.banner || merchant.logo;
+  const coverUrl = !coverFailed && rawCover ? optimizeImageUrl(rawCover, 1000, 80) : DEFAULT_COVER;
+  const rawLogo = merchant.logo;
+  const logoUrl = !logoFailed && rawLogo ? optimizeImageUrl(rawLogo, 300, 80) : DEFAULT_LOGO;
   const distanceFormatted = formatDistance(merchant.distance);
   const totalReviews = merchant.totalRatings || 92;
   const ratingValue = merchant.rating ? merchant.rating.toFixed(1) : '4.5';
@@ -149,6 +157,15 @@ export function MerchantDetailPage({
           src={coverUrl}
           alt={merchant.name}
           className="customer-store-hero-img"
+          loading="lazy"
+          onError={(e) => {
+            if (!coverFailed) {
+              setCoverFailed(true);
+            } else {
+              (e.currentTarget as HTMLImageElement).src =
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><rect width="100%" height="100%" fill="%231e3a29"/></svg>';
+            }
+          }}
         />
         <div className="customer-store-hero-scrim" />
 
@@ -189,29 +206,36 @@ export function MerchantDetailPage({
           </div>
         </div>
 
-        {/* Floating Brand Logo Badge (Avatar tràn viền) */}
+        {/* Floating Brand Logo Badge (Avatar tràn viền 1:1) */}
         <div className="customer-store-floating-logo">
-          {merchant.logo ? (
-            <img src={merchant.logo} alt={merchant.name} />
-          ) : (
-            <div className="customer-store-logo-placeholder">
-              <Store size={36} color="var(--color-primary)" />
-            </div>
-          )}
+          <img
+            src={logoUrl}
+            alt={merchant.name}
+            loading="lazy"
+            onError={(e) => {
+              if (!logoFailed) {
+                setLogoFailed(true);
+              } else {
+                (e.currentTarget as HTMLImageElement).src =
+                  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="100%" height="100%" fill="%2322c55e"/></svg>';
+              }
+            }}
+          />
         </div>
       </section>
 
       {/* 2. Store Info Section */}
       <section className="customer-store-info-section">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-          <h1 className="customer-store-title" style={{ margin: 0 }}>{merchant.name}</h1>
+        <h1 className="customer-store-title">{merchant.name}</h1>
+
+        <div style={{ marginTop: 6, marginBottom: 8 }}>
           <span className={`customer-merchant-status-badge ${merchant.isOpen !== false ? 'is-open' : 'is-closed'}`}>
             <span className="customer-merchant-status-dot" />
             {merchant.isOpen !== false ? 'Đang mở cửa' : 'Đã đóng cửa'}
           </span>
         </div>
 
-        <div className="customer-store-address-row" style={{ marginTop: 8 }}>
+        <div className="customer-store-address-row">
           <MapPin size={15} strokeWidth={2} className="customer-store-address-pin" />
           <span>{merchant.address}</span>
         </div>

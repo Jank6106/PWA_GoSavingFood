@@ -4,28 +4,105 @@ import { compressImageFile, optimizeImageUrl } from '../../services/utils';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../../types';
 import { Button, Field, Modal, TextAreaField } from '../ui';
 
-const readImage = (file?: File) => compressImageFile(file, 800, 0.75);
-const isImage = (value: string) => value.startsWith('data:image/') || value.startsWith('http');
+const DEFAULT_COVER =
+  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80';
+const DEFAULT_AVATAR =
+  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80';
 
-export function StoreCoverHeader({ profile, saving, onSaveImages }: { profile: StoreProfile; saving: boolean; onSaveImages: (input: StoreImageUpdate) => void }) {
-  const changeImage = async (event: ChangeEvent<HTMLInputElement>, field: keyof StoreImageUpdate) => { const image = await readImage(event.target.files?.[0]); if (image) onSaveImages({ [field]: image }); event.target.value = ''; };
+const isImage = (value?: string | null) =>
+  Boolean(value && (value.startsWith('data:image/') || value.startsWith('http')));
+
+export function StoreCoverHeader({
+  profile,
+  saving,
+  onSaveImages,
+}: {
+  profile: StoreProfile;
+  saving: boolean;
+  onSaveImages: (input: StoreImageUpdate) => void;
+}) {
+  const [coverFailed, setCoverFailed] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  const changeImage = async (
+    event: ChangeEvent<HTMLInputElement>,
+    field: keyof StoreImageUpdate
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Avatar: tỉ lệ 1:1, nén tối ưu 300px, quality 0.8 (~15-30KB)
+    // Ảnh bìa: tỉ lệ 16:9, nén tối ưu 1000px, quality 0.8 (~60-100KB)
+    const image =
+      field === 'avatar'
+        ? await compressImageFile(file, 300, 0.8)
+        : await compressImageFile(file, 1000, 0.8);
+
+    if (image) onSaveImages({ [field]: image });
+    event.target.value = '';
+  };
+
+  const coverSrc =
+    !coverFailed && profile.coverImage
+      ? optimizeImageUrl(profile.coverImage, 1000, 80)
+      : DEFAULT_COVER;
+
+  const avatarSrc =
+    !avatarFailed && profile.avatar
+      ? optimizeImageUrl(profile.avatar, 300, 80)
+      : DEFAULT_AVATAR;
+
   return (
     <section className="merchant-store-cover">
-      <img src={optimizeImageUrl(profile.coverImage, 800, 75)} alt="Không gian cửa hàng" loading="lazy" />
+      <img
+        src={coverSrc}
+        alt="Không gian cửa hàng"
+        loading="lazy"
+        onError={() => setCoverFailed(true)}
+      />
       <label className="merchant-cover-image-action">
         <ImageUp size={15} /> Thay ảnh bìa
-        <input type="file" accept="image/*" onChange={(event) => void changeImage(event, 'coverImage')} disabled={saving} />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(event) => void changeImage(event, 'coverImage')}
+          disabled={saving}
+        />
       </label>
       <div className="merchant-store-cover-overlay">
         <label className="merchant-avatar-edit">
-          {isImage(profile.avatar) ? <img src={optimizeImageUrl(profile.avatar, 160, 80)} alt="Ảnh đại diện cửa hàng" loading="lazy" /> : profile.avatar}
-          <span><Pencil size={13} /></span>
-          <input type="file" accept="image/*" onChange={(event) => void changeImage(event, 'avatar')} disabled={saving} />
+          {isImage(avatarSrc) ? (
+            <img
+              src={avatarSrc}
+              alt="Ảnh đại diện cửa hàng"
+              loading="lazy"
+              onError={() => setAvatarFailed(true)}
+            />
+          ) : (
+            profile.avatar
+          )}
+          <span>
+            <Pencil size={13} />
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(event) => void changeImage(event, 'avatar')}
+            disabled={saving}
+          />
         </label>
         <div>
-          <h1>{profile.name}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <h1 style={{ margin: 0 }}>{profile.name}</h1>
+            <span className={`merchant-cover-status-badge ${profile.isOpen ? 'is-open' : 'is-closed'}`}>
+              <span className="merchant-cover-status-dot" />
+              {profile.isOpen ? 'Đang mở cửa' : 'Đã đóng cửa'}
+            </span>
+          </div>
           <p>{profile.description}</p>
-          <small><MapPin size={14} /> {profile.address}</small>
+          <small>
+            <MapPin size={14} /> {profile.address}
+          </small>
         </div>
       </div>
       <div className="merchant-impact-grid">

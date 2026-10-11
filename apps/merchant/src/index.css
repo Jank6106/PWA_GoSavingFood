@@ -333,6 +333,10 @@ h1, h2, h3, p { margin: 0; }
 .merchant-store-cover-overlay h1 { font-size: 22px; }
 .merchant-store-cover-overlay p, .merchant-store-cover-overlay small { color: #D8ED9B; font-size: 11px; }
 .merchant-store-cover-overlay small { display: flex; align-items: center; gap: 4px; }
+.merchant-cover-status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 750; background: rgba(22, 163, 74, 0.25); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.4); backdrop-filter: blur(6px); line-height: 1; }
+.merchant-cover-status-badge.is-closed { background: rgba(239, 68, 68, 0.25); color: #fca5a5; border-color: rgba(252, 165, 165, 0.4); }
+.merchant-cover-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+.merchant-cover-status-badge.is-closed .merchant-cover-status-dot { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
 .merchant-impact-grid { position: relative; z-index: 3; display: grid; height: 82px; grid-template-columns: repeat(2, 1fr); background: var(--primary-dark); }
 .merchant-impact-grid > div { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .merchant-impact-grid > div + div { border-left: 1px solid rgba(255,255,255,.15); }

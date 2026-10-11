@@ -259,11 +259,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return await customerService.deleteAccount(targetId, targetEmail || targetPhone);
       },
       updateProfile: (updates: Partial<User>) => {
+        const targetId = user?.id;
         setUser((prev) => {
           const updated = prev ? { ...prev, ...updates } : null;
           setCachedCustomerUser(updated);
           return updated;
         });
+        if (targetId) {
+          void customerService.updateUserProfile(targetId, updates);
+        }
       },
     }),
     [initializing, isAuthOpen, user]

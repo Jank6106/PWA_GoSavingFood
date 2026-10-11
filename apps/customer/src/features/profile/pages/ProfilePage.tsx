@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Bell,
   Camera,
@@ -6,6 +6,7 @@ import {
   Gift,
   HelpCircle,
   Info,
+  Loader2,
   LogOut,
   Mail,
   Pencil,
@@ -19,6 +20,8 @@ import {
 import { Badge, Button, Input } from '@gosavingfood/ui';
 import { AuthRequiredState } from '../../../shared/components';
 import type { Order, User, Voucher } from '../../../shared/types/customer.types';
+import { compressAvatarFile } from '../../../shared/utils/imageCompression';
+import { customerService } from '../../../services/customer.service';
 import {
   VoucherPopup,
   HelpSupportModal,
@@ -53,7 +56,14 @@ export function ProfilePage(props: ProfilePageProps) {
   const [phone, setPhone] = useState(props.user.phone);
   const [email, setEmail] = useState(props.user.email || '');
   const [avatar, setAvatar] = useState(props.user.avatar || '');
-  const [coverImage, setCoverImage] = useState(props.user.coverImage || '');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  // Sync avatar with props.user.avatar if updated externally
+  useEffect(() => {
+    if (!isUploadingAvatar) {
+      setAvatar(props.user?.avatar || '');
+    }
+  }, [props.user?.avatar, isUploadingAvatar]);
 
   // New states for modals and notification switch
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
@@ -67,7 +77,6 @@ export function ProfilePage(props: ProfilePageProps) {
   const [toastFeedback, setToastFeedback] = useState<string | null>(null);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const toggleInfoAccordion = () => {
     if (isInfoOpen) {
@@ -81,32 +90,67 @@ export function ProfilePage(props: ProfilePageProps) {
     setIsInfoOpen(!isInfoOpen);
   };
 
-  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * Xử lý đổi ảnh đại diện với quy trình:
+   * 1. 0ms Optimistic UI (URL.createObjectURL)
+   * 2. Đồng bộ tức thời vào Global State / AuthContext
+   * 3. Nén ảnh chuẩn 400x400 px, WebP/JPEG chất lượng 0.8 (< 100KB)
+   * 4. Upload Supabase Storage bucket 'avatars'
+   * 5. Cập nhật Database (users & auth user_metadata)
+   * 6. Tự động rollback khi gặp sự cố
+   */
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        const nextAvatar = reader.result;
-        setAvatar(nextAvatar);
-        props.onUpdateProfile?.({ avatar: nextAvatar });
-      }
-    };
-    reader.readAsDataURL(file);
-  };
 
-  const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        const nextCover = reader.result;
-        setCoverImage(nextCover);
-        props.onUpdateProfile?.({ coverImage: nextCover });
-      }
-    };
-    reader.readAsDataURL(file);
+    // Reset input value để cho phép chọn lại cùng 1 file
+    e.target.value = '';
+
+    if (!props.user?.id) {
+      setToastFeedback('Vui lòng đăng nhập lại để đổi ảnh đại diện.');
+      setTimeout(() => setToastFeedback(null), 3000);
+      return;
+    }
+
+    const previousAvatar = avatar;
+    // Bước 1 & 2: Optimistic UI - Hiển thị ngay lập tức trong 0ms
+    const optimisticUrl = URL.createObjectURL(file);
+    setAvatar(optimisticUrl);
+    props.onUpdateProfile?.({ avatar: optimisticUrl });
+    setIsUploadingAvatar(true);
+
+    try {
+      // Bước 3: Nén ảnh phía client (Canvas API, center-crop 1:1, max 400x400, quality 0.8)
+      const compressed = await compressAvatarFile(file, { size: 400, quality: 0.8 });
+
+      // Bước 4 & 5: Upload Storage và lưu vào Database
+      const permanentUrl = await customerService.uploadAvatar(
+        props.user.id,
+        compressed.blob,
+        compressed.contentType
+      );
+
+      // Cập nhật URL vĩnh viễn từ Storage
+      setAvatar(permanentUrl);
+      props.onUpdateProfile?.({ avatar: permanentUrl });
+
+      setToastFeedback('Đã cập nhật ảnh đại diện thành công!');
+      setTimeout(() => {
+        setToastFeedback(null);
+      }, 2500);
+    } catch (err: any) {
+      console.error('[ProfilePage] Upload avatar error:', err);
+      // Rollback về ảnh cũ khi thất bại
+      setAvatar(previousAvatar);
+      props.onUpdateProfile?.({ avatar: previousAvatar });
+      setToastFeedback(err?.message || 'Không thể tải ảnh lên. Vui lòng thử lại.');
+      setTimeout(() => {
+        setToastFeedback(null);
+      }, 3200);
+    } finally {
+      URL.revokeObjectURL(optimisticUrl);
+      setIsUploadingAvatar(false);
+    }
   };
 
   const handleSaveProfile = () => {
@@ -139,6 +183,8 @@ export function ProfilePage(props: ProfilePageProps) {
     0
   );
 
+  const initialLetter = (props.user.name?.trim().charAt(0) || 'U').toUpperCase();
+
   return (
     <div className="customer-screen customer-profile-screen">
       {/* Toast Feedback */}
@@ -149,66 +195,66 @@ export function ProfilePage(props: ProfilePageProps) {
         </div>
       )}
 
-      {/* Profile Header & Cover */}
-      <section
-        className={`customer-profile-card ${coverImage ? 'has-cover' : ''}`}
-        style={coverImage ? { backgroundImage: `url(${coverImage})` } : undefined}
-      >
-        <button
-          type="button"
-          className="customer-cover-edit-btn"
-          onClick={() => coverInputRef.current?.click()}
-          title="Đổi ảnh bìa"
-        >
-          <Camera size={13} />
-          <span>Đổi ảnh bìa</span>
-        </button>
-        <input
-          ref={coverInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={handleCoverFile}
-        />
-
-        <div className="customer-avatar-container">
+      {/* Profile Header (Bố cục căn giữa hiện đại) */}
+      <section className="customer-profile-header-center">
+        <div className="customer-profile-avatar-wrapper">
           <div
-            className="customer-avatar-wrap"
-            onClick={() => avatarInputRef.current?.click()}
+            className="customer-profile-avatar-circle"
+            onClick={() => !isUploadingAvatar && avatarInputRef.current?.click()}
             role="button"
             tabIndex={0}
             title="Nhấn để đổi ảnh đại diện"
           >
             {avatar ? (
-              <img src={avatar} alt={props.user.name} className="customer-avatar-img" />
+              <img
+                src={avatar}
+                alt={props.user.name}
+                className="customer-profile-avatar-img"
+              />
             ) : (
-              <span className="customer-avatar-initials">{props.user.name.charAt(0)}</span>
+              <div className="customer-profile-avatar-initials">
+                {initialLetter}
+              </div>
             )}
-            <div className="customer-avatar-overlay-btn">
-              <Camera size={18} />
-              <span>Đổi ảnh</span>
-            </div>
+
+            {/* Spinner loading khi đang xử lý upload */}
+            {isUploadingAvatar && (
+              <div className="customer-profile-avatar-loading-overlay">
+                <Loader2 size={26} className="customer-profile-spinner" />
+              </div>
+            )}
           </div>
+
+          {/* Nút Action Badge (Camera) ở góc dưới bên phải avatar */}
           <button
             type="button"
-            className="customer-avatar-badge-btn"
+            className="customer-profile-camera-badge"
             onClick={() => avatarInputRef.current?.click()}
             title="Đổi ảnh đại diện"
             aria-label="Đổi ảnh đại diện"
+            disabled={isUploadingAvatar}
           >
-            <Camera size={12} />
+            {isUploadingAvatar ? (
+              <Loader2 size={14} className="customer-profile-badge-spinner" />
+            ) : (
+              <Camera size={15} />
+            )}
           </button>
+
+          {/* Input file ẩn hỗ trợ Camera và File Picker */}
           <input
             ref={avatarInputRef}
             type="file"
             accept="image/*"
+            className="customer-profile-file-input"
             style={{ display: 'none' }}
-            onChange={handleAvatarFile}
+            onChange={handleAvatarChange}
           />
         </div>
 
-        <div className="customer-profile-details">
-          <h1>{props.user.name}</h1>
+        {/* Họ tên in đậm rõ ràng ngay bên dưới avatar */}
+        <div className="customer-profile-header-details">
+          <h1 className="customer-profile-name">{props.user.name}</h1>
           <Badge variant="success">Người cứu thực phẩm tích cực</Badge>
         </div>
       </section>

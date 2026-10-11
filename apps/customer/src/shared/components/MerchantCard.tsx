@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Clock, MapPin, Navigation, Star, Tag } from 'lucide-react';
 import type { Merchant } from '../types/customer.types';
+import { optimizeImageUrl } from '../../services/customer.service';
 
 interface MerchantCardProps {
   merchant: Merchant;
@@ -11,7 +12,7 @@ interface MerchantCardProps {
 }
 
 const DEFAULT_BANNER =
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80';
+  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80';
 
 const formatDistance = (dist?: number) => {
   if (dist === undefined || dist === null) return null;
@@ -26,7 +27,7 @@ export function MerchantCard({ merchant, meta, onClick }: MerchantCardProps) {
   const [imgFailed, setImgFailed] = useState(false);
 
   const rawSrc = merchant.banner || merchant.logo;
-  const imageSrc = !imgFailed && rawSrc ? rawSrc : DEFAULT_BANNER;
+  const imageSrc = !imgFailed && rawSrc ? optimizeImageUrl(rawSrc, 1000, 80) : DEFAULT_BANNER;
   const distanceText = formatDistance(merchant.distance);
   const isOpen = merchant.isOpen ?? true;
 
@@ -50,7 +51,14 @@ export function MerchantCard({ merchant, meta, onClick }: MerchantCardProps) {
           alt={merchant.name}
           className="customer-merchant-card-img"
           loading="lazy"
-          onError={() => setImgFailed(true)}
+          onError={(e) => {
+            if (!imgFailed) {
+              setImgFailed(true);
+            } else {
+              (e.currentTarget as HTMLImageElement).src =
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250"><rect width="100%" height="100%" fill="%232e5b3f"/></svg>';
+            }
+          }}
         />
         <div className="customer-merchant-card-scrim" />
       </div>

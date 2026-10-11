@@ -1,6 +1,7 @@
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../types';
 import { fetchCompletedBagQuantity } from './order.service';
 import { supabase } from './supabase';
+import { base64ToBlob } from './utils';
 
 const CO2_KG_PER_BAG = 2.5;
 const STORE_CACHE_PREFIX = 'gsf_merchant_store:';
@@ -222,13 +223,74 @@ export async function toggleStoreOpenStatus(
   return updated;
 }
 
+async function uploadStoreImageToStorage(
+  storeId: string,
+  imageStr: string,
+  bucket: 'store-assets' | 'store-logos',
+  prefix: 'banner' | 'logo'
+): Promise<string> {
+  // Nếu đã là URL CDN / HTTP, lưu trực tiếp
+  if (!imageStr.startsWith('data:')) {
+    return imageStr;
+  }
+
+  try {
+    const blob = base64ToBlob(imageStr);
+    const ext = blob.type.includes('webp') ? 'webp' : 'jpg';
+    const fileName = `${storeId}/${prefix}_${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, blob, {
+        contentType: blob.type,
+        upsert: true,
+      });
+
+    if (!uploadError) {
+      const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
+      if (data?.publicUrl) {
+        return data.publicUrl;
+      }
+    } else {
+      console.warn(`Upload ${prefix} lên ${bucket} thất bại:`, uploadError.message);
+    }
+  } catch (err) {
+    console.warn(`Lỗi khi nén/upload ảnh ${prefix}:`, err);
+  }
+
+  // Nếu upload storage thất bại và base64 quá lớn (> 60KB), dùng fallback CDN để tránh làm phình DB
+  if (imageStr.length > 60000) {
+    console.warn('Ảnh Base64 quá lớn, dùng fallback CDN để tránh phình database.');
+    return prefix === 'logo'
+      ? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80'
+      : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80';
+  }
+
+  return imageStr;
+}
+
 export async function updateStoreImages(
   storeId: string,
   input: StoreImageUpdate
 ): Promise<StoreProfile | null> {
   const updatePayload: Record<string, any> = {};
-  if (input.coverImage) updatePayload.banner_url = input.coverImage;
-  if (input.avatar) updatePayload.logo_url = input.avatar;
+
+  if (input.coverImage) {
+    updatePayload.banner_url = await uploadStoreImageToStorage(
+      storeId,
+      input.coverImage,
+      'store-assets',
+      'banner'
+    );
+  }
+  if (input.avatar) {
+    updatePayload.logo_url = await uploadStoreImageToStorage(
+      storeId,
+      input.avatar,
+      'store-logos',
+      'logo'
+    );
+  }
 
   if (Object.keys(updatePayload).length > 0) {
     updatePayload.updated_at = new Date().toISOString();

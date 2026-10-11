@@ -43,7 +43,13 @@ export const compressImageFile = (file?: File, maxWidth = 800, quality = 0.75): 
         const ctx = canvas.getContext('2d');
         if (!ctx) return resolve(src);
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+
+        // Ưu tiên nén WebP để dung lượng tối thiểu, fallback JPEG nếu browser cũ
+        let dataUrl = canvas.toDataURL('image/webp', quality);
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(dataUrl);
       };
       img.onerror = () => resolve(src);
       img.src = src;
@@ -51,4 +57,16 @@ export const compressImageFile = (file?: File, maxWidth = 800, quality = 0.75): 
     reader.onerror = () => reject(new Error('Không thể đọc ảnh.'));
     reader.readAsDataURL(file);
   });
+};
+
+export const base64ToBlob = (base64: string): Blob => {
+  const parts = base64.split(';base64,');
+  const contentType = parts[0].replace('data:', '') || 'image/webp';
+  const raw = atob(parts[1]);
+  const rawLength = raw.length;
+  const uInt8Array = new Uint8Array(rawLength);
+  for (let i = 0; i < rawLength; ++i) {
+    uInt8Array[i] = raw.charCodeAt(i);
+  }
+  return new Blob([uInt8Array], { type: contentType });
 };

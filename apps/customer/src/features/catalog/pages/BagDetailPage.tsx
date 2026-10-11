@@ -244,152 +244,163 @@ export function BagDetailPage({
         </div>
       </section>
 
-      {/* 2. Main Product Info & Price Card */}
-      <section className="customer-product-info-card">
-        <h1 className="customer-product-title">{bag.name}</h1>
+      {/* 2. Main Product Info & Details (Right Column on Desktop) */}
+      <div className="customer-product-main-content">
+        {/* Main Product Info & Price Card */}
+        <section className="customer-product-info-card">
+          <h1 className="customer-product-title">{bag.name}</h1>
 
-        {/* Rating and Distance Row */}
-        <div className="customer-product-meta-row">
-          <div className="customer-product-rating-pill">
-            <Star size={14} fill="var(--color-offer-accent)" color="var(--color-offer-accent)" />
-            <strong>{ratingValue}</strong>
-            <span>({totalReviews})</span>
-          </div>
-          {distanceFormatted && (
-            <>
-              <span className="customer-product-meta-dot">•</span>
-              <span className="customer-product-distance">{distanceFormatted}</span>
-            </>
-          )}
-        </div>
-
-        {/* Price & Discount Row */}
-        <div className="customer-product-price-row">
-          <span className="customer-product-price">
-            {bag.discountPrice.toLocaleString('vi-VN')}đ
-          </span>
-          {bag.originalPrice > bag.discountPrice && (
-            <del className="customer-product-orig-price">
-              {bag.originalPrice.toLocaleString('vi-VN')}đ
-            </del>
-          )}
-          {discountPercent > 0 && (
-            <span className="customer-product-discount-pill">
-              -{discountPercent}%
-            </span>
-          )}
-        </div>
-
-        {/* Urgency & Stock Banner */}
-        <div className="customer-product-urgency-row">
-          <div className="customer-product-stock-pill">
-            <ShoppingBag size={14} strokeWidth={2.2} />
-            <span>Còn {bag.quantity} túi</span>
-          </div>
-
-          <div className="customer-product-countdown-pill">
-            <Clock3 size={14} strokeWidth={2.2} />
-            <span>
-              {countdown === 'Đã hết hạn' ? (
-                <strong style={{ color: '#dc2626' }}>Đã hết hạn nhận</strong>
-              ) : (
-                <>Hết hạn sau: <strong>{countdown}</strong></>
-              )}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Section: Khung giờ nhận túi */}
-      <section className="customer-store-section">
-        <div className="customer-store-section-header">
-          <h2 className="customer-store-section-title">Khung giờ nhận túi</h2>
-        </div>
-
-        <div className="customer-product-pickup-card">
-          <div className="customer-product-pickup-icon">
-            <Clock3 size={22} strokeWidth={2.2} />
-          </div>
-          <div className="customer-product-pickup-body">
-            <div className="customer-product-pickup-time">
-              Hôm nay {bag.pickupStart} – {bag.pickupEnd}
+          {/* Rating and Distance Row */}
+          <div className="customer-product-meta-row">
+            <div className="customer-product-rating-pill">
+              <Star size={14} fill="var(--color-offer-accent)" color="var(--color-offer-accent)" />
+              <strong>{ratingValue}</strong>
+              <span>({totalReviews})</span>
             </div>
-            <p className="customer-product-pickup-desc">
-              Vui lòng đến đúng giờ để lấy phần ăn tươi ngon nhất. Quét mã QR tại quán để nhận túi nhanh chóng.
-            </p>
-            {merchant?.address && (
-              <div className="customer-product-pickup-addr">
-                <MapPin size={13} strokeWidth={2.2} />
-                <span>{merchant.address}</span>
-              </div>
+            {distanceFormatted && (
+              <>
+                <span className="customer-product-meta-dot">•</span>
+                <span className="customer-product-distance">{distanceFormatted}</span>
+              </>
             )}
           </div>
-        </div>
-      </section>
 
-      {/* 4. Section: Cửa hàng cung cấp */}
-      {merchant && (
-        <section className="customer-store-section">
-          <div className="customer-store-section-header">
-            <h2 className="customer-store-section-title">Cửa hàng cung cấp</h2>
+          {/* Price & Discount Row */}
+          <div className="customer-product-price-row">
+            <span className="customer-product-price">
+              {bag.discountPrice.toLocaleString('vi-VN')}đ
+            </span>
+            {bag.originalPrice > bag.discountPrice && (
+              <del className="customer-product-orig-price">
+                {bag.originalPrice.toLocaleString('vi-VN')}đ
+              </del>
+            )}
+            {discountPercent > 0 && (
+              <span className="customer-product-discount-pill">
+                -{discountPercent}%
+              </span>
+            )}
           </div>
 
-          <div
-            className="customer-product-merchant-card"
-            onClick={onMerchant}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="customer-product-merchant-logo">
-              <img src={merchantLogo} alt={merchant.name} />
+          {/* Urgency & Stock Banner */}
+          <div className="customer-product-urgency-row">
+            <div className="customer-product-stock-pill">
+              <ShoppingBag size={14} strokeWidth={2.2} />
+              <span>Còn {bag.quantity} túi</span>
             </div>
-            <div className="customer-product-merchant-info">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                <h3 className="customer-product-merchant-name">{merchant.name}</h3>
-                <span
-                  className={`customer-merchant-status-badge ${merchant.isOpen !== false ? 'is-open' : 'is-closed'}`}
-                  style={{ padding: '2px 8px', fontSize: 10 }}
-                >
-                  <span className="customer-merchant-status-dot" style={{ width: 5, height: 5 }} />
-                  {merchant.isOpen !== false ? 'Mở cửa' : 'Đóng cửa'}
-                </span>
-              </div>
-              <p className="customer-product-merchant-addr">
-                <MapPin size={13} strokeWidth={2.2} />
-                <span>{merchant.address}</span>
-              </p>
-              <div className="customer-product-merchant-meta">
-                <Star size={13} fill="var(--color-offer-accent)" color="var(--color-offer-accent)" />
-                <strong>{merchant.rating.toFixed(1)}</strong>
-                {distanceFormatted && <span>• {distanceFormatted}</span>}
-              </div>
+
+            <div className="customer-product-countdown-pill">
+              <Clock3 size={14} strokeWidth={2.2} />
+              <span>
+                {countdown === 'Đã hết hạn' ? (
+                  <strong style={{ color: '#dc2626' }}>Đã hết hạn nhận</strong>
+                ) : (
+                  <>Hết hạn sau: <strong>{countdown}</strong></>
+                )}
+              </span>
             </div>
-            <button
-              type="button"
-              className="customer-store-view-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMerchant();
-              }}
-            >
-              Xem
-            </button>
           </div>
         </section>
-      )}
 
-      {/* 5. Section: Mô tả túi hàng */}
-      <section className="customer-store-section">
-        <div className="customer-store-section-header">
-          <h2 className="customer-store-section-title">Mô tả túi hàng</h2>
-        </div>
+        {/* 3. Section: Khung giờ nhận túi */}
+        <section className="customer-store-section">
+          <div className="customer-store-section-header">
+            <h2 className="customer-store-section-title">Khung giờ nhận túi</h2>
+          </div>
 
-        <div className="customer-product-description-wrap">
-          <p className="customer-product-description">
-            {bag.description || 'Chưa có thông tin mô tả cho túi hàng này.'}
-          </p>
-        </div>
-      </section>
+          <div className="customer-product-pickup-card">
+            <div className="customer-product-pickup-icon">
+              <Clock3 size={22} strokeWidth={2.2} />
+            </div>
+            <div className="customer-product-pickup-body">
+              <div className="customer-product-pickup-time">
+                Hôm nay {bag.pickupStart} – {bag.pickupEnd}
+              </div>
+              <p className="customer-product-pickup-desc">
+                Vui lòng đến đúng giờ để lấy phần ăn tươi ngon nhất. Quét mã QR tại quán để nhận túi nhanh chóng.
+              </p>
+              {merchant?.address && (
+                <div className="customer-product-pickup-addr">
+                  <MapPin size={13} strokeWidth={2.2} />
+                  <span>{merchant.address}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Section: Cửa hàng cung cấp */}
+        {merchant && (
+          <section className="customer-store-section">
+            <div className="customer-store-section-header">
+              <h2 className="customer-store-section-title">Cửa hàng cung cấp</h2>
+            </div>
+
+            <div
+              className="customer-product-merchant-card"
+              onClick={onMerchant}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="customer-product-merchant-logo">
+                <img
+                  src={merchantLogo}
+                  alt={merchant.name}
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80';
+                  }}
+                />
+              </div>
+              <div className="customer-product-merchant-info">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <h3 className="customer-product-merchant-name">{merchant.name}</h3>
+                  <span
+                    className={`customer-merchant-status-badge ${merchant.isOpen !== false ? 'is-open' : 'is-closed'}`}
+                    style={{ padding: '2px 8px', fontSize: 10 }}
+                  >
+                    <span className="customer-merchant-status-dot" style={{ width: 5, height: 5 }} />
+                    {merchant.isOpen !== false ? 'Mở cửa' : 'Đóng cửa'}
+                  </span>
+                </div>
+                <p className="customer-product-merchant-addr">
+                  <MapPin size={13} strokeWidth={2.2} />
+                  <span>{merchant.address}</span>
+                </p>
+                <div className="customer-product-merchant-meta">
+                  <Star size={13} fill="var(--color-offer-accent)" color="var(--color-offer-accent)" />
+                  <strong>{merchant.rating.toFixed(1)}</strong>
+                  {distanceFormatted && <span>• {distanceFormatted}</span>}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="customer-store-view-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMerchant();
+                }}
+              >
+                Xem
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* 5. Section: Mô tả túi hàng */}
+        <section className="customer-store-section">
+          <div className="customer-store-section-header">
+            <h2 className="customer-store-section-title">Mô tả túi hàng</h2>
+          </div>
+
+          <div className="customer-product-description-wrap">
+            <p className="customer-product-description">
+              {bag.description || 'Chưa có thông tin mô tả cho túi hàng này.'}
+            </p>
+          </div>
+        </section>
+      </div>
 
       {/* 8. Sticky Bottom Action Bar */}
       <footer className="customer-product-bottom-bar">

@@ -103,22 +103,22 @@ const getBagImage = (name: string, url?: string | null) => {
 
 const getStoreLogo = (url?: string | null) => {
   if (url && (url.startsWith('http') || url.startsWith('blob:'))) {
-    return optimizeImageUrl(url, 120, 80);
+    return optimizeImageUrl(url, 300, 80);
   }
   if (url && url.startsWith('data:') && url.length < 30000) {
     return url;
   }
-  return optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 120, 80);
+  return optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 300, 80);
 };
 
 const getStoreBanner = (url?: string | null) => {
   if (url && (url.startsWith('http') || url.startsWith('blob:'))) {
-    return optimizeImageUrl(url, 640, 75);
+    return optimizeImageUrl(url, 1000, 80);
   }
   if (url && url.startsWith('data:') && url.length < 50000) {
     return url;
   }
-  return optimizeImageUrl('https://images.unsplash.com/photo-1540420773420-3366772f4999', 640, 75);
+  return optimizeImageUrl('https://images.unsplash.com/photo-1504674900247-0877df9cc836', 1000, 80);
 };
 
 const mapCreateOrderError = (error: { message?: string; details?: string } | null): string => {
@@ -1383,4 +1383,121 @@ export const customerService = {
       return null;
     }
   },
+
+  async uploadAvatar(userId: string, blob: Blob, contentType: string = 'image/webp'): Promise<string> {
+    const ext = contentType.includes('webp') ? 'webp' : 'jpg';
+    const filePath = `${userId}/${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, blob, {
+        contentType,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('[customerService] Upload avatar to storage failed:', uploadError);
+      throw new Error(uploadError.message || 'Không thể tải ảnh lên kho lưu trữ.');
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    const publicUrl = urlData?.publicUrl;
+    if (!publicUrl) {
+      throw new Error('Không lấy được đường dẫn ảnh công khai.');
+    }
+
+    // 1. Cập nhật bảng public.users
+    try {
+      const { error: dbError } = await supabase
+        .from('users')
+        .update({
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+      if (dbError) {
+        console.warn('[customerService] Update users table avatar warning:', dbError.message);
+      }
+    } catch (dbErr) {
+      console.warn('[customerService] Update users table error:', dbErr);
+    }
+
+    // 2. Thử cập nhật fallback các bảng profiles hoặc customers nếu có
+    try {
+      await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+    } catch {}
+
+    try {
+      await supabase
+        .from('customers')
+        .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+    } catch {}
+
+    // 3. Cập nhật Auth Metadata của Supabase
+    try {
+      await supabase.auth.updateUser({
+        data: {
+          avatar_url: publicUrl,
+          picture: publicUrl,
+          avatar: publicUrl,
+        },
+      });
+    } catch (authErr) {
+      console.warn('[customerService] Update auth metadata warning:', authErr);
+    }
+
+    return publicUrl;
+  },
+
+  async updateUserProfile(
+    userId: string,
+    updates: { name?: string; phone?: string; email?: string; avatar?: string }
+  ): Promise<boolean> {
+    try {
+      const dbPayload: Record<string, any> = {
+        updated_at: new Date().toISOString(),
+      };
+      if (updates.name !== undefined) dbPayload.name = updates.name;
+      if (updates.phone !== undefined) dbPayload.phone = updates.phone;
+      if (updates.avatar !== undefined) dbPayload.avatar_url = updates.avatar;
+
+      const { error } = await supabase
+        .from('users')
+        .update(dbPayload)
+        .eq('id', userId);
+
+      if (error) {
+        console.warn('[customerService] updateUserProfile DB error:', error.message);
+      }
+
+      const metaPayload: Record<string, any> = {};
+      if (updates.name) {
+        metaPayload.full_name = updates.name;
+        metaPayload.name = updates.name;
+      }
+      if (updates.phone) metaPayload.phone = updates.phone;
+      if (updates.avatar) {
+        metaPayload.avatar_url = updates.avatar;
+        metaPayload.picture = updates.avatar;
+        metaPayload.avatar = updates.avatar;
+      }
+
+      if (Object.keys(metaPayload).length > 0) {
+        await supabase.auth.updateUser({ data: metaPayload });
+      }
+
+      return true;
+    } catch (err) {
+      console.warn('[customerService] updateUserProfile error:', err);
+      return false;
+    }
+  },
 };
+
