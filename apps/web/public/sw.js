@@ -1,8 +1,11 @@
-const CACHE_NAME = "gosavingfood-v4";
+const CACHE_NAME = "gosavingfood-v6";
 const ASSETS_TO_CACHE = [
   "/",
   "/manifest.json",
-  "/favicon.ico"
+  "/favicon.ico",
+  "/apple-touch-icon.png",
+  "/pwa-192x192.png",
+  "/pwa-512x512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -31,8 +34,11 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  // Do not intercept or hijack sub-apps or API calls
+  if (url.pathname.startsWith("/explore") || url.pathname.startsWith("/merchant") || url.pathname.startsWith("/api")) return;
   // Preserve native byte-range responses. Never return HTML as a video fallback.
-  if (event.request.destination === "video" || event.request.headers.has("range") || new URL(event.request.url).pathname.endsWith(".mp4")) return;
+  if (event.request.destination === "video" || event.request.headers.has("range") || url.pathname.endsWith(".mp4")) return;
   // A saved homepage must not hide newly deployed CSS/JS from returning users.
   if (event.request.mode === "navigate") {
     event.respondWith(fetch(event.request).then((response) => {

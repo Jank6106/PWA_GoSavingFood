@@ -43,8 +43,17 @@ export default function Home() {
     const appUrls = getAppUrls();
     setUrls(appUrls);
 
-    // Nếu người dùng bị redirect về Landing Page kèm OAuth token/code, chuyển hướng ngay về Customer App
     if (typeof window !== "undefined") {
+      // 1. Khi mở ở chế độ Standalone PWA từ màn hình chính tại root '/', tự động chuyển tiếp ngay vào Customer App
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+      if (isStandalone && window.location.pathname === "/") {
+        window.location.replace(appUrls.customerUrl);
+        return;
+      }
+
+      // 2. Nếu người dùng bị redirect về Landing Page kèm OAuth token/code, chuyển hướng ngay về Customer App
       const search = window.location.search;
       const hash = window.location.hash;
       const params = new URLSearchParams(search);

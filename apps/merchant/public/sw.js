@@ -1,8 +1,11 @@
-const CACHE_NAME = 'gsf-merchant-v4';
+const CACHE_NAME = 'gsf-merchant-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
+  './apple-touch-icon.png',
+  './pwa-192x192.png',
+  './pwa-512x512.png',
   './pwa-192x192.svg',
   './pwa-512x512.svg'
 ];

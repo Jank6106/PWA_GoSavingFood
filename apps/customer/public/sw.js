@@ -1,9 +1,10 @@
-const CACHE_NAME = 'gsf-customer-v7';
+const CACHE_NAME = 'gsf-customer-v9';
 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
+  './apple-touch-icon.png',
   './pwa-192x192.png',
   './pwa-512x512.png',
   './pwa-192x192.svg',
