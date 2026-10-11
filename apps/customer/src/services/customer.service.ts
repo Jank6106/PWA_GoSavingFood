@@ -123,8 +123,19 @@ const getStoreBanner = (url?: string | null) => {
 
 const mapCreateOrderError = (error: { message?: string; details?: string } | null): string => {
   const raw = `${error?.message ?? ''} ${error?.details ?? ''}`;
-  if (raw.includes('BAG_UNAVAILABLE'))
+  if (raw.includes('BAG_UNAVAILABLE')) {
+    try {
+      if (error?.details) {
+        const parsed = typeof error.details === 'string' ? JSON.parse(error.details) : error.details;
+        if (typeof parsed?.available === 'number' && typeof parsed?.requested === 'number') {
+          if (parsed.available < parsed.requested) {
+            return `Túi thực phẩm chỉ còn ${parsed.available} phần (bạn đang đặt ${parsed.requested} phần). Vui lòng điều chỉnh lại số lượng.`;
+          }
+        }
+      }
+    } catch {}
     return 'Túi thực phẩm đã hết hoặc không còn mở bán. Vui lòng chọn túi khác.';
+  }
   if (raw.includes('BAG_NOT_FOUND')) return 'Không tìm thấy túi thực phẩm trong hệ thống.';
   if (raw.includes('STORE_MISMATCH')) return 'Túi thực phẩm không thuộc cửa hàng đã chọn.';
   if (raw.includes('VOUCHER_NOT_FOUND')) return 'Mã giảm giá không tồn tại.';
