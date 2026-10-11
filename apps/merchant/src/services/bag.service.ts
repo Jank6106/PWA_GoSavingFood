@@ -153,12 +153,27 @@ export function invalidateBagInFlight(storeId?: string): void {
 
 export async function updateBagStatus(bagId: string, status: BagStatus): Promise<BagItem> {
   invalidateBagInFlight();
+  const isAvailable = status !== 'hidden';
+  const existing = await fetchBagRow(bagId);
+
+  const updates: Record<string, any> = {
+    is_available: isAvailable,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (isAvailable && existing) {
+    const [endH, endM] = (existing.pickupTimeEnd || '21:00').split(':').map(Number);
+    const exp = new Date();
+    exp.setHours(endH || 21, endM || 0, 0, 0);
+    if (exp.getTime() <= Date.now()) {
+      exp.setDate(exp.getDate() + 1);
+    }
+    updates.expires_at = exp.toISOString();
+  }
+
   const { error } = await supabase
     .from('surprise_bags')
-    .update({
-      is_available: status !== 'hidden',
-      updated_at: new Date().toISOString(),
-    })
+    .update(updates)
     .eq('id', bagId);
   if (error) {
     console.warn('Cập nhật trạng thái túi trên Supabase lỗi:', error.message);
@@ -174,12 +189,27 @@ export async function updateBagStatus(bagId: string, status: BagStatus): Promise
 export async function updateBagQuantity(bagId: string, quantity: number): Promise<BagItem> {
   invalidateBagInFlight();
   const safeQty = Math.max(0, quantity);
+  const existing = await fetchBagRow(bagId);
+
+  const updates: Record<string, any> = {
+    quantity: safeQty,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (safeQty > 0 && existing && existing.status !== 'hidden') {
+    const [endH, endM] = (existing.pickupTimeEnd || '21:00').split(':').map(Number);
+    const exp = new Date();
+    exp.setHours(endH || 21, endM || 0, 0, 0);
+    if (exp.getTime() <= Date.now()) {
+      exp.setDate(exp.getDate() + 1);
+    }
+    updates.expires_at = exp.toISOString();
+    updates.is_available = true;
+  }
+
   const { error } = await supabase
     .from('surprise_bags')
-    .update({
-      quantity: safeQty,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updates)
     .eq('id', bagId);
   if (error) {
     console.warn('Cập nhật số lượng túi trên Supabase lỗi:', error.message);

@@ -32,6 +32,7 @@ interface OrderDetailPageProps {
   onBack: () => void;
   onReview: () => void;
   onReport: () => void;
+  onPay?: (order: Order) => void;
   onUpdateOrder?: (updatedOrder: Order) => void;
   onReorder?: (order: Order) => void;
   onOpenBag?: (bagId: string) => void;
@@ -80,6 +81,7 @@ export function OrderDetailPage({
   onBack,
   onReview,
   onReport,
+  onPay,
   onUpdateOrder,
   onReorder,
   onOpenBag,
@@ -502,6 +504,18 @@ export function OrderDetailPage({
 
       {/* Action buttons based on status */}
       <div className="customer-order-actions-container">
+        {/* Nút thanh toán ngay cho đơn pending_payment */}
+        {isPendingPayment && onPay && (
+          <Button
+            fullWidth
+            variant="primary"
+            size="md"
+            onClick={() => onPay(currentOrder)}
+          >
+            <CreditCard size={16} /> Thanh toán VietQR ngay
+          </Button>
+        )}
+
         {/* Nút hủy đơn: Chỉ cho phép hủy khi đơn ở pending_payment / paid */}
         {canCancel && (
           <Button

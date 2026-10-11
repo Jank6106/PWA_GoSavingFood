@@ -25,7 +25,7 @@ const filters: Array<{ id: FilterId; label: string }> = [
 const matchesFilter = (order: Order, filterId: FilterId): boolean => {
   if (filterId === 'all') return true;
   if (filterId === 'pending') {
-    return order.status === 'paid' || order.status === 'pending';
+    return order.status === 'pending_payment' || order.status === 'paid' || order.status === 'pending';
   }
   if (filterId === 'preparing') {
     return order.status === 'preparing' || order.status === 'confirmed';
@@ -45,9 +45,9 @@ const matchesFilter = (order: Order, filterId: FilterId): boolean => {
 export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: OrdersPageProps) {
   const [filter, setFilter] = useState<FilterId>('all');
 
-  // 1. Loại bỏ hoàn toàn các đơn chưa thanh toán thành công (pending_payment)
+  // Hiển thị đầy đủ đơn hàng của khách hàng (bao gồm đơn đang chờ thanh toán VietQR)
   const validOrders = useMemo(
-    () => orders.filter((order) => order.status !== 'pending_payment'),
+    () => orders,
     [orders]
   );
 

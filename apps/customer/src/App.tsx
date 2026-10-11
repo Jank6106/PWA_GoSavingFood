@@ -961,6 +961,20 @@ function CustomerApp() {
           onBack={back}
           onReview={() => push({ name: 'review', id: selectedOrder.id })}
           onReport={() => push({ name: 'report', id: selectedOrder.id })}
+          onPay={(o) =>
+            push({
+              name: 'payment',
+              draft: {
+                customerName: auth.user?.name || 'Khách hàng',
+                phone: auth.user?.phone || '',
+                pickupTime: o.pickupTime,
+                note: o.note || '',
+                paymentMethod: 'payos_vietqr',
+                discountAmount: o.discountAmount,
+              },
+              order: o,
+            })
+          }
           onOpenBag={(bagId) => push({ name: 'bag', id: bagId })}
           onSaveNote={(orderId, note) => {
             void customerService.updateOrderNote(orderId, note);
