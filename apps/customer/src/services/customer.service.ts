@@ -1116,6 +1116,8 @@ export const customerService = {
 
       if (typeof window !== 'undefined') {
         try {
+          localStorage.removeItem('gsf_cached_customer_user');
+          localStorage.removeItem('gsf_cached_auth_user');
           localStorage.removeItem('gsf_customer_user_cache');
           localStorage.removeItem('gsf_notifications_enabled');
           localStorage.removeItem('gsf_customer_orders');

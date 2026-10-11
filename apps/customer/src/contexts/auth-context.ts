@@ -4,6 +4,7 @@ import type { User } from '../shared/types/customer.types';
 export interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
+  initializing: boolean;
   isAuthOpen: boolean;
   showAuthModal: () => void;
   hideAuthModal: () => void;

@@ -5,6 +5,11 @@ import '@gosavingfood/ui/components.css'
 import './index.css'
 import App from './App.tsx'
 
+// Kích hoạt quyền lưu trữ bền vững của PWA (Persistent Storage)
+if (typeof window !== 'undefined' && 'storage' in navigator && (navigator.storage as any)?.persist) {
+  (navigator.storage as any).persist().catch(() => {});
+}
+
 // Đăng ký Service Worker cho PWA (chỉ kích hoạt ở production)
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {

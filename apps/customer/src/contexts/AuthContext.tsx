@@ -6,25 +6,41 @@ import type { User } from '../shared/types/customer.types';
 import { AuthContext } from './auth-context';
 import type { AuthContextValue } from './auth-context';
 
-const USER_CACHE_KEY = 'gsf_cached_auth_user';
+export const CUSTOMER_USER_CACHE_KEY = 'gsf_cached_customer_user';
 
-function getCachedUser(): User | null {
+export function getCachedCustomerUser(): User | null {
+  if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(USER_CACHE_KEY);
+    const raw =
+      localStorage.getItem(CUSTOMER_USER_CACHE_KEY) ||
+      localStorage.getItem('gsf_cached_auth_user') ||
+      localStorage.getItem('gsf_customer_user_cache');
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-function setCachedUser(u: User | null): void {
+export function setCachedCustomerUser(u: User | null): void {
+  if (typeof window === 'undefined') return;
   try {
     if (u) {
-      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(u));
+      const serialized = JSON.stringify(u);
+      localStorage.setItem(CUSTOMER_USER_CACHE_KEY, serialized);
+      localStorage.setItem('gsf_cached_auth_user', serialized);
+      localStorage.setItem('gsf_customer_user_cache', serialized);
     } else {
-      localStorage.removeItem(USER_CACHE_KEY);
+      localStorage.removeItem(CUSTOMER_USER_CACHE_KEY);
+      localStorage.removeItem('gsf_cached_auth_user');
+      localStorage.removeItem('gsf_customer_user_cache');
     }
   } catch {}
+}
+
+export function requestPersistentStorage(): void {
+  if (typeof window !== 'undefined' && 'storage' in navigator && (navigator.storage as any)?.persist) {
+    (navigator.storage as any).persist().catch(() => {});
+  }
 }
 
 function cleanAuthUrl() {
@@ -54,11 +70,17 @@ function cleanAuthUrl() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(getCachedUser);
+  // 1. Khởi tạo tức thì 0ms từ cache localStorage (tránh giật/nháy màn hình chưa đăng nhập)
+  const [user, setUser] = useState<User | null>(() => getCachedCustomerUser());
+  // Khởi tạo cờ initializing thông minh: nếu đã có user trong cache thì false ngay từ đầu
+  const [initializing, setInitializing] = useState(() => !getCachedCustomerUser());
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+
+    // Yêu cầu quyền lưu trữ bền vững (PWA Persistent Storage) tránh bị iOS Safari/Chrome dọn cache
+    requestPersistentStorage();
 
     const initAuth = async () => {
       try {
@@ -71,10 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           cleanAuthUrl();
         }
 
-        // 1. Supabase client với detectSessionInUrl: true tự động hoàn thành PKCE exchange khi getSession() được gọi
+        // 1. Supabase client với detectSessionInUrl: true tự động xử lý PKCE exchange khi getSession() được gọi
         let { data: { session } } = await supabase.auth.getSession();
 
-        // 2. Nếu getSession() chưa có session mà URL vẫn còn code, thực hiện fallback exchange
+        // 2. Fallback exchange nếu getSession() chưa có session mà URL vẫn còn code
         if (!session && code) {
           try {
             const { data: exchangeData, error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
@@ -86,7 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // 3. Làm sạch URL sau khi đã hoàn tất xử lý xác thực
         cleanAuthUrl();
 
         if (!isMounted) return;
@@ -104,59 +125,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: session.user.email,
             avatar: meta.avatar_url || meta.picture || meta.avatar,
           };
-          setUser(quickUser);
-          setCachedUser(quickUser);
 
-          // Refresh profile chi tiết từ DB ở background
+          // Nếu chưa có user trong state, đặt quickUser ngay lập tức
+          setUser((prev) => prev || quickUser);
+          setCachedCustomerUser(quickUser);
+
+          // Cập nhật background profile chi tiết từ DB mà không làm giật UI
           void customerService.getUser().then((existing) => {
             if (existing && isMounted) {
               setUser(existing);
-              setCachedUser(existing);
+              setCachedCustomerUser(existing);
             }
           });
         } else {
+          // Khi không có session trong Supabase, dọn dẹp cache
           setUser(null);
-          setCachedUser(null);
+          setCachedCustomerUser(null);
         }
       } catch (err) {
         console.warn('[auth] Lỗi khởi tạo session:', err);
+      } finally {
+        if (isMounted) {
+          setInitializing(false);
+        }
       }
     };
 
     void initAuth();
 
+    // 3. Đồng bộ vòng đời phiên: Lắng nghe SIGNED_IN, TOKEN_REFRESHED, SIGNED_OUT
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setCachedCustomerUser(null);
+        if (isMounted) setUser(null);
+      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         cleanAuthUrl();
-        const fullUser = await customerService.getUser();
-        if (fullUser) {
-          setUser(fullUser);
-          setCachedUser(fullUser);
-        } else {
-          const meta = session.user.user_metadata || {};
-          const quickUser: User = {
-            id: session.user.id,
-            name:
-              meta.full_name ||
-              meta.name ||
-              session.user.email?.split('@')[0] ||
-              'Khách hàng',
-            phone: meta.phone || '',
-            email: session.user.email,
-            avatar: meta.avatar_url || meta.picture || meta.avatar,
-          };
-          setUser(quickUser);
-          setCachedUser(quickUser);
+        requestPersistentStorage();
+
+        const meta = session.user.user_metadata || {};
+        const quickUser: User = {
+          id: session.user.id,
+          name:
+            meta.full_name ||
+            meta.name ||
+            session.user.email?.split('@')[0] ||
+            'Khách hàng',
+          phone: meta.phone || '',
+          email: session.user.email,
+          avatar: meta.avatar_url || meta.picture || meta.avatar,
+        };
+
+        if (isMounted) {
+          setUser((prev) => {
+            const next = prev ? { ...prev, ...quickUser } : quickUser;
+            setCachedCustomerUser(next);
+            return next;
+          });
         }
-      } else if (_event === 'SIGNED_OUT') {
-        setUser(null);
-        setCachedUser(null);
+
+        // Cập nhật profile đầy đủ từ DB ở background
+        try {
+          const fullUser = await customerService.getUser();
+          if (fullUser && isMounted) {
+            setUser(fullUser);
+            setCachedCustomerUser(fullUser);
+          }
+        } catch {}
       }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -165,13 +206,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       isAuthenticated: Boolean(user),
+      initializing,
       isAuthOpen,
       showAuthModal: () => setIsAuthOpen(true),
       hideAuthModal: () => setIsAuthOpen(false),
       login: async (identifier, password) => {
         const nextUser = await customerService.login(identifier, password);
         setUser(nextUser);
-        setCachedUser(nextUser);
+        setCachedCustomerUser(nextUser);
+        requestPersistentStorage();
         setIsAuthOpen(false);
       },
       loginWithGoogle: async () => {
@@ -184,14 +227,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const res = await customerService.registerInit(name, email, password, phone);
         if (res.autoConfirmed && res.user) {
           setUser(res.user);
-          setCachedUser(res.user);
+          setCachedCustomerUser(res.user);
+          requestPersistentStorage();
         }
         return res;
       },
       verifyRegisterOtp: async (email: string, token: string) => {
         const nextUser = await customerService.verifyRegisterOtp(email, token);
         setUser(nextUser);
-        setCachedUser(nextUser);
+        setCachedCustomerUser(nextUser);
+        requestPersistentStorage();
         setIsAuthOpen(false);
       },
       resendRegisterOtp: async (email: string) => {
@@ -201,28 +246,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return await customerService.resetPassword(email);
       },
       logout: () => {
-        void customerService.logout();
+        setCachedCustomerUser(null);
         setUser(null);
-        setCachedUser(null);
+        void customerService.logout();
       },
       deleteAccount: async () => {
         const targetId = user?.id;
         const targetEmail = user?.email;
         const targetPhone = user?.phone;
-        const res = await customerService.deleteAccount(targetId, targetEmail || targetPhone);
+        setCachedCustomerUser(null);
         setUser(null);
-        setCachedUser(null);
-        return res;
+        return await customerService.deleteAccount(targetId, targetEmail || targetPhone);
       },
       updateProfile: (updates: Partial<User>) => {
         setUser((prev) => {
           const updated = prev ? { ...prev, ...updates } : null;
-          setCachedUser(updated);
+          setCachedCustomerUser(updated);
           return updated;
         });
       },
     }),
-    [isAuthOpen, user]
+    [initializing, isAuthOpen, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
