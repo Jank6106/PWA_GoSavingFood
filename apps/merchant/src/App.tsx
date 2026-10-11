@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { QrCode } from 'lucide-react';
 import { AppHeader } from './components/layout/AppHeader';
 import { AppTabBar } from './components/layout/AppTabBar';
+import { DraggableQRFab } from './components/layout/DraggableQRFab';
 import { NotificationModal } from './components/notifications/NotificationModal';
 import { ToastBar } from './components/ui';
 import { useAuth } from './hooks/useAuth';
@@ -250,7 +250,7 @@ export default function App() {
     <div className="merchant-app-shell">
       <ToastBar message={toastMessage} />
       <AppHeader
-        title="GoSavingFood"
+        title="Merchant"
         storeName={store.profile?.name ?? 'GoSavingFood'}
         isOpen={store.profile?.isOpen ?? true}
         avatar={store.profile?.avatar}
@@ -307,19 +307,12 @@ export default function App() {
           </div>
         )}
       </main>
-      <button
-        type="button"
-        className="merchant-scan-fab"
+      <DraggableQRFab
         onClick={() => {
           navigateTo('orders');
           setIsGlobalQRScannerOpen(true);
         }}
-        aria-label="Quét mã QR bàn giao đơn"
-        title="Quét mã QR nhận hàng"
-      >
-        <QrCode size={22} />
-        <span>Quét QR</span>
-      </button>
+      />
       <AppTabBar active={route} orderBadge={notifications.unreadCount} onNavigate={navigateTo} />
       <NotificationModal
         open={notifications.isOpen}

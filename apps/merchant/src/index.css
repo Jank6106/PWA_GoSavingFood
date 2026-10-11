@@ -107,15 +107,15 @@ h1, h2, h3, p { margin: 0; }
 @keyframes merchant-spin { to { transform: rotate(360deg); } }
 
 /* Header and tabs */
-.merchant-app-header { position: sticky; z-index: 40; top: 0; padding: 10px 20px; background: var(--primary-dark); color: #fff; box-shadow: 0 4px 18px rgba(25, 59, 44, .18); }
-.merchant-app-header-inner { display: flex; width: min(100%, 1200px); min-height: 52px; align-items: center; justify-content: space-between; gap: 20px; margin: 0 auto; }
-.merchant-header-brand { display: flex; min-width: 0; align-items: center; gap: 11px; }
-.merchant-header-brand > span { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; background: transparent; border: none; box-shadow: none; }
+.merchant-app-header { position: sticky; z-index: 40; top: 0; padding: 10px 16px; background: var(--primary-dark); color: #fff; box-shadow: 0 4px 18px rgba(25, 59, 44, .18); }
+.merchant-app-header-inner { display: flex; width: min(100%, 1200px); min-height: 50px; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto; }
+.merchant-header-brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.merchant-header-brand > span { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; background: transparent; border: none; box-shadow: none; }
 .merchant-header-logo-img { width: 100%; height: 100%; object-fit: contain; display: block; filter: brightness(0) invert(1); }
 .merchant-header-brand > div { display: flex; min-width: 0; flex-direction: column; }
-.merchant-header-brand strong { overflow: hidden; font-size: 25px; font-weight: 800; letter-spacing: -.3px; text-overflow: ellipsis; white-space: nowrap; }
-.merchant-header-brand small { overflow: hidden; color: #D8ED9B; font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.merchant-header-actions { display: flex; align-items: center; gap: 8px; }
+.merchant-header-brand strong { overflow: hidden; font-size: 19px; font-weight: 800; letter-spacing: -.2px; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
+.merchant-header-brand small { overflow: hidden; color: #D8ED9B; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.merchant-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .merchant-status-pill { display: flex; height: 34px; align-items: center; gap: 7px; padding: 0 11px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; font-size: 11px; font-weight: 800; }
 .merchant-status-pill i { width: 7px; height: 7px; border-radius: 50%; background: #6DBF8B; box-shadow: 0 0 0 3px rgba(74,222,128,.14); }
 .merchant-header-icon, .merchant-profile-button { position: relative; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; min-width: 38px; min-height: 38px; aspect-ratio: 1 / 1; flex: 0 0 38px; flex-shrink: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; cursor: pointer; overflow: hidden; box-sizing: border-box; }
@@ -453,7 +453,19 @@ h1, h2, h3, p { margin: 0; }
 .merchant-avatar-edit { position: relative; display: grid; width: 72px; height: 72px; flex: 0 0 auto; overflow: hidden; place-items: center; border: 4px solid rgba(255,255,255,.65); border-radius: 20px; background: #fff; color: var(--primary); cursor: pointer; font-size: 20px; font-weight: 800; }.merchant-avatar-edit img { width: 100%; height: 100%; object-fit: cover; }.merchant-avatar-edit > span { position: absolute; right: 2px; bottom: 2px; display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: var(--primary); color: #fff; }.merchant-avatar-edit input, .merchant-cover-image-action input { display: none; }.merchant-cover-image-action { position: absolute; z-index: 4; top: 15px; right: 15px; display: inline-flex; align-items: center; gap: 5px; padding: 8px 10px; border-radius: 9px; background: rgba(0,61,39,.8); color: #fff; cursor: pointer; font-size: 11px; font-weight: 750; }
 .merchant-notification-modal { width: min(100%, 520px); height: min(640px, 78vh); overflow: hidden; }.merchant-notification-modal .merchant-modal-body { height: calc(100% - 78px); overflow: auto; }
 @media (max-width: 760px) { .merchant-store-status { min-width: auto; width: auto; height: 32px; padding: 0 9px; gap: 5px; }.merchant-store-status span { display: none; }.merchant-store-status b { display: inline; font-size: 11px; }.merchant-inventory-options { align-items: flex-start; flex-direction: column; gap: 6px; } }
-@media (max-width: 480px) { .merchant-time-fields { grid-template-columns: 1fr; }.merchant-form-actions--between > div { width: 100%; flex-direction: column; }.merchant-avatar-edit { width: 58px; height: 58px; border-radius: 17px; }.merchant-notification-modal { height: min(620px, 90vh); } }
+@media (max-width: 480px) {
+  .merchant-app-header { padding: 8px 10px; }
+  .merchant-app-header-inner { min-height: 44px; gap: 8px; }
+  .merchant-header-brand { gap: 7px; }
+  .merchant-header-brand > span { width: 26px; height: 26px; flex: 0 0 26px; }
+  .merchant-header-brand strong { font-size: 16px; }
+  .merchant-header-actions { gap: 6px; }
+  .merchant-header-icon, .merchant-profile-button { width: 34px; height: 34px; min-width: 34px; min-height: 34px; flex: 0 0 34px; }
+  .merchant-time-fields { grid-template-columns: 1fr; }
+  .merchant-form-actions--between > div { width: 100%; flex-direction: column; }
+  .merchant-avatar-edit { width: 58px; height: 58px; border-radius: 17px; }
+  .merchant-notification-modal { height: min(620px, 90vh); }
+}
 
 @keyframes skeleton-pulse {
   0% { background-position: 200% 0; }
@@ -925,45 +937,48 @@ h1, h2, h3, p { margin: 0; }
 }
 
 /* ==========================================================================
-   MERCHANT FLOATING ACTION BUTTON (SINGLE ENTRY POINT FOR QR SCANNING)
+   MERCHANT DRAGGABLE QR FAB (ASSISTIVETOUCH STYLE)
    ========================================================================== */
-.merchant-scan-fab {
+.merchant-draggable-qr-fab {
   position: fixed;
-  right: 18px;
-  bottom: 74px;
-  z-index: 45;
-  display: inline-flex;
+  z-index: 50;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 18px;
-  border-radius: 999px;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  border-radius: 50%;
   background: linear-gradient(135deg, #008751 0%, #005639 100%);
   color: #ffffff;
-  border: 1.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 24px rgba(0, 86, 57, 0.42), 0 2px 6px rgba(0, 0, 0, 0.16);
-  font-weight: 750;
-  font-size: 14px;
-  cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 86, 57, 0.45), 0 2px 6px rgba(0, 0, 0, 0.18);
+  cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
+  opacity: 0.94;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
-.merchant-scan-fab:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 12px 28px rgba(0, 86, 57, 0.52);
+.merchant-draggable-qr-fab:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  box-shadow: 0 10px 28px rgba(0, 86, 57, 0.52);
 }
 
-.merchant-scan-fab:active {
-  transform: translateY(0) scale(0.96);
+.merchant-draggable-qr-fab:active,
+.merchant-draggable-qr-fab.is-dragging {
+  cursor: grabbing;
+  transform: scale(1.1);
+  opacity: 1;
+  box-shadow: 0 16px 36px rgba(0, 86, 57, 0.6), 0 4px 10px rgba(0, 0, 0, 0.25);
+  z-index: 100;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
-@media (max-width: 480px) {
-  .merchant-scan-fab {
-    bottom: 70px;
-    right: 14px;
-    padding: 11px 16px;
-    font-size: 13.5px;
-  }
+.merchant-draggable-qr-fab.is-snapping {
+  transition: left 0.28s cubic-bezier(0.25, 1, 0.5, 1), top 0.28s cubic-bezier(0.25, 1, 0.5, 1), transform 0.2s ease, opacity 0.2s ease;
 }
 

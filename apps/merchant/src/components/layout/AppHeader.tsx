@@ -48,7 +48,7 @@ export function AppHeader({
             />
           </span>
           <div>
-            <strong>{title ?? 'GoSavingFood'}</strong>
+            <strong>{title ?? 'Merchant'}</strong>
             {subtitle && <small>{subtitle}</small>}
           </div>
         </div>
