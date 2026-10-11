@@ -143,7 +143,16 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
   return fetchPromise;
 }
 
+export function invalidateBagInFlight(storeId?: string): void {
+  if (storeId) {
+    bagsInFlight.delete(storeId);
+  } else {
+    bagsInFlight.clear();
+  }
+}
+
 export async function updateBagStatus(bagId: string, status: BagStatus): Promise<BagItem> {
+  invalidateBagInFlight();
   const { error } = await supabase
     .from('surprise_bags')
     .update({
@@ -163,6 +172,7 @@ export async function updateBagStatus(bagId: string, status: BagStatus): Promise
 }
 
 export async function updateBagQuantity(bagId: string, quantity: number): Promise<BagItem> {
+  invalidateBagInFlight();
   const safeQty = Math.max(0, quantity);
   const { error } = await supabase
     .from('surprise_bags')
@@ -251,6 +261,8 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     throw new Error(`Không thể lưu túi mù vào Database: ${error.message}`);
   }
 
+  invalidateBagInFlight(targetStoreId);
+
   const newBag: BagItem = {
     ...input,
     id: data.id,
@@ -265,6 +277,7 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
 }
 
 export async function updateBagItem(bagId: string, input: BagInput): Promise<BagItem> {
+  invalidateBagInFlight();
   const { error } = await supabase
     .from('surprise_bags')
     .update({
@@ -303,6 +316,7 @@ export async function updateBagItem(bagId: string, input: BagInput): Promise<Bag
 }
 
 export async function deleteBagItem(bagId: string): Promise<boolean> {
+  invalidateBagInFlight();
   // 1. Thử xóa vĩnh viễn (hard delete)
   const { error: deleteError } = await supabase.from('surprise_bags').delete().eq('id', bagId);
 

@@ -85,9 +85,9 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
         open={Boolean(bagToDelete)}
         saving={state.saving}
         onClose={() => setBagToDelete(null)}
-        onConfirm={async (id) => {
-          await state.removeBag(id);
+        onConfirm={(id) => {
           setBagToDelete(null);
+          void state.removeBag(id);
         }}
       />
       <BagEditorModal

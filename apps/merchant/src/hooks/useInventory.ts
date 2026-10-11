@@ -26,6 +26,8 @@ export function useInventory(storeId: string) {
   hasUnsavedChangesRef.current = hasUnsavedChanges;
   const { toastMessage: saveSuccessMessage, showToast } = useToast();
 
+  const ignoreRealtimeUntilRef = useRef<number>(0);
+
   useEffect(() => {
     const cached = getCachedInventoryItems(storeId);
     setAllItems(cached);
@@ -84,6 +86,10 @@ export function useInventory(storeId: string) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'surprise_bags', filter: `store_id=eq.${storeId}` },
         () => {
+          // Bỏ qua Realtime self-echo nếu vừa thao tác trong 3.5s
+          if (Date.now() < ignoreRealtimeUntilRef.current) {
+            return;
+          }
           if (!hasUnsavedChangesRef.current) {
             void loadData();
           }
@@ -124,14 +130,21 @@ export function useInventory(storeId: string) {
   };
   const removeFromShelf = async (item: InventoryItem) => {
     if (!item.bagId) return;
+    const prevAll = allItems;
+    const prevSaved = savedItems;
+    // Optimistic UI: Gỡ khỏi kệ ngay lập tức (0ms)
     setAllItems((entries) => entries.filter((entry) => entry.id !== item.id));
     setSavedItems((entries) => entries.filter((entry) => entry.id !== item.id));
+    showToast(`Đã gỡ "${item.name}" khỏi kệ hàng`);
+    ignoreRealtimeUntilRef.current = Date.now() + 3500;
+
     try {
       await updateBagStatus(item.bagId, 'hidden');
-      showToast(`Đã gỡ "${item.name}" khỏi kệ hàng`);
     } catch {
-      showToast('Lỗi khi gỡ sản phẩm khỏi kệ.');
-      await loadData();
+      // Rollback nếu thất bại
+      setAllItems(prevAll);
+      setSavedItems(prevSaved);
+      showToast('Lỗi khi gỡ sản phẩm khỏi kệ. Đã khôi phục.');
     }
   };
   const cancelChanges = () => {
@@ -144,6 +157,7 @@ export function useInventory(storeId: string) {
   const saveChanges = async () => {
     if (!hasUnsavedChanges) return;
     setSaving(true);
+    ignoreRealtimeUntilRef.current = Date.now() + 3500;
     try {
       await Promise.all(removedBagIds.map((bagId) => updateBagStatus(bagId, 'hidden')));
       const saved = await saveInventoryItems(storeId, allItems);

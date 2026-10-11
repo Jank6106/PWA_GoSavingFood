@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gsf-merchant-v3';
+const CACHE_NAME = 'gsf-merchant-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -31,6 +31,25 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // 1. Tuyệt đối không can thiệp/cache bất kỳ request API nào tới Supabase (REST, Auth, Realtime, Storage)
+  // Đảm bảo toàn bộ request này hoạt động theo cơ chế NetworkOnly thuần túy
+  if (
+    url.hostname.includes('supabase.co') ||
+    url.pathname.includes('/rest/v1/') ||
+    url.pathname.includes('/auth/v1/') ||
+    url.pathname.includes('/storage/v1/') ||
+    url.pathname.includes('/realtime/v1/')
+  ) {
+    return;
+  }
+
+  // 2. Không cache các extension trình duyệt hoặc scheme không phải http/https
+  if (!url.protocol.startsWith('http')) {
+    return;
+  }
 
   // Với HTML/navigation: Luôn lấy từ network trước để người dùng lập tức nhận bản code mới
   if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {

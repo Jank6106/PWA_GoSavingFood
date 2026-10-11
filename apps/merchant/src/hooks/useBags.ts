@@ -28,6 +28,7 @@ export function useBags(storeId: string) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toastMessage, showToast } = useToast();
+  const ignoreRealtimeUntilRef = useRef<number>(0);
 
   useEffect(() => {
     const cached = getCachedBagItems(storeId);
@@ -80,6 +81,10 @@ export function useBags(storeId: string) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'surprise_bags', filter: `store_id=eq.${storeId}` },
         () => {
+          // Bỏ qua Realtime self-echo nếu vừa có thao tác từ chính client trong vòng 3.5s
+          if (Date.now() < ignoreRealtimeUntilRef.current) {
+            return;
+          }
           void loadBags();
         }
       )
@@ -130,51 +135,104 @@ export function useBags(storeId: string) {
   const toggleStatus = async (bagId: string) => {
     const current = allBags.find((bag) => bag.id === bagId);
     if (!current) return;
-    const nextStatus: BagStatus = current.status === 'hidden' ? (current.availableQuantity ? 'active' : 'sold_out') : 'hidden';
+    const previousBags = allBags;
+    const nextStatus: BagStatus =
+      current.status === 'hidden' ? (current.availableQuantity ? 'active' : 'sold_out') : 'hidden';
+
+    // Optimistic UI: Phản hồi 0ms trên giao diện
     setAllBags((items) => {
       const next = items.map((bag) => (bag.id === bagId ? { ...bag, status: nextStatus } : bag));
       setCachedBagItems(storeId, next);
       return next;
     });
+    showToast(nextStatus === 'hidden' ? 'Đã gỡ túi khỏi kệ hàng' : 'Đã đưa túi lên kệ hàng');
+
+    // Chặn Realtime self-echo ghi đè dữ liệu cũ trong 3.5s
+    ignoreRealtimeUntilRef.current = Date.now() + 3500;
+
     try {
       const updated = await updateBagStatus(bagId, nextStatus);
       replaceBag(updated);
       setSelectedBag((bag) => (bag?.id === bagId ? updated : bag));
-      showToast(nextStatus === 'hidden' ? 'Đã gỡ túi khỏi kệ hàng' : 'Đã đưa túi lên kệ hàng');
     } catch {
-      await loadBags();
+      // Rollback nếu API thất bại
+      setAllBags(previousBags);
+      setCachedBagItems(storeId, previousBags);
+      showToast('Không thể cập nhật trạng thái túi, đã hoàn tác');
     }
   };
 
   const changeQuantity = async (bagId: string, delta: number) => {
     const current = allBags.find((bag) => bag.id === bagId);
     if (!current) return;
+    const previousBags = allBags;
     const nextQuantity = Math.max(0, current.availableQuantity + delta);
+    const nextStatus: BagStatus =
+      current.status === 'hidden' ? 'hidden' : nextQuantity > 0 ? 'active' : 'sold_out';
+
+    // Optimistic UI: Cập nhật số lượng 0ms
     setAllBags((items) => {
-      const next = items.map((bag) => (bag.id === bagId ? { ...bag, availableQuantity: nextQuantity } : bag));
+      const next = items.map((bag) =>
+        bag.id === bagId ? { ...bag, availableQuantity: nextQuantity, status: nextStatus } : bag
+      );
       setCachedBagItems(storeId, next);
       return next;
     });
+
+    ignoreRealtimeUntilRef.current = Date.now() + 3500;
+
     try {
-      replaceBag(await updateBagQuantity(bagId, nextQuantity));
+      const updated = await updateBagQuantity(bagId, nextQuantity);
+      replaceBag(updated);
     } catch {
-      await loadBags();
+      // Rollback
+      setAllBags(previousBags);
+      setCachedBagItems(storeId, previousBags);
+      showToast('Lỗi cập nhật số lượng, đã hoàn tác');
     }
   };
 
   const addBag = async (input: BagInput) => {
+    const tempId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const previousBags = allBags;
+    const optimisticBag: BagItem = {
+      id: tempId,
+      storeId,
+      name: input.name,
+      description: input.description,
+      category: input.category,
+      originalPrice: input.originalPrice,
+      salePrice: input.salePrice,
+      quantity: input.quantity,
+      availableQuantity: input.quantity,
+      imageUrl: input.imageUrl || input.imageUrls?.[0] || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
+      imageUrls: input.imageUrls?.length ? input.imageUrls : [input.imageUrl || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600'],
+      pickupTimeStart: input.pickupTimeStart,
+      pickupTimeEnd: input.pickupTimeEnd,
+      status: input.quantity > 0 ? 'active' : 'sold_out',
+      createdAt: new Date().toISOString(),
+    };
+
+    // Optimistic UI: Đóng modal và hiển thị ngay trên màn hình trong 0ms
+    setAllBags([optimisticBag, ...allBags]);
+    setCachedBagItems(storeId, [optimisticBag, ...allBags]);
+    setIsCreateModalOpen(false);
+    showToast('Đã tạo túi hàng và đưa lên kệ');
+
+    ignoreRealtimeUntilRef.current = Date.now() + 3500;
     setSaving(true);
     try {
-      const bag = await createBagItem(storeId, input);
+      const realBag = await createBagItem(storeId, input);
       setAllBags((items) => {
-        const next = [bag, ...items];
+        const next = items.map((b) => (b.id === tempId ? realBag : b));
         setCachedBagItems(storeId, next);
         return next;
       });
-      setIsCreateModalOpen(false);
-      showToast('Đã tạo túi hàng và đưa lên kệ');
     } catch (err: any) {
-      showToast(err.message || 'Lỗi tạo túi hàng');
+      // Rollback
+      setAllBags(previousBags);
+      setCachedBagItems(storeId, previousBags);
+      showToast(err.message || 'Lỗi tạo túi hàng, đã hoàn tác');
     } finally {
       setSaving(false);
     }
@@ -182,31 +240,56 @@ export function useBags(storeId: string) {
 
   const editBag = async (input: BagInput) => {
     if (!selectedBag) return;
+    const previousBags = allBags;
+    const optimisticUpdated: BagItem = {
+      ...selectedBag,
+      ...input,
+      availableQuantity: input.quantity,
+      status: input.quantity > 0 ? (selectedBag.status === 'hidden' ? 'hidden' : 'active') : 'sold_out',
+    };
+
+    // Optimistic UI: Cập nhật thông tin và đóng modal trong 0ms
+    replaceBag(optimisticUpdated);
+    setSelectedBag(optimisticUpdated);
+    setIsEditModalOpen(false);
+    showToast('Đã cập nhật thông tin túi hàng');
+
+    ignoreRealtimeUntilRef.current = Date.now() + 3500;
     setSaving(true);
     try {
       const updated = await updateBagItem(selectedBag.id, input);
       replaceBag(updated);
       setSelectedBag(updated);
-      setIsEditModalOpen(false);
-      showToast('Đã cập nhật thông tin túi hàng');
+    } catch (err: any) {
+      // Rollback
+      setAllBags(previousBags);
+      setCachedBagItems(storeId, previousBags);
+      showToast(err.message || 'Lỗi cập nhật túi hàng, đã hoàn tác');
     } finally {
       setSaving(false);
     }
   };
 
   const removeBag = async (bagId: string) => {
+    const previousBags = allBags;
+    // Optimistic UI: Xóa khỏi danh sách và thông báo ngay trong 0ms
+    setAllBags((items) => {
+      const next = items.filter((bag) => bag.id !== bagId);
+      setCachedBagItems(storeId, next);
+      return next;
+    });
+    setSelectedBag(null);
+    showToast('Đã xóa hoàn toàn túi hàng');
+
+    ignoreRealtimeUntilRef.current = Date.now() + 3500;
     setSaving(true);
     try {
       await deleteBagItem(bagId);
-      setAllBags((items) => {
-        const next = items.filter((bag) => bag.id !== bagId);
-        setCachedBagItems(storeId, next);
-        return next;
-      });
-      setSelectedBag(null);
-      showToast('Đã xóa hoàn toàn túi hàng');
     } catch (err: any) {
-      showToast(err.message || 'Lỗi khi xóa túi hàng');
+      // Rollback
+      setAllBags(previousBags);
+      setCachedBagItems(storeId, previousBags);
+      showToast(err.message || 'Lỗi khi xóa túi hàng, đã hoàn tác');
     } finally {
       setSaving(false);
     }
