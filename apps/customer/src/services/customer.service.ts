@@ -129,7 +129,18 @@ const mapCreateOrderError = (error: { message?: string; details?: string } | nul
     try {
       if (error?.details) {
         const parsed = typeof error.details === 'string' ? JSON.parse(error.details) : error.details;
+        if (parsed?.reason === 'EXPIRED') {
+          return parsed.pickupEnd
+            ? `Túi thực phẩm đã hết giờ lấy hàng hôm nay (kết thúc lúc ${parsed.pickupEnd}). Vui lòng chọn túi khác.`
+            : 'Túi thực phẩm đã quá khung giờ nhận hàng trong ngày. Vui lòng chọn túi khác.';
+        }
+        if (parsed?.reason === 'INACTIVE') {
+          return 'Túi thực phẩm hiện đang tạm dừng mở bán. Vui lòng chọn túi khác.';
+        }
         if (typeof parsed?.available === 'number' && typeof parsed?.requested === 'number') {
+          if (parsed.available <= 0) {
+            return 'Túi thực phẩm đã hết hàng. Vui lòng chọn túi khác.';
+          }
           if (parsed.available < parsed.requested) {
             return `Túi thực phẩm chỉ còn ${parsed.available} phần (bạn đang đặt ${parsed.requested} phần). Vui lòng điều chỉnh lại số lượng.`;
           }
@@ -1236,20 +1247,17 @@ export const customerService = {
       throw new Error('Vui lòng đăng nhập trước khi đặt hàng.');
     }
 
-    try {
-      await supabase.from('users').upsert(
-        {
-          id: user.id,
-          email: user.email || '',
-          name: customerInfo?.name?.trim() || user.user_metadata?.name || 'Khách hàng',
-          phone: customerInfo?.phone?.trim() || user.user_metadata?.phone || null,
-          role: 'customer',
+    if (customerInfo?.name?.trim() || customerInfo?.phone?.trim()) {
+      try {
+        const updates: { name?: string; phone?: string; updated_at: string } = {
           updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'id' }
-      );
-    } catch (err) {
-      console.warn('Đồng bộ thông tin khách hàng vào bảng users lỗi:', err);
+        };
+        if (customerInfo.name?.trim()) updates.name = customerInfo.name.trim();
+        if (customerInfo.phone?.trim()) updates.phone = customerInfo.phone.trim();
+        await supabase.from('users').update(updates).eq('id', user.id);
+      } catch (err) {
+        console.warn('Cập nhật thông tin khách hàng vào bảng users lỗi:', err);
+      }
     }
 
     const orderId = crypto.randomUUID();
