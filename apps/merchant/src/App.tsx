@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { AppHeader } from './components/layout/AppHeader';
 import { AppTabBar } from './components/layout/AppTabBar';
 import { NotificationModal } from './components/notifications/NotificationModal';
@@ -58,8 +58,15 @@ function ScreenLoadingSkeleton() {
 export default function App() {
   const auth = useAuth();
 
-  // Tối ưu như Customer PWA: Khởi tạo ngay lập tức với dữ liệu ảo (0ms), tải ngầm sau
+  // Tối ưu như Customer PWA: Khởi tạo ngay lập tức từ URL params hoặc dữ liệu cached (0ms)
   const [route, setRoute] = useState<'login' | 'setup' | TabRoute>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') as TabRoute | null;
+      if (tabParam && ['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(tabParam)) {
+        return tabParam;
+      }
+    }
     const cached = getCachedMerchantUser();
     if (cached) {
       return cached.isFirstLogin ? 'setup' : 'bags';
@@ -73,29 +80,47 @@ export default function App() {
   const store = useStoreProfile(storeId);
   const { toastMessage, showToast } = useToast();
 
+  const handleNewNotification = useCallback(
+    (item: any) => {
+      showToast(`🔔 ${item?.title ?? 'Đơn hàng mới'}: ${item?.body ?? 'Có đơn hàng mới vừa được đặt!'}`);
+    },
+    [showToast]
+  );
+
+  const notifications = useNotifications(auth.user?.id ?? '', handleNewNotification);
+
+  const routeRef = useRef<'login' | 'setup' | TabRoute>(route);
+  routeRef.current = route;
+
+  const notificationsRef = useRef(notifications);
+  notificationsRef.current = notifications;
+
   const navigateTo = useCallback((nextRoute: 'login' | 'setup' | TabRoute, pushHistory = true) => {
-    setRoute((current) => {
-      if (current === nextRoute) return current;
-      if (pushHistory && nextRoute !== 'login' && nextRoute !== 'setup') {
-        const url = nextRoute === 'bags' ? window.location.pathname : `${window.location.pathname}?tab=${nextRoute}`;
-        window.history.pushState({ route: nextRoute }, '', url);
-      }
-      return nextRoute;
-    });
+    if (routeRef.current === nextRoute) return;
+
+    if (pushHistory && nextRoute !== 'login' && nextRoute !== 'setup') {
+      const url = nextRoute === 'bags' ? window.location.pathname : `${window.location.pathname}?tab=${nextRoute}`;
+      window.history.pushState({ route: nextRoute }, '', url);
+    }
+    setRoute(nextRoute);
   }, []);
 
-  // Đồng bộ lịch sử điều hướng với trình duyệt cho Merchant PWA
+  // Đồng bộ lịch sử điều hướng với trình duyệt cho Merchant PWA (chỉ chạy 1 lần khi mount)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab') as TabRoute | null;
-    if (tabParam && ['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(tabParam)) {
-      setRoute(tabParam);
-      window.history.replaceState({ route: tabParam }, '', `${window.location.pathname}?tab=${tabParam}`);
-    } else {
-      window.history.replaceState({ route: 'bags' }, '', window.location.pathname);
-    }
+    const initialRoute = tabParam && ['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(tabParam)
+      ? tabParam
+      : 'bags';
+    const initialUrl = initialRoute === 'bags' ? window.location.pathname : `${window.location.pathname}?tab=${initialRoute}`;
+    window.history.replaceState({ route: initialRoute }, '', initialUrl);
 
     const handlePopState = (event: PopStateEvent) => {
+      // Đóng modal overlay khi bấm phím Back
+      setIsGlobalQRScannerOpen(false);
+      notificationsRef.current?.setIsOpen(false);
+      setTargetOrderId(null);
+
       const state = event.state as { route?: 'login' | 'setup' | TabRoute } | null;
       if (state && state.route) {
         setRoute(state.route);
@@ -112,18 +137,11 @@ export default function App() {
 
   useEffect(() => {
     if (auth.user && route === 'login') {
-      setRoute(auth.user.isFirstLogin ? 'setup' : 'bags');
+      const nextRoute = auth.user.isFirstLogin ? 'setup' : 'bags';
+      window.history.replaceState({ route: nextRoute }, '', window.location.pathname);
+      setRoute(nextRoute);
     }
   }, [auth.user, route]);
-
-  const handleNewNotification = useCallback(
-    (item: any) => {
-      showToast(`🔔 ${item?.title ?? 'Đơn hàng mới'}: ${item?.body ?? 'Có đơn hàng mới vừa được đặt!'}`);
-    },
-    [showToast]
-  );
-
-  const notifications = useNotifications(auth.user?.id ?? '', handleNewNotification);
 
   const handleSelectNotification = useCallback(
     (item: NotificationItem) => {
@@ -138,23 +156,33 @@ export default function App() {
 
   const handleLogin = async (credentials: LoginCredentials) => {
     const user = await auth.login(credentials);
-    if (user) setRoute(user.isFirstLogin ? 'setup' : 'bags');
+    if (user) {
+      const nextRoute = user.isFirstLogin ? 'setup' : 'bags';
+      window.history.replaceState({ route: nextRoute }, '', window.location.pathname);
+      setRoute(nextRoute);
+    }
     return user;
   };
 
   const handleRegister = async (input: MerchantRegisterInput) => {
     const user = await auth.register(input);
-    if (user) setRoute(user.isFirstLogin ? 'setup' : 'bags');
+    if (user) {
+      const nextRoute = user.isFirstLogin ? 'setup' : 'bags';
+      window.history.replaceState({ route: nextRoute }, '', window.location.pathname);
+      setRoute(nextRoute);
+    }
     return user;
   };
 
   const handleCompleteSetup = async () => {
     await auth.completeSetup();
+    window.history.replaceState({ route: 'bags' }, '', window.location.pathname);
     setRoute('bags');
   };
 
   const handleLogout = async () => {
     await auth.logout();
+    window.history.replaceState({ route: 'login' }, '', window.location.pathname);
     setRoute('login');
   };
 
@@ -168,6 +196,7 @@ export default function App() {
         onClearError={auth.clearError}
         onExploreDemo={() => {
           auth.exploreDemo();
+          window.history.replaceState({ route: 'bags' }, '', window.location.pathname);
           setRoute('bags');
         }}
       />
@@ -233,6 +262,7 @@ export default function App() {
               const res = await auth.deleteAccount();
               if (res.success) {
                 showToast('Tài khoản đối tác đã được xóa vĩnh viễn khỏi hệ thống.');
+                window.history.replaceState({ route: 'login' }, '', window.location.pathname);
                 setRoute('login');
               } else {
                 showToast(res.message || 'Không thể xóa tài khoản. Vui lòng thử lại.');

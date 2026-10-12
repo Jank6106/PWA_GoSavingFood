@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  AlertTriangle,
   Check,
   Clock3,
   Copy,
   Download,
+  ExternalLink,
+  RefreshCw,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@gosavingfood/ui';
@@ -26,6 +29,7 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isImgError, setIsImgError] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [payosData, setPayosData] = useState<{
     orderCode: number;
     qrCode: string;
@@ -292,7 +296,35 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
         </div>
 
         {/* Mã QR */}
-        <div className="customer-payment-qr-wrap" style={{ padding: '8px', marginTop: '2px' }}>
+        <div className="customer-payment-qr-wrap" style={{ padding: '8px', marginTop: '2px', position: 'relative' }}>
+          {timeLeft <= 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(255, 255, 255, 0.92)',
+                backdropFilter: 'blur(4px)',
+                borderRadius: '16px',
+                zIndex: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '16px',
+                textAlign: 'center',
+              }}
+            >
+              <AlertTriangle size={36} color="#ef4444" style={{ marginBottom: '8px' }} />
+              <strong style={{ fontSize: '15px', color: '#b91c1c' }}>Hết thời gian giữ đơn</strong>
+              <p style={{ margin: '4px 0 12px', fontSize: '12px', color: '#6b7280' }}>
+                Mã QR này đã hết hạn hiệu lực 15 phút. Vui lòng quay lại đặt lại để đảm bảo quán còn suất ăn.
+              </p>
+              <Button size="sm" variant="outline" onClick={onBack}>
+                Quay lại đặt đơn khác
+              </Button>
+            </div>
+          )}
+
           {payosData?.qrCode ? (
             <div style={{ padding: '6px', background: '#fff', borderRadius: '12px' }}>
               <QRCodeSVG value={payosData.qrCode} size={200} level="M" />
@@ -312,29 +344,56 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
           )}
         </div>
 
-        {/* 3. Nút tải ảnh kích thước vừa phải ngay dưới qr */}
-        <button
-          type="button"
-          onClick={handleDownloadQr}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            padding: '7px 16px',
-            borderRadius: '10px',
-            border: '1px solid #dce5df',
-            background: '#f8faf9',
-            color: 'var(--color-text-primary)',
-            fontSize: '12.5px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          <Download size={14} color="#166B4A" />
-          <span>Tải ảnh mã QR</span>
-        </button>
+        {/* Action buttons dưới QR: Tải ảnh QR & Mở cổng PayOS (nếu có) */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button
+            type="button"
+            onClick={handleDownloadQr}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '7px 14px',
+              borderRadius: '10px',
+              border: '1px solid #dce5df',
+              background: '#f8faf9',
+              color: 'var(--color-text-primary)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Download size={14} color="#166B4A" />
+            <span>Tải ảnh mã QR</span>
+          </button>
+
+          {payosData?.checkoutUrl && (
+            <a
+              href={payosData.checkoutUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '7px 14px',
+                borderRadius: '10px',
+                border: '1px solid #166B4A',
+                background: 'var(--color-primary-soft)',
+                color: 'var(--color-primary)',
+                fontSize: '12px',
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              <ExternalLink size={14} />
+              <span>Cổng thanh toán PayOS</span>
+            </a>
+          )}
+        </div>
 
         {/* 4. Thông tin chuyển khoản gồm: ngân hàng, stk (cho phép copy), Chủ tài khoản, Nội dung chuyển khoản (Mã đơn) */}
         <div className="customer-bank-info-card" style={{ width: '100%', marginTop: '6px' }}>
@@ -396,6 +455,62 @@ export function PaymentPage({ draft, total, isSubmitting, order, onBack, onConfi
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Nút kiểm tra trạng thái thanh toán thủ công (Manual Verification CTA) */}
+        <div style={{ width: '100%', marginTop: '6px' }}>
+          <Button
+            fullWidth
+            size="md"
+            variant="primary"
+            isLoading={isCheckingStatus}
+            onClick={async () => {
+              if (isCheckingStatus) return;
+              setIsCheckingStatus(true);
+              try {
+                // Kiểm tra trực tiếp qua DB hoặc PayOS
+                if (payosData?.orderCode) {
+                  const check = await customerService.checkPayOSStatus(payosData.orderCode);
+                  if (check?.paid) {
+                    showToast('Đã xác nhận thanh toán thành công!');
+                    setTimeout(() => onConfirm(), 400);
+                    return;
+                  }
+                }
+                if (order?.id) {
+                  const { data: ord } = await supabase
+                    .from('orders')
+                    .select('payment_status')
+                    .eq('id', order.id)
+                    .single();
+                  if (ord?.payment_status === 'success') {
+                    showToast('Đã xác nhận thanh toán thành công!');
+                    setTimeout(() => onConfirm(), 400);
+                    return;
+                  }
+                }
+                showToast('Hệ thống đang chờ giao dịch từ ngân hàng. Vui lòng thử lại sau vài giây!');
+              } catch {
+                showToast('Không thể kết nối máy chủ kiểm tra. Vui lòng thử lại.');
+              } finally {
+                setIsCheckingStatus(false);
+              }
+            }}
+          >
+            <RefreshCw size={15} style={{ marginRight: '6px' }} />
+            Tôi đã chuyển khoản thành công
+          </Button>
+
+          <p
+            style={{
+              margin: '8px 0 0',
+              fontSize: '11px',
+              color: 'var(--color-text-muted)',
+              textAlign: 'center',
+            }}
+          >
+            🛡️ Bảo đảm Yindii: Tiền được giữ an toàn trên hệ thống và hoàn 100% nếu bạn hủy trước giờ nhận 2 tiếng.
+          </p>
         </div>
       </section>
 

@@ -212,15 +212,19 @@ export function OrderDetailPage({
         )}
       </section>
 
-      {/* Pickup Code Section - For Ready for pickup */}
-      {isReady && (
+      {/* Pickup Code Section - For Confirmed, Preparing or Ready for pickup */}
+      {(isReady || isConfirmedOrPreparing || (isPending && currentOrder.paymentStatus === 'success')) && (
         <section className="customer-pickup-code">
-          <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-            <QRCodeSVG value={currentOrder.qrCode || currentOrder.orderCode} size={148} level="M" />
+          <div style={{ background: '#ffffff', padding: '12px', borderRadius: '16px', border: '1px solid #e5e7eb', boxShadow: '0 4px 14px rgba(0,0,0,0.04)' }}>
+            <QRCodeSVG value={currentOrder.orderCode} size={156} level="M" />
           </div>
-          <span>Mã nhận hàng điện tử</span>
-          <strong>{currentOrder.orderCode}</strong>
-          <small>Đưa mã này hoặc mã QR cho nhân viên tại quán để lấy món</small>
+          <span>Mã nhận hàng điện tử (Yindii standard)</span>
+          <strong style={{ letterSpacing: '0.04em' }}>{currentOrder.orderCode}</strong>
+          <small>
+            {isReady
+              ? 'Đưa mã QR hoặc đọc mã này cho nhân viên quán quét để nhận túi cứu đồ ăn'
+              : 'Đơn đã xác nhận! Bạn có thể xuất trình mã này khi tới quán trong khung giờ nhận'}
+          </small>
         </section>
       )}
 

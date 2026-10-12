@@ -39,7 +39,15 @@ export function BrandDetailPage({ brand, stores, onBack, onOpenMerchant }: Brand
           <h1>{brand.name}</h1>
           <p>{brand.description}</p>
           <span>
-            <Star size={15} fill="currentColor" /> {brand.rating} · {brand.totalStores} cửa hàng
+            {(brand.totalRatings ?? 0) > 0 || brand.rating > 0 ? (
+              <>
+                <Star size={15} fill="currentColor" /> {brand.rating.toFixed(1)}
+              </>
+            ) : (
+              'Thương hiệu mới'
+            )}
+            {' · '}
+            {brand.totalStores} cửa hàng
           </span>
         </div>
       </section>

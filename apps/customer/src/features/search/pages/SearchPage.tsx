@@ -568,7 +568,7 @@ export function SearchPage({
                   <p>{selectedMerchant.address}</p>
                   <div className="customer-store-sheet-meta">
                     <span className="customer-store-sheet-rating">
-                      ⭐ {selectedMerchant.rating ? selectedMerchant.rating.toFixed(1) : '5.0'}
+                      {selectedMerchant.totalRatings > 0 ? `⭐ ${selectedMerchant.rating.toFixed(1)} (${selectedMerchant.totalRatings})` : '⭐ Mới'}
                     </span>
                     <span className="customer-store-sheet-dist">
                       {selectedMerchant.distance
@@ -705,8 +705,8 @@ export function SearchPage({
                       )
                     : 50;
 
-                const rating = store?.rating || bag.rating || 4.8;
-                const totalRatings = store?.totalRatings || 18;
+                const rating = store?.rating ?? bag.rating ?? 0;
+                const totalRatings = store?.totalRatings ?? 0;
                 const distanceText = store?.distance
                   ? formatDistance(store.distance)
                   : '560 m';
@@ -756,10 +756,18 @@ export function SearchPage({
 
                         <div className="customer-yindii-item-bottom-row">
                           <div className="customer-yindii-item-meta">
-                            <Star size={12} fill="#f59e0b" color="#f59e0b" />
-                            <span className="customer-yindii-item-rating">
-                              {rating.toFixed(1)} ({totalRatings})
-                            </span>
+                            {totalRatings > 0 ? (
+                              <>
+                                <Star size={12} fill="#f59e0b" color="#f59e0b" />
+                                <span className="customer-yindii-item-rating">
+                                  {rating.toFixed(1)} ({totalRatings})
+                                </span>
+                              </>
+                            ) : (
+                              <span className="customer-yindii-item-rating" style={{ color: '#10b981', fontWeight: 600 }}>
+                                Mới
+                              </span>
+                            )}
                             <span>–</span>
                             <span>{distanceText}</span>
                           </div>

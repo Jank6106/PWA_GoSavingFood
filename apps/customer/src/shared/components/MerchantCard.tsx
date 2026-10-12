@@ -36,7 +36,7 @@ export function MerchantCard({ merchant, detail, meta, showArrow = true, onClick
       </span>
       <span>
         <strong>{merchant.name}</strong>
-        <small><MapPin size={12} /> {detail ?? `★ ${merchant.rating} · ${merchant.distance.toLocaleString('vi-VN')} km`}</small>
+        <small><MapPin size={12} /> {detail ?? `${merchant.totalRatings > 0 ? `★ ${merchant.rating.toFixed(1)}` : 'Mới'} · ${merchant.distance >= 1000 ? (merchant.distance / 1000).toFixed(1) + ' km' : merchant.distance + ' m'}`}</small>
         {meta && <em>{meta}</em>}
       </span>
       {showArrow && <ArrowRight size={18} />}

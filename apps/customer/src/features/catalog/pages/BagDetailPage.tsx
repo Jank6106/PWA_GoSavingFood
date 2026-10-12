@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Clock3, ShoppingBag, Star, Store } from 'lucide-react';
 import { Badge, Button, Dialog, EmptyState } from '@gosavingfood/ui';
 import { PriceDisplay, QuantityStepper, ScreenHeader, StickyActions } from '../../../shared/components';
-import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
+import { customerService } from '../../../services/customer.service';
+import type { CustomerReview, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const isMediaUrl = (url?: string | null) =>
   Boolean(url && (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')));
@@ -32,7 +33,17 @@ export function BagDetailPage({
 }: BagDetailPageProps) {
   const [quantity, setQuantity] = useState(1);
   const [isQuantityOpen, setIsQuantityOpen] = useState(false);
+  const [reviews, setReviews] = useState<CustomerReview[]>([]);
   const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    if (bag?.merchantId) {
+      void customerService.getStoreReviews(bag.merchantId).then((data) => {
+        if (data && data.length > 0) setReviews(data);
+      });
+    }
+  }, [bag?.merchantId]);
+
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
@@ -84,14 +95,53 @@ export function BagDetailPage({
             <div>
               <strong>{merchant.name}</strong>
               <small>
-                <Star size={13} fill="currentColor" /> {merchant.rating} · {merchant.distance.toLocaleString('vi-VN')} km
+                {merchant.totalRatings > 0 ? (
+                  <>
+                    <Star size={13} fill="currentColor" /> {merchant.rating.toFixed(1)} ({merchant.totalRatings})
+                  </>
+                ) : (
+                  <span>Quán mới</span>
+                )}
+                {' · '}
+                {merchant.distance >= 1000
+                  ? `${(merchant.distance / 1000).toFixed(1)} km`
+                  : `${merchant.distance} m`}
               </small>
             </div>
             <em>Xem shop</em>
           </button>
         )}
-        <section className="customer-copy-section"><h2>Trong túi có gì?</h2><p>{bag.description}</p><div className="customer-pickup-box"><span>Khung giờ nhận</span><strong>{bag.pickupStart} – {bag.pickupEnd}</strong><small>Vui lòng đến đúng giờ để món ăn vẫn ngon nhất.</small></div></section>
-        <section className="customer-review-card"><div><span className="customer-review-avatar">L</span><div><strong>Linh Nguyễn</strong><span>★★★★★</span></div><small>2 ngày trước</small></div><p>Đồ ăn vẫn rất tươi và phần nhận được nhiều hơn mình mong đợi. Sẽ quay lại!</p></section>
+        <section className="customer-copy-section">
+          <h2>Trong túi có gì?</h2>
+          <p>{bag.description}</p>
+          <div className="customer-pickup-box">
+            <span>Khung giờ nhận</span>
+            <strong>{bag.pickupStart} – {bag.pickupEnd}</strong>
+            <small>Vui lòng đến đúng giờ để món ăn vẫn ngon nhất.</small>
+          </div>
+        </section>
+
+        {reviews.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <strong style={{ fontSize: '15px' }}>Đánh giá gần đây từ khách hàng</strong>
+              <small style={{ color: 'var(--color-text-muted)' }}>{reviews.length} nhận xét</small>
+            </div>
+            {reviews.slice(0, 2).map((rev) => (
+              <section key={rev.id} className="customer-review-card">
+                <div>
+                  <span className="customer-review-avatar">{rev.avatar || 'K'}</span>
+                  <div>
+                    <strong>{rev.customerName}</strong>
+                    <span>{'★'.repeat(Math.min(5, Math.max(1, rev.rating)))}{'☆'.repeat(5 - Math.min(5, Math.max(1, rev.rating)))}</span>
+                  </div>
+                  <small>{rev.timeAgo || 'Gần đây'}</small>
+                </div>
+                {rev.comment && <p>{rev.comment}</p>}
+              </section>
+            ))}
+          </div>
+        )}
       </div>
       <StickyActions>
         <Button

@@ -154,7 +154,7 @@ export function HomePage({
                   )}
                 </span>
                 <strong>{brand.name}</strong>
-                <small>★ {brand.rating}</small>
+                <small>{(brand.totalRatings ?? 0) > 0 || brand.rating > 0 ? `★ ${brand.rating.toFixed(1)}` : 'Mới'}</small>
               </button>
             );
           })}
@@ -170,11 +170,17 @@ export function HomePage({
         <div className="customer-merchant-list">
           {merchants.map((merchant) => {
             const merchantBag = bags.find((bag) => bag.merchantId === merchant.id);
+            const distStr = merchant.distance >= 1000
+              ? `${(merchant.distance / 1000).toFixed(1)} km`
+              : `${merchant.distance} m`;
+            const ratingStr = merchant.totalRatings > 0
+              ? `★ ${merchant.rating.toFixed(1)} (${merchant.totalRatings})`
+              : 'Mới';
             return (
               <MerchantCard
                 key={merchant.id}
                 merchant={merchant}
-                detail={`★ ${merchant.rating} · ${merchant.distance.toLocaleString('vi-VN')} km`}
+                detail={`${ratingStr} · ${distStr}`}
                 meta={merchantBag ? `Từ ${merchantBag.discountPrice.toLocaleString('vi-VN')}đ` : undefined}
                 onClick={onOpenMerchant}
               />
