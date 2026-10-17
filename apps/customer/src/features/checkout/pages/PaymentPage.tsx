@@ -4,7 +4,6 @@ import {
   Clock3,
   Copy,
   Download,
-  Loader2,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -635,27 +634,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
           <span>Tải ảnh mã QR</span>
         </button>
 
-        {/* Cảnh báo bắt buộc giữ nguyên nội dung chuyển khoản */}
-        <div
-          style={{
-            width: '100%',
-            marginTop: '10px',
-            padding: '9px 12px',
-            background: '#fffbeb',
-            border: '1px solid #fde68a',
-            borderRadius: '10px',
-            fontSize: '12px',
-            fontWeight: 650,
-            color: '#b45309',
-            lineHeight: 1.45,
-            textAlign: 'left',
-          }}
-        >
-          ⚠️ Bắt buộc giữ nguyên nội dung chuyển khoản để hệ thống tự động xác nhận đơn.
-        </div>
-
-        {/* Thông tin chuyển khoản hiển thị rõ ràng */}
-        <div className="customer-bank-info-card" style={{ width: '100%', marginTop: '8px' }}>
+        <div className="customer-bank-info-card" style={{ width: '100%', marginTop: '14px' }}>
           <div className="customer-bank-info-header">
             <span>Chi tiết chuyển khoản thủ công</span>
           </div>
@@ -679,28 +658,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
               </div>
             </div>
 
-            {/* Nội dung chuyển khoản */}
-            <div className="customer-bank-info-row" style={{ background: '#f0fdf4', padding: '6px 8px', borderRadius: '8px' }}>
-              <span className="customer-bank-info-label" style={{ fontWeight: 700, color: '#166534' }}>
-                Nội dung chuyển khoản
-              </span>
-              <div className="customer-bank-info-val-wrap">
-                <span className="customer-bank-info-val" style={{ fontWeight: 800, color: '#15803d', letterSpacing: '0.02em' }}>
-                  {isPayosLoading ? 'Đang tạo mã PayOS...' : transferContent}
-                </span>
-                <button
-                  type="button"
-                  className={`customer-copy-btn ${copiedField === 'content' ? 'copied' : ''}`}
-                  onClick={() => handleCopy(transferContent, 'content')}
-                  title="Sao chép nội dung chuyển khoản"
-                  aria-label="Sao chép nội dung chuyển khoản"
-                  style={{ background: '#dcfce7', borderColor: '#86efac' }}
-                  disabled={isPayosLoading}
-                >
-                  {copiedField === 'content' ? <Check size={14} /> : <Copy size={14} />}
-                </button>
-              </div>
-            </div>
+
 
             {/* Ngân hàng */}
             <div className="customer-bank-info-row">
@@ -744,43 +702,14 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
           </div>
         </div>
 
-        {/* Nút "Tôi đã chuyển tiền - Kiểm tra ngay" */}
-        <div style={{ marginTop: '16px', width: '100%' }}>
-          <Button
-            fullWidth
-            size="lg"
-            variant="primary"
-            disabled={isCheckingPayment}
-            onClick={() => void checkCurrentOrderStatus(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              fontWeight: 700,
-              fontSize: '15px',
-              padding: '13px 16px',
-            }}
-          >
-            {isCheckingPayment ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                <span>Đang kiểm tra thanh toán...</span>
-              </>
-            ) : (
-              <>
-                <Check size={18} />
-                <span>Tôi đã chuyển tiền - Kiểm tra ngay</span>
-              </>
-            )}
-          </Button>
+        {/* Ghi chú tự động xác nhận */}
+        <div style={{ marginTop: '14px', width: '100%', textAlign: 'center' }}>
           <p
             style={{
-              fontSize: '12px',
+              fontSize: '12.5px',
               color: 'var(--color-text-muted)',
-              textAlign: 'center',
-              marginTop: '8px',
-              lineHeight: 1.4,
+              margin: 0,
+              lineHeight: 1.5,
             }}
           >
             Hệ thống tự động xác nhận đơn ngay khi tiền vào tài khoản.
