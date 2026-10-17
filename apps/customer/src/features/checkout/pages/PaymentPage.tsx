@@ -149,6 +149,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
     }
   }, [order, effectiveOrderId, effectiveTotal]);
 
+  const isPayosLoading = !payosData;
   const transferContent = payosData?.description || effectiveOrderCode;
   const bankAccount = payosData?.accountNumber || '8823316420';
   const bankName = 'BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam';
@@ -448,6 +449,10 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
   };
 
   const handleCopy = (text: string, fieldName: string) => {
+    if (isPayosLoading && (fieldName === 'content' || fieldName === 'stk')) {
+      showToast('Đang tải mã thanh toán PayOS, vui lòng chờ 1-2 giây...');
+      return;
+    }
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(text);
       setCopiedField(fieldName);
@@ -456,20 +461,48 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
     }
   };
 
-  const handleDownloadQr = async () => {
+  const handleDownloadQr = () => {
     try {
-      showToast('Đang tải ảnh mã QR...');
-      const res = await fetch(qrImageUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `VietQR-PayOS-${transferContent}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast('Đã lưu ảnh QR vào máy!');
+      showToast('Đang chuẩn bị ảnh mã QR...');
+      const svg = document.querySelector('.customer-payment-qr-wrap svg') as SVGSVGElement | null;
+      if (svg) {
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = () => {
+          // Thêm viền trắng (quiet zone) 24px để app ngân hàng quét ảnh từ thư viện nhận diện 100%
+          const padding = 24;
+          canvas.width = img.width + padding * 2;
+          canvas.height = img.height + padding * 2;
+          if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, padding, padding);
+          }
+          URL.revokeObjectURL(url);
+          const pngUrl = canvas.toDataURL('image/png');
+          const a = document.createElement('a');
+          a.href = pngUrl;
+          a.download = `VietQR-PayOS-${effectiveOrderCode}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          showToast('Đã lưu ảnh QR chuẩn PayOS vào máy!');
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          window.open(qrImageUrl, '_blank');
+        };
+        img.src = url;
+        return;
+      }
+
+      window.open(qrImageUrl, '_blank');
+      showToast('Đang mở ảnh QR để bạn tải về.');
     } catch {
       window.open(qrImageUrl, '_blank');
       showToast('Đang mở ảnh QR để bạn tải về.');
@@ -652,7 +685,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
               </span>
               <div className="customer-bank-info-val-wrap">
                 <span className="customer-bank-info-val" style={{ fontWeight: 800, color: '#15803d', letterSpacing: '0.02em' }}>
-                  {transferContent}
+                  {isPayosLoading ? 'Đang tạo mã PayOS...' : transferContent}
                 </span>
                 <button
                   type="button"
@@ -661,6 +694,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
                   title="Sao chép nội dung chuyển khoản"
                   aria-label="Sao chép nội dung chuyển khoản"
                   style={{ background: '#dcfce7', borderColor: '#86efac' }}
+                  disabled={isPayosLoading}
                 >
                   {copiedField === 'content' ? <Check size={14} /> : <Copy size={14} />}
                 </button>
@@ -682,13 +716,16 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
             <div className="customer-bank-info-row">
               <span className="customer-bank-info-label">Số tài khoản</span>
               <div className="customer-bank-info-val-wrap">
-                <span className="customer-bank-info-val">{bankAccount}</span>
+                <span className="customer-bank-info-val">
+                  {isPayosLoading ? 'Đang lấy STK PayOS...' : bankAccount}
+                </span>
                 <button
                   type="button"
                   className={`customer-copy-btn ${copiedField === 'stk' ? 'copied' : ''}`}
                   onClick={() => handleCopy(bankAccount, 'stk')}
                   title="Sao chép số tài khoản"
                   aria-label="Sao chép số tài khoản"
+                  disabled={isPayosLoading}
                 >
                   {copiedField === 'stk' ? <Check size={14} /> : <Copy size={14} />}
                 </button>

@@ -101,18 +101,36 @@ export async function POST(request: Request) {
 
           if (existingOrder?.payment_order_code && existingOrder?.checkout_url) {
             console.log(`[PayOS] Order ${orderId} already has payment link ${existingOrder.payment_order_code}. Reusing.`);
-            resolveInFlight({
-              success: true,
-              orderCode: existingOrder.payment_order_code,
-              paymentLinkId: existingOrder.payment_link_id,
-              checkoutUrl: existingOrder.checkout_url,
-              accountNumber: '8823316420',
-              accountName: 'NGUYEN HUU DANH',
-              bin: '970418',
-              amount,
-              description: cleanDesc,
-            });
-            return;
+            try {
+              const checkRes = await fetch(
+                `https://api-merchant.payos.vn/v2/payment-requests/${existingOrder.payment_order_code}`,
+                {
+                  method: 'GET',
+                  headers: {
+                    'x-client-id': clientId,
+                    'x-api-key': apiKey,
+                  },
+                }
+              );
+              const checkData = await checkRes.json();
+              if (checkData.code === '00' && checkData.data) {
+                resolveInFlight({
+                  success: true,
+                  orderCode: existingOrder.payment_order_code,
+                  paymentLinkId: existingOrder.payment_link_id,
+                  checkoutUrl: existingOrder.checkout_url,
+                  qrCode: checkData.data.qrCode,
+                  accountNumber: checkData.data.accountNumber || '8823316420',
+                  accountName: checkData.data.accountName || 'NGUYEN HUU DANH',
+                  bin: checkData.data.bin || '970418',
+                  amount,
+                  description: checkData.data.description || cleanDesc,
+                });
+                return;
+              }
+            } catch (reuseErr) {
+              console.warn('[PayOS] Query existing payment link error, falling back:', reuseErr);
+            }
           }
         }
 
@@ -182,10 +200,8 @@ export async function POST(request: Request) {
           accountName,
           bin,
           paymentLinkId,
+          description: payosDescription,
         } = payosData.data;
-
-        const cleanAccountNumber =
-          String(accountNumber || '8823316420').replace(/^[A-Za-z0-9]*?(?=\d{8,})/, '') || '8823316420';
 
         // Cập nhật thông tin PayOS vào Supabase orders
         if (supabaseAdmin) {
@@ -206,11 +222,11 @@ export async function POST(request: Request) {
           paymentLinkId,
           checkoutUrl,
           qrCode,
-          accountNumber: cleanAccountNumber,
-          accountName,
-          bin,
+          accountNumber: String(accountNumber || '8823316420'),
+          accountName: accountName || 'NGUYEN HUU DANH',
+          bin: bin || '970418',
           amount,
-          description: cleanDesc,
+          description: payosDescription || cleanDesc,
         });
       } catch (err) {
         rejectInFlight(err);
