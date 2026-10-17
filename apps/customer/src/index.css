@@ -1532,27 +1532,55 @@ img { display: block; max-width: 100%; }
 .customer-success-screen { align-items: center; padding-top: 48px; text-align: center; }.customer-success-screen > svg { color: var(--color-primary); }.customer-success-screen > h1 { margin: -7px 0 0; font-size: 26px; }.customer-success-screen > p { max-width: 350px; margin: -9px 0 4px; color: var(--color-text-secondary); line-height: 22px; }.customer-success-screen > button:last-child { border: 0; background: none; color: var(--color-primary); font-weight: 800; cursor: pointer; }.customer-ticket { width: 100%; overflow: hidden; border: 1px solid var(--color-border-subtle); border-radius: 22px; background: #fff; box-shadow: 0 8px 24px rgb(25 28 29 / 7%); }.customer-ticket > div:first-child { display: flex; flex-direction: column; gap: 5px; padding: 18px; background: var(--color-primary); color: #fff; }.customer-ticket > div:first-child span { color: rgb(255 255 255 / 72%); font-size: 10px; letter-spacing: .12em; }.customer-ticket > div:first-child strong { font-size: 25px; letter-spacing: .08em; }.customer-ticket-code { display: grid; width: 150px; height: 150px; place-items: center; margin: 20px auto; border: 12px solid #101815; border-radius: 12px; font-size: 30px; font-weight: 900; letter-spacing: .16em; }.customer-ticket p { display: flex; align-items: flex-start; gap: 9px; margin: 0; padding: 10px 17px; text-align: left; }.customer-ticket p svg { color: var(--color-primary); }.customer-ticket p span { display: flex; flex-direction: column; gap: 2px; }.customer-ticket p small { color: var(--color-text-muted); }.customer-ticket p strong { font-size: 12px; }.customer-ticket footer { display: flex; justify-content: space-between; margin-top: 10px; padding: 15px 17px; border-top: 1px dashed var(--color-border-subtle); }.customer-ticket footer strong { color: var(--color-primary); font-size: 19px; }
 /* Order detail screen & Status cards */
 .customer-order-detail-screen { display: flex; flex-direction: column; gap: 16px; padding-bottom: 32px; }
-.customer-order-status-card { padding: 18px; border: 1px solid #cfe2d5; border-radius: 19px; background: var(--color-primary-soft); }
-.customer-order-status-card--ready_for_pickup { background: var(--color-primary-soft); border-color: #bed8c6; }
-.customer-order-status-card--pending { background: #fffbeb; border-color: #fde68a; }
-.customer-order-status-card--pending h1 { color: #b45309; }
-.customer-order-status-card--confirmed, .customer-order-status-card--preparing { background: #f0fdf9; border-color: #a7f3d0; }
-.customer-order-status-card--confirmed h1, .customer-order-status-card--preparing h1 { color: #166B4A; }
+.customer-order-status-card { padding: 14px 18px; border: 1px solid #cfe2d5; border-radius: 16px; background: var(--color-primary-soft); }
+.customer-status-banner-title { display: flex; align-items: center; gap: 10px; }
+.customer-status-banner-title h1 { margin: 0; font-size: 17px; font-weight: 800; line-height: 1.3; }
+.customer-status-banner-title svg { flex-shrink: 0; }
+
+.customer-order-status-card--ready_for_pickup { background: #f0fdf9; border-color: #a7f3d0; }
+.customer-order-status-card--ready_for_pickup h1,
+.customer-order-status-card--ready_for_pickup svg { color: #166B4A; }
+
+.customer-order-status-card--pending,
+.customer-order-status-card--pending_payment { background: #fffbeb; border-color: #fde68a; }
+.customer-order-status-card--pending h1,
+.customer-order-status-card--pending_payment h1,
+.customer-order-status-card--pending svg,
+.customer-order-status-card--pending_payment svg { color: #b45309; }
+
+.customer-order-status-card--paid,
+.customer-order-status-card--confirmed,
+.customer-order-status-card--preparing { background: #f0fdf9; border-color: #a7f3d0; }
+.customer-order-status-card--paid h1,
+.customer-order-status-card--confirmed h1,
+.customer-order-status-card--preparing h1,
+.customer-order-status-card--paid svg,
+.customer-order-status-card--confirmed svg,
+.customer-order-status-card--preparing svg { color: #166B4A; }
+
 .customer-order-status-card--completed { background: #EEF4E4; border-color: #C8E4A8; }
-.customer-order-status-card--completed h1 { color: #166B4A; }
-.customer-order-status-card--cancelled { background: #fef2f2; border-color: #fecaca; }
-.customer-order-status-card--cancelled h1 { color: #b91c1c; }
+.customer-order-status-card--completed h1,
+.customer-order-status-card--completed svg { color: #166B4A; }
+
+.customer-order-status-card--cancelled,
+.customer-order-status-card--expired { background: #fef2f2; border-color: #fecaca; }
+.customer-order-status-card--cancelled h1,
+.customer-order-status-card--expired h1,
+.customer-order-status-card--cancelled svg,
+.customer-order-status-card--expired svg { color: #b91c1c; }
+
 .customer-order-status-badge-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .customer-order-status-time { font-size: 11px; color: var(--color-text-muted); font-weight: 600; }
-.customer-order-status-card h1 { margin: 0 0 6px; color: var(--color-primary); font-size: 20px; font-weight: 800; line-height: 1.25; }
+.customer-order-status-card h1 { margin: 0; color: var(--color-primary); font-size: 17px; font-weight: 800; line-height: 1.3; }
 .customer-order-status-card p { margin: 0; color: var(--color-text-secondary); font-size: 13px; line-height: 20px; }
 
 /* Cancelled Banner */
-.customer-cancelled-banner { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 16px; background: #fff5f5; border: 1px solid #fed7d7; }
-.customer-cancelled-icon { color: #dc2626; flex-shrink: 0; margin-top: 2px; }
-.customer-cancelled-banner strong { font-size: 13px; font-weight: 800; color: #991b1b; display: block; }
-.customer-cancelled-banner p { margin: 3px 0 6px; font-size: 12px; color: #7f1d1d; line-height: 1.4; }
-.customer-refund-status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; background: #ecfdf5; color: #166B4A; font-size: 11px; font-weight: 750; border: 1px solid #a7f3d0; }
+.customer-cancelled-banner { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-radius: 14px; background: #fff5f5; border: 1px solid #fed7d7; }
+.customer-cancelled-icon { color: #dc2626; flex-shrink: 0; margin-top: 1px; }
+.customer-cancelled-banner strong { font-size: 13px; font-weight: 750; color: #991b1b; display: block; }
+.customer-refund-status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700; border: 1px solid #bfdbfe; }
+.customer-review-cta-clean { display: flex; width: 100%; }
+.customer-review-cta-clean .gsf-button { min-height: 44px !important; border-radius: 12px !important; font-weight: 700 !important; }
 
 /* Order Note Display & Editor */
 .customer-order-note-display { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--color-bg-muted); }

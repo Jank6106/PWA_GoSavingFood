@@ -10,7 +10,7 @@ import {
   MapPin,
   MessageSquareText,
   RotateCcw,
-  Sparkles,
+  ShoppingBag,
   Star,
   Store,
   Trash2,
@@ -189,95 +189,71 @@ export function OrderDetailPage({
         onBack={onBack}
       />
 
-      {/* Top Status Card - Only big text and guide note */}
+      {/* Top Status Card - Clean monochrome title & icon */}
       <section
         className={`customer-order-status-card customer-order-status-card--${status}`}
       >
         {isPendingPayment && (
-          <>
+          <div className="customer-status-banner-title">
+            <Clock3 size={20} />
             <h1>Chờ thanh toán VietQR</h1>
-            <p>
-              Đơn hàng đang chờ bạn thanh toán. Vui lòng thanh toán trước khi hết hạn 15 phút để quán chuẩn bị món.
-            </p>
-          </>
+          </div>
         )}
 
         {isPaid && (
-          <>
-            <h1>Đã thanh toán · Chờ quán nhận đơn 🎉</h1>
-            <p>
-              Thanh toán thành công! Quán đã nhận được đơn của bạn và sẽ bấm xác nhận trong ít phút.
-            </p>
-          </>
+          <div className="customer-status-banner-title">
+            <CheckCircle2 size={20} />
+            <h1>Đã thanh toán · Chờ quán nhận đơn</h1>
+          </div>
         )}
 
         {isPreparing && (
-          <>
-            <h1>Quán đang chuẩn bị món 🍳</h1>
-            <p>
-              Cửa hàng đã xác nhận đơn và đang chuẩn bị các phần ăn cho bạn.
-              Chúng tôi sẽ thông báo ngay khi đơn hàng sẵn sàng để lấy!
-            </p>
-          </>
+          <div className="customer-status-banner-title">
+            <Store size={20} />
+            <h1>Quán đang chuẩn bị món</h1>
+          </div>
         )}
 
         {isReady && (
-          <>
-            <h1>Hẹn gặp bạn tại cửa hàng! 🛍️</h1>
-            <p>
-              Đơn hàng đã sẵn sàng. Vui lòng đến cửa hàng đúng khung giờ và xuất trình
-              mã nhận hàng bảo mật bên dưới.
-            </p>
-          </>
+          <div className="customer-status-banner-title">
+            <ShoppingBag size={20} />
+            <h1>Sẵn sàng lấy món</h1>
+          </div>
         )}
 
         {isPendingLegacy && (
-          <>
+          <div className="customer-status-banner-title">
+            <Clock3 size={20} />
             <h1>Đang chờ quán xác nhận đơn</h1>
-            <p>
-              Cửa hàng đang kiểm tra thực phẩm trong ca và sẽ xác nhận trong ít
-              phút.
-            </p>
-          </>
+          </div>
         )}
 
         {isConfirmedLegacy && (
-          <>
+          <div className="customer-status-banner-title">
+            <CheckCircle2 size={20} />
             <h1>Quán đã xác nhận đơn</h1>
-            <p>
-              Cửa hàng đã xác nhận đơn và đang chuẩn bị các phần ăn cho bạn.
-            </p>
-          </>
+          </div>
         )}
 
         {isCompleted && (
-          <>
-            <h1>Đơn hàng đã hoàn thành ✨</h1>
-            <p>
-              Cảm ơn bạn đã chung tay giải cứu thực phẩm xanh cùng GoSavingFood!
-            </p>
-          </>
+          <div className="customer-status-banner-title">
+            <CheckCircle2 size={20} />
+            <h1>Đơn hàng đã hoàn thành</h1>
+          </div>
         )}
 
         {isCancelled && (
-          <>
-            <h1>Đơn hàng đã được hủy</h1>
-            <p>
-              Đơn hàng này đã bị hủy.
-              {currentOrder.paymentStatus === 'refund_pending'
-                ? ' Yêu cầu hoàn tiền 100% của bạn đã được ghi nhận và đang được xử lý hoàn trả.'
-                : ' Cảm ơn bạn đã quan tâm đến GoSavingFood.'}
-            </p>
-          </>
+          <div className="customer-status-banner-title">
+            <AlertCircle size={20} />
+            <h1>Đơn hàng đã hủy</h1>
+          </div>
         )}
 
         {isExpired && (
-          <>
-            <h1>Đơn hàng đã hết hạn ⏰</h1>
-            <p>
-              Đơn hàng đã quá thời gian chờ thanh toán 15 phút và tự động hủy để hoàn trả tồn kho.
-            </p>
-          </>
+          <div className="customer-status-banner-title">
+            <Clock3 size={20} />
+            <h1>Đơn hàng đã hết hạn</h1>
+          </div>
         )}
       </section>
 
@@ -289,7 +265,6 @@ export function OrderDetailPage({
           </div>
           <span>Mã nhận hàng điện tử (Bảo mật)</span>
           <strong>{currentOrder.orderCode}</strong>
-          <small>Đưa mã QR bảo mật này cho nhân viên tại quán để đối soát và lấy món</small>
         </section>
       )}
 
@@ -297,23 +272,20 @@ export function OrderDetailPage({
       {isCancelled && (
         <section className="customer-cancelled-banner">
           <div className="customer-cancelled-icon">
-            <AlertCircle size={22} />
+            <AlertCircle size={20} />
           </div>
           <div>
-            <strong>Thông tin hoàn tiền & Hủy đơn</strong>
-            <p>
-              Lý do hủy: {currentOrder.cancelReason || 'Khách hàng yêu cầu hủy đơn'}
-            </p>
+            <strong>Lý do hủy: {currentOrder.cancelReason || 'Khách hàng yêu cầu hủy đơn'}</strong>
             {currentOrder.paymentStatus === 'refund_pending' && (
-              <div className="customer-refund-status-tag" style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+              <div className="customer-refund-status-tag" style={{ marginTop: '6px' }}>
                 <CheckCircle2 size={12} />
                 <span>
-                  Yêu cầu hoàn tiền đang xử lý ({currentOrder.finalAmount.toLocaleString('vi-VN')}đ)
+                  Đang xử lý hoàn tiền ({currentOrder.finalAmount.toLocaleString('vi-VN')}đ)
                 </span>
               </div>
             )}
             {currentOrder.paymentStatus === 'refunded' && (
-              <div className="customer-refund-status-tag">
+              <div className="customer-refund-status-tag" style={{ marginTop: '6px' }}>
                 <CheckCircle2 size={12} />
                 <span>
                   Đã hoàn tiền 100% ({currentOrder.finalAmount.toLocaleString('vi-VN')}đ)
@@ -502,19 +474,9 @@ export function OrderDetailPage({
               )}
             </div>
           ) : (
-            <div className="customer-review-cta-card">
-              <div className="customer-review-cta-icon">
-                <Sparkles size={24} />
-              </div>
-              <div className="customer-review-cta-text">
-                <strong>Bạn thấy món ăn hôm nay thế nào?</strong>
-                <p>
-                  Chia sẻ cảm nhận để giúp cộng đồng và nhận điểm thưởng cứu thực
-                  phẩm nhé!
-                </p>
-              </div>
-              <Button fullWidth variant="primary" size="md" onClick={onReview}>
-                <MessageSquareText size={16} /> Viết đánh giá
+            <div className="customer-review-cta-clean">
+              <Button fullWidth variant="outline" size="md" onClick={onReview}>
+                <MessageSquareText size={16} /> Viết đánh giá cho đơn hàng
               </Button>
             </div>
           )}
@@ -545,13 +507,6 @@ export function OrderDetailPage({
           >
             <Trash2 size={16} /> Hủy đơn hàng này
           </Button>
-        )}
-
-        {/* Thông báo khi quán đã nhận đơn & đang chuẩn bị: Khách không được tự ý hủy */}
-        {(isPreparing || isReady) && (
-          <div style={{ padding: '12px 16px', background: '#f8faf9', border: '1px solid #e2e8e4', borderRadius: '12px', fontSize: '13px', color: '#4b5563', textAlign: 'center', lineHeight: 1.5 }}>
-            Quán đang chuẩn bị hoặc đã sẵn sàng món ăn. Nếu bạn gặp sự cố đột xuất cần hỗ trợ, vui lòng gọi điện thoại trực tiếp cho cửa hàng.
-          </div>
         )}
 
         {/* If cancelled: Reorder button */}

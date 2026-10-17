@@ -491,7 +491,7 @@ export const customerService = {
           `
           *,
           stores (name, address, phone, logo_url),
-          order_items (*)
+          order_items (*, surprise_bags (image_url))
         `
         )
         .eq('customer_id', currentUserId)
@@ -507,6 +507,10 @@ export const customerService = {
           items: (o.order_items || []).map((item: any) => ({
             bagId: item.bag_id,
             bagName: item.bag_name || 'Túi cứu trợ thực phẩm',
+            imageUrl:
+              item.surprise_bags?.image_url ||
+              item.image_url ||
+              'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80',
             quantity: item.quantity,
             unitPrice: item.unit_price,
             totalPrice: item.total_price || item.unit_price * item.quantity,
