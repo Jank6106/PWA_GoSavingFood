@@ -51,13 +51,14 @@ export function OrderSuccessPage({ order, onOrders, onHome }: OrderSuccessPagePr
           background: 'var(--color-primary-soft)',
           border: '2px solid var(--color-primary)',
           borderRadius: '24px',
-          padding: '40px 24px 32px',
+          padding: '36px clamp(12px, 4vw, 24px) 28px',
           marginBottom: '28px',
           boxShadow: '0 12px 32px rgba(0, 108, 64, 0.1)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           textAlign: 'center',
+          boxSizing: 'border-box',
         }}
       >
         {/* Biểu tượng dấu tích xanh trên nền tròn trắng */}
@@ -99,30 +100,44 @@ export function OrderSuccessPage({ order, onOrders, onHome }: OrderSuccessPagePr
           {order.finalAmount.toLocaleString('vi-VN')}đ
         </div>
 
-        {/* Thông tin chỉ hiện mã đơn - căn giữa kèm nút sao chép */}
+        {/* Thông tin chỉ hiện mã đơn - căn giữa kèm nút sao chép, tự co giãn trên 1 dòng */}
         <div
           style={{
             width: '100%',
+            maxWidth: '100%',
             background: '#ffffff',
             borderRadius: '16px',
-            padding: '14px 20px',
+            padding: '12px clamp(8px, 3vw, 16px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
+            flexWrap: 'nowrap',
+            gap: '6px',
             border: '1px solid var(--color-border-subtle)',
-            fontSize: '15px',
             textAlign: 'center',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
           }}
         >
-          <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+          <span
+            style={{
+              color: 'var(--color-text-secondary)',
+              fontWeight: 500,
+              fontSize: 'clamp(12px, 3.4vw, 14.5px)',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
             Mã đơn hàng:
           </span>
           <strong
             style={{
               color: 'var(--color-text-primary)',
-              fontSize: '16px',
-              letterSpacing: '0.04em',
+              fontSize: 'clamp(13px, 3.8vw, 16px)',
+              fontWeight: 800,
+              letterSpacing: '0.02em',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
             {order.orderCode}
@@ -133,7 +148,7 @@ export function OrderSuccessPage({ order, onOrders, onHome }: OrderSuccessPagePr
             onClick={handleCopy}
             title="Sao chép mã đơn hàng"
             aria-label="Sao chép mã đơn hàng"
-            style={{ marginLeft: '4px' }}
+            style={{ marginLeft: '2px', flexShrink: 0 }}
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
           </button>
