@@ -530,7 +530,9 @@ export const customerService = {
           pickupToken: o.pickup_token || undefined,
           paymentExpiresAt: o.payment_expires_at || undefined,
         }));
-        return [...localOrders, ...remoteOrders];
+        const remoteIdSet = new Set((remoteOrders || []).map((o: any) => String(o.id).toLowerCase()));
+        const validLocalOrders = localOrders.filter((l: any) => !remoteIdSet.has(String(l.id).toLowerCase()));
+        return [...validLocalOrders, ...remoteOrders];
       }
     } catch (err) {
       console.warn('Lấy đơn hàng từ Supabase lỗi:', err);

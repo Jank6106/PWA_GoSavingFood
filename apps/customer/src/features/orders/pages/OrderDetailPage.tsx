@@ -26,6 +26,7 @@ import {
   ScreenHeader,
 } from '../../../shared/components';
 import type { Order } from '../../../shared/types/customer.types';
+import { customerService } from '../../../services/customer.service';
 
 interface OrderDetailPageProps {
   order: Order;
@@ -99,6 +100,24 @@ export function OrderDetailPage({
     setCurrentOrder(order);
     setNoteValue(order.note || '');
   }, [order]);
+
+  useEffect(() => {
+    if (currentOrder.status === 'pending_payment' || currentOrder.paymentStatus === 'pending') {
+      void customerService
+        .checkPayOSStatus({ orderId: currentOrder.id, orderCode: currentOrder.orderCode })
+        .then((res) => {
+          if (res?.paid || res?.status === 'PAID') {
+            const updated: Order = {
+              ...currentOrder,
+              status: 'paid',
+              paymentStatus: 'success',
+            };
+            setCurrentOrder(updated);
+            onUpdateOrder?.(updated);
+          }
+        });
+    }
+  }, [currentOrder.id]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

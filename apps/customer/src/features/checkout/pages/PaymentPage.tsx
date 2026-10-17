@@ -367,17 +367,19 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && !isPaidConfirmedRef.current) {
-        console.log('[PaymentPage] App became visible. Checking payment status immediately...');
-        const isPaid = await checkCurrentOrderStatus();
-        if (isPaid) return;
+        void checkCurrentOrderStatus();
+        setTimeout(() => {
+          if (!isPaidConfirmedRef.current) void checkCurrentOrderStatus();
+        }, 1200);
+        setTimeout(() => {
+          if (!isPaidConfirmedRef.current) void checkCurrentOrderStatus();
+        }, 2500);
 
-        // Tái kết nối Realtime subscription nếu bị ngắt kết nối trong nền
-        if (channelRef.current) {
-          const state = (channelRef.current as any).state;
-          if (state === 'closed' || state === 'errored') {
-            setupRealtimeChannel();
-          }
-        } else {
+        if (
+          !channelRef.current ||
+          (channelRef.current as any).state === 'closed' ||
+          (channelRef.current as any).state === 'errored'
+        ) {
           setupRealtimeChannel();
         }
       }

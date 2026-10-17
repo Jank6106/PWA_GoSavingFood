@@ -392,11 +392,16 @@ function CustomerApp() {
           setOrders(items);
           setHistory((currentHistory) => {
             const currentRoute = currentHistory[currentHistory.length - 1];
-            if (currentRoute?.name === 'payment' && currentRoute.order?.id) {
-              const matchedOrder = items.find((it) => it.id === currentRoute.order?.id);
+            const targetOrderId =
+              currentRoute?.name === 'payment' ? currentRoute.order?.id || currentRoute.orderId : undefined;
+            if (currentRoute?.name === 'payment' && targetOrderId) {
+              const matchedOrder = items.find(
+                (it) => it.id.toLowerCase() === String(targetOrderId).toLowerCase()
+              );
               if (
                 matchedOrder &&
                 (matchedOrder.paymentStatus === 'success' ||
+                  matchedOrder.status === 'paid' ||
                   matchedOrder.status === 'preparing' ||
                   matchedOrder.status === 'ready_for_pickup' ||
                   matchedOrder.status === 'completed' ||
