@@ -86,7 +86,6 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isImgError, setIsImgError] = useState(false);
-  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [payosData, setPayosData] = useState<{
     orderCode: number;
     qrCode: string;
@@ -181,10 +180,6 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
     const targetOrderId = effectiveOrderId || order?.id;
     if (!targetOrderId) return false;
 
-    if (isManual) {
-      setIsCheckingPayment(true);
-    }
-
     try {
       // 1. Kiểm tra trực tiếp bảng orders trên Supabase (siêu nhanh ~50ms)
       const { data: dbOrder, error: dbError } = await supabase
@@ -240,10 +235,6 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
       if (isManual) {
         setToastMessage('Lỗi kiểm tra trạng thái thanh toán. Vui lòng thử lại.');
         setTimeout(() => setToastMessage(null), 3000);
-      }
-    } finally {
-      if (isManual) {
-        setIsCheckingPayment(false);
       }
     }
 
