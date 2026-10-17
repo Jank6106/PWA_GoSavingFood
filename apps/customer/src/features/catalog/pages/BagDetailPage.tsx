@@ -11,7 +11,8 @@ import {
 import { Button, Dialog, EmptyState } from '@gosavingfood/ui';
 import { QuantityStepper } from '../../../shared/components';
 import { calculateDistanceKm } from '../../../services/mapbox.service';
-import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
+import { customerService } from '../../../services/customer.service';
+import type { CustomerReview, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const DEFAULT_COVER =
   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80';
@@ -45,8 +46,16 @@ export function BagDetailPage({
   const [isQuantityOpen, setIsQuantityOpen] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<CustomerReview[]>([]);
   const [now, setNow] = useState(0);
 
+  useEffect(() => {
+    if (bag?.merchantId) {
+      void customerService.getStoreReviews(bag.merchantId).then((data) => {
+        if (data && data.length > 0) setReviews(data);
+      });
+    }
+  }, [bag?.merchantId]);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
@@ -168,7 +177,6 @@ export function BagDetailPage({
       </div>
     );
   }
-
   if (!bag) {
     return (
       <div className="customer-screen">
@@ -400,6 +408,31 @@ export function BagDetailPage({
             </p>
           </div>
         </section>
+
+        {/* 6. Section: Đánh giá từ khách hàng */}
+        {reviews.length > 0 && (
+          <section className="customer-store-section">
+            <div className="customer-store-section-header">
+              <h2 className="customer-store-section-title">Đánh giá từ khách hàng ({reviews.length})</h2>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {reviews.slice(0, 3).map((rev) => (
+                <div key={rev.id} className="customer-review-card">
+                  <div>
+                    <span className="customer-review-avatar">{rev.avatar || 'K'}</span>
+                    <div>
+                      <strong>{rev.customerName}</strong>
+                      <span>{'★'.repeat(Math.min(5, Math.max(1, rev.rating)))}{'☆'.repeat(5 - Math.min(5, Math.max(1, rev.rating)))}</span>
+                    </div>
+                    <small>{rev.timeAgo || 'Gần đây'}</small>
+                  </div>
+                  {rev.comment && <p>{rev.comment}</p>}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       {/* 8. Sticky Bottom Action Bar */}

@@ -163,6 +163,7 @@ export function OrderDetailPage({
   const isReady = status === 'ready_for_pickup';
   const isPendingLegacy = status === 'pending';
   const isConfirmedLegacy = status === 'confirmed';
+  const isConfirmedOrPreparing = isConfirmedLegacy || isPreparing;
   const isCompleted = status === 'completed' || (status as string) === 'picked_up';
   const isCancelled = status === 'cancelled';
   const isExpired = status === 'expired';
@@ -257,8 +258,8 @@ export function OrderDetailPage({
         )}
       </section>
 
-      {/* Pickup Code Section - For Ready for pickup */}
-      {isReady && (
+      {/* Pickup Code Section - For Confirmed, Preparing or Ready for pickup */}
+      {(isReady || isConfirmedOrPreparing || (isPending && currentOrder.paymentStatus === 'success')) && (
         <section className="customer-pickup-code">
           <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
             <QRCodeSVG value={currentOrder.pickupToken || currentOrder.qrCode || currentOrder.id} size={148} level="M" />

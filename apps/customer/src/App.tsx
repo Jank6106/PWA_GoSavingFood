@@ -1038,13 +1038,14 @@ function CustomerApp() {
           mode={route.name}
           order={selectedOrder}
           onBack={back}
-          onSubmit={(feedback) => {
+          onSubmit={async (feedback) => {
             if (route.name === 'review') {
-              void customerService.submitFeedback(
+              await customerService.submitFeedback(
                 selectedOrder.id,
                 selectedOrder.merchantId,
                 feedback.rating,
-                feedback.comment
+                feedback.comment,
+                feedback.tags
               );
               setOrders((prev) =>
                 prev.map((o) =>
@@ -1061,14 +1062,14 @@ function CustomerApp() {
                     : o
                 )
               );
-              window.alert('Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn đã được lưu lại.');
+              setToastMessage('Cảm ơn bạn đã đánh giá! Nhận xét đã được gửi đến quán.');
             } else {
-              void customerService.submitIssue(
+              await customerService.submitIssue(
                 selectedOrder.id,
                 feedback.tags[0] || 'Báo cáo sự cố',
                 feedback.comment
               );
-              window.alert('Đã gửi báo cáo sự cố. Đội ngũ CSKH GoSavingFood sẽ sớm liên hệ lại.');
+              setToastMessage('Đã gửi báo cáo sự cố. Đội ngũ CSKH sẽ sớm liên hệ hỗ trợ bạn.');
             }
             back();
           }}

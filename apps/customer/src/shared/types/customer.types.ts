@@ -54,6 +54,7 @@ export interface Brand {
   logo: string;
   description: string;
   rating: number;
+  totalRatings?: number;
   totalStores: number;
   categories: string[];
   sustainabilityMessage: string;
@@ -156,6 +157,19 @@ export interface NotificationItem {
   body: string;
   time: string;
   read: boolean;
+}
+
+export interface CustomerReview {
+  id: string;
+  orderId?: string;
+  storeId?: string;
+  customerName: string;
+  avatar?: string;
+  rating: number;
+  comment: string;
+  tags?: string[];
+  createdAt: string;
+  timeAgo?: string;
 }
 
 export interface Voucher {

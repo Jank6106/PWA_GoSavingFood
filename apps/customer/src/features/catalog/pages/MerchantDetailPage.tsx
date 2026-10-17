@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ChevronLeft,
   Clock,
@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
 import { MerchantReviewsView } from '../components/MerchantReviewsView';
-import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
-import { optimizeImageUrl } from '../../../services/customer.service';
+import type { CustomerReview, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
+import { customerService, optimizeImageUrl } from '../../../services/customer.service';
 
 interface MerchantDetailPageProps {
   merchant: Merchant | null;
@@ -61,6 +61,15 @@ export function MerchantDetailPage({
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [coverFailed, setCoverFailed] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
+  const [reviews, setReviews] = useState<CustomerReview[]>([]);
+
+  useEffect(() => {
+    if (merchant?.id) {
+      void customerService.getStoreReviews(merchant.id).then((data) => {
+        if (data && data.length > 0) setReviews(data);
+      });
+    }
+  }, [merchant?.id]);
 
   const handleOpenReviews = () => {
     if (onOpenReviews && merchant) {
@@ -372,6 +381,25 @@ export function MerchantDetailPage({
             </div>
           </div>
         </div>
+
+        {reviews.length > 0 && (
+          <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {reviews.slice(0, 3).map((rev) => (
+              <section key={rev.id} className="customer-review-card" style={{ padding: '12px 14px', background: '#ffffff', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="customer-review-avatar" style={{ width: 28, height: 28, borderRadius: '50%', background: '#e2e8f0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '12px' }}>{rev.avatar || 'K'}</span>
+                    <strong style={{ fontSize: '13px' }}>{rev.customerName}</strong>
+                  </div>
+                  <span style={{ color: '#f59e0b', fontSize: '12px' }}>
+                    {'★'.repeat(Math.min(5, Math.max(1, rev.rating)))}
+                  </span>
+                </div>
+                {rev.comment && <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{rev.comment}</p>}
+              </section>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 5. Rescued by the Community Section */}

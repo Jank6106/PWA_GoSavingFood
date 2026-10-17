@@ -8,7 +8,7 @@ interface OrderFeedbackPageProps {
   mode: 'review' | 'report';
   order: Order;
   onBack: () => void;
-  onSubmit: (feedback: { rating: number; tags: string[]; comment: string }) => void;
+  onSubmit: (feedback: { rating: number; tags: string[]; comment: string }) => Promise<void> | void;
 }
 
 const REVIEW_TAGS = [
@@ -51,6 +51,7 @@ export function OrderFeedbackPage({
     order.review?.tags || [REVIEW_TAGS[0], REVIEW_TAGS[2]]
   );
   const [comment, setComment] = useState(order.review?.comment || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Report states
   const [selectedIssue, setSelectedIssue] = useState(REPORT_ISSUES[0]);
@@ -64,19 +65,25 @@ export function OrderFeedbackPage({
     );
   };
 
-  const handleFormSubmit = () => {
-    if (isReview) {
-      onSubmit({
-        rating,
-        tags: selectedTags,
-        comment: comment.trim(),
-      });
-    } else {
-      onSubmit({
-        rating: 1,
-        tags: [selectedIssue],
-        comment: reportDetail.trim(),
-      });
+  const handleFormSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      if (isReview) {
+        await onSubmit({
+          rating,
+          tags: selectedTags,
+          comment: comment.trim(),
+        });
+      } else {
+        await onSubmit({
+          rating: 1,
+          tags: [selectedIssue],
+          comment: reportDetail.trim(),
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -200,10 +207,11 @@ export function OrderFeedbackPage({
             fullWidth
             size="lg"
             variant="primary"
+            isLoading={isSubmitting}
             onClick={handleFormSubmit}
           >
             <Send size={16} />
-            {isReview ? 'Gửi đánh giá' : 'Gửi báo cáo sự cố'}
+            {isReview ? (isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá') : (isSubmitting ? 'Đang gửi...' : 'Gửi báo cáo sự cố')}
           </Button>
         </div>
       </section>

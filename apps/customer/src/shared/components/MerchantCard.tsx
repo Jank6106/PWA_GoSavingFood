@@ -23,7 +23,7 @@ const formatDistance = (dist?: number) => {
   return `${(meters / 1000).toFixed(1)} km`;
 };
 
-export function MerchantCard({ merchant, meta, onClick }: MerchantCardProps) {
+export function MerchantCard({ merchant, detail, meta, onClick }: MerchantCardProps) {
   const [imgFailed, setImgFailed] = useState(false);
 
   const rawSrc = merchant.banner || merchant.logo;
@@ -102,6 +102,12 @@ export function MerchantCard({ merchant, meta, onClick }: MerchantCardProps) {
               <span className="customer-merchant-chip chip-hours">
                 <Clock size={11} strokeWidth={1.8} />
                 <span>{merchant.openingHours}</span>
+              </span>
+            )}
+
+            {detail && (
+              <span className="customer-merchant-chip">
+                <span>{detail}</span>
               </span>
             )}
 
