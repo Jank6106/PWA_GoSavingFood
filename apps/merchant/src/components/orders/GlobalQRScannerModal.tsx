@@ -5,17 +5,14 @@ import {
   CheckCircle2,
   Flashlight,
   Keyboard,
-  Phone,
   QrCode,
   RefreshCw,
   ShoppingBag,
-  User,
   X,
 } from 'lucide-react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import type { MerchantOrder } from '../../types';
 import { Button, Field } from '../ui';
-import { OrderStatusBadge } from './index';
 
 interface GlobalQRScannerModalProps {
   open: boolean;
@@ -476,43 +473,45 @@ export function GlobalQRScannerModal({
             ) : (
               <>
                 <div className="merchant-banking-sheet-header">
-                  <div className="header-badge-row">
-                    <span className="success-pill">
-                      <Check size={14} /> Đã nhận diện mã
-                    </span>
-                    <OrderStatusBadge status={matchedOrder.status} />
-                  </div>
                   <h2 className="order-code-title">Đơn hàng #{matchedOrder.orderCode}</h2>
                 </div>
 
                 <div className="merchant-banking-sheet-details">
-                  <div className="detail-row">
-                    <User size={16} className="detail-icon" />
-                    <div>
-                      <strong>{matchedOrder.customerName}</strong>
-                      {matchedOrder.customerPhone &&
-                        matchedOrder.customerPhone !== 'Chưa cập nhật' && (
-                          <a
-                            href={`tel:${matchedOrder.customerPhone}`}
-                            className="phone-link"
-                            title="Gọi điện cho khách"
-                          >
-                            <Phone size={12} /> {matchedOrder.customerPhone}
-                          </a>
-                        )}
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <ShoppingBag size={16} className="detail-icon" />
-                    <div>
-                      <strong>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                      <ShoppingBag size={18} className="detail-icon" style={{ marginTop: 0 }} />
+                      <strong
+                        style={{
+                          fontSize: 15.5,
+                          fontWeight: 700,
+                          color: '#0f172a',
+                          lineHeight: 1.35,
+                          wordBreak: 'break-word',
+                        }}
+                      >
                         {matchedOrder.quantity}× {matchedOrder.bagName}
                       </strong>
-                      <span className="price-tag">
-                        {matchedOrder.price.toLocaleString('vi-VN')}đ
-                      </span>
                     </div>
+                    <span
+                      className="price-tag"
+                      style={{
+                        fontSize: 16.5,
+                        fontWeight: 800,
+                        color: '#008751',
+                        flexShrink: 0,
+                        marginTop: 0,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {matchedOrder.price.toLocaleString('vi-VN')}đ
+                    </span>
                   </div>
                 </div>
 
@@ -534,11 +533,11 @@ export function GlobalQRScannerModal({
                     <Check size={18} /> Bàn giao món cho khách
                   </Button>
 
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 10, width: '100%' }}>
                     <Button
                       type="button"
                       variant="outline"
-                      fullWidth
+                      style={{ flex: 1 }}
                       onClick={() => {
                         resetScan();
                         setMode('camera');
@@ -549,7 +548,8 @@ export function GlobalQRScannerModal({
                     {onOpenOrderDetails && (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
+                        style={{ flex: 1 }}
                         onClick={() => {
                           onOpenOrderDetails(matchedOrder);
                           void handleClose();
