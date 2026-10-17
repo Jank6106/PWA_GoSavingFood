@@ -509,16 +509,27 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
     return (
       <div className="customer-screen customer-payment-screen">
         <ScreenHeader title="Hết hạn thanh toán" onBack={onBack} />
-        <section className="customer-payment-card" style={{ padding: '36px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '52px', marginBottom: '16px' }}>⏰</div>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
-            Đơn hàng đã hết thời hạn thanh toán
+        <section className="customer-payment-card" style={{ padding: '36px 20px 28px', textAlign: 'center' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              background: 'var(--color-bg-muted, #f3f4f6)',
+              color: 'var(--color-text-secondary, #4b5563)',
+              margin: '0 auto 16px',
+            }}
+          >
+            <Clock3 size={32} strokeWidth={2.2} />
+          </div>
+          <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-text-primary)', margin: '0 0 24px' }}>
+            Đơn hàng đã hết thời gian thanh toán
           </h2>
-          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '28px' }}>
-            Thời hạn 15 phút cho giao dịch này đã kết thúc. Túi thực phẩm và ưu đãi đã được trả về kệ hàng để cộng đồng tiếp tục giải cứu. Vui lòng quay lại và tiến hành đặt lại.
-          </p>
           <Button fullWidth size="lg" onClick={onBack}>
-            Quay lại danh mục món ăn
+            Quay lại trang khám phá
           </Button>
         </section>
       </div>
