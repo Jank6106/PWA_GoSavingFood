@@ -151,6 +151,23 @@ export function OrderCard({
   );
 }
 
+function formatDateTime(value?: string) {
+  if (!value) return '';
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return new Intl.DateTimeFormat('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(d);
+  } catch {
+    return value;
+  }
+}
+
 export function OrderDetailsModal({
   order,
   open,
@@ -164,12 +181,44 @@ export function OrderDetailsModal({
   actions: OrderActions;
   onCopyReceipt?: (text: string) => void;
 }) {
-  void onCopyReceipt;
+  const [copied, setCopied] = useState(false);
+
   if (!order) return null;
+
+  const customerAccountName =
+    order.customerName && order.customerName !== 'Khách hàng GoSavingFood'
+      ? order.customerName
+      : 'Khách hàng';
+
+  const recipientName =
+    order.recipientName && order.recipientName !== 'Khách hàng GoSavingFood'
+      ? order.recipientName
+      : customerAccountName;
+
+  const handleCopyOrderInfo = async () => {
+    const text = `--- THÔNG TIN ĐƠN HÀNG GOSAVINGFOOD ---
+Mã đơn: ${order.orderCode}
+Tên sản phẩm: ${order.quantity}× ${order.bagName}
+Thời gian đặt: ${formatDateTime(order.placedAt || order.createdAt)}
+Thời gian thanh toán: ${order.paidAt ? formatDateTime(order.paidAt) : 'Đã thanh toán'}
+Khung giờ nhận: ${order.pickupTime}
+Tên người nhận: ${recipientName}
+Số điện thoại thanh toán: ${order.customerPhone || 'Chưa cập nhật'}
+Tổng thanh toán: ${order.price.toLocaleString('vi-VN')}đ${order.note ? `\nGhi chú: ${order.note}` : ''}`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      onCopyReceipt?.(text);
+    } catch {
+      // Fallback
+    }
+  };
 
   return (
     <Modal open={open} title={`Đơn ${order.orderCode}`} onClose={onClose}>
-      <div className="merchant-order-detail-head">
+      <div className="merchant-order-detail-head" style={{ marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {order.customerAvatar ? (
             <img
@@ -199,14 +248,73 @@ export function OrderDetailsModal({
                 flexShrink: 0,
               }}
             >
-              {order.customerName.slice(0, 1).toUpperCase()}
+              {(customerAccountName || 'K').slice(0, 1).toUpperCase()}
             </span>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <strong style={{ fontSize: 16, fontWeight: 750, color: '#0f172a', lineHeight: 1.3 }}>
-              {order.customerName}
+              {customerAccountName}
             </strong>
-            {order.customerPhone && order.customerPhone.trim() && order.customerPhone !== 'Chưa cập nhật' && (
+            <button
+              type="button"
+              onClick={handleCopyOrderInfo}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '4px 10px',
+                borderRadius: 8,
+                border: '1px solid #008751',
+                background: copied ? '#dcfce7' : '#f0fdf4',
+                color: '#008751',
+                fontSize: 12.5,
+                fontWeight: 650,
+                cursor: 'pointer',
+                width: 'fit-content',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Copy size={13} /> {copied ? 'Đã sao chép' : 'Sao chép thông tin đơn'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <dl className="merchant-detail-list" style={{ marginTop: 14 }}>
+        <div>
+          <dt>Tên sản phẩm</dt>
+          <dd>
+            <strong>
+              {order.quantity}× {order.bagName}
+            </strong>
+          </dd>
+        </div>
+        <div>
+          <dt>Thời gian đặt</dt>
+          <dd>
+            <Clock3 size={14} /> {formatDateTime(order.placedAt || order.createdAt)}
+          </dd>
+        </div>
+        <div>
+          <dt>Thời gian thanh toán</dt>
+          <dd>
+            <Clock3 size={14} /> {order.paidAt ? formatDateTime(order.paidAt) : 'Đã thanh toán'}
+          </dd>
+        </div>
+        <div>
+          <dt>Khung giờ nhận</dt>
+          <dd>{order.pickupTime}</dd>
+        </div>
+        <div>
+          <dt>Tên người nhận</dt>
+          <dd>
+            <strong>{recipientName}</strong>
+          </dd>
+        </div>
+        <div>
+          <dt>Số điện thoại thanh toán</dt>
+          <dd>
+            {order.customerPhone && order.customerPhone.trim() && order.customerPhone !== 'Chưa cập nhật' ? (
               <a
                 href={`tel:${order.customerPhone}`}
                 className="merchant-phone-link"
@@ -223,24 +331,10 @@ export function OrderDetailsModal({
               >
                 <Phone size={13} /> {order.customerPhone}
               </a>
+            ) : (
+              'Chưa cập nhật'
             )}
-          </div>
-        </div>
-        <OrderStatusBadge status={order.status} />
-      </div>
-
-      <dl className="merchant-detail-list" style={{ marginTop: 16 }}>
-        <div>
-          <dt>Sản phẩm</dt>
-          <dd>
-            <strong>
-              {order.quantity}× {order.bagName}
-            </strong>
           </dd>
-        </div>
-        <div>
-          <dt>Khung giờ nhận</dt>
-          <dd>{order.pickupTime}</dd>
         </div>
         <div>
           <dt>Tổng thanh toán</dt>

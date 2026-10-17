@@ -29,6 +29,7 @@ const mapDbOrder = (o: any): MerchantOrder => {
     customerName: customer?.name || 'Khách hàng',
     customerPhone: customer?.phone || '',
     customerAvatar: customer?.avatar_url || undefined,
+    recipientName: customer?.name || 'Khách hàng',
     storeName: 'Cửa hàng của tôi',
     bagName: firstItem?.bag_name || 'Túi cứu trợ thực phẩm',
     quantity: firstItem?.quantity || 1,
@@ -40,6 +41,12 @@ const mapDbOrder = (o: any): MerchantOrder => {
     status: mapDbStatusToUi(String(o.status)),
     createdAt: o.created_at || new Date().toISOString(),
     placedAt: o.created_at || new Date().toISOString(),
+    paidAt:
+      o.paid_at ||
+      (o.payment_status === 'success' ||
+      ['confirmed', 'ready_for_pickup', 'completed', 'picked_up'].includes(String(o.status))
+        ? o.updated_at || o.created_at
+        : undefined),
     pickupTime: o.pickup_time
       ? new Date(o.pickup_time).toLocaleString('vi-VN', {
           hour: '2-digit',
@@ -87,7 +94,7 @@ export function setCachedMerchantOrders(storeId: string, orders: MerchantOrder[]
 }
 
 const ORDER_SELECT =
-  'id, store_id, customer_id, status, payment_status, payment_method, total_original_price, discount_amount, final_amount, pickup_time, qr_code, pickup_token, note, created_at, updated_at, completed_at, cancelled_at, cancel_reason, users(id, name, phone, avatar_url), order_items(id, order_id, bag_id, bag_name, quantity, unit_price, surprise_bags(image_url))';
+  'id, store_id, customer_id, status, payment_status, payment_method, total_original_price, discount_amount, final_amount, pickup_time, qr_code, pickup_token, note, created_at, paid_at, updated_at, completed_at, cancelled_at, cancel_reason, users(id, name, phone, avatar_url), order_items(id, order_id, bag_id, bag_name, quantity, unit_price, surprise_bags(image_url))';
 
 export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrder[]> {
   const existing = ordersInFlight.get(storeId);
