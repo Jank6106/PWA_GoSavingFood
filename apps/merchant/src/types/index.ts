@@ -61,6 +61,7 @@ export interface MerchantOrder {
   orderCode: string;
   customerName: string;
   customerPhone: string;
+  customerAvatar?: string;
   storeName: string;
   bagName: string;
   quantity: number;

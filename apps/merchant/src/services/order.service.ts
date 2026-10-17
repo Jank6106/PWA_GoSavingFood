@@ -26,8 +26,9 @@ const mapDbOrder = (o: any): MerchantOrder => {
     id: o.id,
     storeId: o.store_id,
     orderCode: `GSF-${String(o.id).slice(0, 6).toUpperCase()}`,
-    customerName: customer?.name || 'Khách hàng GoSavingFood',
-    customerPhone: customer?.phone || 'Chưa cập nhật',
+    customerName: customer?.name || 'Khách hàng',
+    customerPhone: customer?.phone || '',
+    customerAvatar: customer?.avatar_url || undefined,
     storeName: 'Cửa hàng của tôi',
     bagName: firstItem?.bag_name || 'Túi cứu trợ thực phẩm',
     quantity: firstItem?.quantity || 1,
@@ -86,7 +87,7 @@ export function setCachedMerchantOrders(storeId: string, orders: MerchantOrder[]
 }
 
 const ORDER_SELECT =
-  'id, store_id, customer_id, status, payment_status, payment_method, total_original_price, discount_amount, final_amount, pickup_time, qr_code, pickup_token, note, created_at, updated_at, completed_at, cancelled_at, cancel_reason, order_items(id, order_id, bag_id, bag_name, quantity, unit_price, surprise_bags(image_url))';
+  'id, store_id, customer_id, status, payment_status, payment_method, total_original_price, discount_amount, final_amount, pickup_time, qr_code, pickup_token, note, created_at, updated_at, completed_at, cancelled_at, cancel_reason, users(id, name, phone, avatar_url), order_items(id, order_id, bag_id, bag_name, quantity, unit_price, surprise_bags(image_url))';
 
 export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrder[]> {
   const existing = ordersInFlight.get(storeId);
@@ -144,7 +145,8 @@ export async function updateMerchantOrderStatus(
     storeId: '',
     orderCode: `GSF-${orderId.slice(0, 6).toUpperCase()}`,
     customerName: 'Khách hàng',
-    customerPhone: 'Chưa cập nhật',
+    customerPhone: '',
+    customerAvatar: undefined,
     storeName: 'Cửa hàng',
     bagName: 'Túi thực phẩm',
     quantity: 1,

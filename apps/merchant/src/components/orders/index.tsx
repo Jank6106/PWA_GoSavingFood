@@ -1,4 +1,4 @@
-import { AlertTriangle, Camera, Check, Clock3, Copy, FileSearch, KeyRound, Phone, Printer, QrCode, Search, WalletCards, XCircle } from 'lucide-react';
+import { AlertTriangle, Camera, Check, Clock3, Copy, FileSearch, KeyRound, Phone, QrCode, Search, XCircle } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
 import type { MerchantOrder, OrderStatus, OrderStatusFilter, OrderSummaryMetrics } from '../../types';
 import { optimizeImageUrl } from '../../services/utils';
@@ -95,10 +95,18 @@ export function OrderCard({
         <OrderStatusBadge status={order.status} />
       </div>
       <div className="merchant-order-customer">
-        <span>{order.customerName.slice(0, 1)}</span>
+        {order.customerAvatar ? (
+          <img
+            src={order.customerAvatar}
+            alt=""
+            style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }}
+          />
+        ) : (
+          <span>{order.customerName.slice(0, 1).toUpperCase()}</span>
+        )}
         <div>
           <strong>{order.customerName}</strong>
-          {order.customerPhone && order.customerPhone !== 'Chưa cập nhật' ? (
+          {order.customerPhone && order.customerPhone.trim() && order.customerPhone !== 'Chưa cập nhật' && (
             <a
               href={`tel:${order.customerPhone}`}
               className="merchant-phone-link"
@@ -107,8 +115,6 @@ export function OrderCard({
             >
               <Phone size={12} /> {order.customerPhone}
             </a>
-          ) : (
-            <small><Phone size={12} /> Chưa cập nhật SĐT</small>
           )}
         </div>
       </div>
@@ -145,8 +151,6 @@ export function OrderCard({
   );
 }
 
-const formatDateTime = (value?: string) => value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : 'Chưa thanh toán';
-
 export function OrderDetailsModal({
   order,
   open,
@@ -160,63 +164,99 @@ export function OrderDetailsModal({
   actions: OrderActions;
   onCopyReceipt?: (text: string) => void;
 }) {
+  void onCopyReceipt;
   if (!order) return null;
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleCopyDetails = () => {
-    const text = `--- HOÁ ĐƠN GOSAVINGFOOD ---
-Mã đơn: ${order.orderCode}
-Khách hàng: ${order.customerName}
-SĐT: ${order.customerPhone}
-Sản phẩm: ${order.quantity}x ${order.bagName}
-Khung giờ nhận: ${order.pickupTime}
-Tổng tiền: ${order.price.toLocaleString('vi-VN')}đ
-Trạng thái: ${statusMeta[order.status]?.label || order.status}
-${order.note ? `Ghi chú: ${order.note}` : ''}`;
-    onCopyReceipt?.(text);
-  };
-
   return (
-    <Modal open={open} title={`Đơn ${order.orderCode}`} description="Thông tin chi tiết đơn hàng" onClose={onClose}>
+    <Modal open={open} title={`Đơn ${order.orderCode}`} onClose={onClose}>
       <div className="merchant-order-detail-head">
-        <div>
-          <span>{order.customerName.slice(0, 1)}</span>
-          <div>
-            <strong>{order.customerName}</strong>
-            {order.customerPhone && order.customerPhone !== 'Chưa cập nhật' ? (
-              <a href={`tel:${order.customerPhone}`} className="merchant-phone-link" title="Gọi khách hàng">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {order.customerAvatar ? (
+            <img
+              src={order.customerAvatar}
+              alt=""
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '1.5px solid #e2e8f0',
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <span
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                display: 'grid',
+                placeItems: 'center',
+                background: 'linear-gradient(135deg, #008751 0%, #005639 100%)',
+                color: '#fff',
+                fontSize: 18,
+                fontWeight: 800,
+                flexShrink: 0,
+              }}
+            >
+              {order.customerName.slice(0, 1).toUpperCase()}
+            </span>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <strong style={{ fontSize: 16, fontWeight: 750, color: '#0f172a', lineHeight: 1.3 }}>
+              {order.customerName}
+            </strong>
+            {order.customerPhone && order.customerPhone.trim() && order.customerPhone !== 'Chưa cập nhật' && (
+              <a
+                href={`tel:${order.customerPhone}`}
+                className="merchant-phone-link"
+                title="Gọi khách hàng"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  color: '#008751',
+                  fontSize: 14,
+                  fontWeight: 650,
+                  textDecoration: 'none',
+                }}
+              >
                 <Phone size={13} /> {order.customerPhone}
               </a>
-            ) : (
-              <small>Chưa cập nhật SĐT</small>
             )}
           </div>
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
 
-      <div style={{ display: 'flex', gap: 8, margin: '14px 0 6px' }}>
-        <Button size="small" variant="outline" onClick={handleCopyDetails}>
-          <Copy size={14} /> Sao chép đơn
-        </Button>
-        <Button size="small" variant="outline" onClick={handlePrint}>
-          <Printer size={14} /> In phiếu
-        </Button>
-      </div>
-
-      <dl className="merchant-detail-list">
-        <div><dt>Sản phẩm</dt><dd>{order.quantity}× {order.bagName}</dd></div>
-        <div><dt>Thời gian đặt</dt><dd><Clock3 size={14} /> {formatDateTime(order.placedAt)}</dd></div>
-        <div><dt>Thời gian thanh toán</dt><dd><WalletCards size={14} /> {formatDateTime(order.paidAt)}</dd></div>
-        <div><dt>Khung giờ nhận</dt><dd>{order.pickupTime}</dd></div>
-        <div><dt>Tổng thanh toán</dt><dd>{order.price.toLocaleString('vi-VN')}đ</dd></div>
-        {order.note && <div><dt>Ghi chú</dt><dd>{order.note}</dd></div>}
+      <dl className="merchant-detail-list" style={{ marginTop: 16 }}>
+        <div>
+          <dt>Sản phẩm</dt>
+          <dd>
+            <strong>
+              {order.quantity}× {order.bagName}
+            </strong>
+          </dd>
+        </div>
+        <div>
+          <dt>Khung giờ nhận</dt>
+          <dd>{order.pickupTime}</dd>
+        </div>
+        <div>
+          <dt>Tổng thanh toán</dt>
+          <dd style={{ color: '#008751', fontWeight: 800, fontSize: 16 }}>
+            {order.price.toLocaleString('vi-VN')}đ
+          </dd>
+        </div>
+        {order.note && (
+          <div>
+            <dt>Ghi chú</dt>
+            <dd>{order.note}</dd>
+          </div>
+        )}
       </dl>
 
-      <div className="merchant-form-actions">
+      <div className="merchant-form-actions" style={{ marginTop: 20 }}>
         {order.status === 'pending' && <Button onClick={() => actions.onConfirm(order.id)}>Xác nhận đơn</Button>}
         {order.status === 'processing' && <Button onClick={() => actions.onFinishPreparation(order.id)}>Hoàn tất chuẩn bị</Button>}
         {order.status === 'confirmed' && <Button onClick={() => actions.onOpenQR(order)}><QrCode size={16} /> Quét QR</Button>}
