@@ -114,13 +114,15 @@ export async function POST(request: Request) {
               );
               const checkData = await checkRes.json();
               if (checkData.code === '00' && checkData.data) {
+                const rawReusedAcc = String(checkData.data.accountNumber || 'V3CAS8823316420');
+                const vaReusedAcc = rawReusedAcc.startsWith('V3CAS') ? rawReusedAcc : `V3CAS${rawReusedAcc}`;
                 resolveInFlight({
                   success: true,
                   orderCode: existingOrder.payment_order_code,
                   paymentLinkId: existingOrder.payment_link_id,
                   checkoutUrl: existingOrder.checkout_url,
                   qrCode: checkData.data.qrCode,
-                  accountNumber: checkData.data.accountNumber || '8823316420',
+                  accountNumber: vaReusedAcc,
                   accountName: checkData.data.accountName || 'NGUYEN HUU DANH',
                   bin: checkData.data.bin || '970418',
                   amount,
@@ -216,13 +218,15 @@ export async function POST(request: Request) {
             .eq('id', orderId);
         }
 
+        const rawCreatedAcc = String(accountNumber || 'V3CAS8823316420');
+        const vaCreatedAcc = rawCreatedAcc.startsWith('V3CAS') ? rawCreatedAcc : `V3CAS${rawCreatedAcc}`;
         resolveInFlight({
           success: true,
           orderCode,
           paymentLinkId,
           checkoutUrl,
           qrCode,
-          accountNumber: String(accountNumber || '8823316420'),
+          accountNumber: vaCreatedAcc,
           accountName: accountName || 'NGUYEN HUU DANH',
           bin: bin || '970418',
           amount,

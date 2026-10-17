@@ -151,7 +151,8 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
 
   const isPayosLoading = !payosData;
   const transferContent = payosData?.description || effectiveOrderCode;
-  const bankAccount = payosData?.accountNumber || '8823316420';
+  const rawAccount = payosData?.accountNumber || 'V3CAS8823316420';
+  const bankAccount = rawAccount.startsWith('V3CAS') ? rawAccount : `V3CAS${rawAccount}`;
   const bankName = 'BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam';
   const accountHolder = payosData?.accountName || 'NGUYEN HUU DANH';
 
@@ -162,7 +163,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
 
   const fallbackQrData =
     payosData?.qrCode ||
-    `00020101021238540010A000000727012600069704180112${bankAccount}0208QRIBFTTA5303704540${effectiveTotal}5802VN62180814${transferContent}6304`;
+    `00020101021238590010A000000727012900069704180115${bankAccount}0208QRIBFTTA5303704540${effectiveTotal}5802VN62180814${transferContent}6304`;
 
   // Hàm kích hoạt xác nhận thanh toán thành công (đảm bảo chỉ chạy đúng 1 lần)
   const handlePaymentSuccess = useCallback(() => {
