@@ -231,8 +231,6 @@ h1, h2, h3, p { margin: 0; }
 .merchant-detail-list > div { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid #edf4ef; }
 .merchant-detail-list dt { color: var(--text-secondary); font-size: 12px; }
 .merchant-detail-list dd { margin: 0; text-align: right; font-size: 13px; font-weight: 700; }
-.merchant-qr-simulator { display: flex; align-items: center; flex-direction: column; gap: 12px; padding: 26px; border: 2px dashed var(--border); border-radius: 16px; background: var(--primary-soft); text-align: center; }
-.merchant-qr-simulator span { color: var(--text-secondary); font-size: 12px; }
 .merchant-divider { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 10px; }
 .merchant-divider::before, .merchant-divider::after { height: 1px; flex: 1; background: var(--border); content: ''; }
 

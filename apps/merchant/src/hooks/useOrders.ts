@@ -200,20 +200,24 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     if (!order) return false;
 
     const normalized = qrCode.trim().toUpperCase();
+    if (!normalized) {
+      showToast('Vui lòng quét hoặc nhập mã nhận hàng.');
+      return false;
+    }
+
     const orderCode = order.orderCode.toUpperCase();
     const targetQR = (order.qrCode || '').toUpperCase();
     const targetToken = (order.pickupToken || '').toUpperCase();
     const cleanId = order.id.toUpperCase();
 
     const matches =
-      !normalized ||
       (targetToken && normalized === targetToken) ||
       normalized === targetQR ||
-      targetQR.includes(normalized) ||
+      (targetQR && targetQR.includes(normalized)) ||
+      normalized === orderCode ||
       normalized.includes(orderCode) ||
-      orderCode.includes(normalized) ||
-      cleanId.includes(normalized) ||
-      normalized.length >= 4;
+      cleanId === normalized ||
+      cleanId.includes(normalized);
 
     if (!matches) {
       showToast('Mã QR không khớp với đơn hàng này.');

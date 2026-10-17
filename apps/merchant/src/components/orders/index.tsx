@@ -375,7 +375,7 @@ export function QRScannerModal({
             setError('');
           }}
         >
-          <KeyRound size={15} /> Nhập mã & Giả lập
+          <KeyRound size={15} /> Nhập mã thủ công
         </button>
       </div>
 
@@ -409,25 +409,14 @@ export function QRScannerModal({
         </div>
       ) : (
         <form className="merchant-qr-form" onSubmit={submit}>
-          <div
-            className="merchant-qr-simulator"
-            onClick={() => setCode(order.pickupToken || order.qrCode || order.orderCode)}
-            style={{ cursor: 'pointer' }}
-            title="Bấm để giả lập quét mã QR này"
-          >
-            <QrCode size={82} />
-            <span>
-              Đưa mã QR bảo mật của khách vào vùng quét (hoặc <b>bấm vào đây để điền mã giả lập</b>: <code>{order.pickupToken ? `${order.pickupToken.slice(0, 8)}...` : order.orderCode}</code>)
-            </span>
-          </div>
-          <div className="merchant-divider">
-            <span>hoặc nhập mã thủ công</span>
-          </div>
+          <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+            Sử dụng trong trường hợp camera không khả dụng hoặc khách hàng đọc mã trực tiếp tại quầy.
+          </p>
           <Field
-            label="Mã xác nhận bảo mật"
+            label="Mã nhận hàng điện tử hoặc Mã đơn"
             value={code}
             onChange={(event) => setCode(event.target.value)}
-            placeholder={order.pickupToken || order.orderCode}
+            placeholder="Ví dụ: GSF-123456 hoặc mã pickup token"
             error={error}
             required
           />
