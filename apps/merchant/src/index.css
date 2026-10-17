@@ -378,13 +378,29 @@ h1, h2, h3, p { margin: 0; }
 .merchant-detail-content dd { margin: 4px 0 0; font-size: 12px; font-weight: 800; }
 .merchant-modal-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .merchant-notification-list { display: flex; flex-direction: column; gap: 8px; }
-.merchant-notification { position: relative; display: flex; align-items: flex-start; gap: 11px; width: 100%; padding: 12px; border: 1px solid #edf4ef; border-radius: 12px; background: #fff; cursor: pointer; text-align: left; }
-.merchant-notification.is-unread { border-color: var(--border); background: var(--primary-soft); }
-.merchant-notification > span { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--primary-selected); }
-.merchant-notification > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
-.merchant-notification p { color: var(--text-secondary); font-size: 11px; line-height: 1.4; }
-.merchant-notification small { display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 9px; }
-.merchant-notification > i { position: absolute; top: 12px; right: 12px; width: 7px; height: 7px; border-radius: 50%; background: #ef4444; }
+.merchant-notification { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff; cursor: pointer; text-align: left; transition: all .15s ease; }
+.merchant-notification:hover { background: #f8fafc; border-color: #cbd5e1; }
+.merchant-notification.is-unread { background: #f8fafc; border-color: #cbd5e1; }
+.merchant-notification-icon { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; border-radius: 10px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+.merchant-notification-body { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.merchant-notification-header { display: flex; align-items: center; gap: 6px; }
+.merchant-notification-header strong { font-size: 13.5px; font-weight: 750; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.1px; }
+.merchant-notification-dot { width: 6px; height: 6px; border-radius: 50%; background: #0f172a; flex-shrink: 0; }
+.merchant-notification-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; line-height: 1.4; }
+.merchant-notification-code { font-weight: 700; color: #334155; }
+.merchant-notification-sep { color: #94a3b8; font-size: 10px; }
+.merchant-notification-time { color: #64748b; }
+.merchant-notification-desc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+.merchant-notification-arrow { display: flex; align-items: center; color: #94a3b8; flex-shrink: 0; margin-left: auto; transition: transform .15s ease, color .15s ease; }
+.merchant-notification:hover .merchant-notification-arrow { transform: translateX(2px); color: #475569; }
+
+.merchant-notification-modal header > button { background: #f1f5f9 !important; color: #475569 !important; border-radius: 50% !important; transition: background .15s ease, color .15s ease; }
+.merchant-notification-modal header > button:hover { background: #e2e8f0 !important; color: #0f172a !important; }
+.merchant-notification-modal .merchant-segmented { background: #f1f5f9; }
+.merchant-notification-modal .merchant-segmented button { color: #64748b; }
+.merchant-notification-modal .merchant-segmented button.is-active { background: #fff; color: #0f172a; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.merchant-notification-modal .merchant-modal-toolbar .merchant-button--ghost { color: #475569; font-size: 12px; font-weight: 600; }
+.merchant-notification-modal .merchant-modal-toolbar .merchant-button--ghost:hover { color: #0f172a; }
 
 @media (max-width: 760px) {
   .merchant-main { padding: 22px 14px 100px; }
