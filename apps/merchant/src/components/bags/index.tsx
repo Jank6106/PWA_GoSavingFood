@@ -166,6 +166,12 @@ export function BagCard({
   );
 }
 
+const TIME_OPTIONS_24H: string[] = [];
+for (let h = 0; h < 24; h++) {
+  const hh = String(h).padStart(2, '0');
+  TIME_OPTIONS_24H.push(`${hh}:00`, `${hh}:15`, `${hh}:30`, `${hh}:45`);
+}
+
 export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?: BagItem; open: boolean; saving: boolean; onClose: () => void; onSubmit: (input: BagInput) => void }) {
   const [name, setName] = useState(bag?.name ?? '');
   const [category, setCategory] = useState(bag?.category ?? PRESET_BAG_CATEGORIES[0]);
@@ -304,21 +310,37 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
               Bắt đầu - Kết thúc <b style={{ color: 'var(--danger)' }}>*</b>
             </span>
             <div className="merchant-field-control merchant-time-range-control">
-              <input
-                type="time"
+              <select
                 value={pickupTimeStart}
                 onChange={(event) => setPickupTimeStart(event.target.value)}
-                aria-label="Giờ bắt đầu nhận"
+                aria-label="Giờ bắt đầu nhận (24h)"
                 required
-              />
+              >
+                {TIME_OPTIONS_24H.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+                {!TIME_OPTIONS_24H.includes(pickupTimeStart) && (
+                  <option value={pickupTimeStart}>{pickupTimeStart}</option>
+                )}
+              </select>
               <span className="merchant-time-dash">-</span>
-              <input
-                type="time"
+              <select
                 value={pickupTimeEnd}
                 onChange={(event) => setPickupTimeEnd(event.target.value)}
-                aria-label="Giờ kết thúc nhận"
+                aria-label="Giờ kết thúc nhận (24h)"
                 required
-              />
+              >
+                {TIME_OPTIONS_24H.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+                {!TIME_OPTIONS_24H.includes(pickupTimeEnd) && (
+                  <option value={pickupTimeEnd}>{pickupTimeEnd}</option>
+                )}
+              </select>
             </div>
           </div>
         </div>
