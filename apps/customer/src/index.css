@@ -555,12 +555,16 @@ img { display: block; max-width: 100%; }
 }
 
 
-.customer-screen-header { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 48px; }
-.customer-screen-header .customer-round-button { position: relative; z-index: 2; }
-.customer-screen-header > div:first-of-type { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; max-width: calc(100% - 190px); pointer-events: none; z-index: 1; }
-.customer-screen-header h1 { margin: 0; font-size: 20px; line-height: 25px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.customer-screen-header p { margin: 2px 0 0; color: var(--color-text-muted); font-size: 11px; text-align: center; }
-.customer-screen-action { position: relative; z-index: 2; margin-left: auto; display: flex; align-items: center; justify-content: flex-end; }
+.customer-screen-header { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 48px; width: 100%; }
+.customer-screen-header .customer-round-button { position: relative; z-index: 2; flex-shrink: 0; }
+.customer-screen-header > div:first-of-type,
+.customer-screen-header .customer-screen-header-title,
+.customer-screen-header > h1 { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; width: max-content; max-width: calc(100% - 96px); pointer-events: none; z-index: 1; }
+.customer-screen-header.has-action > div:first-of-type,
+.customer-screen-header.has-action .customer-screen-header-title { max-width: calc(100% - 190px); }
+.customer-screen-header h1 { margin: 0; font-size: clamp(17px, 4.5vw, 19px); font-weight: 750; line-height: 1.3; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-text-primary); }
+.customer-screen-header p { margin: 2px 0 0; color: var(--color-text-muted); font-size: 11.5px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.customer-screen-action { position: relative; z-index: 2; margin-left: auto; display: flex; align-items: center; justify-content: flex-end; min-width: 40px; flex-shrink: 0; }
 .customer-text-action { display: grid; width: 42px; height: 42px; place-items: center; border: 0; background: none; color: var(--color-primary); cursor: pointer; }
 
 .customer-map-panel, .customer-location-map { position: relative; height: 230px; overflow: hidden; border: 1px solid #d2ddd6; border-radius: 20px; background: #e8efe9; }

@@ -9,11 +9,11 @@ interface ScreenHeaderProps {
 
 export function ScreenHeader({ title, subtitle, onBack, action }: ScreenHeaderProps) {
   return (
-    <header className="customer-screen-header">
+    <header className={`customer-screen-header ${action ? 'has-action' : ''}`}>
       <button type="button" className="customer-round-button" onClick={onBack} aria-label="Quay lại">
         <ArrowLeft size={21} />
       </button>
-      <div>
+      <div className="customer-screen-header-title">
         <h1>{title}</h1>
         {subtitle && <p>{subtitle}</p>}
       </div>
