@@ -95,44 +95,50 @@ export async function POST(request: Request) {
         if (supabaseAdmin) {
           const { data: existingOrder } = await supabaseAdmin
             .from('orders')
-            .select('payment_order_code, payment_link_id, checkout_url')
+            .select('payment_order_code, payment_link_id, checkout_url, payos_qr_code, payos_description, payos_account_number, status, payment_expires_at')
             .eq('id', orderId)
             .single();
 
-          if (existingOrder?.payment_order_code && existingOrder?.checkout_url) {
-            console.log(`[PayOS] Order ${orderId} already has payment link ${existingOrder.payment_order_code}. Reusing.`);
+          if (
+            existingOrder?.payment_order_code &&
+            existingOrder?.checkout_url &&
+            existingOrder?.payos_qr_code &&
+            existingOrder?.status === 'pending_payment' &&
+            existingOrder?.payment_expires_at &&
+            new Date(existingOrder.payment_expires_at).getTime() > Date.now()
+          ) {
+            console.log(`[PayOS] Order ${orderId} has valid cached PayOS QR (${existingOrder.payment_order_code}). Reusing.`);
+            const rawReusedAcc = String(existingOrder.payos_account_number || 'V3CAS8823316420');
+            const vaReusedAcc = rawReusedAcc.startsWith('V3CAS') ? rawReusedAcc : `V3CAS${rawReusedAcc}`;
+            resolveInFlight({
+              success: true,
+              orderCode: existingOrder.payment_order_code,
+              paymentLinkId: existingOrder.payment_link_id,
+              checkoutUrl: existingOrder.checkout_url,
+              qrCode: existingOrder.payos_qr_code,
+              accountNumber: vaReusedAcc,
+              accountName: 'NGUYEN HUU DANH',
+              bin: '970418',
+              amount,
+              description: existingOrder.payos_description || cleanDesc,
+            });
+            return;
+          }
+
+          // Nếu có mã cũ nhưng thiếu payos_qr_code (đơn cũ trước khi có cache), hủy mã cũ trên PayOS để tạo mã mới chuẩn 100%
+          if (existingOrder?.payment_order_code && !existingOrder?.payos_qr_code) {
             try {
-              const checkRes = await fetch(
-                `https://api-merchant.payos.vn/v2/payment-requests/${existingOrder.payment_order_code}`,
-                {
-                  method: 'GET',
-                  headers: {
-                    'x-client-id': clientId,
-                    'x-api-key': apiKey,
-                  },
-                }
-              );
-              const checkData = await checkRes.json();
-              if (checkData.code === '00' && checkData.data) {
-                const rawReusedAcc = String(checkData.data.accountNumber || 'V3CAS8823316420');
-                const vaReusedAcc = rawReusedAcc.startsWith('V3CAS') ? rawReusedAcc : `V3CAS${rawReusedAcc}`;
-                resolveInFlight({
-                  success: true,
-                  orderCode: existingOrder.payment_order_code,
-                  paymentLinkId: existingOrder.payment_link_id,
-                  checkoutUrl: existingOrder.checkout_url,
-                  qrCode: checkData.data.qrCode,
-                  accountNumber: vaReusedAcc,
-                  accountName: checkData.data.accountName || 'NGUYEN HUU DANH',
-                  bin: checkData.data.bin || '970418',
-                  amount,
-                  description: checkData.data.description || cleanDesc,
-                });
-                return;
-              }
-            } catch (reuseErr) {
-              console.warn('[PayOS] Query existing payment link error, falling back:', reuseErr);
-            }
+              await fetch(`https://api-merchant.payos.vn/v2/payment-requests/${existingOrder.payment_order_code}/cancel`, {
+                method: 'POST',
+                headers: {
+                  'x-client-id': clientId,
+                  'x-api-key': apiKey,
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'GoSavingFood/1.0',
+                },
+                body: JSON.stringify({ cancellationReason: 'Tạo lại mã thanh toán mới có đầy đủ QR' }),
+              });
+            } catch {}
           }
         }
 
@@ -205,7 +211,11 @@ export async function POST(request: Request) {
           description: payosDescription,
         } = payosData.data;
 
-        // Cập nhật thông tin PayOS vào Supabase orders
+        const rawCreatedAcc = String(accountNumber || 'V3CAS8823316420');
+        const vaCreatedAcc = rawCreatedAcc.startsWith('V3CAS') ? rawCreatedAcc : `V3CAS${rawCreatedAcc}`;
+        const finalDescription = payosDescription || cleanDesc;
+
+        // Cập nhật thông tin PayOS vào Supabase orders (bao gồm cache payos_qr_code tạm trong 33 phút)
         if (supabaseAdmin) {
           await supabaseAdmin
             .from('orders')
@@ -213,13 +223,14 @@ export async function POST(request: Request) {
               payment_order_code: orderCode,
               payment_link_id: paymentLinkId,
               checkout_url: checkoutUrl,
+              payos_qr_code: qrCode,
+              payos_description: finalDescription,
+              payos_account_number: vaCreatedAcc,
               updated_at: new Date().toISOString(),
             })
             .eq('id', orderId);
         }
 
-        const rawCreatedAcc = String(accountNumber || 'V3CAS8823316420');
-        const vaCreatedAcc = rawCreatedAcc.startsWith('V3CAS') ? rawCreatedAcc : `V3CAS${rawCreatedAcc}`;
         resolveInFlight({
           success: true,
           orderCode,
@@ -230,7 +241,7 @@ export async function POST(request: Request) {
           accountName: accountName || 'NGUYEN HUU DANH',
           bin: bin || '970418',
           amount,
-          description: payosDescription || cleanDesc,
+          description: finalDescription,
         });
       } catch (err) {
         rejectInFlight(err);
