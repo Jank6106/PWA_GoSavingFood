@@ -377,3 +377,17 @@ export async function deleteBagItem(bagId: string): Promise<boolean> {
   removeBagFromInventoryShelf(bagId);
   return true;
 }
+
+export function subscribeToStoreBags(storeId: string, onChange: () => void) {
+  return supabase
+    .channel(`store-bags-sync-${storeId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'surprise_bags', filter: `store_id=eq.${storeId}` },
+      () => {
+        onChange();
+      }
+    )
+    .subscribe();
+}
+

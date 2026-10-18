@@ -21,6 +21,8 @@ interface HomePageProps {
   isLoading: boolean;
   error: string | null;
   location: string;
+  hasCoords?: boolean;
+  onRequestLocation?: () => void;
   onSearch: () => void;
   onLocation: () => void;
   onOpenBag: (bag: SurpriseBag) => void;
@@ -39,6 +41,8 @@ export function HomePage({
   isLoading,
   error,
   location,
+  hasCoords,
+  onRequestLocation,
   onSearch,
   onLocation,
   onOpenBag,
@@ -49,6 +53,7 @@ export function HomePage({
 }: HomePageProps) {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [category, setCategory] = useState<string>('all');
+  const [dismissedLocationPrompt, setDismissedLocationPrompt] = useState(false);
 
   useEffect(() => {
     if (banners.length < 2) return;
@@ -90,6 +95,35 @@ export function HomePage({
 
   return (
     <div className="customer-screen customer-home-screen">
+      {!hasCoords && !dismissedLocationPrompt && onRequestLocation && (
+        <div className="customer-location-prompt-banner">
+          <div className="customer-location-prompt-content">
+            <span className="customer-location-prompt-icon">📍</span>
+            <div>
+              <strong>Bật định vị để khám phá quanh bạn</strong>
+              <small>Xem món ăn & túi cứu trợ gần nhất theo vị trí thực tế</small>
+            </div>
+          </div>
+          <div className="customer-location-prompt-actions">
+            <button
+              type="button"
+              className="customer-location-prompt-btn"
+              onClick={onRequestLocation}
+            >
+              Bật vị trí
+            </button>
+            <button
+              type="button"
+              className="customer-location-prompt-close"
+              onClick={() => setDismissedLocationPrompt(true)}
+              aria-label="Đóng"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <HomeBanner
         banners={banners}
         currentIndex={bannerIndex}
