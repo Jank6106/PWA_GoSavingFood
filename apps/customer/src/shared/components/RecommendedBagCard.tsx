@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Clock3, Star } from 'lucide-react';
 import type { SurpriseBag } from '../types/customer.types';
+import { getBagTimingInfo } from '../utils/bagTiming';
 
 interface RecommendedBagCardProps {
   bag: SurpriseBag;
@@ -15,6 +16,7 @@ export function RecommendedBagCard({
 }: RecommendedBagCardProps) {
   const discount = Math.round((1 - bag.discountPrice / bag.originalPrice) * 100);
   const rating = (bag.rating || 4.7).toFixed(1);
+  const timing = getBagTimingInfo(bag);
 
   // Deterministic review count for realistic display like in reference
   const reviewCount = useMemo(() => {
@@ -71,7 +73,11 @@ export function RecommendedBagCard({
             <div className="customer-recommended-time">
               <Clock3 size={13} strokeWidth={2} />
               <span>
-                Hôm nay {bag.pickupStart || '18:30'} – {bag.pickupEnd || '20:30'}
+                {timing.phase === 'upcoming'
+                  ? `Sắp mở (${bag.pickupStart || '18:30'})`
+                  : bag.bagType === 'shelf_life' && bag.expiryDate
+                  ? `HSD: ${bag.expiryDate.split('-').reverse().slice(0, 2).join('/')} (${bag.pickupStart}–${bag.pickupEnd})`
+                  : `Hôm nay ${bag.pickupStart || '18:30'} – ${bag.pickupEnd || '20:30'}`}
               </span>
             </div>
             <div className="customer-recommended-rating">

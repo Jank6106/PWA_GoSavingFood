@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, Clock3, MapPin, Plus } from 'lucide-react';
 import type { SurpriseBag } from '../types/customer.types';
+import { getBagTimingInfo } from '../utils/bagTiming';
 import { PriceDisplay } from './PriceDisplay';
 
 interface BagCardProps {
@@ -14,9 +15,14 @@ interface BagCardProps {
 export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen, onAdd }: BagCardProps) {
   const [added, setAdded] = useState(false);
   const discount = Math.round((1 - bag.discountPrice / bag.originalPrice) * 100);
+  const timing = getBagTimingInfo(bag);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!timing.canOrder) {
+      alert(timing.detailMessage);
+      return;
+    }
     const res = onAdd(bag);
     if (res !== false) {
       setAdded(true);
@@ -34,9 +40,32 @@ export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen
 
       <div className="customer-bag-top-badges">
         <span className="customer-discount-tag">-{discount}%</span>
-        <span className="customer-distance-tag">
-          <MapPin size={11} /> {distanceLabel}
-        </span>
+        {timing.phase !== 'available' ? (
+          <span
+            className="customer-distance-tag"
+            style={{
+              background:
+                timing.badgeVariant === 'yellow'
+                  ? '#fef08a'
+                  : timing.badgeVariant === 'orange'
+                  ? '#ffedd5'
+                  : '#e5e7eb',
+              color:
+                timing.badgeVariant === 'yellow'
+                  ? '#854d0e'
+                  : timing.badgeVariant === 'orange'
+                  ? '#9a3412'
+                  : '#374151',
+              fontWeight: 600,
+            }}
+          >
+            <Clock3 size={11} /> {timing.badgeLabel}
+          </span>
+        ) : (
+          <span className="customer-distance-tag">
+            <MapPin size={11} /> {distanceLabel}
+          </span>
+        )}
       </div>
 
       <div className="customer-bag-overlay">
@@ -57,9 +86,17 @@ export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen
             type="button"
             className={`customer-bag-add-btn ${added ? 'is-added' : ''}`}
             onClick={handleAdd}
-            aria-label={`Thêm ${bag.name}`}
+            aria-label={timing.canOrder ? `Thêm ${bag.name}` : timing.badgeLabel}
+            title={timing.canOrder ? `Thêm ${bag.name}` : timing.detailMessage}
+            style={!timing.canOrder ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
           >
-            {added ? <Check size={16} strokeWidth={3} /> : <Plus size={16} strokeWidth={2.8} />}
+            {added ? (
+              <Check size={16} strokeWidth={3} />
+            ) : !timing.canOrder ? (
+              <Clock3 size={15} strokeWidth={2.5} />
+            ) : (
+              <Plus size={16} strokeWidth={2.8} />
+            )}
           </button>
         </div>
       </div>

@@ -80,6 +80,9 @@ export interface Merchant {
 }
 
 
+export type BagType = 'daily' | 'shelf_life';
+export type RepeatMode = 'today_only' | 'recurring';
+
 export interface SurpriseBag {
   id: string;
   merchantId: string;
@@ -94,6 +97,11 @@ export interface SurpriseBag {
   maxQuantity: number;
   pickupStart: string;
   pickupEnd: string;
+  bagType?: BagType;
+  repeatMode?: RepeatMode;
+  dailyQuota?: number;
+  expiryDate?: string;
+  status?: string;
   isAvailable: boolean;
   expiresAt?: string;
   rating: number;

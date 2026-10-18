@@ -19,6 +19,7 @@ import {
   ScreenHeader,
 } from '../../../shared/components';
 import { validateRecipientPhone } from '../../../shared/utils/validation';
+import { getBagTimingInfo } from '../../../shared/utils/bagTiming';
 import type { CartItem, CheckoutDraft, User, Voucher } from '../../../shared/types/customer.types';
 
 interface CheckoutPageProps {
@@ -51,7 +52,9 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
   const isNameValid = name.trim().length >= 2;
   const phoneValidation = validateRecipientPhone(phone);
   const isPhoneValid = phoneValidation.isValid;
-  const isFormValid = isNameValid && isPhoneValid;
+  const invalidTimingItem = items.find((item) => !getBagTimingInfo(item.bag).canOrder);
+  const timingError = invalidTimingItem ? getBagTimingInfo(invalidTimingItem.bag).detailMessage : null;
+  const isFormValid = isNameValid && isPhoneValid && !timingError;
 
   const voucher = vouchers.find(
     (item) =>
@@ -416,6 +419,23 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
           placeholder="Ví dụ: Không lấy dụng cụ dùng một lần, lấy ít cay..."
         />
       </FormSection>
+
+      {timingError && (
+        <div
+          style={{
+            margin: '16px 0',
+            padding: '12px 16px',
+            background: '#fff7ed',
+            border: '1px solid #fed7aa',
+            borderRadius: 12,
+            color: '#9a3412',
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          ⚠️ {invalidTimingItem?.bag.name}: {timingError}
+        </div>
+      )}
 
       <OrderSummary
         rows={[

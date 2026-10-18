@@ -12,6 +12,7 @@ import { Button, Dialog, EmptyState } from '@gosavingfood/ui';
 import { QuantityStepper } from '../../../shared/components';
 import { calculateDistanceKm } from '../../../services/mapbox.service';
 import { customerService } from '../../../services/customer.service';
+import { getBagTimingInfo } from '../../../shared/utils/bagTiming';
 import type { CustomerReview, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const DEFAULT_COVER =
@@ -99,6 +100,8 @@ export function BagDetailPage({
     const seconds = Math.floor((remaining % 60000) / 1000);
     return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
   }, [bag, now, targetExpiryMs]);
+
+  const timing = useMemo(() => getBagTimingInfo(bag), [bag, now]);
 
   // Tính khoảng cách thực tế từ vị trí đã xác nhận trên Map tới tọa độ của quán
   const distanceFormatted = useMemo(() => {
@@ -297,10 +300,25 @@ export function BagDetailPage({
               <span>Còn {bag.quantity} túi</span>
             </div>
 
-            <div className="customer-product-countdown-pill">
+            <div
+              className="customer-product-countdown-pill"
+              style={
+                timing.phase === 'upcoming'
+                  ? { background: '#fef9c3', color: '#854d0e', border: '1px solid #fef08a' }
+                  : timing.phase === 'order_closed'
+                  ? { background: '#ffedd5', color: '#9a3412', border: '1px solid #fed7aa' }
+                  : undefined
+              }
+            >
               <Clock3 size={14} strokeWidth={2.2} />
               <span>
-                {countdown === 'Đã hết hạn' ? (
+                {timing.phase === 'upcoming' ? (
+                  <>Sắp mở bán lúc <strong>{bag.pickupStart}</strong> hôm nay</>
+                ) : timing.phase === 'order_closed' ? (
+                  <strong style={{ color: '#c2410c' }}>Đã hết giờ nhận đơn</strong>
+                ) : bag.bagType === 'shelf_life' && bag.expiryDate ? (
+                  <>HSD đến: <strong>{bag.expiryDate.split('-').reverse().join('/')}</strong></>
+                ) : countdown === 'Đã hết hạn' ? (
                   <strong style={{ color: '#dc2626' }}>Đã hết hạn nhận</strong>
                 ) : (
                   <>Hết hạn sau: <strong>{countdown}</strong></>
@@ -322,7 +340,9 @@ export function BagDetailPage({
             </div>
             <div className="customer-product-pickup-body">
               <div className="customer-product-pickup-time">
-                Hôm nay {bag.pickupStart} – {bag.pickupEnd}
+                {bag.bagType === 'shelf_life'
+                  ? `Hàng ngày ${bag.pickupStart} – ${bag.pickupEnd} (HSD: ${bag.expiryDate ? bag.expiryDate.split('-').reverse().join('/') : 'Nhiều ngày'})`
+                  : `Hôm nay ${bag.pickupStart} – ${bag.pickupEnd}`}
               </div>
               <p className="customer-product-pickup-desc">
                 Vui lòng đến đúng giờ để lấy phần ăn tươi ngon nhất. Quét mã QR tại quán để nhận túi nhanh chóng.
@@ -452,6 +472,41 @@ export function BagDetailPage({
             }}
           >
             ⚠️ Quán hiện đang tạm đóng cửa — Chưa thể đặt hàng
+          </div>
+        ) : !timing.canOrder ? (
+          <div
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              background:
+                timing.phase === 'upcoming'
+                  ? '#fefce8'
+                  : timing.phase === 'order_closed'
+                  ? '#fff7ed'
+                  : '#f3f4f6',
+              border: `1px solid ${
+                timing.phase === 'upcoming'
+                  ? '#fef08a'
+                  : timing.phase === 'order_closed'
+                  ? '#fed7aa'
+                  : '#e5e7eb'
+              }`,
+              borderRadius: 14,
+              textAlign: 'center',
+              color:
+                timing.phase === 'upcoming'
+                  ? '#854d0e'
+                  : timing.phase === 'order_closed'
+                  ? '#9a3412'
+                  : '#4b5563',
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
+            {timing.phase === 'upcoming' && `🟡 ${timing.detailMessage}`}
+            {timing.phase === 'order_closed' && `🟠 ${timing.detailMessage}`}
+            {timing.phase === 'sold_out' && `⚪ ${timing.detailMessage}`}
+            {timing.phase === 'expired' && `🔴 ${timing.detailMessage}`}
           </div>
         ) : (
           <>

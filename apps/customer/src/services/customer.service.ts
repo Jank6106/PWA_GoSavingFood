@@ -130,10 +130,16 @@ const mapCreateOrderError = (error: { message?: string; details?: string } | nul
     try {
       if (error?.details) {
         const parsed = typeof error.details === 'string' ? JSON.parse(error.details) : error.details;
+        if (parsed?.reason === 'NOT_YET_OPEN') {
+          return `Túi thực phẩm chưa đến giờ mở bán (mở lúc ${parsed.pickupStart || '... Hôm nay'}). Vui lòng quay lại sau.`;
+        }
+        if (parsed?.reason === 'ORDER_CLOSED') {
+          return `Đã hết thời gian nhận đơn cho túi này hôm nay (kết thúc lúc ${parsed.pickupEnd || '...'}). Quán hiện chỉ giao túi cho các đơn đã đặt trước.`;
+        }
         if (parsed?.reason === 'EXPIRED') {
-          return parsed.pickupEnd
-            ? `Túi thực phẩm đã hết giờ lấy hàng hôm nay (kết thúc lúc ${parsed.pickupEnd}). Vui lòng chọn túi khác.`
-            : 'Túi thực phẩm đã quá khung giờ nhận hàng trong ngày. Vui lòng chọn túi khác.';
+          return parsed.expiryDate
+            ? `Túi thực phẩm đã hết hạn sử dụng (hạn: ${parsed.expiryDate}). Vui lòng chọn túi khác.`
+            : 'Túi thực phẩm đã hết hạn sử dụng. Vui lòng chọn túi khác.';
         }
         if (parsed?.reason === 'INACTIVE') {
           return 'Túi thực phẩm hiện đang tạm dừng mở bán. Vui lòng chọn túi khác.';
@@ -1015,7 +1021,7 @@ export const customerService = {
             try {
               const { data: directBags, error: bagsErr } = await supabase
                 .from('surprise_bags')
-                .select('id, store_id, name, description, original_price, discount_price, category, image_url, quantity, max_quantity, pickup_start, pickup_end, is_available, expires_at, created_at, stores(id, name, logo_url, banner_url, address, latitude, longitude, rating, total_ratings)')
+                .select('id, store_id, name, description, original_price, discount_price, category, image_url, quantity, max_quantity, pickup_start, pickup_end, is_available, expires_at, created_at, bag_type, repeat_mode, daily_quota, expiry_date, status, stores(id, name, logo_url, banner_url, address, latitude, longitude, rating, total_ratings)')
                 .eq('is_available', true)
                 .is('deleted_at', null)
                 .order('created_at', { ascending: false })
@@ -1053,7 +1059,7 @@ export const customerService = {
             brandId: s.id,
             name: s.name,
             description: s.description || 'Quán ăn đối tác GoSavingFood',
-            phone: s.phone || '+84900000000',
+            phone: s.phone || '+849****0000',
             address: s.address || 'Việt Nam',
             logo: getStoreLogo(s.logo_url),
             banner: getStoreBanner(s.banner_url),
@@ -1070,25 +1076,54 @@ export const customerService = {
       }
 
       if (bagsSource.length > 0) {
-        remoteBags = bagsSource.map((b: any) => ({
-          id: b.id,
-          merchantId: b.store_id,
-          merchantName: b.store_name || b.stores?.name || 'Quán đối tác',
-          name: b.name,
-          description: b.description || 'Túi cứu trợ thực phẩm xanh',
-          originalPrice: Number(b.original_price) || 50000,
-          discountPrice: Number(b.discount_price) || 30000,
-          category: normalizeCategory(b.category),
-          imageUrl: b.image_url || getBagImage(b.name, null),
-          quantity: Number(b.quantity) || 5,
-          maxQuantity: Number(b.max_quantity) || 2,
-          pickupStart: b.pickup_start?.slice(0, 5) || '11:00',
-          pickupEnd: b.pickup_end?.slice(0, 5) || '14:00',
-          isAvailable: b.is_available ?? true,
-          expiresAt: b.expires_at || undefined,
-          rating: b.stores?.rating != null ? Number(b.stores.rating) : (typeof b.rating === 'number' ? Number(b.rating) : 4.8),
-          createdAt: b.created_at,
-        }));
+        const now = new Date();
+        const timeInVn = now.toLocaleTimeString('en-US', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const [vnH, vnM] = timeInVn.split(':').map(Number);
+        const currentVnMinutes = vnH * 60 + vnM;
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        remoteBags = bagsSource
+          .filter((b: any) => {
+            // Ẩn túi đã hết hạn / archived khỏi mục khám phá
+            if (b.status === 'archived' || b.status === 'expired') return false;
+            if (b.expiry_date && b.expiry_date < todayStr) return false;
+            if (b.bag_type === 'daily' && b.repeat_mode === 'today_only' && b.pickup_end) {
+              const [endH, endM] = b.pickup_end.split(':').map(Number);
+              if (!isNaN(endH) && currentVnMinutes > endH * 60 + (endM || 0)) {
+                return false;
+              }
+            }
+            return true;
+          })
+          .map((b: any) => ({
+            id: b.id,
+            merchantId: b.store_id,
+            merchantName: b.store_name || b.stores?.name || 'Quán đối tác',
+            name: b.name,
+            description: b.description || 'Túi cứu trợ thực phẩm xanh',
+            originalPrice: Number(b.original_price) || 50000,
+            discountPrice: Number(b.discount_price) || 30000,
+            category: normalizeCategory(b.category),
+            imageUrl: b.image_url || getBagImage(b.name, null),
+            quantity: Number(b.quantity) || 5,
+            maxQuantity: Number(b.max_quantity) || 2,
+            pickupStart: b.pickup_start?.slice(0, 5) || '11:00',
+            pickupEnd: b.pickup_end?.slice(0, 5) || '14:00',
+            bagType: b.bag_type || 'daily',
+            repeatMode: b.repeat_mode || 'today_only',
+            dailyQuota: b.daily_quota != null ? Number(b.daily_quota) : undefined,
+            expiryDate: b.expiry_date || undefined,
+            status: b.status || 'active',
+            isAvailable: b.is_available ?? true,
+            expiresAt: b.expires_at || undefined,
+            rating: b.stores?.rating != null ? Number(b.stores.rating) : (typeof b.rating === 'number' ? Number(b.rating) : 4.8),
+            createdAt: b.created_at,
+          }));
 
         remoteBags.sort((a: any, b: any) => {
           if (!a.createdAt || !b.createdAt) return 0;
@@ -1170,7 +1205,6 @@ export const customerService = {
         .from('surprise_bags')
         .select('*, stores(id, name, logo_url, banner_url, address, latitude, longitude, rating, total_ratings)')
         .eq('id', id)
-        .eq('is_available', true)
         .is('deleted_at', null)
         .maybeSingle();
 
@@ -1189,6 +1223,11 @@ export const customerService = {
           maxQuantity: Number(data.max_quantity) || 2,
           pickupStart: data.pickup_start?.slice(0, 5) || '11:00',
           pickupEnd: data.pickup_end?.slice(0, 5) || '14:00',
+          bagType: data.bag_type || 'daily',
+          repeatMode: data.repeat_mode || 'today_only',
+          dailyQuota: data.daily_quota != null ? Number(data.daily_quota) : undefined,
+          expiryDate: data.expiry_date || undefined,
+          status: data.status || 'active',
           isAvailable: data.is_available ?? true,
           expiresAt: data.expires_at || undefined,
           rating: Number(data.stores?.rating) || (typeof data.rating === 'number' && data.rating > 0 ? Number(data.rating) : 4.9),
@@ -1214,6 +1253,8 @@ export const customerService = {
         .select('*')
         .eq('store_id', id)
         .eq('is_available', true)
+        .neq('status', 'archived')
+        .neq('status', 'expired')
         .is('deleted_at', null);
 
       if (store) {
@@ -1236,24 +1277,51 @@ export const customerService = {
           longitude: store.longitude != null ? Number(store.longitude) : undefined,
         };
 
-        const mappedBags: SurpriseBag[] = (bags || []).map((b: any) => ({
-          id: b.id,
-          merchantId: b.store_id,
-          merchantName: store.name,
-          name: b.name,
-          description: b.description || '',
-          originalPrice: Number(b.original_price),
-          discountPrice: Number(b.discount_price),
-          category: (b.category as Exclude<FoodCategory, 'all'>) || 'vegetarian',
-          imageUrl: b.image_url || getBagImage(b.name, null),
-          quantity: Number(b.quantity),
-          maxQuantity: Number(b.max_quantity) || 2,
-          pickupStart: b.pickup_start?.slice(0, 5) || '11:00',
-          pickupEnd: b.pickup_end?.slice(0, 5) || '14:00',
-          isAvailable: b.is_available ?? true,
-          expiresAt: b.expires_at || undefined,
-          rating: typeof store.rating === 'number' && store.rating > 0 ? Number(store.rating) : 4.9,
-        }));
+        const now = new Date();
+        const timeInVn = now.toLocaleTimeString('en-US', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const [vnH, vnM] = timeInVn.split(':').map(Number);
+        const currentVnMinutes = vnH * 60 + vnM;
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        const mappedBags: SurpriseBag[] = (bags || [])
+          .filter((b: any) => {
+            if (b.expiry_date && b.expiry_date < todayStr) return false;
+            if (b.bag_type === 'daily' && b.repeat_mode === 'today_only' && b.pickup_end) {
+              const [endH, endM] = b.pickup_end.split(':').map(Number);
+              if (!isNaN(endH) && currentVnMinutes > endH * 60 + (endM || 0)) {
+                return false;
+              }
+            }
+            return true;
+          })
+          .map((b: any) => ({
+            id: b.id,
+            merchantId: b.store_id,
+            merchantName: store.name,
+            name: b.name,
+            description: b.description || '',
+            originalPrice: Number(b.original_price),
+            discountPrice: Number(b.discount_price),
+            category: (b.category as Exclude<FoodCategory, 'all'>) || 'vegetarian',
+            imageUrl: b.image_url || getBagImage(b.name, null),
+            quantity: Number(b.quantity),
+            maxQuantity: Number(b.max_quantity) || 2,
+            pickupStart: b.pickup_start?.slice(0, 5) || '11:00',
+            pickupEnd: b.pickup_end?.slice(0, 5) || '14:00',
+            bagType: b.bag_type || 'daily',
+            repeatMode: b.repeat_mode || 'today_only',
+            dailyQuota: b.daily_quota != null ? Number(b.daily_quota) : undefined,
+            expiryDate: b.expiry_date || undefined,
+            status: b.status || 'active',
+            isAvailable: b.is_available ?? true,
+            expiresAt: b.expires_at || undefined,
+            rating: typeof store.rating === 'number' && store.rating > 0 ? Number(store.rating) : 4.9,
+          }));
 
         return { merchant, bags: mappedBags };
       }

@@ -52,14 +52,24 @@ const mapDbBag = (b: any): BagItem => ({
   imageUrls: [optimizeImageUrl(b.image_url || DEFAULT_BAG_IMAGE, 400, 75)],
   pickupTimeStart: b.pickup_start?.slice(0, 5) || '18:00',
   pickupTimeEnd: b.pickup_end?.slice(0, 5) || '21:00',
-  status: (b.is_available ? (b.quantity > 0 ? 'active' : 'sold_out') : 'hidden') as BagStatus,
+  bagType: b.bag_type || 'daily',
+  repeatMode: b.repeat_mode || 'today_only',
+  dailyQuota: b.daily_quota != null ? Number(b.daily_quota) : undefined,
+  expiryDate: b.expiry_date || undefined,
+  status: (b.status === 'archived' || b.status === 'expired'
+    ? 'hidden'
+    : b.is_available
+    ? b.quantity > 0
+      ? 'active'
+      : 'sold_out'
+    : 'hidden') as BagStatus,
   createdAt: b.created_at || new Date().toISOString(),
 });
 
 const fetchBagRow = async (bagId: string): Promise<BagItem | null> => {
   const { data, error } = await supabase
     .from('surprise_bags')
-    .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at')
+    .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at, bag_type, repeat_mode, daily_quota, expiry_date, status')
     .eq('id', bagId)
     .is('deleted_at', null)
     .maybeSingle();
@@ -122,7 +132,7 @@ export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
     try {
       const { data, error } = await supabase
         .from('surprise_bags')
-        .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at')
+        .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at, bag_type, repeat_mode, daily_quota, expiry_date, status')
         .eq('store_id', storeId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
@@ -271,9 +281,17 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
         input.pickupTimeEnd.length === 5
           ? `${input.pickupTimeEnd}:00`
           : input.pickupTimeEnd,
-      is_daily: true,
+      is_daily: input.bagType !== 'shelf_life',
+      bag_type: input.bagType || 'daily',
+      repeat_mode: input.bagType === 'shelf_life' ? 'today_only' : (input.repeatMode || 'today_only'),
+      daily_quota: input.dailyQuota ?? input.quantity,
+      expiry_date: input.bagType === 'shelf_life' ? (input.expiryDate || null) : null,
+      status: input.quantity > 0 ? 'active' : 'sold_out',
       is_available: true,
       expires_at: (() => {
+        if (input.bagType === 'shelf_life' && input.expiryDate) {
+          return `${input.expiryDate}T23:59:59.999Z`;
+        }
         const [endH, endM] = (input.pickupTimeEnd || '21:00').split(':').map(Number);
         const exp = new Date();
         exp.setHours(endH || 21, endM || 0, 0, 0);
@@ -322,7 +340,17 @@ export async function updateBagItem(bagId: string, input: BagInput): Promise<Bag
         input.pickupTimeStart.length === 5 ? `${input.pickupTimeStart}:00` : input.pickupTimeStart,
       pickup_end:
         input.pickupTimeEnd.length === 5 ? `${input.pickupTimeEnd}:00` : input.pickupTimeEnd,
+      bag_type: input.bagType || 'daily',
+      repeat_mode: input.bagType === 'shelf_life' ? 'today_only' : (input.repeatMode || 'today_only'),
+      daily_quota: input.dailyQuota ?? input.quantity,
+      expiry_date: input.bagType === 'shelf_life' ? (input.expiryDate || null) : null,
+      is_daily: input.bagType !== 'shelf_life',
+      is_available: true,
+      status: 'active',
       expires_at: (() => {
+        if (input.bagType === 'shelf_life' && input.expiryDate) {
+          return `${input.expiryDate}T23:59:59.999Z`;
+        }
         const [endH, endM] = (input.pickupTimeEnd || '21:00').split(':').map(Number);
         const exp = new Date();
         exp.setHours(endH || 21, endM || 0, 0, 0);
@@ -347,31 +375,20 @@ export async function updateBagItem(bagId: string, input: BagInput): Promise<Bag
 
 export async function deleteBagItem(bagId: string): Promise<boolean> {
   invalidateBagInFlight();
-  // 1. Thử xóa vĩnh viễn (hard delete)
-  const { error: deleteError } = await supabase.from('surprise_bags').delete().eq('id', bagId);
+  // Luôn dùng soft delete: gán deleted_at, is_available = false, status = 'archived' để bảo toàn lịch sử đơn & báo cáo
+  const { error } = await supabase
+    .from('surprise_bags')
+    .update({
+      deleted_at: new Date().toISOString(),
+      is_available: false,
+      status: 'archived',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', bagId);
 
-  if (deleteError) {
-    // 2. Nếu có ràng buộc khóa ngoại (đã có đơn hàng liên kết trong order_items),
-    // chuyển sang xóa mềm: gán deleted_at, is_available = false, quantity = 0 để bảo toàn lịch sử đơn nhưng gỡ hoàn toàn túi khỏi hệ thống
-    if (deleteError.code === '23503' || deleteError.message?.includes('violates foreign key constraint')) {
-      const { error: softDeleteError } = await supabase
-        .from('surprise_bags')
-        .update({
-          deleted_at: new Date().toISOString(),
-          is_available: false,
-          quantity: 0,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', bagId);
-
-      if (softDeleteError) {
-        console.warn('Lỗi khi xóa túi hàng (soft delete):', softDeleteError.message);
-        throw new Error('Không thể xóa túi hàng: ' + softDeleteError.message);
-      }
-    } else {
-      console.warn('Xóa túi mù trên Supabase lỗi:', deleteError.message);
-      throw new Error('Không thể xóa túi hàng: ' + (deleteError.message || 'Lỗi cơ sở dữ liệu'));
-    }
+  if (error) {
+    console.warn('Lỗi khi xóa túi hàng (soft delete):', error.message);
+    throw new Error('Không thể xóa túi hàng: ' + error.message);
   }
 
   removeBagFromInventoryShelf(bagId);

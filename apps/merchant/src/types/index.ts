@@ -24,6 +24,8 @@ export interface MerchantRegisterInput {
 }
 
 export type BagStatus = 'active' | 'sold_out' | 'hidden';
+export type BagType = 'daily' | 'shelf_life';
+export type RepeatMode = 'today_only' | 'recurring';
 
 export interface BagItem {
   id: string;
@@ -39,6 +41,10 @@ export interface BagItem {
   imageUrls: string[];
   pickupTimeStart: string;
   pickupTimeEnd: string;
+  bagType?: BagType;
+  repeatMode?: RepeatMode;
+  dailyQuota?: number;
+  expiryDate?: string;
   status: BagStatus;
   createdAt: string;
 }

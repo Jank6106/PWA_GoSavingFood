@@ -117,7 +117,10 @@ export function BagCard({
             <strong>{bag.salePrice.toLocaleString('vi-VN')}đ</strong>
           </span>
           <span>
-            <Clock3 size={14} /> {bag.pickupTimeStart}–{bag.pickupTimeEnd}
+            <Clock3 size={14} />{' '}
+            {bag.bagType === 'shelf_life'
+              ? `HSD: ${bag.expiryDate ? bag.expiryDate.split('-').reverse().slice(0, 2).join('/') : 'Nhiều ngày'} (${bag.pickupTimeStart}–${bag.pickupTimeEnd})`
+              : `${bag.repeatMode === 'recurring' ? 'Hàng ngày' : 'Hôm nay'}: ${bag.pickupTimeStart}–${bag.pickupTimeEnd}`}
           </span>
         </div>
         <footer>
@@ -175,6 +178,10 @@ for (let h = 0; h < 24; h++) {
 export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?: BagItem; open: boolean; saving: boolean; onClose: () => void; onSubmit: (input: BagInput) => void }) {
   const [name, setName] = useState(bag?.name ?? '');
   const [category, setCategory] = useState(bag?.category ?? PRESET_BAG_CATEGORIES[0]);
+  const [bagType, setBagType] = useState<'daily' | 'shelf_life'>(bag?.bagType ?? 'daily');
+  const [repeatMode, setRepeatMode] = useState<'today_only' | 'recurring'>(bag?.repeatMode ?? 'today_only');
+  const [dailyQuota, setDailyQuota] = useState(bag?.dailyQuota ? String(bag.dailyQuota) : '');
+  const [expiryDate, setExpiryDate] = useState(bag?.expiryDate ?? '');
   const [description, setDescription] = useState(bag?.description ?? '');
   const [originalPrice, setOriginalPrice] = useState(bag ? String(bag.originalPrice) : '');
   const [pricingMode, setPricingMode] = useState<'amount' | 'discount'>('amount');
@@ -192,6 +199,10 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
     if (open) {
       setName(bag?.name ?? '');
       setCategory(bag?.category ?? PRESET_BAG_CATEGORIES[0]);
+      setBagType(bag?.bagType ?? 'daily');
+      setRepeatMode(bag?.repeatMode ?? 'today_only');
+      setDailyQuota(bag?.dailyQuota ? String(bag.dailyQuota) : '');
+      setExpiryDate(bag?.expiryDate ?? '');
       setDescription(bag?.description ?? '');
       setOriginalPrice(bag ? String(bag.originalPrice) : '');
       setSalePrice(bag ? String(bag.salePrice) : '');
@@ -274,24 +285,28 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
       imageUrls: imageUrls,
       pickupTimeStart,
       pickupTimeEnd,
+      bagType,
+      repeatMode: bagType === 'daily' ? repeatMode : undefined,
+      dailyQuota: bagType === 'daily' && repeatMode === 'recurring' ? (Number(dailyQuota) || qty) : undefined,
+      expiryDate: bagType === 'shelf_life' ? expiryDate : undefined,
     });
   };
 
   return (
     <Modal open={open} title={bag ? 'Chỉnh sửa túi hàng' : 'Tạo túi hàng mới'} onClose={onClose} size="large">
       <form className="merchant-form" onSubmit={submit}>
-        <Field
-          label={
-            <>
-              Tên túi hàng <b style={{ color: 'var(--danger)' }}>*</b>
-            </>
-          }
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Ví dụ: Túi bánh tươi cuối ngày"
-          required
-        />
         <div className="merchant-form-grid">
+          <Field
+            label={
+              <>
+                Tên túi hàng <b style={{ color: 'var(--danger)' }}>*</b>
+              </>
+            }
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Ví dụ: Túi bánh tươi cuối ngày"
+            required
+          />
           <SelectField
             label={
               <>
@@ -305,45 +320,158 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
               <option key={item}>{item}</option>
             ))}
           </SelectField>
-          <div className="merchant-field">
-            <span>
-              Bắt đầu - Kết thúc <b style={{ color: 'var(--danger)' }}>*</b>
-            </span>
-            <div className="merchant-field-control merchant-time-range-control">
-              <select
-                value={pickupTimeStart}
-                onChange={(event) => setPickupTimeStart(event.target.value)}
-                aria-label="Giờ bắt đầu nhận (24h)"
-                required
-              >
-                {TIME_OPTIONS_24H.map((time) => (
-                  <option key={time} value={time}>
-                    {time}
-                  </option>
-                ))}
-                {!TIME_OPTIONS_24H.includes(pickupTimeStart) && (
-                  <option value={pickupTimeStart}>{pickupTimeStart}</option>
-                )}
-              </select>
-              <span className="merchant-time-dash">-</span>
-              <select
-                value={pickupTimeEnd}
-                onChange={(event) => setPickupTimeEnd(event.target.value)}
-                aria-label="Giờ kết thúc nhận (24h)"
-                required
-              >
-                {TIME_OPTIONS_24H.map((time) => (
-                  <option key={time} value={time}>
-                    {time}
-                  </option>
-                ))}
-                {!TIME_OPTIONS_24H.includes(pickupTimeEnd) && (
-                  <option value={pickupTimeEnd}>{pickupTimeEnd}</option>
-                )}
-              </select>
-            </div>
+        </div>
+
+        {/* 1. Chọn loại mặt hàng */}
+        <div className="merchant-field">
+          <span>
+            Loại mặt hàng <b style={{ color: 'var(--danger)' }}>*</b>
+          </span>
+          <div className="merchant-pricing-mode" style={{ marginTop: 6, display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              className={bagType === 'daily' ? 'is-active' : ''}
+              onClick={() => setBagType('daily')}
+            >
+              🍱 Dùng trong ngày
+            </button>
+            <button
+              type="button"
+              className={bagType === 'shelf_life' ? 'is-active' : ''}
+              onClick={() => setBagType('shelf_life')}
+            >
+              📦 Có hạn sử dụng
+            </button>
           </div>
         </div>
+
+        {/* 2. Cấu hình thời gian theo loại mặt hàng */}
+        {bagType === 'daily' ? (
+          <div className="merchant-form-grid" style={{ marginTop: 6 }}>
+            <div className="merchant-field">
+              <span>
+                Khung giờ nhận túi hôm nay <b style={{ color: 'var(--danger)' }}>*</b>
+              </span>
+              <div className="merchant-field-control merchant-time-range-control">
+                <select
+                  value={pickupTimeStart}
+                  onChange={(event) => setPickupTimeStart(event.target.value)}
+                  aria-label="Giờ bắt đầu nhận (24h)"
+                  required
+                >
+                  {TIME_OPTIONS_24H.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                  {!TIME_OPTIONS_24H.includes(pickupTimeStart) && (
+                    <option value={pickupTimeStart}>{pickupTimeStart}</option>
+                  )}
+                </select>
+                <span className="merchant-time-dash">-</span>
+                <select
+                  value={pickupTimeEnd}
+                  onChange={(event) => setPickupTimeEnd(event.target.value)}
+                  aria-label="Giờ kết thúc nhận (24h)"
+                  required
+                >
+                  {TIME_OPTIONS_24H.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                  {!TIME_OPTIONS_24H.includes(pickupTimeEnd) && (
+                    <option value={pickupTimeEnd}>{pickupTimeEnd}</option>
+                  )}
+                </select>
+              </div>
+              <small style={{ color: '#64748b', marginTop: 4, display: 'block', fontSize: 11 }}>
+                *Trước giờ: Khách xem trước (chưa mua được). Trong giờ: Khách đặt & thanh toán.
+              </small>
+            </div>
+
+            <div className="merchant-field">
+              <span>Chế độ lặp</span>
+              <div className="merchant-pricing-mode" style={{ marginTop: 6, display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  className={repeatMode === 'today_only' ? 'is-active' : ''}
+                  onClick={() => setRepeatMode('today_only')}
+                >
+                  Chỉ hôm nay
+                </button>
+                <button
+                  type="button"
+                  className={repeatMode === 'recurring' ? 'is-active' : ''}
+                  onClick={() => setRepeatMode('recurring')}
+                >
+                  Mọi ngày
+                </button>
+              </div>
+              <small style={{ color: '#64748b', marginTop: 4, display: 'block', fontSize: 11 }}>
+                {repeatMode === 'today_only'
+                  ? '*Hết giờ nhận sẽ tự chuyển vào lưu trữ.'
+                  : '*Cố định khung giờ, tự nạp lại kho vào 00h01 mỗi ngày.'}
+              </small>
+            </div>
+          </div>
+        ) : (
+          <div className="merchant-form-grid" style={{ marginTop: 6 }}>
+            <Field
+              label={
+                <>
+                  Hạn sử dụng <b style={{ color: 'var(--danger)' }}>*</b>
+                </>
+              }
+              type="date"
+              value={expiryDate}
+              min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+              onChange={(event) => setExpiryDate(event.target.value)}
+              required
+            />
+            <div className="merchant-field">
+              <span>
+                Khung giờ khách lấy hàng mỗi ngày <b style={{ color: 'var(--danger)' }}>*</b>
+              </span>
+              <div className="merchant-field-control merchant-time-range-control">
+                <select
+                  value={pickupTimeStart}
+                  onChange={(event) => setPickupTimeStart(event.target.value)}
+                  aria-label="Giờ bắt đầu nhận (24h)"
+                  required
+                >
+                  {TIME_OPTIONS_24H.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                  {!TIME_OPTIONS_24H.includes(pickupTimeStart) && (
+                    <option value={pickupTimeStart}>{pickupTimeStart}</option>
+                  )}
+                </select>
+                <span className="merchant-time-dash">-</span>
+                <select
+                  value={pickupTimeEnd}
+                  onChange={(event) => setPickupTimeEnd(event.target.value)}
+                  aria-label="Giờ kết thúc nhận (24h)"
+                  required
+                >
+                  {TIME_OPTIONS_24H.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                  {!TIME_OPTIONS_24H.includes(pickupTimeEnd) && (
+                    <option value={pickupTimeEnd}>{pickupTimeEnd}</option>
+                  )}
+                </select>
+              </div>
+              <small style={{ color: '#64748b', marginTop: 4, display: 'block', fontSize: 11 }}>
+                *Mở bán liên tục đến hết ngày HSD (23:59:59).
+              </small>
+            </div>
+          </div>
+        )}
         <TextAreaField
           label={
             <>
