@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
 export function ImpactCalculator() {
   const [meals, setMeals] = useState(3);
   const monthly = Math.round(meals * 4.33);
@@ -8,7 +9,11 @@ export function ImpactCalculator() {
   const co2 = Number(food.toFixed(1)) * 2.5;
   return <section id="calculator" className="impact-section">
     <div className="editorial-shell impact-layout">
-      <div data-reveal><h2>Nhỏ với bạn.<br />Lớn với<br /><span>ngày mai.</span></h2><p>Một vài bữa ăn mỗi tuần. Một thay đổi có thể nhìn thấy, từ chiếc ví đến lượng thực phẩm được giữ lại.</p><a href="#solution" className="text-link">Bắt đầu từ bữa tiếp theo <ArrowUpRight size={20} /></a></div>
+      <div className="impact-story" data-reveal><h2>Nhỏ với bạn.<br />Lớn với<br /><span>ngày mai.</span></h2><p>Một vài bữa ăn mỗi tuần. Một thay đổi có thể nhìn thấy, từ chiếc ví đến lượng thực phẩm được giữ lại.</p><a href="#solution" className="text-link">Bắt đầu từ bữa tiếp theo <ArrowUpRight size={20} /></a>
+        <figure className="impact-photograph">
+          <Image src="/media/imagery/rescue-bag-cutout.png" alt="Túi giấy in logo GoSavingFood bên những chiếc bánh được mang về cho một bữa ngon." width={1536} height={1024} sizes="(max-width: 700px) calc(100vw - 40px), 45vw" />
+        </figure>
+      </div>
       <div className="impact-tool" data-reveal>
         <label htmlFor="rescue-meals">Mỗi tuần, bạn giải cứu bao nhiêu bữa?</label>
         <div className="meal-value"><strong>{meals}</strong><span>bữa / tuần</span></div>

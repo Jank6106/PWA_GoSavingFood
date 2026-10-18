@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 
 export const CommunityAndPartners: React.FC = () => {
@@ -37,6 +38,12 @@ export const CommunityAndPartners: React.FC = () => {
       <div className="section-intro" data-reveal><h2>Ngon hơn khi<br /><span>cùng nhau.</span></h2><p>Những góc nhìn từ người mua và cửa hàng trên hành trình giảm lãng phí thực phẩm.</p></div>
     </div>
     <div className="editorial-shell">
+      <figure className="community-photograph" data-reveal>
+        <div className="editorial-photo-frame">
+        <Image src="/media/imagery/community-pickup.webp" alt="Ảnh minh họa khoảnh khắc trao túi bánh GoSavingFood từ cửa hàng đến người nhận." width={1536} height={1024} sizes="(max-width: 700px) calc(100vw - 40px), (max-width: 1392px) calc(100vw - 112px), 1280px" />
+        </div>
+        <figcaption>Một túi ngon được trao. Một phần giá trị được giữ lại.<span>Ảnh minh họa</span></figcaption>
+      </figure>
       <div className="testimonials">{testimonials.map((item,i) => <figure key={item.name} data-reveal className={i === 0 ? 'quote-featured' : ''}><blockquote>{item.content.split(/(60%|30 giây|50–80%)/).map((part,index) => /^(60%|30 giây|50–80%)$/.test(part) ? <strong className="inline-stat" key={index}>{part}</strong> : part)}</blockquote><figcaption><strong>{item.name}</strong><span>{item.role}</span></figcaption></figure>)}</div>
     </div>
   </section>;

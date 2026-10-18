@@ -13,7 +13,7 @@ export function LandingMotion() {
       // IntersectionObserver also covers rows mounted after an audience-tab change.
       // Default HTML stays visible when JavaScript or motion is disabled.
       const tracked = new Set<HTMLElement>();
-      const selector = "[data-reveal]:not([data-reveal='words']), .journey-row, .audience-switch, .partner-window, .footer-links, .solution-section > .editorial-button";
+      const selector = "[data-reveal]:not([data-reveal='words']), .journey-row, .audience-switch, .partner-window, .footer-links, .solution-instructions > .editorial-button";
       const revealObserver = new IntersectionObserver(entries => {
         entries.forEach(entry => {
           const element = entry.target as HTMLElement;
