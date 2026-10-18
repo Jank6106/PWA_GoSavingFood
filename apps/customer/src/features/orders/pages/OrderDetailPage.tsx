@@ -57,6 +57,24 @@ function formatDateTime(dateStr?: string): string {
   }
 }
 
+function formatPickupTimeDisplay(pickupTime?: string): string {
+  if (!pickupTime) return '11:00 - 14:00';
+  if (pickupTime.includes('T') || (pickupTime.includes('-') && pickupTime.includes(':'))) {
+    try {
+      const d = new Date(pickupTime);
+      if (!isNaN(d.getTime())) {
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${hours}:${minutes} · ${day}/${month}/${year}`;
+      }
+    } catch {}
+  }
+  return pickupTime;
+}
+
 function getPaymentMethodLabel(method: string): string {
   switch (method) {
     case 'payos_vietqr':
@@ -103,6 +121,22 @@ export function OrderDetailPage({
 
   useEffect(() => {
     if (currentOrder.status === 'pending_payment' || currentOrder.paymentStatus === 'pending') {
+      // 1. Kiểm tra nếu đã quá hạn TTL thì chuyển sang expired
+      if (
+        currentOrder.paymentExpiresAt &&
+        new Date(currentOrder.paymentExpiresAt).getTime() <= Date.now()
+      ) {
+        const expiredOrder: Order = {
+          ...currentOrder,
+          status: 'expired',
+        };
+        setCurrentOrder(expiredOrder);
+        onUpdateOrder?.(expiredOrder);
+        void customerService.cleanupExpiredPendingOrders();
+        return;
+      }
+
+      // 2. Tra cứu PayOS xem đã thanh toán chưa
       void customerService
         .checkPayOSStatus({ orderId: currentOrder.id, orderCode: currentOrder.orderCode })
         .then((res) => {
@@ -167,6 +201,13 @@ export function OrderDetailPage({
   const isCompleted = status === 'completed' || (status as string) === 'picked_up';
   const isCancelled = status === 'cancelled';
   const isExpired = status === 'expired';
+  const isOrderPaid =
+    currentOrder.paymentStatus === 'success' ||
+    isPaid ||
+    isPreparing ||
+    isReady ||
+    isCompleted ||
+    Boolean(currentOrder.paidAt);
   const isPending = isPendingPayment || isPaid || isPendingLegacy;
   const canCancel = isPendingPayment || isPaid || isPendingLegacy || isConfirmedLegacy;
 
@@ -304,13 +345,27 @@ export function OrderDetailPage({
           label="Thời gian đặt hàng"
           value={formatDateTime(currentOrder.createdAt)}
         />
-        <InfoRow
-          icon={<CreditCard size={18} />}
-          label="Thời gian thanh toán"
-          value={`${formatDateTime(currentOrder.paidAt || currentOrder.createdAt)} · ${getPaymentMethodLabel(
-            currentOrder.paymentMethod
-          )} (Đã thanh toán)`}
-        />
+        {isOrderPaid ? (
+          <InfoRow
+            icon={<CreditCard size={18} />}
+            label="Thời gian thanh toán"
+            value={`${formatDateTime(currentOrder.paidAt || currentOrder.createdAt)} · ${getPaymentMethodLabel(
+              currentOrder.paymentMethod
+            )} (Đã thanh toán)`}
+          />
+        ) : (
+          <InfoRow
+            icon={<CreditCard size={18} />}
+            label="Trạng thái thanh toán"
+            value={
+              isPendingPayment
+                ? `${getPaymentMethodLabel(currentOrder.paymentMethod)} · Chờ thanh toán`
+                : currentOrder.paymentStatus === 'refund_pending'
+                ? 'Đang xử lý hoàn tiền'
+                : `${getPaymentMethodLabel(currentOrder.paymentMethod)} · Chưa thanh toán`
+            }
+          />
+        )}
         {currentOrder.completedAt && (
           <InfoRow
             icon={<CheckCircle2 size={18} />}
@@ -332,7 +387,7 @@ export function OrderDetailPage({
         <InfoRow
           icon={<Clock3 size={18} />}
           label="Khung giờ nhận"
-          value={currentOrder.pickupTime}
+          value={formatPickupTimeDisplay(currentOrder.pickupTime)}
         />
         <InfoRow
           icon={<Store size={18} />}

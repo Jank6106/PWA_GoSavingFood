@@ -11,10 +11,11 @@ interface OrdersPageProps {
   onOpenOrder: (order: Order) => void;
 }
 
-type FilterId = 'all' | 'pending' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled';
+type FilterId = 'all' | 'pending_payment' | 'pending' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled';
 
 const filters: Array<{ id: FilterId; label: string }> = [
   { id: 'all', label: 'Tất cả' },
+  { id: 'pending_payment', label: 'Chờ thanh toán' },
   { id: 'pending', label: 'Chờ xác nhận' },
   { id: 'preparing', label: 'Đang xử lý' },
   { id: 'ready_for_pickup', label: 'Chờ lấy' },
@@ -22,10 +23,30 @@ const filters: Array<{ id: FilterId; label: string }> = [
   { id: 'cancelled', label: 'Đã hủy' },
 ];
 
+function formatPickupTimeDisplay(pickupTime?: string): string {
+  if (!pickupTime) return '11:00 - 14:00';
+  if (pickupTime.includes('T') || (pickupTime.includes('-') && pickupTime.includes(':'))) {
+    try {
+      const d = new Date(pickupTime);
+      if (!isNaN(d.getTime())) {
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        return `${hours}:${minutes} · ${day}/${month}`;
+      }
+    } catch {}
+  }
+  return pickupTime;
+}
+
 const matchesFilter = (order: Order, filterId: FilterId): boolean => {
   if (filterId === 'all') return true;
+  if (filterId === 'pending_payment') {
+    return order.status === 'pending_payment';
+  }
   if (filterId === 'pending') {
-    return order.status === 'pending_payment' || order.status === 'paid' || order.status === 'pending';
+    return order.status === 'paid' || order.status === 'pending';
   }
   if (filterId === 'preparing') {
     return order.status === 'preparing' || order.status === 'confirmed';
@@ -55,6 +76,7 @@ export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: Or
   const tabCounts = useMemo(() => {
     const counts: Record<FilterId, number> = {
       all: 0,
+      pending_payment: 0,
       pending: 0,
       preparing: 0,
       ready_for_pickup: 0,
@@ -62,7 +84,8 @@ export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: Or
       cancelled: 0,
     };
     for (const order of validOrders) {
-      if (matchesFilter(order, 'pending')) counts.pending++;
+      if (matchesFilter(order, 'pending_payment')) counts.pending_payment++;
+      else if (matchesFilter(order, 'pending')) counts.pending++;
       else if (matchesFilter(order, 'preparing')) counts.preparing++;
       else if (matchesFilter(order, 'ready_for_pickup')) counts.ready_for_pickup++;
       else if (matchesFilter(order, 'completed')) counts.completed++;
@@ -125,7 +148,7 @@ export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: Or
                 </div>
                 <div className="customer-order-meta">
                   <span>
-                    <Clock3 size={14} /> {order.pickupTime}
+                    <Clock3 size={14} /> {formatPickupTimeDisplay(order.pickupTime)}
                   </span>
                   <span>
                     <MapPin size={14} /> {order.pickupAddress}

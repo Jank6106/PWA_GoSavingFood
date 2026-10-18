@@ -1316,8 +1316,22 @@ export const customerService = {
 
       const { data, error } = await query;
       if (!error && Array.isArray(data)) {
+        let hasOverdueOrders = false;
         const remoteOrders = data.map((o: any) => {
           const rev = Array.isArray(o.reviews) ? o.reviews[0] : o.reviews;
+          const isOverdue =
+            o.status === 'pending_payment' &&
+            o.payment_expires_at &&
+            new Date(o.payment_expires_at).getTime() <= Date.now();
+
+          if (isOverdue) hasOverdueOrders = true;
+
+          const normalizedStatus = isOverdue
+            ? 'expired'
+            : o.status === 'picked_up'
+            ? 'completed'
+            : o.status;
+
           return {
             id: o.id,
             orderCode: o.order_code || `GSF-${o.id.slice(0, 6).toUpperCase()}`,
@@ -1338,7 +1352,7 @@ export const customerService = {
             totalDiscountPrice: Number(o.total_discount_price) || Number(o.final_amount),
             discountAmount: Number(o.discount_amount) || 0,
             finalAmount: Number(o.final_amount) || 0,
-            status: o.status === 'picked_up' ? 'completed' : o.status,
+            status: normalizedStatus,
             paymentMethod: o.payment_method === 'cash' ? 'payos_vietqr' : (o.payment_method || 'payos_vietqr'),
             paymentStatus: o.payment_status || (o.status === 'pending_payment' ? 'pending' : 'success'),
             pickupTime: o.pickup_time || '11:00 - 14:00',
@@ -1347,7 +1361,7 @@ export const customerService = {
             paidAt: o.paid_at || undefined,
             completedAt: o.completed_at || undefined,
             cancelledAt: o.cancelled_at || undefined,
-            cancelReason: o.cancel_reason || undefined,
+            cancelReason: isOverdue ? 'Hết thời hạn thanh toán (TTL 30 phút)' : (o.cancel_reason || undefined),
             note: o.note || undefined,
             qrCode: o.qr_code || `GSF-ORDER-${o.id}`,
             pickupToken: o.pickup_token || undefined,
@@ -1362,6 +1376,11 @@ export const customerService = {
               : undefined,
           };
         });
+
+        if (hasOverdueOrders) {
+          void customerService.cleanupExpiredPendingOrders();
+        }
+
         const remoteIdSet = new Set((remoteOrders || []).map((o: any) => String(o.id).toLowerCase()));
         const validLocalOrders = localOrders.filter((l: any) => !remoteIdSet.has(String(l.id).toLowerCase()));
         return [...validLocalOrders, ...remoteOrders];
