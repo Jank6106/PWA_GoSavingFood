@@ -6,6 +6,7 @@ import {
   Clock3,
   MapPin,
   Phone,
+  QrCode,
   TicketPercent,
   User as UserIcon,
 } from 'lucide-react';
@@ -410,74 +411,31 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
+            alignItems: 'center',
+            gap: '12px',
             background: '#ffffff',
-            padding: '14px',
-            borderRadius: '16px',
+            padding: '12px 14px',
+            borderRadius: '14px',
             border: '1px solid #dce5df',
           }}
         >
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '12px',
+              width: '34px',
+              height: '34px',
+              borderRadius: '9px',
+              background: 'var(--color-primary-soft)',
+              color: 'var(--color-primary)',
+              display: 'grid',
+              placeItems: 'center',
+              flexShrink: 0,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: 'var(--color-primary-soft)',
-                  color: 'var(--color-primary)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontWeight: 800,
-                  fontSize: '14px',
-                }}
-              >
-                QR
-              </div>
-              <div>
-                <strong style={{ fontSize: '13.5px', color: 'var(--color-text-primary)' }}>
-                  Chuyển khoản VietQR (Napas 24/7)
-                </strong>
-                <p style={{ margin: '2px 0 0', fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
-                  Thanh toán trực tuyến tức thì để giữ món
-                </p>
-              </div>
-            </div>
-            <span
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: 'var(--color-primary)',
-                background: 'var(--color-primary-soft)',
-                padding: '3px 8px',
-                borderRadius: '8px',
-              }}
-            >
-              Mặc định
-            </span>
+            <QrCode size={18} />
           </div>
-
-          <div
-            style={{
-              padding: '10px 12px',
-              background: '#f8faf9',
-              borderRadius: '10px',
-              border: '1px dashed #cbdad0',
-              fontSize: '11.5px',
-              color: 'var(--color-text-secondary)',
-              lineHeight: 1.5,
-            }}
-          >
-            🌱 <strong>Mô hình giải cứu thực phẩm (Yindii standard):</strong> Để tránh lãng phí đồ ăn do bỏ đơn, đơn hàng cần được thanh toán trước. Bạn có thể <strong>hủy đơn và nhận hoàn tiền 100%</strong> trước giờ nhận tối thiểu 2 tiếng.
-          </div>
+          <strong style={{ fontSize: '14px', color: 'var(--color-text-primary)', fontWeight: 650 }}>
+            Chuyển khoản
+          </strong>
         </div>
       </FormSection>
 
