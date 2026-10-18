@@ -1,6 +1,6 @@
 import { Clock3, Eye, EyeOff, ImagePlus, Minus, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
-import { PRESET_BAG_CATEGORIES, PRESET_BAG_IMAGES } from '../../mocks';
+import { PRESET_BAG_CATEGORIES } from '../../mocks';
 import { compressImageFile, optimizeImageUrl } from '../../services/utils';
 import type { BagInput, BagItem } from '../../types';
 import { Button, Field, Modal, SelectField, TextAreaField } from '../ui';
@@ -166,6 +166,69 @@ export function BagCard({
   );
 }
 
+const HOURS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+const MINUTES_5 = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+
+function TimePicker24Field({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const [h, m] = (value || '18:00').split(':');
+  const currentHour = h ? h.padStart(2, '0') : '18';
+  const currentMinute = m ? m.padStart(2, '0') : '00';
+
+  const handleHourChange = (newHour: string) => {
+    onChange(`${newHour}:${currentMinute}`);
+  };
+
+  const handleMinuteChange = (newMinute: string) => {
+    onChange(`${currentHour}:${newMinute}`);
+  };
+
+  return (
+    <div className="merchant-field">
+      <span>{label} (24h)</span>
+      <div className="merchant-time-select-group">
+        <div className="merchant-field-control">
+          <select
+            value={currentHour}
+            onChange={(e) => handleHourChange(e.target.value)}
+            aria-label={`${label} - Giờ`}
+          >
+            {HOURS_24.map((hour) => (
+              <option key={hour} value={hour}>
+                {hour} giờ
+              </option>
+            ))}
+          </select>
+        </div>
+        <span className="merchant-time-separator">:</span>
+        <div className="merchant-field-control">
+          <select
+            value={currentMinute}
+            onChange={(e) => handleMinuteChange(e.target.value)}
+            aria-label={`${label} - Phút`}
+          >
+            {MINUTES_5.map((minute) => (
+              <option key={minute} value={minute}>
+                {minute} phút
+              </option>
+            ))}
+            {!MINUTES_5.includes(currentMinute) && (
+              <option value={currentMinute}>{currentMinute} phút</option>
+            )}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?: BagItem; open: boolean; saving: boolean; onClose: () => void; onSubmit: (input: BagInput) => void }) {
   const [name, setName] = useState(bag?.name ?? '');
   const [category, setCategory] = useState(bag?.category ?? PRESET_BAG_CATEGORIES[0]);
@@ -177,7 +240,8 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   const [quantity, setQuantity] = useState(String(bag?.availableQuantity ?? bag?.quantity ?? 5));
   const [pickupTimeStart, setPickupTimeStart] = useState(bag?.pickupTimeStart ?? '18:00');
   const [pickupTimeEnd, setPickupTimeEnd] = useState(bag?.pickupTimeEnd ?? '20:00');
-  const [imageUrls, setImageUrls] = useState<string[]>(bag?.imageUrls?.length ? bag.imageUrls : [bag?.imageUrl ?? PRESET_BAG_IMAGES[0]]);
+  const [imageUrls, setImageUrls] = useState<string[]>(bag?.imageUrls?.length ? bag.imageUrls : (bag?.imageUrl ? [bag.imageUrl] : []));
+  const [imageError, setImageError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -192,7 +256,8 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
       setQuantity(String(bag?.availableQuantity ?? bag?.quantity ?? 5));
       setPickupTimeStart(bag?.pickupTimeStart ?? '18:00');
       setPickupTimeEnd(bag?.pickupTimeEnd ?? '20:00');
-      setImageUrls(bag?.imageUrls?.length ? bag.imageUrls : [bag?.imageUrl ?? PRESET_BAG_IMAGES[0]]);
+      setImageUrls(bag?.imageUrls?.length ? bag.imageUrls : (bag?.imageUrl ? [bag.imageUrl] : []));
+      setImageError(null);
     }
   }, [bag, open]);
 
@@ -226,14 +291,17 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   const uploadFiles = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length) return;
     const files = await readImageFiles(event.target.files);
-    setImageUrls((current) => {
-      const filtered = current.filter((img) => !PRESET_BAG_IMAGES.includes(img));
-      return [...files, ...filtered];
-    });
+    setImageUrls((current) => [...current, ...files]);
+    setImageError(null);
     event.target.value = '';
   };
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    if (imageUrls.length === 0) {
+      setImageError('Vui lòng tải lên ít nhất 1 ảnh cho túi hàng.');
+      return;
+    }
+    setImageError(null);
     const original = Number(originalPrice);
     const calculatedPrice = pricingMode === 'discount' ? Math.round(original * (1 - Number(discountPercent) / 100)) : Number(salePrice);
     onSubmit({
@@ -243,14 +311,99 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
       originalPrice: original,
       salePrice: Math.max(0, calculatedPrice),
       quantity: Number(quantity),
-      imageUrl: imageUrls[0] ?? PRESET_BAG_IMAGES[0],
-      imageUrls: imageUrls.length ? imageUrls : [PRESET_BAG_IMAGES[0]],
+      imageUrl: imageUrls[0],
+      imageUrls: imageUrls,
       pickupTimeStart,
       pickupTimeEnd
     });
   };
 
-  return <Modal open={open} title={bag ? 'Chỉnh sửa túi hàng' : 'Tạo túi hàng mới'} onClose={onClose} size="large"><form className="merchant-form" onSubmit={submit}><Field label="Tên túi hàng" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ví dụ: Túi bánh tươi cuối ngày" required /><div className="merchant-form-grid"><SelectField label="Danh mục" value={category} onChange={(event) => setCategory(event.target.value)}>{PRESET_BAG_CATEGORIES.map((item) => <option key={item}>{item}</option>)}</SelectField><div className="merchant-time-fields"><Field label="Bắt đầu nhận" type="time" value={pickupTimeStart} onChange={(event) => setPickupTimeStart(event.target.value)} required /><Field label="Kết thúc nhận" type="time" value={pickupTimeEnd} onChange={(event) => setPickupTimeEnd(event.target.value)} required /></div></div><TextAreaField label="Mô tả" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Khách hàng có thể nhận được gì?" required /><div className="merchant-form-grid merchant-form-grid--three"><Field label="Giá gốc" type="number" min="0" value={originalPrice} onChange={(event) => handleOriginalPriceChange(event.target.value)} required /><div className="merchant-pricing-field"><span>Giá giải cứu</span><div className="merchant-pricing-mode"><button type="button" className={pricingMode === 'amount' ? 'is-active' : ''} onClick={() => setPricingMode('amount')}>Nhập giá</button><button type="button" className={pricingMode === 'discount' ? 'is-active' : ''} onClick={() => setPricingMode('discount')}>Chiết khấu %</button></div><Field label={pricingMode === 'amount' ? 'Giá cụ thể' : 'Giảm giá'} type="number" min="0" max={pricingMode === 'discount' ? '100' : undefined} value={pricingMode === 'amount' ? salePrice : discountPercent} onChange={(event) => pricingMode === 'amount' ? handleSalePriceChange(event.target.value) : handleDiscountChange(event.target.value)} required /></div><Field label="Số lượng" type="number" min="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} required /></div><label className="merchant-upload-box"><ImagePlus size={22} /><span>Chọn ảnh từ thiết bị</span><small>Có thể chọn nhiều ảnh JPG, PNG hoặc WebP</small><input type="file" accept="image/*" multiple onChange={(event) => void uploadFiles(event)} /></label><div className="merchant-upload-preview">{imageUrls.map((image, index) => <div key={`${image}-${index}`}><img src={optimizeImageUrl(image, 200, 75)} alt={`Ảnh túi hàng ${index + 1}`} loading="lazy" /><button type="button" aria-label="Xóa ảnh" onClick={() => setImageUrls((current) => current.filter((_, imageIndex) => imageIndex !== index))}><X size={14} /></button>{index === 0 && <span>Ảnh bìa</span>}</div>)}</div><div className="merchant-form-actions"><Button type="button" variant="secondary" onClick={onClose}>Hủy</Button><Button type="submit" loading={saving}>{bag ? 'Lưu thay đổi' : 'Tạo túi hàng'}</Button></div></form></Modal>;
+  return (
+    <Modal open={open} title={bag ? 'Chỉnh sửa túi hàng' : 'Tạo túi hàng mới'} onClose={onClose} size="large">
+      <form className="merchant-form" onSubmit={submit}>
+        <Field label="Tên túi hàng" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ví dụ: Túi bánh tươi cuối ngày" required />
+        <div className="merchant-form-grid">
+          <SelectField label="Danh mục" value={category} onChange={(event) => setCategory(event.target.value)}>
+            {PRESET_BAG_CATEGORIES.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
+          </SelectField>
+          <div className="merchant-time-fields">
+            <TimePicker24Field label="Bắt đầu nhận" value={pickupTimeStart} onChange={setPickupTimeStart} />
+            <TimePicker24Field label="Kết thúc nhận" value={pickupTimeEnd} onChange={setPickupTimeEnd} />
+          </div>
+        </div>
+        <TextAreaField label="Mô tả" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Khách hàng có thể nhận được gì?" required />
+        <div className="merchant-form-grid merchant-form-grid--three">
+          <Field label="Giá gốc" type="number" min="0" value={originalPrice} onChange={(event) => handleOriginalPriceChange(event.target.value)} required />
+          <div className="merchant-pricing-field">
+            <span>Giá giải cứu</span>
+            <div className="merchant-pricing-mode">
+              <button type="button" className={pricingMode === 'amount' ? 'is-active' : ''} onClick={() => setPricingMode('amount')}>
+                Nhập giá
+              </button>
+              <button type="button" className={pricingMode === 'discount' ? 'is-active' : ''} onClick={() => setPricingMode('discount')}>
+                Chiết khấu %
+              </button>
+            </div>
+            <Field
+              label={pricingMode === 'amount' ? 'Giá cụ thể' : 'Giảm giá'}
+              type="number"
+              min="0"
+              max={pricingMode === 'discount' ? '100' : undefined}
+              value={pricingMode === 'amount' ? salePrice : discountPercent}
+              onChange={(event) => (pricingMode === 'amount' ? handleSalePriceChange(event.target.value) : handleDiscountChange(event.target.value))}
+              required
+            />
+          </div>
+          <Field label="Số lượng" type="number" min="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} required />
+        </div>
+        <div className="merchant-field">
+          <span>
+            Hình ảnh túi hàng <b style={{ color: 'var(--danger)' }}>*</b>
+          </span>
+          <label className={`merchant-upload-box ${imageError ? 'has-error' : ''}`}>
+            <ImagePlus size={22} />
+            <span>Chọn ảnh từ thiết bị</span>
+            <small>Bắt buộc tải lên ít nhất 1 ảnh (JPG, PNG, WebP)</small>
+            <input type="file" accept="image/*" multiple onChange={(event) => void uploadFiles(event)} />
+          </label>
+          {imageError && <small>{imageError}</small>}
+        </div>
+        {imageUrls.length > 0 && (
+          <div className="merchant-upload-preview">
+            {imageUrls.map((image, index) => (
+              <div key={`${image}-${index}`}>
+                <img src={optimizeImageUrl(image, 200, 75)} alt={`Ảnh túi hàng ${index + 1}`} loading="lazy" />
+                <button
+                  type="button"
+                  aria-label="Xóa ảnh"
+                  onClick={() => {
+                    const next = imageUrls.filter((_, imageIndex) => imageIndex !== index);
+                    setImageUrls(next);
+                    if (next.length === 0) {
+                      setImageError('Vui lòng tải lên ít nhất 1 ảnh cho túi hàng.');
+                    }
+                  }}
+                >
+                  <X size={14} />
+                </button>
+                {index === 0 && <span>Ảnh bìa</span>}
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="merchant-form-actions">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Hủy
+          </Button>
+          <Button type="submit" loading={saving}>
+            {bag ? 'Lưu thay đổi' : 'Tạo túi hàng'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
 }
 
 export function DeleteBagConfirmModal({
