@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Flashlight,
   Keyboard,
-  QrCode,
   RefreshCw,
   ShoppingBag,
   X,
@@ -382,8 +381,7 @@ export function GlobalQRScannerModal({
       {/* Chế độ nhập mã đơn thủ công / Giả lập */}
       {mode === 'manual' && !matchedOrder && !notFoundCode && (
         <div className="merchant-banking-manual-card">
-          <h3>Nhập mã đơn hàng</h3>
-          <p>Nhập mã đơn hàng (hoặc mã nhận hàng 6 ký tự) mà khách cung cấp:</p>
+          <h3 style={{ margin: '0 0 14px' }}>Nhập mã đơn hàng</h3>
 
           <Field
             label="Mã đơn hàng"
@@ -396,9 +394,10 @@ export function GlobalQRScannerModal({
                 handleProcessCode(manualCode);
               }
             }}
+            autoFocus
           />
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
             <Button
               type="button"
               fullWidth
@@ -408,33 +407,6 @@ export function GlobalQRScannerModal({
               Kiểm tra & Xác thực mã
             </Button>
           </div>
-
-          {allOrders.filter((o) => ['confirmed', 'processing', 'pending'].includes(o.status))
-            .length > 0 && (
-            <div style={{ marginTop: 16 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
-                Bấm nhanh đơn chờ nhận:
-              </span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                {allOrders
-                  .filter((o) => ['confirmed', 'processing', 'pending'].includes(o.status))
-                  .slice(0, 4)
-                  .map((o) => (
-                    <button
-                      type="button"
-                      key={o.id}
-                      className="merchant-quick-code-chip"
-                      onClick={() => {
-                        setManualCode(o.orderCode);
-                        handleProcessCode(o.orderCode);
-                      }}
-                    >
-                      <QrCode size={12} /> {o.orderCode} ({o.customerName})
-                    </button>
-                  ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 

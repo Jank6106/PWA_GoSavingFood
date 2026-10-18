@@ -1365,6 +1365,8 @@ export const customerService = {
             note: o.note || undefined,
             qrCode: o.qr_code || `GSF-ORDER-${o.id}`,
             pickupToken: o.pickup_token || undefined,
+            recipientName: o.recipient_name || undefined,
+            recipientPhone: o.recipient_phone || undefined,
             paymentExpiresAt: o.payment_expires_at || undefined,
             review: rev
               ? {
@@ -2126,6 +2128,8 @@ export const customerService = {
         id: orderId,
         orderCode: generatedOrderCode,
         qrCode: qrCodeString,
+        recipientName: customerInfo?.name?.trim() || undefined,
+        recipientPhone: customerInfo?.phone?.trim() || undefined,
         status: 'pending',
         paymentStatus: 'pending',
         createdAt: new Date().toISOString(),
@@ -2155,6 +2159,8 @@ export const customerService = {
       p_discount_amount: order.discountAmount,
       p_final_amount: order.finalAmount,
       p_qr_code: qrCodeString,
+      p_recipient_name: customerInfo?.name?.trim() || null,
+      p_recipient_phone: customerInfo?.phone?.trim() || null,
     });
 
     if (error) {
@@ -2171,6 +2177,8 @@ export const customerService = {
       orderCode: generatedOrderCode,
       qrCode: qrCodeString,
       pickupToken: pickupToken || undefined,
+      recipientName: customerInfo?.name?.trim() || undefined,
+      recipientPhone: customerInfo?.phone?.trim() || undefined,
       paymentExpiresAt: new Date(Date.now() + 30 * 60000).toISOString(),
       status: 'pending_payment',
       paymentStatus: 'pending',

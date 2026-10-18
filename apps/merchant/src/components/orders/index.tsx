@@ -105,17 +105,19 @@ export function OrderCard({
           <span>{order.customerName.slice(0, 1).toUpperCase()}</span>
         )}
         <div>
-          <strong>{order.customerName}</strong>
-          {order.customerPhone && order.customerPhone.trim() && order.customerPhone !== 'Chưa cập nhật' && (
-            <a
-              href={`tel:${order.customerPhone}`}
-              className="merchant-phone-link"
-              title="Gọi điện cho khách hàng"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Phone size={12} /> {order.customerPhone}
-            </a>
-          )}
+          <strong>{order.recipientName || order.customerName}</strong>
+          {(order.recipientPhone || order.customerPhone) &&
+            (order.recipientPhone || order.customerPhone).trim() !== '' &&
+            (order.recipientPhone || order.customerPhone) !== 'Chưa cập nhật' && (
+              <a
+                href={`tel:${order.recipientPhone || order.customerPhone}`}
+                className="merchant-phone-link"
+                title="Gọi điện cho khách hàng"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Phone size={12} /> {order.recipientPhone || order.customerPhone}
+              </a>
+            )}
         </div>
       </div>
       <div className="merchant-order-product">
@@ -195,6 +197,11 @@ export function OrderDetailsModal({
       ? order.recipientName
       : customerAccountName;
 
+  const recipientPhone =
+    (order.recipientPhone && order.recipientPhone.trim()) ||
+    (order.customerPhone && order.customerPhone.trim()) ||
+    '';
+
   const handleCopyOrderInfo = async () => {
     const text = `--- THÔNG TIN ĐƠN HÀNG GOSAVINGFOOD ---
 Mã đơn: ${order.orderCode}
@@ -203,7 +210,7 @@ Thời gian đặt: ${formatDateTime(order.placedAt || order.createdAt)}
 Thời gian thanh toán: ${order.paidAt ? formatDateTime(order.paidAt) : 'Đã thanh toán'}
 Khung giờ nhận: ${order.pickupTime}
 Tên người nhận: ${recipientName}
-Số điện thoại thanh toán: ${order.customerPhone || 'Chưa cập nhật'}
+Số điện thoại thanh toán: ${recipientPhone || 'Chưa cập nhật'}
 Tổng thanh toán: ${order.price.toLocaleString('vi-VN')}đ${order.note ? `\nGhi chú: ${order.note}` : ''}`;
 
     try {
@@ -314,9 +321,9 @@ Tổng thanh toán: ${order.price.toLocaleString('vi-VN')}đ${order.note ? `\nGh
         <div>
           <dt>Số điện thoại thanh toán</dt>
           <dd>
-            {order.customerPhone && order.customerPhone.trim() && order.customerPhone !== 'Chưa cập nhật' ? (
+            {recipientPhone && recipientPhone !== 'Chưa cập nhật' ? (
               <a
-                href={`tel:${order.customerPhone}`}
+                href={`tel:${recipientPhone}`}
                 className="merchant-phone-link"
                 title="Gọi khách hàng"
                 style={{
@@ -329,7 +336,7 @@ Tổng thanh toán: ${order.price.toLocaleString('vi-VN')}đ${order.note ? `\nGh
                   textDecoration: 'none',
                 }}
               >
-                <Phone size={13} /> {order.customerPhone}
+                <Phone size={13} /> {recipientPhone}
               </a>
             ) : (
               'Chưa cập nhật'

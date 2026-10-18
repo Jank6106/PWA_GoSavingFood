@@ -144,6 +144,8 @@ export interface Order {
   };
   qrCode?: string;
   pickupToken?: string;
+  recipientName?: string;
+  recipientPhone?: string;
   paymentExpiresAt?: string;
   paymentOrderCode?: number;
   paymentLinkId?: string;

@@ -63,6 +63,7 @@ export interface MerchantOrder {
   customerPhone: string;
   customerAvatar?: string;
   recipientName?: string;
+  recipientPhone?: string;
   storeName: string;
   bagName: string;
   quantity: number;

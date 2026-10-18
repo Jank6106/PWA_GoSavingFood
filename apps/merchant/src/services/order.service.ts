@@ -22,14 +22,17 @@ const mapDbStatusToUi = (status: string): OrderStatus => {
 const mapDbOrder = (o: any): MerchantOrder => {
   const firstItem = o.order_items?.[0];
   const customer = Array.isArray(o.users) ? o.users[0] : o.users;
+  const orderPhone = (o.recipient_phone && String(o.recipient_phone).trim()) || customer?.phone || '';
+  const orderRecipient = (o.recipient_name && String(o.recipient_name).trim()) || customer?.name || 'Khách hàng';
   return {
     id: o.id,
     storeId: o.store_id,
     orderCode: `GSF-${String(o.id).slice(0, 6).toUpperCase()}`,
-    customerName: customer?.name || 'Khách hàng',
-    customerPhone: customer?.phone || '',
+    customerName: customer?.name || orderRecipient,
+    customerPhone: orderPhone,
+    recipientPhone: orderPhone,
     customerAvatar: customer?.avatar_url || undefined,
-    recipientName: customer?.name || 'Khách hàng',
+    recipientName: orderRecipient,
     storeName: 'Cửa hàng của tôi',
     bagName: firstItem?.bag_name || 'Túi cứu trợ thực phẩm',
     quantity: firstItem?.quantity || 1,
@@ -94,7 +97,7 @@ export function setCachedMerchantOrders(storeId: string, orders: MerchantOrder[]
 }
 
 const ORDER_SELECT =
-  'id, store_id, customer_id, status, payment_status, payment_method, total_original_price, discount_amount, final_amount, pickup_time, qr_code, pickup_token, note, created_at, paid_at, updated_at, completed_at, cancelled_at, cancel_reason, users(id, name, phone, avatar_url), order_items(id, order_id, bag_id, bag_name, quantity, unit_price, surprise_bags(image_url))';
+  'id, store_id, customer_id, status, payment_status, payment_method, total_original_price, discount_amount, final_amount, pickup_time, qr_code, pickup_token, note, created_at, paid_at, updated_at, completed_at, cancelled_at, cancel_reason, recipient_name, recipient_phone, users(id, name, phone, avatar_url), order_items(id, order_id, bag_id, bag_name, quantity, unit_price, surprise_bags(image_url))';
 
 export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrder[]> {
   const existing = ordersInFlight.get(storeId);
@@ -154,6 +157,8 @@ export async function updateMerchantOrderStatus(
     customerName: 'Khách hàng',
     customerPhone: '',
     customerAvatar: undefined,
+    recipientName: 'Khách hàng',
+    recipientPhone: '',
     storeName: 'Cửa hàng',
     bagName: 'Túi thực phẩm',
     quantity: 1,
