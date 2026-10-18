@@ -250,3 +250,80 @@ html { color-scheme: light; scroll-padding-bottom: max(16px, env(safe-area-inset
  .scroll-story .story-content { height: 100svh; min-height: 620px; padding-top: calc(90px + env(safe-area-inset-top)); padding-bottom: max(32px,env(safe-area-inset-bottom)); }
 }
 
+/* Food photography: four purposeful pauses in the existing editorial story. */
+.bridge-bottom { grid-template-columns: minmax(0,1.12fr) minmax(0,1fr); gap: clamp(36px,6vw,88px); align-items: center; margin-top: 64px; }
+.bridge-photograph, .impact-photograph, .community-photograph, .app-photograph { margin: 0; min-width: 0; }
+.editorial-photo-frame { overflow: hidden; padding: 8px; border-radius: 16px; background: #fffaf2; box-shadow: 0 14px 32px -22px rgb(25 59 44 / .32); }
+.editorial-photo-frame img { border-radius: 10px; }
+.bridge-photograph .editorial-photo-frame { aspect-ratio: 4 / 3; }
+.bridge-photograph img, .impact-photograph img, .community-photograph img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.bridge-photograph img { object-position: 52% center; }
+.bridge-copy .bridge-arrow { display: block; width: 68px; margin-bottom: 26px; }
+.bridge-copy p { max-width: 42ch; }
+.bridge-bottom .text-link { margin-top: 18px; }
+
+.solution-layout { display: grid; grid-template-columns: minmax(0,.88fr) minmax(0,1.12fr); align-items: center; gap: clamp(40px,6vw,88px); }
+.solution-instructions { min-width: 0; }
+.solution-layout .journey { margin-bottom: 32px; }
+.solution-layout .journey-row { grid-template-columns: 38px minmax(0,1fr); column-gap: 22px; row-gap: 16px; padding-block: 28px; }
+.solution-layout .journey-number { align-self: start; padding-top: 3px; font-size: 1.4rem; }
+.solution-layout .journey-row h3 { font-size: clamp(1.35rem,2.05vw,1.85rem); line-height: 1.25; margin-bottom: 12px; }
+.solution-layout .journey-row p { font-size: .91rem; line-height: 1.8; }
+.solution-layout .journey-detail { grid-column: 2; flex-direction: row; align-items: center; gap: 10px; text-align: left; font-size: .75rem; }
+.solution-layout .journey-detail svg { width: 20px; height: 20px; flex-shrink: 0; }
+.app-photograph-stage { display: flex; align-items: center; justify-content: center; padding: 24px; }
+.phone-device { position: relative; width: 292px; max-width: 100%; flex-shrink: 0; padding: 8px; border: 2px solid #6a7066; border-radius: 42px; background: #1b231e; box-shadow: 0 30px 46px -22px rgb(16 39 27 / .5); }
+.phone-device::before, .phone-device::after { content: ''; position: absolute; left: -5px; width: 3px; border-radius: 2px; background: #6a7066; }
+.phone-device::before { top: 100px; height: 25px; }
+.phone-device::after { top: 145px; height: 48px; }
+.phone-display { position: relative; border-radius: 32px; overflow: hidden; background: var(--forest); aspect-ratio: 1179 / 2556; }
+.phone-display img { display: block; width: 100%; height: auto; }
+.phone-island { position: absolute; z-index: 1; top: 1.65%; left: 50%; width: 30%; height: 3.6%; transform: translateX(-50%); border-radius: 999px; background: #080a09; pointer-events: none; }
+.phone-island::after { content: ''; position: absolute; width: 6px; height: 6px; right: 10%; top: 50%; transform: translateY(-50%); border-radius: 50%; background: #111c25; box-shadow: inset 0 1px 2px rgb(0 0 0 / .7); }
+.app-photograph figcaption { display: flex; flex-direction: column; gap: 6px; padding-top: 22px; }
+.app-photograph figcaption strong { font-size: .9rem; font-weight: 600; }
+.app-photograph figcaption span { font-size: .73rem; color: var(--muted-ink); }
+
+.impact-layout { gap: clamp(48px,6vw,88px); align-items: center; }
+.impact-story h2 { font-size: clamp(2.6rem,4.7vw,4.4rem); }
+.impact-photograph { aspect-ratio: 3 / 2; width: 100%; max-width: 480px; margin-top: 32px; }
+.impact-photograph img { object-position: center; }
+.community-photograph .editorial-photo-frame { aspect-ratio: 2 / 1; }
+.community-photograph figcaption { display: flex; justify-content: space-between; gap: 20px; padding-top: 16px; font-size: .78rem; line-height: 1.7; color: var(--muted-ink); }
+.community-photograph figcaption span { white-space: nowrap; font-size: .68rem; }
+.community-section .testimonials { margin-top: 48px; }
+
+@media (min-width: 701px) and (max-width: 1100px) {
+ .solution-layout { gap: 36px; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); }
+ .phone-device { width: 260px; }
+ .app-photograph-stage { padding: 34px 18px; }
+ .solution-layout .journey-row { column-gap: 14px; grid-template-columns: 30px minmax(0,1fr); }
+ .solution-layout .journey-row p { font-size: .86rem; }
+ .bridge-copy .bridge-arrow { width: 50px; margin-bottom: 18px; }
+}
+@media (max-width: 700px) {
+ .bridge-bottom { grid-template-columns: minmax(0,1fr); gap: 32px; margin-top: 40px; }
+ .editorial-photo-frame { padding: 6px; border-radius: 14px; }
+ .editorial-photo-frame img { border-radius: 8px; }
+ .bridge-copy .bridge-arrow { width: 46px; margin-bottom: 20px; }
+ .solution-layout { grid-template-columns: minmax(0,1fr); gap: 38px; }
+ .solution-section .section-intro { grid-template-columns: minmax(0,1fr); gap: 24px; }
+ .solution-section .audience-switch { margin-top: 24px; margin-bottom: 26px; gap: 22px; }
+ .audience-switch button { min-height: 44px; }
+ .app-photograph-stage { padding: 28px 24px; }
+ .phone-device { width: 248px; border-radius: 37px; padding: 7px; }
+ .phone-display { border-radius: 28px; }
+ .app-photograph figcaption { padding-top: 18px; }
+ .solution-layout .journey-row { padding-block: 25px; grid-template-columns: 30px minmax(0,1fr); column-gap: 18px; }
+ .solution-layout .journey-row h3 { font-size: 1.4rem; }
+ .solution-layout .journey-row p { font-size: .94rem; }
+ .solution-instructions > .editorial-button { width: 100%; }
+ .impact-layout { grid-template-columns: minmax(0,1fr); gap: 48px; }
+ .impact-story h2 { font-size: 2.6rem; }
+ .impact-photograph { max-width: none; margin-top: 28px; }
+ .community-photograph .editorial-photo-frame { aspect-ratio: 4 / 3; }
+ .community-photograph img { object-position: 50% 48%; }
+ .community-photograph figcaption { flex-direction: column; gap: 4px; font-size: .75rem; padding-top: 12px; }
+ .community-section .testimonials { margin-top: 32px; }
+}
+
