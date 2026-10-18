@@ -12,16 +12,16 @@ export function Button({ variant = 'primary', size = 'medium', loading, fullWidt
   return <button className={`merchant-button merchant-button--${variant} merchant-button--${size} ${fullWidth ? 'merchant-button--full' : ''} ${className}`} disabled={disabled || loading} {...props}>{loading && <LoaderCircle className="spin" size={17} />}{children}</button>;
 }
 
-interface FieldProps extends InputHTMLAttributes<HTMLInputElement> { label: string; error?: string; icon?: ReactNode; isPassword?: boolean; }
+interface FieldProps extends InputHTMLAttributes<HTMLInputElement> { label: ReactNode; error?: string; icon?: ReactNode; isPassword?: boolean; }
 export function Field({ label, error, icon, isPassword, className = '', ...props }: FieldProps) {
   const id = useId(); const [visible, setVisible] = useState(false);
   return <label className={`merchant-field ${error ? 'has-error' : ''} ${className}`} htmlFor={id}><span>{label}</span><div className="merchant-field-control">{icon}<input id={id} type={isPassword && !visible ? 'password' : props.type} {...props} />{isPassword && <button type="button" aria-label={visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setVisible((value) => !value)}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button>}</div>{error && <small>{error}</small>}</label>;
 }
 
-interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> { label: string; error?: string; }
+interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> { label: ReactNode; error?: string; }
 export function TextAreaField({ label, error, ...props }: TextAreaFieldProps) { const id = useId(); return <label className={`merchant-field ${error ? 'has-error' : ''}`} htmlFor={id}><span>{label}</span><div className="merchant-field-control merchant-field-control--textarea"><textarea id={id} {...props} /></div>{error && <small>{error}</small>}</label>; }
 
-export function SelectField({ label, children, ...props }: { label: string; children: ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) { const id = useId(); return <label className="merchant-field" htmlFor={id}><span>{label}</span><div className="merchant-field-control"><select id={id} {...props}>{children}</select></div></label>; }
+export function SelectField({ label, children, ...props }: { label: ReactNode; children: ReactNode } & React.SelectHTMLAttributes<HTMLSelectElement>) { const id = useId(); return <label className="merchant-field" htmlFor={id}><span>{label}</span><div className="merchant-field-control"><select id={id} {...props}>{children}</select></div></label>; }
 
 export function Modal({ open, title, description, onClose, children, size = 'medium', className = '' }: { open: boolean; title: string; description?: string; onClose: () => void; children: ReactNode; size?: 'small' | 'medium' | 'large'; className?: string }) {
   if (!open) return null;

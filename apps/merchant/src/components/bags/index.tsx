@@ -166,78 +166,17 @@ export function BagCard({
   );
 }
 
-const HOURS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
-const MINUTES_5 = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
-
-function TimePicker24Field({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (val: string) => void;
-}) {
-  const [h, m] = (value || '18:00').split(':');
-  const currentHour = h ? h.padStart(2, '0') : '18';
-  const currentMinute = m ? m.padStart(2, '0') : '00';
-
-  const handleHourChange = (newHour: string) => {
-    onChange(`${newHour}:${currentMinute}`);
-  };
-
-  const handleMinuteChange = (newMinute: string) => {
-    onChange(`${currentHour}:${newMinute}`);
-  };
-
-  return (
-    <div className="merchant-field">
-      <span>{label} (24h)</span>
-      <div className="merchant-time-select-group">
-        <div className="merchant-field-control">
-          <select
-            value={currentHour}
-            onChange={(e) => handleHourChange(e.target.value)}
-            aria-label={`${label} - Giờ`}
-          >
-            {HOURS_24.map((hour) => (
-              <option key={hour} value={hour}>
-                {hour} giờ
-              </option>
-            ))}
-          </select>
-        </div>
-        <span className="merchant-time-separator">:</span>
-        <div className="merchant-field-control">
-          <select
-            value={currentMinute}
-            onChange={(e) => handleMinuteChange(e.target.value)}
-            aria-label={`${label} - Phút`}
-          >
-            {MINUTES_5.map((minute) => (
-              <option key={minute} value={minute}>
-                {minute} phút
-              </option>
-            ))}
-            {!MINUTES_5.includes(currentMinute) && (
-              <option value={currentMinute}>{currentMinute} phút</option>
-            )}
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?: BagItem; open: boolean; saving: boolean; onClose: () => void; onSubmit: (input: BagInput) => void }) {
   const [name, setName] = useState(bag?.name ?? '');
   const [category, setCategory] = useState(bag?.category ?? PRESET_BAG_CATEGORIES[0]);
   const [description, setDescription] = useState(bag?.description ?? '');
-  const [originalPrice, setOriginalPrice] = useState(String(bag?.originalPrice ?? 120000));
+  const [originalPrice, setOriginalPrice] = useState(bag ? String(bag.originalPrice) : '');
   const [pricingMode, setPricingMode] = useState<'amount' | 'discount'>('amount');
-  const [salePrice, setSalePrice] = useState(String(bag?.salePrice ?? 45000));
-  const [discountPercent, setDiscountPercent] = useState(String(bag ? Math.round((1 - bag.salePrice / bag.originalPrice) * 100) : 60));
-  const [quantity, setQuantity] = useState(String(bag?.availableQuantity ?? bag?.quantity ?? 5));
+  const [salePrice, setSalePrice] = useState(bag ? String(bag.salePrice) : '');
+  const [discountPercent, setDiscountPercent] = useState(
+    bag ? String(bag.originalPrice > 0 ? Math.round((1 - bag.salePrice / bag.originalPrice) * 100) : 60) : ''
+  );
+  const [quantity, setQuantity] = useState(bag ? String(bag.availableQuantity ?? bag.quantity) : '');
   const [pickupTimeStart, setPickupTimeStart] = useState(bag?.pickupTimeStart ?? '18:00');
   const [pickupTimeEnd, setPickupTimeEnd] = useState(bag?.pickupTimeEnd ?? '20:00');
   const [imageUrls, setImageUrls] = useState<string[]>(bag?.imageUrls?.length ? bag.imageUrls : (bag?.imageUrl ? [bag.imageUrl] : []));
@@ -248,12 +187,12 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
       setName(bag?.name ?? '');
       setCategory(bag?.category ?? PRESET_BAG_CATEGORIES[0]);
       setDescription(bag?.description ?? '');
-      const orig = bag?.originalPrice ?? 120000;
-      const sale = bag?.salePrice ?? 45000;
-      setOriginalPrice(String(orig));
-      setSalePrice(String(sale));
-      setDiscountPercent(String(orig > 0 ? Math.round((1 - sale / orig) * 100) : 60));
-      setQuantity(String(bag?.availableQuantity ?? bag?.quantity ?? 5));
+      setOriginalPrice(bag ? String(bag.originalPrice) : '');
+      setSalePrice(bag ? String(bag.salePrice) : '');
+      setDiscountPercent(
+        bag ? String(bag.originalPrice > 0 ? Math.round((1 - bag.salePrice / bag.originalPrice) * 100) : 60) : ''
+      );
+      setQuantity(bag ? String(bag.availableQuantity ?? bag.quantity) : '');
       setPickupTimeStart(bag?.pickupTimeStart ?? '18:00');
       setPickupTimeEnd(bag?.pickupTimeEnd ?? '20:00');
       setImageUrls(bag?.imageUrls?.length ? bag.imageUrls : (bag?.imageUrl ? [bag.imageUrl] : []));
@@ -264,10 +203,10 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   const handleOriginalPriceChange = (val: string) => {
     setOriginalPrice(val);
     const orig = Number(val);
-    if (orig > 0 && pricingMode === 'discount') {
+    if (orig > 0 && pricingMode === 'discount' && discountPercent) {
       const disc = Number(discountPercent);
       setSalePrice(String(Math.round(orig * (1 - disc / 100))));
-    } else if (orig > 0) {
+    } else if (orig > 0 && salePrice) {
       setDiscountPercent(String(Math.max(0, Math.round((1 - Number(salePrice) / orig) * 100))));
     }
   };
@@ -275,7 +214,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   const handleSalePriceChange = (val: string) => {
     setSalePrice(val);
     const orig = Number(originalPrice);
-    if (orig > 0) {
+    if (orig > 0 && val) {
       setDiscountPercent(String(Math.max(0, Math.round((1 - Number(val) / orig) * 100))));
     }
   };
@@ -283,7 +222,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   const handleDiscountChange = (val: string) => {
     setDiscountPercent(val);
     const orig = Number(originalPrice);
-    if (orig > 0) {
+    if (orig > 0 && val) {
       setSalePrice(String(Math.max(0, Math.round(orig * (1 - Number(val) / 100)))));
     }
   };
@@ -295,6 +234,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
     setImageError(null);
     event.target.value = '';
   };
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (imageUrls.length === 0) {
@@ -303,60 +243,163 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
     }
     setImageError(null);
     const original = Number(originalPrice);
-    const calculatedPrice = pricingMode === 'discount' ? Math.round(original * (1 - Number(discountPercent) / 100)) : Number(salePrice);
+    if (!originalPrice || isNaN(original) || original <= 0) {
+      return;
+    }
+    const calculatedPrice =
+      pricingMode === 'discount'
+        ? Math.round(original * (1 - Number(discountPercent || 0) / 100))
+        : Number(salePrice);
+    if (pricingMode === 'amount' && (!salePrice || Number(salePrice) < 0)) {
+      return;
+    }
+    const qty = Number(quantity);
+    if (!quantity || isNaN(qty) || qty <= 0) {
+      return;
+    }
     onSubmit({
       name,
       category,
       description,
       originalPrice: original,
       salePrice: Math.max(0, calculatedPrice),
-      quantity: Number(quantity),
+      quantity: qty,
       imageUrl: imageUrls[0],
       imageUrls: imageUrls,
       pickupTimeStart,
-      pickupTimeEnd
+      pickupTimeEnd,
     });
   };
 
   return (
     <Modal open={open} title={bag ? 'Chỉnh sửa túi hàng' : 'Tạo túi hàng mới'} onClose={onClose} size="large">
       <form className="merchant-form" onSubmit={submit}>
-        <Field label="Tên túi hàng" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ví dụ: Túi bánh tươi cuối ngày" required />
+        <Field
+          label={
+            <>
+              Tên túi hàng <b style={{ color: 'var(--danger)' }}>*</b>
+            </>
+          }
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Ví dụ: Túi bánh tươi cuối ngày"
+          required
+        />
         <div className="merchant-form-grid">
-          <SelectField label="Danh mục" value={category} onChange={(event) => setCategory(event.target.value)}>
+          <SelectField
+            label={
+              <>
+                Danh mục <b style={{ color: 'var(--danger)' }}>*</b>
+              </>
+            }
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+          >
             {PRESET_BAG_CATEGORIES.map((item) => (
               <option key={item}>{item}</option>
             ))}
           </SelectField>
-          <div className="merchant-time-fields">
-            <TimePicker24Field label="Bắt đầu nhận" value={pickupTimeStart} onChange={setPickupTimeStart} />
-            <TimePicker24Field label="Kết thúc nhận" value={pickupTimeEnd} onChange={setPickupTimeEnd} />
+          <div className="merchant-field">
+            <span>
+              Bắt đầu - Kết thúc <b style={{ color: 'var(--danger)' }}>*</b>
+            </span>
+            <div className="merchant-field-control merchant-time-range-control">
+              <input
+                type="time"
+                value={pickupTimeStart}
+                onChange={(event) => setPickupTimeStart(event.target.value)}
+                aria-label="Giờ bắt đầu nhận"
+                required
+              />
+              <span className="merchant-time-dash">-</span>
+              <input
+                type="time"
+                value={pickupTimeEnd}
+                onChange={(event) => setPickupTimeEnd(event.target.value)}
+                aria-label="Giờ kết thúc nhận"
+                required
+              />
+            </div>
           </div>
         </div>
-        <TextAreaField label="Mô tả" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Khách hàng có thể nhận được gì?" required />
+        <TextAreaField
+          label={
+            <>
+              Mô tả <b style={{ color: 'var(--danger)' }}>*</b>
+            </>
+          }
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Khách hàng có thể nhận được gì?"
+          required
+        />
         <div className="merchant-form-grid merchant-form-grid--three">
-          <Field label="Giá gốc" type="number" min="0" value={originalPrice} onChange={(event) => handleOriginalPriceChange(event.target.value)} required />
+          <Field
+            label={
+              <>
+                Giá gốc <b style={{ color: 'var(--danger)' }}>*</b>
+              </>
+            }
+            type="number"
+            min="1"
+            placeholder="Ví dụ: 120000"
+            value={originalPrice}
+            onChange={(event) => handleOriginalPriceChange(event.target.value)}
+            required
+          />
           <div className="merchant-pricing-field">
-            <span>Giá giải cứu</span>
+            <span>
+              Giá giải cứu <b style={{ color: 'var(--danger)' }}>*</b>
+            </span>
             <div className="merchant-pricing-mode">
-              <button type="button" className={pricingMode === 'amount' ? 'is-active' : ''} onClick={() => setPricingMode('amount')}>
+              <button
+                type="button"
+                className={pricingMode === 'amount' ? 'is-active' : ''}
+                onClick={() => setPricingMode('amount')}
+              >
                 Nhập giá
               </button>
-              <button type="button" className={pricingMode === 'discount' ? 'is-active' : ''} onClick={() => setPricingMode('discount')}>
+              <button
+                type="button"
+                className={pricingMode === 'discount' ? 'is-active' : ''}
+                onClick={() => setPricingMode('discount')}
+              >
                 Chiết khấu %
               </button>
             </div>
             <Field
-              label={pricingMode === 'amount' ? 'Giá cụ thể' : 'Giảm giá'}
+              label={
+                <>
+                  {pricingMode === 'amount' ? 'Giá cụ thể' : 'Giảm giá'}{' '}
+                  <b style={{ color: 'var(--danger)' }}>*</b>
+                </>
+              }
               type="number"
               min="0"
               max={pricingMode === 'discount' ? '100' : undefined}
+              placeholder={pricingMode === 'amount' ? 'Ví dụ: 45000' : 'Ví dụ: 60'}
               value={pricingMode === 'amount' ? salePrice : discountPercent}
-              onChange={(event) => (pricingMode === 'amount' ? handleSalePriceChange(event.target.value) : handleDiscountChange(event.target.value))}
+              onChange={(event) =>
+                pricingMode === 'amount'
+                  ? handleSalePriceChange(event.target.value)
+                  : handleDiscountChange(event.target.value)
+              }
               required
             />
           </div>
-          <Field label="Số lượng" type="number" min="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} required />
+          <Field
+            label={
+              <>
+                Số lượng <b style={{ color: 'var(--danger)' }}>*</b>
+              </>
+            }
+            type="number"
+            min="1"
+            placeholder="Ví dụ: 5"
+            value={quantity}
+            onChange={(event) => setQuantity(event.target.value)}
+            required
+          />
         </div>
         <div className="merchant-field">
           <span>

@@ -460,6 +460,9 @@ h1, h2, h3, p { margin: 0; }
 .merchant-store-status span { color: #D8ED9B; font-weight: 600; }.merchant-store-status b { font-weight: 800; }.merchant-store-status.is-closed i { background: #f59e0b; }
 .merchant-field-control input:disabled, .merchant-field-control textarea:disabled { color: var(--text-secondary); cursor: not-allowed; }.merchant-field:has(input:disabled) .merchant-field-control, .merchant-field:has(textarea:disabled) .merchant-field-control { border-color: #E5E7EB; background: #F8FAFC; }
 .merchant-form-actions--between > div { display: flex; gap: 8px; }.merchant-time-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.merchant-time-range-control { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
+.merchant-time-range-control input[type="time"] { flex: 1; min-width: 0; text-align: center; border: 0; background: transparent; color: var(--primary); font-size: 14px; font-weight: 600; }
+.merchant-time-dash { font-weight: 700; color: var(--text-secondary); user-select: none; padding: 0 4px; }
 .merchant-time-select-group { display: flex; align-items: center; gap: 6px; }
 .merchant-time-select-group .merchant-field-control { flex: 1; min-width: 0; }
 .merchant-time-separator { font-weight: 700; color: var(--text-secondary); user-select: none; }
