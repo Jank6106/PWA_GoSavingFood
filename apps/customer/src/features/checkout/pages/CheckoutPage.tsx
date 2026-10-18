@@ -88,21 +88,10 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
   };
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    let val = event.target.value;
-    // Chỉ cho phép nhập các ký tự liên quan đến số điện thoại
-    val = val.replace(/[^\d+\s-]/g, '');
-
-    // Nếu người dùng nhập hoặc paste đầu số quốc tế +84 -> tự động chuyển thành 0
-    if (val.startsWith('+84')) {
-      val = '0' + val.slice(3).replace(/\D/g, '');
-    } else if (val.startsWith('84') && val.replace(/\D/g, '').length >= 10) {
-      val = '0' + val.slice(2).replace(/\D/g, '');
-    }
-
-    // Giới hạn số lượng chữ số tối đa là 10
-    const digitsOnly = val.replace(/\D/g, '');
+    // Chỉ cho phép nhập các chữ số thuần túy (0-9), tối đa 10 chữ số
+    const digitsOnly = event.target.value.replace(/\D/g, '');
     if (digitsOnly.length <= 10) {
-      setPhone(val);
+      setPhone(digitsOnly);
       if (!phoneTouched) setPhoneTouched(true);
     }
   };
@@ -150,22 +139,7 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
         </label>
 
         <label className="customer-field-label">
-          <div className="customer-field-label-header">
-            <span>Số điện thoại người nhận</span>
-            <span
-              className={`customer-field-counter ${
-                isPhoneValid
-                  ? 'is-valid'
-                  : phoneTouched && phone.trim().length > 0 && !isPhoneValid
-                  ? 'is-error'
-                  : ''
-              }`}
-            >
-              {isPhoneValid
-                ? '10/10 số (Hợp lệ)'
-                : `${phoneValidation.digitsCount}/10 số`}
-            </span>
-          </div>
+          <span>Số điện thoại người nhận</span>
           <span
             className={`customer-input-wrap ${
               phoneTouched && !isPhoneValid ? 'has-error' : ''
@@ -177,9 +151,9 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
               value={phone}
               onChange={handlePhoneChange}
               onBlur={() => setPhoneTouched(true)}
-              placeholder="Ví dụ: 0912 345 678"
+              placeholder="0912345678"
               inputMode="numeric"
-              maxLength={15}
+              maxLength={10}
             />
             {isPhoneValid && (
               <Check size={18} className="customer-field-success-icon" />
@@ -188,12 +162,7 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
           {phoneTouched && !isPhoneValid && (
             <span className="customer-field-error-msg">
               <AlertCircle size={14} />
-              <span>{phoneValidation.errorMessage}</span>
-            </span>
-          )}
-          {!phoneTouched && !phone.trim() && (
-            <span className="customer-field-hint-msg">
-              Nhập đủ 10 số di động Việt Nam (đầu 03, 05, 07, 08, 09) để nhận mã đơn hàng.
+              <span>Số điện thoại chưa hợp lệ</span>
             </span>
           )}
         </label>
