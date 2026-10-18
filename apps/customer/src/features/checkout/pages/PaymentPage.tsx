@@ -79,7 +79,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
       const saved = Number(sessionStorage.getItem(SESSION_EXPIRES_AT_KEY));
       if (!isNaN(saved) && saved > 0) return saved;
     } catch {}
-    const fresh = Date.now() + 15 * 60 * 1000;
+    const fresh = Date.now() + 30 * 60 * 1000;
     try {
       sessionStorage.setItem(SESSION_EXPIRES_AT_KEY, String(fresh));
     } catch {}
@@ -466,6 +466,11 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
       if (remaining <= 0) {
         setIsExpired(true);
         void customerService.cleanupExpiredPendingOrders();
+        void customerService.cancelPayOSPayment({
+          orderCode: payosData?.orderCode,
+          orderId: effectiveOrderId,
+          cancellationReason: 'Đơn hàng hết thời gian thanh toán',
+        });
       }
     };
 
@@ -474,7 +479,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
 
     const timer = setInterval(syncCountdown, 1000);
     return () => clearInterval(timer);
-  }, [targetExpiresAt, isExpired]);
+  }, [targetExpiresAt, isExpired, payosData?.orderCode, effectiveOrderId]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

@@ -2152,15 +2152,51 @@ export const customerService = {
       orderCode: generatedOrderCode,
       qrCode: qrCodeString,
       pickupToken: pickupToken || undefined,
-      paymentExpiresAt: new Date(Date.now() + 15 * 60000).toISOString(),
+      paymentExpiresAt: new Date(Date.now() + 30 * 60000).toISOString(),
       status: 'pending_payment',
       paymentStatus: 'pending',
       createdAt: new Date().toISOString(),
     };
   },
 
+  async cancelPayOSPayment(params: {
+    orderCode?: number | string;
+    orderId?: string;
+    cancellationReason?: string;
+  }): Promise<boolean> {
+    try {
+      const apiBase =
+        import.meta.env.VITE_API_URL ||
+        (import.meta.env.PROD ? 'https://gosavingfood.app' : '');
+      const res = await fetch(`${apiBase}/api/payos/cancel-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+      return res.ok;
+    } catch (err) {
+      console.warn('cancelPayOSPayment error:', err);
+      return false;
+    }
+  },
+
   async cleanupExpiredPendingOrders(): Promise<number> {
     try {
+      const apiBase =
+        import.meta.env.VITE_API_URL ||
+        (import.meta.env.PROD ? 'https://gosavingfood.app' : '');
+
+      // Ưu tiên gọi API cleanup để vừa dọn DB vừa hủy link PayOS
+      try {
+        const res = await fetch(`${apiBase}/api/payos/cleanup-expired`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            return Number(data.expiredCount) || 0;
+          }
+        }
+      } catch {}
+
       const { data } = await supabase.rpc('cleanup_expired_pending_orders');
       return (data as any)?.expired_orders_count || 0;
     } catch (err) {
