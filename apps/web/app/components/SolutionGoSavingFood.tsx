@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ArrowUpRight, MapPin, ShoppingBag, QrCode, Store, CircleDollarSign, Leaf } from "lucide-react";
+import { AppPhotograph } from "./AppPhotograph";
 
 const journeys = {
   consumer: [
@@ -30,6 +31,9 @@ export function SolutionGoSavingFood({
       <button aria-pressed={audience === 'consumer'} onClick={() => setAudience('consumer')}>Tôi muốn tìm món ngon</button>
       <button aria-pressed={audience === 'merchant'} onClick={() => setAudience('merchant')}>Tôi có cửa hàng</button>
     </div>
+    <div className="solution-layout">
+      <AppPhotograph audience={audience} />
+      <div className="solution-instructions">
     <div className="journey" key={audience}>
       {journeys[audience].map((step, i) => <article className="journey-row" key={step.title} >
         <span className="journey-number">0{i + 1}</span><div><h3>{step.title}</h3><p>{step.copy}</p></div><div className="journey-detail"><step.icon size={36} strokeWidth={1.3} /><span>{step.detail}</span></div>
@@ -48,5 +52,7 @@ export function SolutionGoSavingFood({
       {audience === 'consumer' ? 'Tìm món ngon gần tôi' : 'Đăng ký cửa hàng'}
       <ArrowUpRight size={20} />
     </a>
+      </div>
+    </div>
   </section>;
 }
