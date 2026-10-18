@@ -2,6 +2,7 @@
 -- 1. Nâng TTL thanh toán lên 33 phút (30 phút hiển thị cho khách + 3 phút khoảng đệm ẩn)
 -- 2. Tự động xử lý Hoàn tiền (Auto-Refund) khi thanh toán trùng lặp (lần 2) hoặc thanh toán sau khi đơn đã hết hạn/hủy
 -- 3. Trả về danh sách mã PayOS của các đơn hết hạn để backend chủ động gọi API hủy link trên PayOS
+-- 4. Đảm bảo đúng 100% schema thực tế của bảng surprise_bags (name, discount_price, is_available) và idempotency_keys
 
 -- Cập nhật default của cột payment_expires_at sang 33 phút
 ALTER TABLE public.orders
@@ -181,7 +182,248 @@ $function$;
 
 GRANT EXECUTE ON FUNCTION public.confirm_payos_payment(BIGINT, TEXT) TO authenticated, service_role;
 
--- 2. Cập nhật place_order với TTL 33 phút (30 phút hiển thị + 3 phút buffer ẩn)
+-- 2. Cập nhật create_order_transaction và place_order chuẩn schema 100%
+CREATE OR REPLACE FUNCTION public.create_order_transaction(
+  p_id uuid,
+  p_customer_id uuid,
+  p_store_id uuid,
+  p_idempotency_key text,
+  p_items jsonb,
+  p_voucher_code text,
+  p_pickup_time timestamp with time zone,
+  p_payment_method text,
+  p_note text,
+  p_total_original_price integer,
+  p_total_discount_price integer,
+  p_discount_amount integer,
+  p_final_amount integer,
+  p_qr_code text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_item RECORD;
+  v_expired_order RECORD;
+  v_bag_id UUID;
+  v_quantity INTEGER;
+  v_bag_name TEXT;
+  v_discount_price INTEGER;
+  v_current_stock INTEGER;
+  v_is_available BOOLEAN;
+  v_is_daily BOOLEAN;
+  v_pickup_start TIME;
+  v_pickup_end TIME;
+  v_store_id UUID;
+  v_voucher_id UUID;
+  v_voucher_used_count INTEGER;
+  v_voucher_quantity INTEGER;
+  v_voucher_is_active BOOLEAN;
+  v_voucher_start TIMESTAMPTZ;
+  v_voucher_end TIMESTAMPTZ;
+  v_expires_at TIMESTAMPTZ;
+  v_pickup_token UUID;
+  v_normalized_method TEXT;
+  v_vn_time TIME;
+  v_is_expired BOOLEAN;
+BEGIN
+  -- 1. Chặn phương thức tiền mặt (100% Online Payment)
+  IF p_payment_method = 'cash' THEN
+    RAISE EXCEPTION 'CASH_PAYMENT_NOT_SUPPORTED' USING DETAIL = 'GoSavingFood chỉ hỗ trợ thanh toán trực tuyến qua VietQR.';
+  END IF;
+
+  v_normalized_method := p_payment_method;
+  IF v_normalized_method NOT IN ('banking', 'payos_vietqr', 'momo', 'zalopay') THEN
+    v_normalized_method := 'banking';
+  END IF;
+
+  -- 2. Idempotency Check qua bảng public.idempotency_keys
+  IF EXISTS (
+    SELECT 1 FROM public.idempotency_keys
+    WHERE key = p_idempotency_key AND user_id = p_customer_id
+  ) THEN
+    RETURN json_build_object(
+      'success', true,
+      'is_duplicate', true,
+      'order_id', (
+        SELECT (response->>'orderId')::UUID
+        FROM public.idempotency_keys
+        WHERE key = p_idempotency_key AND user_id = p_customer_id
+      )
+    );
+  END IF;
+
+  -- 3. LAZY CLEANUP: Hủy các đơn pending_payment quá hạn 33 phút của chính các túi được đặt
+  FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x("bagId" UUID, quantity INTEGER) LOOP
+    FOR v_expired_order IN
+      SELECT o.id, o.voucher_code, oi.quantity AS expired_qty
+      FROM public.orders o
+      JOIN public.order_items oi ON oi.order_id = o.id
+      WHERE oi.bag_id = v_item."bagId"
+        AND o.status = 'pending_payment'
+        AND o.payment_status = 'pending'
+        AND o.payment_expires_at < NOW()
+        AND o.deleted_at IS NULL
+      FOR UPDATE OF o SKIP LOCKED
+    LOOP
+      UPDATE public.surprise_bags
+      SET quantity = quantity + v_expired_order.expired_qty,
+          updated_at = NOW()
+      WHERE id = v_item."bagId";
+
+      IF v_expired_order.voucher_code IS NOT NULL AND v_expired_order.voucher_code != '' THEN
+        UPDATE public.vouchers
+        SET used_count = GREATEST(0, used_count - 1),
+            updated_at = NOW()
+        WHERE code = v_expired_order.voucher_code AND deleted_at IS NULL;
+      END IF;
+
+      UPDATE public.orders
+      SET status = 'expired'::order_status,
+          cancelled_at = NOW(),
+          cancel_reason = 'Quá hạn thanh toán 30 phút (Lazy Cleanup)',
+          updated_at = NOW(),
+          pickup_token = NULL
+      WHERE id = v_expired_order.id;
+    END LOOP;
+  END LOOP;
+
+  -- 4. Khóa & Kiểm tra tồn kho & Múi giờ Việt Nam
+  v_vn_time := (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::time;
+
+  FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x("bagId" UUID, quantity INTEGER) LOOP
+    v_bag_id := v_item."bagId";
+    v_quantity := v_item.quantity;
+
+    SELECT name, quantity, is_available, discount_price, store_id, expires_at, is_daily, pickup_start, pickup_end
+    INTO v_bag_name, v_current_stock, v_is_available, v_discount_price, v_store_id, v_expires_at, v_is_daily, v_pickup_start, v_pickup_end
+    FROM public.surprise_bags
+    WHERE id = v_bag_id AND deleted_at IS NULL
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'BAG_NOT_FOUND' USING DETAIL = v_bag_id::TEXT;
+    END IF;
+
+    IF v_store_id != p_store_id THEN
+      RAISE EXCEPTION 'STORE_MISMATCH' USING DETAIL = v_bag_id::TEXT;
+    END IF;
+
+    IF NOT v_is_available THEN
+      RAISE EXCEPTION 'BAG_UNAVAILABLE' USING DETAIL = jsonb_build_object(
+        'bagId', v_bag_id,
+        'available', v_current_stock,
+        'requested', v_quantity,
+        'reason', 'INACTIVE'
+      )::TEXT;
+    END IF;
+
+    IF COALESCE(v_is_daily, false) THEN
+      IF v_pickup_end IS NOT NULL THEN
+        IF v_pickup_start IS NOT NULL AND v_pickup_start > v_pickup_end THEN
+          v_is_expired := (v_vn_time > v_pickup_end AND v_vn_time < v_pickup_start);
+        ELSE
+          v_is_expired := (v_vn_time > v_pickup_end);
+        END IF;
+      ELSE
+        v_is_expired := false;
+      END IF;
+    ELSE
+      v_is_expired := (v_expires_at IS NOT NULL AND NOW() > v_expires_at);
+    END IF;
+
+    IF v_is_expired THEN
+      RAISE EXCEPTION 'BAG_UNAVAILABLE' USING DETAIL = jsonb_build_object(
+        'bagId', v_bag_id,
+        'available', v_current_stock,
+        'requested', v_quantity,
+        'reason', 'EXPIRED',
+        'pickupEnd', to_char(v_pickup_end, 'HH24:MI')
+      )::TEXT;
+    END IF;
+
+    IF v_current_stock < v_quantity THEN
+      RAISE EXCEPTION 'BAG_UNAVAILABLE' USING DETAIL = jsonb_build_object(
+        'bagId', v_bag_id,
+        'available', v_current_stock,
+        'requested', v_quantity,
+        'reason', 'OUT_OF_STOCK'
+      )::TEXT;
+    END IF;
+
+    UPDATE public.surprise_bags
+    SET quantity = quantity - v_quantity,
+        updated_at = NOW()
+    WHERE id = v_bag_id;
+  END LOOP;
+
+  -- 5. Kiểm tra voucher
+  IF p_voucher_code IS NOT NULL AND p_voucher_code != '' THEN
+    SELECT id, used_count, quantity, is_active, valid_from, valid_until
+    INTO v_voucher_id, v_voucher_used_count, v_voucher_quantity, v_voucher_is_active, v_voucher_start, v_voucher_end
+    FROM public.vouchers
+    WHERE code = p_voucher_code AND deleted_at IS NULL
+    FOR UPDATE;
+
+    IF NOT FOUND THEN RAISE EXCEPTION 'VOUCHER_NOT_FOUND' USING DETAIL = p_voucher_code; END IF;
+    IF NOT v_voucher_is_active THEN RAISE EXCEPTION 'VOUCHER_INACTIVE' USING DETAIL = p_voucher_code; END IF;
+    IF v_voucher_start IS NOT NULL AND NOW() < v_voucher_start THEN RAISE EXCEPTION 'VOUCHER_NOT_STARTED' USING DETAIL = p_voucher_code; END IF;
+    IF v_voucher_end IS NOT NULL AND NOW() > v_voucher_end THEN RAISE EXCEPTION 'VOUCHER_EXPIRED' USING DETAIL = p_voucher_code; END IF;
+    IF v_voucher_quantity IS NOT NULL AND v_voucher_used_count >= v_voucher_quantity THEN RAISE EXCEPTION 'VOUCHER_USAGE_LIMIT' USING DETAIL = p_voucher_code; END IF;
+
+    IF EXISTS (
+      SELECT 1 FROM public.orders
+      WHERE customer_id = p_customer_id AND voucher_code = p_voucher_code
+        AND status NOT IN ('cancelled', 'expired') AND deleted_at IS NULL
+    ) THEN RAISE EXCEPTION 'VOUCHER_ALREADY_USED' USING DETAIL = p_voucher_code; END IF;
+
+    UPDATE public.vouchers
+    SET used_count = used_count + 1, updated_at = NOW()
+    WHERE id = v_voucher_id;
+  END IF;
+
+  v_pickup_token := gen_random_uuid();
+
+  -- 6. Tạo đơn với status = pending_payment, TTL 33 phút (30m + 3m grace) và pickup_token
+  INSERT INTO public.orders (
+    id, customer_id, store_id, total_original_price, total_discount_price,
+    discount_amount, final_amount, voucher_code, status,
+    payment_method, payment_status, qr_code, pickup_time, note,
+    payment_expires_at, pickup_token, created_at, updated_at
+  ) VALUES (
+    p_id, p_customer_id, p_store_id, p_total_original_price, p_total_discount_price,
+    p_discount_amount, p_final_amount, p_voucher_code, 'pending_payment'::order_status,
+    v_normalized_method::payment_method, 'pending'::payment_status, p_qr_code, p_pickup_time, p_note,
+    NOW() + INTERVAL '33 minutes', v_pickup_token, NOW(), NOW()
+  );
+
+  -- 7. Chi tiết đơn hàng
+  FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x("bagId" UUID, quantity INTEGER) LOOP
+    SELECT name, discount_price INTO v_bag_name, v_discount_price
+    FROM public.surprise_bags WHERE id = v_item."bagId";
+
+    INSERT INTO public.order_items (id, order_id, bag_id, bag_name, quantity, unit_price, total_price, created_at)
+    VALUES (gen_random_uuid(), p_id, v_item."bagId", v_bag_name, v_item.quantity, v_discount_price, v_discount_price * v_item.quantity, NOW());
+  END LOOP;
+
+  -- 8. Lưu idempotency key vào bảng idempotency_keys
+  INSERT INTO public.idempotency_keys (id, user_id, key, request_hash, response, expires_at, created_at)
+  VALUES (gen_random_uuid(), p_customer_id, p_idempotency_key, p_idempotency_key, json_build_object('orderId', p_id), NOW() + INTERVAL '7 days', NOW());
+
+  RETURN json_build_object(
+    'success', true,
+    'is_duplicate', false,
+    'order_id', p_id,
+    'pickup_token', v_pickup_token,
+    'expires_at', NOW() + INTERVAL '33 minutes',
+    'status', 'pending_payment'
+  );
+END;
+$function$;
+
+-- 3. Wrapper place_order gọi create_order_transaction và auto-heal user nếu cần
 CREATE OR REPLACE FUNCTION public.place_order(
   p_id uuid,
   p_store_id uuid,
@@ -203,228 +445,69 @@ SECURITY DEFINER
 SET search_path TO 'public'
 AS $function$
 DECLARE
-  v_existing_order_id uuid;
-  v_item jsonb;
-  v_bag_id uuid;
-  v_qty integer;
-  v_current_stock integer;
-  v_bag_name text;
-  v_unit_price integer;
-  v_store_active boolean;
-  v_voucher RECORD;
-  v_user_role text;
-  v_auth_uid uuid;
-  v_actual_customer_id uuid;
   v_caller_email text;
   v_caller_name text;
   v_caller_phone text;
-  v_normalized_method text;
-  v_pickup_token UUID;
-  v_expired_order RECORD;
-  v_bag_ids UUID[] := ARRAY[]::UUID[];
+  v_customer_id uuid;
 BEGIN
-  v_auth_uid := auth.uid();
-  IF v_auth_uid IS NULL THEN
-    RAISE EXCEPTION 'UNAUTHENTICATED: Ban can dang nhap de dat hang.';
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
   END IF;
 
-  SELECT id INTO v_actual_customer_id FROM public.users WHERE id = v_auth_uid;
+  v_customer_id := auth.uid();
 
-  IF v_actual_customer_id IS NULL THEN
+  -- Tự động đảm bảo user tồn tại trong public.users
+  IF NOT EXISTS (SELECT 1 FROM public.users WHERE id = v_customer_id) THEN
     SELECT email,
            COALESCE(raw_user_meta_data->>'name', raw_user_meta_data->>'full_name', split_part(email, '@', 1)),
            COALESCE(raw_user_meta_data->>'phone', '')
     INTO v_caller_email, v_caller_name, v_caller_phone
     FROM auth.users
-    WHERE id = v_auth_uid;
+    WHERE id = v_customer_id;
 
     INSERT INTO public.users (id, role, name, email, phone, created_at, updated_at)
     VALUES (
-      v_auth_uid,
+      v_customer_id,
       'customer',
-      COALESCE(v_caller_name, 'Khach hang'),
-      COALESCE(v_caller_email, v_auth_uid::text || '@placeholder.gsf'),
+      COALESCE(v_caller_name, 'Khách hàng'),
+      COALESCE(v_caller_email, v_customer_id::text || '@placeholder.gsf'),
       v_caller_phone,
       NOW(),
       NOW()
     )
-    ON CONFLICT (id) DO UPDATE
-      SET updated_at = NOW()
-    RETURNING id INTO v_actual_customer_id;
+    ON CONFLICT (id) DO UPDATE SET updated_at = NOW();
   END IF;
 
-  SELECT role INTO v_user_role FROM public.users WHERE id = v_actual_customer_id;
-  IF v_user_role IS DISTINCT FROM 'customer' THEN
-    RAISE EXCEPTION 'FORBIDDEN: Chi khach hang moi duoc phep dat don.';
-  END IF;
-
-  SELECT is_open INTO v_store_active FROM public.stores WHERE id = p_store_id;
-  IF v_store_active IS NOT TRUE THEN
-    RAISE EXCEPTION 'STORE_CLOSED: Cua hang hien dang dong cua, khong the nhan don.';
-  END IF;
-
-  v_normalized_method := lower(trim(p_payment_method));
-  IF v_normalized_method IN ('cash', 'cash_on_pickup', 'cod') THEN
-    RAISE EXCEPTION 'CASH_PAYMENT_NOT_SUPPORTED: GoSavingFood chi ho tro thanh toan online qua VietQR (PayOS) de bao ve quyen loi quan va chong huy don ao.';
-  END IF;
-
-  IF v_normalized_method NOT IN ('banking', 'payos_vietqr', 'momo', 'zalopay') THEN
-    v_normalized_method := 'payos_vietqr';
-  END IF;
-
-  IF p_idempotency_key IS NOT NULL AND length(trim(p_idempotency_key)) > 0 THEN
-    SELECT id INTO v_existing_order_id
-    FROM public.orders
-    WHERE idempotency_key = p_idempotency_key
-      AND customer_id = v_actual_customer_id
-    LIMIT 1;
-
-    IF v_existing_order_id IS NOT NULL THEN
-      RETURN jsonb_build_object(
-        'success', true,
-        'order_id', v_existing_order_id,
-        'message', 'IDEMPOTENT_REPLAY'
-      );
-    END IF;
-  END IF;
-
-  IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
-    RAISE EXCEPTION 'EMPTY_ITEMS: Don hang phai co it nhat mot san pham.';
-  END IF;
-
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
-  LOOP
-    v_bag_ids := array_append(v_bag_ids, (v_item->>'bagId')::UUID);
-  END LOOP;
-
-  -- 3. LAZY CLEANUP: Hủy các đơn pending_payment quá hạn 33 phút của chính các túi được đặt
-  FOR v_expired_order IN
-    SELECT DISTINCT o.id, o.store_id, o.payment_order_code
-    FROM public.orders o
-    JOIN public.order_items oi ON oi.order_id = o.id
-    WHERE oi.bag_id = ANY(v_bag_ids)
-      AND o.status = 'pending_payment'
-      AND o.payment_expires_at < NOW()
-      AND o.deleted_at IS NULL
-    FOR UPDATE OF o
-  LOOP
-    UPDATE public.orders
-    SET status = 'expired'::order_status,
-        updated_at = NOW(),
-        cancelled_at = NOW(),
-        cancel_reason = 'Quá hạn thanh toán 30 phút (Lazy Cleanup)',
-        pickup_token = NULL
-    WHERE id = v_expired_order.id;
-
-    UPDATE public.surprise_bags sb
-    SET quantity = sb.quantity + oi.quantity,
-        updated_at = NOW()
-    FROM public.order_items oi
-    WHERE oi.order_id = v_expired_order.id
-      AND sb.id = oi.bag_id;
-  END LOOP;
-
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
-  LOOP
-    v_bag_id := (v_item->>'bagId')::uuid;
-    v_qty := COALESCE((v_item->>'quantity')::integer, 1);
-
-    IF v_qty <= 0 THEN
-      RAISE EXCEPTION 'INVALID_QUANTITY: So luong mon phai lon hon 0.';
-    END IF;
-
-    SELECT quantity, title, price INTO v_current_stock, v_bag_name, v_unit_price
-    FROM public.surprise_bags
-    WHERE id = v_bag_id
-      AND store_id = p_store_id
-      AND deleted_at IS NULL
-      AND is_active = true
-    FOR UPDATE;
-
-    IF NOT FOUND THEN
-      RAISE EXCEPTION 'BAG_NOT_FOUND: Mon an khong ton tai hoac da ngung kinh doanh.';
-    END IF;
-
-    IF v_current_stock < v_qty THEN
-      RAISE EXCEPTION 'BAG_OUT_OF_STOCK: Mon "%" khong du so luong (con %, can %).',
-        v_bag_name, v_current_stock, v_qty;
-    END IF;
-
-    UPDATE public.surprise_bags
-    SET quantity = quantity - v_qty,
-        updated_at = NOW()
-    WHERE id = v_bag_id;
-  END LOOP;
-
-  IF p_voucher_code IS NOT NULL AND length(trim(p_voucher_code)) > 0 THEN
-    SELECT * INTO v_voucher
-    FROM public.vouchers
-    WHERE code = trim(p_voucher_code)
-      AND is_active = true
-      AND (valid_from IS NULL OR valid_from <= NOW())
-      AND (valid_until IS NULL OR valid_until >= NOW())
-    FOR UPDATE;
-
-    IF NOT FOUND THEN
-      RAISE EXCEPTION 'VOUCHER_INVALID: Ma giam gia khong hop le hoac da het han.';
-    END IF;
-
-    IF v_voucher.usage_limit IS NOT NULL AND v_voucher.used_count >= v_voucher.usage_limit THEN
-      RAISE EXCEPTION 'VOUCHER_EXHAUSTED: Ma giam gia da het luot su dung.';
-    END IF;
-
-    IF p_total_discount_price < v_voucher.min_order_value THEN
-      RAISE EXCEPTION 'VOUCHER_MIN_VALUE: Don hang chua dat gia tri toi thieu de dung voucher.';
-    END IF;
-
-    UPDATE public.vouchers
-    SET used_count = used_count + 1,
-        updated_at = NOW()
-    WHERE id = v_voucher.id;
-  END IF;
-
-  v_pickup_token := gen_random_uuid();
-
-  -- 6. Tạo đơn với status = pending_payment, TTL 33 phút và pickup_token
-  INSERT INTO public.orders (
-    id, customer_id, store_id, idempotency_key, voucher_code,
-    pickup_time, payment_method, note, total_original_price, total_discount_price,
-    discount_amount, final_amount, status, payment_status, qr_code,
-    payment_expires_at, pickup_token, created_at, updated_at
-  ) VALUES (
-    p_id, v_actual_customer_id, p_store_id, p_idempotency_key, p_voucher_code,
-    p_pickup_time, v_normalized_method::payment_method, p_note, p_total_original_price, p_total_discount_price,
-    p_discount_amount, p_final_amount, 'pending_payment'::order_status, 'pending'::payment_status, p_qr_code,
-    NOW() + INTERVAL '33 minutes', v_pickup_token, NOW(), NOW()
-  );
-
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
-  LOOP
-    v_bag_id := (v_item->>'bagId')::uuid;
-    v_qty := COALESCE((v_item->>'quantity')::integer, 1);
-
-    SELECT title, price INTO v_bag_name, v_unit_price
-    FROM public.surprise_bags
-    WHERE id = v_bag_id;
-
-    INSERT INTO public.order_items (
-      id, order_id, bag_id, bag_name, quantity, unit_price, total_price, created_at
-    ) VALUES (
-      gen_random_uuid(), p_id, v_bag_id, v_bag_name, v_qty, v_unit_price, v_unit_price * v_qty, NOW()
-    );
-  END LOOP;
-
-  RETURN jsonb_build_object(
-    'success', true,
-    'order_id', p_id,
-    'pickup_token', v_pickup_token,
-    'expires_at', NOW() + INTERVAL '33 minutes',
-    'status', 'pending_payment'
+  RETURN public.create_order_transaction(
+    p_id,
+    v_customer_id,
+    p_store_id,
+    p_idempotency_key,
+    p_items,
+    p_voucher_code,
+    p_pickup_time,
+    p_payment_method,
+    p_note,
+    p_total_original_price,
+    p_total_discount_price,
+    p_discount_amount,
+    p_final_amount,
+    p_qr_code
   );
 END;
 $function$;
 
--- 3. Cập nhật cleanup_expired_pending_orders để trả về danh sách payment_order_code của đơn hết hạn
+GRANT EXECUTE ON FUNCTION public.place_order(
+  uuid, uuid, text, jsonb, text, timestamp with time zone, text, text,
+  integer, integer, integer, integer, text
+) TO authenticated, service_role;
+
+GRANT EXECUTE ON FUNCTION public.create_order_transaction(
+  uuid, uuid, uuid, text, jsonb, text, timestamp with time zone, text, text,
+  integer, integer, integer, integer, text
+) TO authenticated, service_role;
+
+-- 4. Cập nhật cleanup_expired_pending_orders để trả về danh sách payment_order_code của đơn hết hạn
 CREATE OR REPLACE FUNCTION public.cleanup_expired_pending_orders()
 RETURNS jsonb
 LANGUAGE plpgsql
