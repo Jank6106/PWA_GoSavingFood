@@ -249,9 +249,15 @@ function CustomerApp() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Tối ưu định vị không chặn (Non-blocking): Timeout 2.5s, dùng vị trí sẵn có ngay 0ms
-  useEffect(() => {
-    if (!navigator.geolocation) return;
+  const requestUserGPS = (isUserAction = false) => {
+    if (!navigator.geolocation) {
+      if (isUserAction) {
+        setToastMessage('Trình duyệt không hỗ trợ định vị GPS.');
+      } else if (location === 'Đang lấy vị trí của bạn...') {
+        updateLocation('Quận 1, TP.HCM', { lat: 10.7798, lng: 106.7032 });
+      }
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -261,15 +267,31 @@ function CustomerApp() {
           const rev = await mapboxService.reverseGeocode(lng, lat);
           const addr = rev.address || rev.name;
           updateLocation(addr, { lat, lng });
+          if (isUserAction) {
+            setToastMessage(`Đã cập nhật vị trí: ${addr}`);
+          }
         } catch {
           updateLocation(`Vị trí hiện tại (${lat.toFixed(4)}, ${lng.toFixed(4)})`, { lat, lng });
+          if (isUserAction) {
+            setToastMessage('Đã cập nhật vị trí GPS thành công.');
+          }
         }
       },
       (err) => {
-        console.warn('[App] Geolocation non-blocking fallback:', err.message);
+        console.warn('[App] Geolocation denied or unavailable:', err.message);
+        if (isUserAction) {
+          alert('Vui lòng cho phép quyền vị trí trong cài đặt trình duyệt để tự động tìm quán gần bạn.');
+        } else if (location === 'Đang lấy vị trí của bạn...') {
+          updateLocation('Quận 1, TP.HCM', { lat: 10.7798, lng: 106.7032 });
+        }
       },
-      { enableHighAccuracy: false, timeout: 2500, maximumAge: 300000 }
+      { enableHighAccuracy: isUserAction, timeout: isUserAction ? 10000 : 3500, maximumAge: isUserAction ? 0 : 300000 }
     );
+  };
+
+  // Tự động xin quyền GPS và lấy vị trí thực tế của thiết bị ngay khi mở app
+  useEffect(() => {
+    requestUserGPS(false);
   }, []);
 
   useEffect(() => {
@@ -805,7 +827,21 @@ function CustomerApp() {
 
   const renderScreen = () => {
     if (route.name === 'tabs') {
-      if (route.tab === 'home') return <HomePage {...catalog} location={location} onSearch={() => push({ name: 'search' })} onLocation={() => push({ name: 'location' })} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })} onAdd={addToCart} onViewAll={() => push({ name: 'bags' })} />;
+      if (route.tab === 'home') return (
+        <HomePage
+          {...catalog}
+          location={location}
+          hasCoords={Boolean(coords)}
+          onRequestLocation={() => requestUserGPS(true)}
+          onSearch={() => push({ name: 'search' })}
+          onLocation={() => push({ name: 'location' })}
+          onOpenBag={(bag) => push({ name: 'bag', id: bag.id })}
+          onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })}
+          onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })}
+          onAdd={addToCart}
+          onViewAll={() => push({ name: 'bags' })}
+        />
+      );
       if (route.tab === 'cart') return <CartPage items={cart.items} isAuthenticated={auth.isAuthenticated} {...cart.summary} onLogin={auth.showAuthModal} onExplore={home} onCheckout={startCheckout} onUpdate={cart.updateQuantity} onRemove={cart.removeItem} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} />;
       if (route.tab === 'orders') return <OrdersPage orders={orders} isAuthenticated={auth.isAuthenticated} onLogin={auth.showAuthModal} onOpenOrder={(order) => push({ name: 'order', id: order.id })} />;
       return (
