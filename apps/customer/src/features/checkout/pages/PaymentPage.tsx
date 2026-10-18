@@ -28,6 +28,7 @@ const SESSION_ORDER_ID_KEY = 'gsf_payment_order_id';
 const SESSION_ORDER_CODE_KEY = 'gsf_payment_order_code';
 const SESSION_PAYOS_CODE_KEY = 'gsf_payment_payos_order_code';
 const SESSION_ORDER_TOTAL_KEY = 'gsf_payment_order_total';
+const SESSION_EXPIRES_AT_KEY = 'gsf_payment_expires_at';
 
 export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfirm }: PaymentPageProps) {
   // 1. Phục hồi state orderId, orderCode, total từ Props -> URL Query -> sessionStorage
@@ -68,19 +69,30 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
     return 0;
   });
 
-  const [timeLeft, setTimeLeft] = useState(() => {
+  // Mốc thời gian kết thúc tuyệt đối (Epoch ms) để đồng bộ chống trễ khi đổi tab trình duyệt
+  const [targetExpiresAt, setTargetExpiresAt] = useState<number>(() => {
     if (order?.paymentExpiresAt) {
-      const diff = Math.floor((new Date(order.paymentExpiresAt).getTime() - Date.now()) / 1000);
-      return diff > 0 ? diff : 0;
+      const parsed = new Date(order.paymentExpiresAt).getTime();
+      if (!isNaN(parsed) && parsed > 0) return parsed;
     }
-    return 900; // 15 phút đếm ngược
+    try {
+      const saved = Number(sessionStorage.getItem(SESSION_EXPIRES_AT_KEY));
+      if (!isNaN(saved) && saved > 0) return saved;
+    } catch {}
+    const fresh = Date.now() + 15 * 60 * 1000;
+    try {
+      sessionStorage.setItem(SESSION_EXPIRES_AT_KEY, String(fresh));
+    } catch {}
+    return fresh;
   });
 
-  const [isExpired, setIsExpired] = useState(() => {
-    if (order?.paymentExpiresAt) {
-      return new Date(order.paymentExpiresAt).getTime() <= Date.now();
-    }
-    return false;
+  const [timeLeft, setTimeLeft] = useState<number>(() => {
+    const diff = Math.floor((targetExpiresAt - Date.now()) / 1000);
+    return diff > 0 ? diff : 0;
+  });
+
+  const [isExpired, setIsExpired] = useState<boolean>(() => {
+    return targetExpiresAt <= Date.now();
   });
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -107,6 +119,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
       if (effectiveOrderId) sessionStorage.setItem(SESSION_ORDER_ID_KEY, effectiveOrderId);
       if (effectiveOrderCode) sessionStorage.setItem(SESSION_ORDER_CODE_KEY, effectiveOrderCode);
       if (effectiveTotal > 0) sessionStorage.setItem(SESSION_ORDER_TOTAL_KEY, String(effectiveTotal));
+      if (targetExpiresAt > 0) sessionStorage.setItem(SESSION_EXPIRES_AT_KEY, String(targetExpiresAt));
     } catch {}
 
     const url = new URL(window.location.href);
@@ -122,7 +135,17 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
     if (updated) {
       window.history.replaceState(window.history.state, '', url.toString());
     }
-  }, [effectiveOrderId, effectiveOrderCode, effectiveTotal]);
+  }, [effectiveOrderId, effectiveOrderCode, effectiveTotal, targetExpiresAt]);
+
+  // Cập nhật targetExpiresAt khi order prop thay đổi
+  useEffect(() => {
+    if (order?.paymentExpiresAt) {
+      const parsed = new Date(order.paymentExpiresAt).getTime();
+      if (!isNaN(parsed) && parsed > 0 && parsed !== targetExpiresAt) {
+        setTargetExpiresAt(parsed);
+      }
+    }
+  }, [order?.paymentExpiresAt, targetExpiresAt]);
 
   // Phục hồi thông tin đơn hàng nếu component bị reload do app ngân hàng chiếm bộ nhớ
   useEffect(() => {
@@ -138,9 +161,13 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
               setEffectiveTotal(data.final_amount);
             }
             if (data.payment_expires_at) {
-              const diff = Math.floor((new Date(data.payment_expires_at).getTime() - Date.now()) / 1000);
-              setTimeLeft(diff > 0 ? diff : 0);
-              setIsExpired(new Date(data.payment_expires_at).getTime() <= Date.now());
+              const parsed = new Date(data.payment_expires_at).getTime();
+              if (!isNaN(parsed) && parsed > 0) {
+                setTargetExpiresAt(parsed);
+              }
+            }
+            if (data.status === 'expired' || data.status === 'cancelled') {
+              setIsExpired(true);
             }
           }
         });
@@ -189,6 +216,12 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
         .maybeSingle();
 
       if (!dbError && dbOrder) {
+        if (dbOrder.status === 'expired' || dbOrder.status === 'cancelled') {
+          console.log('[PaymentPage] DB query confirmed order is EXPIRED/CANCELLED:', dbOrder.status);
+          setIsExpired(true);
+          return false;
+        }
+
         const isDbPaid =
           dbOrder.payment_status === 'success' ||
           dbOrder.status === 'paid' ||
@@ -352,27 +385,38 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
     };
   }, [setupRealtimeChannel]);
 
-  // 3. Tự động kiểm tra khi người dùng quay lại App từ app ngân hàng (visibilitychange)
+  // 3. Tự động kiểm tra khi người dùng quay lại App từ app ngân hàng hoặc chuyển tab khác (visibilitychange & focus)
   useEffect(() => {
     const targetOrderId = effectiveOrderId || order?.id;
     if (!targetOrderId || isExpired) return;
 
     const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible' && !isPaidConfirmedRef.current) {
-        void checkCurrentOrderStatus();
-        setTimeout(() => {
-          if (!isPaidConfirmedRef.current) void checkCurrentOrderStatus();
-        }, 1200);
-        setTimeout(() => {
-          if (!isPaidConfirmedRef.current) void checkCurrentOrderStatus();
-        }, 2500);
+      if (document.visibilityState === 'visible') {
+        // Đồng bộ tức thời mốc thời gian thực tế ngay khi mở lại tab (chống lag/chậm)
+        const remaining = Math.max(0, Math.floor((targetExpiresAt - Date.now()) / 1000));
+        setTimeLeft(remaining);
+        if (remaining <= 0) {
+          setIsExpired(true);
+          void customerService.cleanupExpiredPendingOrders();
+          return;
+        }
 
-        if (
-          !channelRef.current ||
-          (channelRef.current as any).state === 'closed' ||
-          (channelRef.current as any).state === 'errored'
-        ) {
-          setupRealtimeChannel();
+        if (!isPaidConfirmedRef.current) {
+          void checkCurrentOrderStatus();
+          setTimeout(() => {
+            if (!isPaidConfirmedRef.current) void checkCurrentOrderStatus();
+          }, 1200);
+          setTimeout(() => {
+            if (!isPaidConfirmedRef.current) void checkCurrentOrderStatus();
+          }, 2500);
+
+          if (
+            !channelRef.current ||
+            (channelRef.current as any).state === 'closed' ||
+            (channelRef.current as any).state === 'errored'
+          ) {
+            setupRealtimeChannel();
+          }
         }
       }
     };
@@ -386,7 +430,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
       window.removeEventListener('focus', handleVisibilityChange);
       window.removeEventListener('pageshow', handleVisibilityChange);
     };
-  }, [effectiveOrderId, order?.id, isExpired, checkCurrentOrderStatus, setupRealtimeChannel]);
+  }, [effectiveOrderId, order?.id, isExpired, targetExpiresAt, checkCurrentOrderStatus, setupRealtimeChannel]);
 
   // 4. Polling kiểm tra trạng thái thanh toán từ PayOS & DB mỗi 3 giây
   useEffect(() => {
@@ -412,25 +456,25 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
     };
   }, [effectiveOrderId, order?.id, isExpired, checkCurrentOrderStatus]);
 
-  // 5. Đếm ngược thời gian thanh toán (TTL 15 phút)
+  // 5. Đếm ngược thời gian thanh toán (dựa trên mốc Timestamp tuyệt đối, không phụ thuộc vào tick của trình duyệt)
   useEffect(() => {
-    if (timeLeft <= 0) {
-      setIsExpired(true);
-      void customerService.cleanupExpiredPendingOrders();
-      return;
-    }
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          setIsExpired(true);
-          void customerService.cleanupExpiredPendingOrders();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    if (isExpired) return;
+
+    const syncCountdown = () => {
+      const remaining = Math.max(0, Math.floor((targetExpiresAt - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        setIsExpired(true);
+        void customerService.cleanupExpiredPendingOrders();
+      }
+    };
+
+    // Chạy đồng bộ ngay lập tức
+    syncCountdown();
+
+    const timer = setInterval(syncCountdown, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [targetExpiresAt, isExpired]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
