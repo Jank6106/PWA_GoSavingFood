@@ -54,6 +54,8 @@ const mapStoreRow = (store: any): StoreProfile => ({
   closingHours: store.close_time?.slice(0, 5) || '22:00',
   pickupHours: '19:00 - 21:00',
   isOpen: store.is_open ?? true,
+  status: store.status || 'active',
+  commissionRate: store.commission_rate != null ? Number(store.commission_rate) : 15,
   rating: Number(store.rating) || 0,
   totalRescuedBags: 0,
   totalCo2SavedKg: 0,

@@ -949,10 +949,11 @@ export const customerService = {
 
     let remoteStores: Merchant[] = [];
     let remoteBags: SurpriseBag[] = [];
+    let remoteBanners: Banner[] = [];
 
     try {
-      // Chạy song song cả truy vấn stores và bags từ Supabase để tối ưu tốc độ mạng tối đa
-      const [rawStores, bagsSource] = await Promise.all([
+      // Chạy song song cả truy vấn stores, bags và banners từ Supabase để tối ưu tốc độ mạng tối đa
+      const [rawStores, bagsSource, rawBanners] = await Promise.all([
         (async () => {
           try {
             const { data: storesData } = await supabase.rpc('list_stores_nearby', {
@@ -964,7 +965,11 @@ export const customerService = {
               p_limit: 20,
             });
             if (Array.isArray(storesData) && storesData.length > 0) return storesData;
-            const { data: directStores } = await supabase.from('stores').select('*').limit(30);
+            const { data: directStores } = await supabase
+              .from('stores')
+              .select('*')
+              .eq('status', 'active')
+              .limit(30);
             return Array.isArray(directStores) ? directStores : [];
           } catch {
             return [];
@@ -984,8 +989,9 @@ export const customerService = {
             if (Array.isArray(nearbyBags) && nearbyBags.length > 0) return nearbyBags;
             const { data: directBags } = await supabase
               .from('surprise_bags')
-              .select('*, stores(name, logo_url, address)')
+              .select('*, stores!inner(name, logo_url, address, status)')
               .eq('is_available', true)
+              .eq('stores.status', 'active')
               .is('deleted_at', null)
               .order('created_at', { ascending: false })
               .limit(30);
@@ -994,7 +1000,32 @@ export const customerService = {
             return [];
           }
         })(),
+
+        (async () => {
+          try {
+            const { data: bannersData } = await supabase
+              .from('banners')
+              .select('*')
+              .eq('is_active', true)
+              .order('display_order', { ascending: true });
+            return Array.isArray(bannersData) ? bannersData : [];
+          } catch {
+            return [];
+          }
+        })(),
       ]);
+
+      if (rawBanners && rawBanners.length > 0) {
+        remoteBanners = rawBanners.map((b: any) => ({
+          id: b.id,
+          title: b.title,
+          description: b.target_type === 'STORE' ? 'Khám phá quán đối tác' : 'Ưu đãi giải cứu thực phẩm hôm nay',
+          eyebrow: 'Chiến Dịch Nổi Bật',
+          imageUrl: b.image_url,
+          icon: 'bag',
+          accent: 'green' as const,
+        }));
+      }
 
       if (rawStores.length > 0) {
         remoteStores = rawStores.map((s: any) => {
@@ -1067,32 +1098,42 @@ export const customerService = {
       };
     });
 
-    // 2. Kết hợp toàn bộ cửa hàng (Dữ liệu Supabase ưu tiên hàng đầu, loại bỏ trùng lặp)
+    // 2. Kết hợp toàn bộ cửa hàng (Ưu tiên dữ liệu Supabase thật; chỉ dùng seed khi chưa có quán remote)
     const storeMap = new Map<string, Merchant>();
     for (const s of remoteStores) {
       storeMap.set(s.id, s);
       storeMap.set(s.name, s);
     }
-    for (const s of hanoiStoresWithDistance) {
-      if (!storeMap.has(s.id) && !storeMap.has(s.name)) {
-        storeMap.set(s.id, s);
+    if (remoteStores.length === 0) {
+      for (const s of hanoiStoresWithDistance) {
+        if (!storeMap.has(s.id) && !storeMap.has(s.name)) {
+          storeMap.set(s.id, s);
+        }
       }
     }
     const allStores = Array.from(new Set(storeMap.values()));
     allStores.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
 
-    // 3. Kết hợp túi mù (Dữ liệu Supabase ưu tiên hàng đầu, loại bỏ trùng lặp)
+    // 3. Kết hợp túi mù (Ưu tiên dữ liệu Supabase thật; chỉ dùng seed khi chưa có túi remote)
     const bagMap = new Map<string, SurpriseBag>();
     for (const b of remoteBags) {
       bagMap.set(b.id, b);
       bagMap.set(b.name, b);
     }
-    for (const b of HANOI_BAGS) {
-      if (!bagMap.has(b.id) && !bagMap.has(b.name)) {
-        bagMap.set(b.id, b);
+    if (remoteBags.length === 0) {
+      for (const b of HANOI_BAGS) {
+        if (!bagMap.has(b.id) && !bagMap.has(b.name)) {
+          bagMap.set(b.id, b);
+        }
       }
     }
     const allBags = Array.from(new Set(bagMap.values()));
+    // Ưu tiên hiển thị túi từ các cửa hàng gần vị trí người dùng nhất
+    allBags.sort((a, b) => {
+      const storeA = storeMap.get(a.merchantId);
+      const storeB = storeMap.get(b.merchantId);
+      return (storeA?.distance ?? 999999) - (storeB?.distance ?? 999999);
+    });
 
     const brands: Brand[] = allStores.map((m) => ({
       id: m.id,
@@ -1108,7 +1149,7 @@ export const customerService = {
     }));
 
     return {
-      banners: HOME_BANNERS,
+      banners: remoteBanners.length > 0 ? remoteBanners : HOME_BANNERS,
       categories: HOME_CATEGORIES,
       brands,
       merchants: allStores,
@@ -1120,12 +1161,13 @@ export const customerService = {
     try {
       const { data } = await supabase
         .from('surprise_bags')
-        .select('*, stores(name, logo_url, address)')
+        .select('*, stores(name, logo_url, address, status)')
         .eq('id', id)
         .eq('is_available', true)
         .maybeSingle();
 
       if (data) {
+        if (data.stores?.status === 'suspended') return null;
         return {
           id: data.id,
           merchantId: data.store_id,
@@ -1162,6 +1204,7 @@ export const customerService = {
         .from('stores')
         .select('*')
         .eq('id', id)
+        .eq('status', 'active')
         .maybeSingle();
 
       const { data: bags } = await supabase

@@ -4,6 +4,7 @@ import {
   deleteBagItem,
   fetchBagItems,
   getCachedBagItems,
+  subscribeToStoreBags,
   updateBagItem,
   updateBagQuantity,
   updateBagStatus,
@@ -53,10 +54,19 @@ export function useBags(storeId: string) {
   const isFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (isFetchedRef.current) return;
-    isFetchedRef.current = true;
-    void loadBags();
-  }, [loadBags]);
+    if (!isFetchedRef.current) {
+      isFetchedRef.current = true;
+      void loadBags();
+    }
+
+    const channel = subscribeToStoreBags(storeId, () => {
+      void loadBags();
+    });
+
+    return () => {
+      void channel.unsubscribe();
+    };
+  }, [loadBags, storeId]);
 
   const onShelfCount = useMemo(() => allBags.filter((b) => b.status !== 'hidden').length, [allBags]);
   const offShelfCount = useMemo(() => allBags.filter((b) => b.status === 'hidden').length, [allBags]);

@@ -233,6 +233,24 @@ export default function App() {
           setIsGlobalQRScannerOpen(true);
         }}
       />
+      {store.profile?.status === 'suspended' && (
+        <div
+          style={{
+            background: '#FEF2F2',
+            borderBottom: '1px solid #FECACA',
+            padding: '10px 16px',
+            color: '#991B1B',
+            fontSize: '12.5px',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <span>⚠️</span>
+          <span>Quán đang bị tạm khóa bởi Quản trị viên. Túi cứu trợ tạm thời ẩn khỏi ứng dụng khách hàng.</span>
+        </div>
+      )}
       <main className={`merchant-main merchant-main--${route}`}>
         <div style={{ display: route === 'bags' ? 'contents' : 'none' }}>
           <BagManagementScreen storeId={storeId} />

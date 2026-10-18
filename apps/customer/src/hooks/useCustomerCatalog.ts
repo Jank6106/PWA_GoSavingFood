@@ -74,7 +74,7 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibility);
 
-    // 2. Đồng bộ realtime từ Supabase khi có thay đổi trên bảng surprise_bags hoặc stores
+    // 2. Đồng bộ realtime từ Supabase khi có thay đổi trên bảng surprise_bags, stores hoặc banners
     const channel = supabase
       .channel('catalog-realtime-sync')
       .on(
@@ -87,6 +87,13 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'stores' },
+        () => {
+          void fetchCatalog(false);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'banners' },
         () => {
           void fetchCatalog(false);
         }
