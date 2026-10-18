@@ -129,8 +129,6 @@ export interface StoreProfile {
   closingHours: string;
   pickupHours: string;
   isOpen: boolean;
-  status?: 'active' | 'suspended' | 'deleted';
-  commissionRate?: number;
   rating: number;
   totalRescuedBags: number;
   totalCo2SavedKg: number;

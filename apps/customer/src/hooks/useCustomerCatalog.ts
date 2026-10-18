@@ -186,13 +186,6 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
           void fetchCatalog(false);
         }
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'banners' },
-        () => {
-          void fetchCatalog(false);
-        }
-      )
       .subscribe();
 
     return () => {

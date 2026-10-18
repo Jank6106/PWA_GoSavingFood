@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { ChevronLeft, Crosshair, Loader2, MapPin, Search, X } from 'lucide-react';
+import { Crosshair, Loader2, MapPin, Navigation } from 'lucide-react';
 import { Button } from '@gosavingfood/ui';
+import { ScreenHeader, SearchField } from '../../../shared/components';
 import { customerService } from '../../../services/customer.service';
 import { MAPBOX_TOKEN, mapboxService } from '../../../services/mapbox.service';
 import type { LocationSuggestion } from '../../../shared/types/customer.types';
@@ -39,8 +40,63 @@ export function SelectLocationPage({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const storeMarkersRef = useRef<mapboxgl.Marker[]>([]);
 
-  // 1. Di chuyển ghim vị trí đã chọn
+  // 1. Tải danh sách cửa hàng gần vị trí [lng, lat] và vẽ Marker
+  const loadNearbyStores = async (lngLat: [number, number]) => {
+    if (!mapRef.current) return;
+    try {
+      const stores = await customerService.getStoresNearby({
+        lat: lngLat[1],
+        lng: lngLat[0],
+      });
+
+      // Xóa marker cửa hàng cũ
+      storeMarkersRef.current.forEach((m) => m.remove());
+      storeMarkersRef.current = [];
+
+      // Thêm marker mới
+      stores.forEach((store: any) => {
+        if (!store.latitude || !store.longitude) return;
+
+        const el = document.createElement('div');
+        el.className = 'gsf-store-marker';
+        el.innerHTML = `
+          <div class="gsf-store-pill">
+            <span>🥡 ${store.name || 'Quán ăn'}</span>
+          </div>
+        `;
+
+        const distanceText = store.distance_m
+          ? `${(store.distance_m / 1000).toFixed(1)} km`
+          : 'Gần đây';
+
+        const popup = new mapboxgl.Popup({ offset: 20, closeButton: false }).setHTML(`
+          <div style="font-family:sans-serif;padding:4px 6px;">
+            <strong style="display:block;font-size:13px;color:#1e293b;margin-bottom:2px;">${store.name}</strong>
+            <small style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">${store.address || ''}</small>
+            <span style="font-size:11px;font-weight:700;color:#166B4A;">Cách bạn ~${distanceText}</span>
+          </div>
+        `);
+
+        const marker = new mapboxgl.Marker({ element: el })
+          .setLngLat([store.longitude, store.latitude])
+          .setPopup(popup)
+          .addTo(mapRef.current!);
+
+        el.addEventListener('click', () => {
+          setSelected(store.address || store.name);
+          setSelectedCoords([store.longitude, store.latitude]);
+        });
+
+        storeMarkersRef.current.push(marker);
+      });
+    } catch (err) {
+      console.warn('[Mapbox] Could not load nearby stores:', err);
+    }
+  };
+
+  // 2. Di chuyển ghim vị trí đã chọn
   const updateUserPin = (lngLat: [number, number]) => {
     if (!mapRef.current) return;
 
@@ -48,9 +104,9 @@ export function SelectLocationPage({
       const el = document.createElement('div');
       el.className = 'gsf-map-user-pin';
       el.innerHTML = `
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="#166B4A" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-          <circle cx="12" cy="10" r="3" fill="#ffffff" stroke="none" />
+          <circle cx="12" cy="10" r="3"/>
         </svg>
       `;
       userMarkerRef.current = new mapboxgl.Marker({ element: el })
@@ -75,12 +131,15 @@ export function SelectLocationPage({
       attributionControl: false,
     });
 
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'top-right');
     mapRef.current = map;
 
     map.on('load', () => {
       map.resize();
       updateUserPin(selectedCoords);
+      void loadNearbyStores(selectedCoords);
     });
+
 
     // Cho phép người dùng click bất kỳ vị trí nào trên bản đồ để chọn
     map.on('click', async (e) => {
@@ -96,6 +155,8 @@ export function SelectLocationPage({
       } catch {
         setStatusMessage(null);
       }
+
+      void loadNearbyStores(clickedLngLat);
     });
 
     return () => {
@@ -166,12 +227,15 @@ export function SelectLocationPage({
 
         updateUserPin(userLngLat);
 
+        // Reverse geocoding để lấy tên phố/phường
         try {
           const res = await mapboxService.reverseGeocode(userLngLat[0], userLngLat[1]);
           setSelected(res.address || res.name);
         } catch {
           setSelected(`Vị trí GPS (${userLngLat[1].toFixed(4)}, ${userLngLat[0].toFixed(4)})`);
         }
+
+        void loadNearbyStores(userLngLat);
       },
       (error) => {
         setIsLocating(false);
@@ -190,7 +254,6 @@ export function SelectLocationPage({
   // 6. Xử lý khi click vào 1 gợi ý địa điểm từ danh sách tìm kiếm
   const handleSelectSuggestion = (loc: LocationSuggestion) => {
     setSelected(loc.address || loc.name);
-    setQuery(''); // Đóng dropdown sau khi chọn
 
     if (loc.coordinates && mapRef.current) {
       const coords: [number, number] = loc.coordinates;
@@ -201,86 +264,46 @@ export function SelectLocationPage({
         essential: true,
       });
       updateUserPin(coords);
+      void loadNearbyStores(coords);
     }
   };
 
   return (
-    <div className="customer-location-page-fullscreen">
-      {/* 1. Header xanh Yindii style: Nút Back + Thanh Search pill trắng */}
-      <header className="customer-location-header-yindii">
-        <button
-          type="button"
-          className="customer-location-back-btn"
-          onClick={onBack}
-          aria-label="Quay lại"
-        >
-          <ChevronLeft size={26} />
-        </button>
+    <div className="customer-screen customer-location-screen">
+      <ScreenHeader
+        title="Chọn vị trí"
+        subtitle="Tìm món ngon cứu trợ ở gần bạn"
+        onBack={onBack}
+      />
 
-        <div className="customer-location-input-pill">
-          <Search size={19} className="text-muted" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tìm đường, phường, quận..."
-            autoFocus
-          />
-          {query.trim().length > 0 && (
-            <button
-              type="button"
-              className="customer-location-clear-btn"
-              onClick={() => setQuery('')}
-              aria-label="Xóa tìm kiếm"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
-      </header>
+      <SearchField
+        value={query}
+        onChange={setQuery}
+        placeholder="Tìm đường, phường, quận..."
+      />
 
-      {/* 2. Danh sách gợi ý địa điểm: Dropdown overlay ngay dưới header (chuẩn ảnh Yindii) */}
-      {query.trim().length > 0 && (
-        <div className="customer-location-dropdown-overlay">
-          {isSearching ? (
-            <div className="customer-location-dropdown-loading">
-              <Loader2 size={18} className="animate-spin text-primary" />
-              <span>Đang tìm kiếm “{query}”...</span>
-            </div>
-          ) : locations.length > 0 ? (
-            <div className="customer-location-dropdown-list">
-              {locations.map((loc) => (
-                <button
-                  type="button"
-                  key={loc.id}
-                  className="customer-location-dropdown-item"
-                  onClick={() => handleSelectSuggestion(loc)}
-                >
-                  <MapPin size={20} className="customer-location-item-pin" />
-                  <div className="customer-location-item-text">
-                    <strong>{loc.name}</strong>
-                    {loc.address && loc.address !== loc.name && (
-                      <small>{loc.address}</small>
-                    )}
-                  </div>
-                  {loc.distance && <em>{loc.distance}</em>}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="customer-location-dropdown-empty">
-              <MapPin size={22} className="text-muted" />
-              <span>Không tìm thấy địa điểm “{query}”</span>
-              <small>Hãy thử nhập tên đường, địa danh hoặc bấm chọn trực tiếp trên bản đồ.</small>
-            </div>
-          )}
-        </div>
-      )}
+      <button
+        type="button"
+        className="customer-gps-button"
+        onClick={handleUseCurrentGPS}
+        disabled={isLocating}
+      >
+        {isLocating ? (
+          <Loader2 size={19} className="animate-spin text-primary" />
+        ) : (
+          <Crosshair size={19} />
+        )}
+        <span>
+          <strong>
+            {isLocating ? 'Đang định vị GPS...' : 'Dùng vị trí hiện tại'}
+          </strong>
+          <small>Cho phép trình duyệt truy cập GPS chính xác</small>
+        </span>
+      </button>
 
-      {/* 3. Bản đồ toàn màn hình (Full-screen Mapbox) */}
-      <div className="customer-location-fullscreen-map">
+      {/* Khung bản đồ tương tác Mapbox */}
+      <div className="customer-location-map">
         <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
-
         {statusMessage && (
           <div className="customer-map-status-overlay">
             <span>{statusMessage}</span>
@@ -288,34 +311,51 @@ export function SelectLocationPage({
         )}
       </div>
 
-      {/* 4. Nút GPS nổi (FAB) ở góc phải dưới bản đồ */}
-      <button
-        type="button"
-        className="customer-location-gps-fab"
-        onClick={handleUseCurrentGPS}
-        disabled={isLocating}
-        title="Dùng vị trí GPS hiện tại"
-        aria-label="Dùng vị trí GPS hiện tại"
-      >
-        {isLocating ? (
-          <Loader2 size={21} className="animate-spin" />
+      {/* Danh sách gợi ý tìm kiếm */}
+      <div className="customer-location-results">
+        {isSearching ? (
+          <div className="customer-location-loading">
+            <Loader2 size={18} className="animate-spin text-primary" />
+            <span>Đang tìm kiếm “{query}”...</span>
+          </div>
+        ) : locations.length > 0 ? (
+          locations.map((location) => {
+            const isMatch =
+              selected === location.name || selected === location.address;
+            return (
+              <button
+                type="button"
+                key={location.id}
+                className={isMatch ? 'is-selected' : ''}
+                onClick={() => handleSelectSuggestion(location)}
+              >
+                <MapPin size={18} />
+                <span>
+                  <strong>{location.name}</strong>
+                  <small>{location.address}</small>
+                </span>
+                <em>{location.distance}</em>
+              </button>
+            );
+          })
+        ) : query.trim() ? (
+          <div className="customer-location-empty">
+            <MapPin size={22} className="text-muted" />
+            <span>Không tìm thấy địa điểm “{query}”</span>
+            <small>Hãy thử nhập tên đường, địa danh hoặc ghim trực tiếp trên bản đồ.</small>
+          </div>
         ) : (
-          <Crosshair size={22} />
+          <button type="button" className="is-selected">
+            <Navigation size={18} />
+            <span>
+              <strong>Vị trí đã chọn trên bản đồ</strong>
+              <small>{selected}</small>
+            </span>
+          </button>
         )}
-      </button>
+      </div>
 
-      {/* 5. Thẻ xác nhận vị trí nổi ở đáy màn hình */}
-      <div className="customer-location-bottom-card">
-        <div className="customer-location-selected-preview">
-          <div className="customer-location-preview-icon">
-            <MapPin size={20} />
-          </div>
-          <div className="customer-location-preview-text">
-            <small>Vị trí bạn đã chọn</small>
-            <strong>{selected}</strong>
-          </div>
-        </div>
-
+      <div className="customer-sticky-action">
         <Button
           fullWidth
           size="lg"
