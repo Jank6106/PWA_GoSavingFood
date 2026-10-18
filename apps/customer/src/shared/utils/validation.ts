@@ -41,6 +41,75 @@ export function isValidVietnamesePhone(raw: string): boolean {
   return VIETNAM_PHONE_GENERAL_REGEX.test(cleaned);
 }
 
+export interface RecipientPhoneValidationResult {
+  isValid: boolean;
+  cleaned: string;
+  digitsCount: number;
+  errorMessage?: string;
+}
+
+/**
+ * Kiểm tra chi tiết số điện thoại người nhận hàng
+ * Đảm bảo đúng định dạng và đủ số lượng chữ số (đúng 10 số, đầu 03, 05, 07, 08, 09)
+ */
+export function validateRecipientPhone(raw: string): RecipientPhoneValidationResult {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return {
+      isValid: false,
+      cleaned: '',
+      digitsCount: 0,
+      errorMessage: 'Vui lòng nhập số điện thoại người nhận.',
+    };
+  }
+
+  const cleaned = cleanPhoneNumber(trimmed);
+  const digitsOnly = cleaned.replace(/\D/g, '');
+  const digitsCount = digitsOnly.length;
+
+  if (!digitsOnly.startsWith('0')) {
+    return {
+      isValid: false,
+      cleaned,
+      digitsCount,
+      errorMessage: 'Số điện thoại phải bắt đầu bằng số 0 (hoặc +84).',
+    };
+  }
+
+  if (digitsCount < 10) {
+    return {
+      isValid: false,
+      cleaned,
+      digitsCount,
+      errorMessage: `Số điện thoại chưa đủ (cần đủ 10 số, hiện có ${digitsCount}/10 số).`,
+    };
+  }
+
+  if (digitsCount > 10) {
+    return {
+      isValid: false,
+      cleaned,
+      digitsCount,
+      errorMessage: 'Số điện thoại quá dài (số di động Việt Nam chỉ có 10 chữ số).',
+    };
+  }
+
+  if (!VIETNAM_PHONE_GENERAL_REGEX.test(cleaned)) {
+    return {
+      isValid: false,
+      cleaned,
+      digitsCount,
+      errorMessage: 'Đầu số không hợp lệ. Phải bắt đầu bằng 03, 05, 07, 08 hoặc 09.',
+    };
+  }
+
+  return {
+    isValid: true,
+    cleaned,
+    digitsCount: 10,
+  };
+}
+
 /**
  * Kiểm tra xem chuỗi có phải Email hợp lệ
  */

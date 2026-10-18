@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  AlertCircle,
   Check,
   ChevronDown,
   Clock3,
@@ -16,6 +17,7 @@ import {
   OrderSummary,
   ScreenHeader,
 } from '../../../shared/components';
+import { validateRecipientPhone } from '../../../shared/utils/validation';
 import type { CartItem, CheckoutDraft, User, Voucher } from '../../../shared/types/customer.types';
 
 interface CheckoutPageProps {
@@ -30,8 +32,10 @@ interface CheckoutPageProps {
 
 export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = false, onBack, onContinue }: CheckoutPageProps) {
   const defaultPickup = `${items[0]?.bag.pickupStart ?? '18:00'} - ${items[0]?.bag.pickupEnd ?? '20:00'}`;
-  const [name, setName] = useState(user.name);
-  const [phone, setPhone] = useState(user.phone);
+  const [name, setName] = useState(user.name || '');
+  const [phone, setPhone] = useState(user.phone || '');
+  const [nameTouched, setNameTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [pickupTime, setPickupTime] = useState(defaultPickup);
   const [voucherCode, setVoucherCode] = useState('');
   const [customInputCode, setCustomInputCode] = useState('');
@@ -41,6 +45,12 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
 
   const pickupRef = useRef<HTMLDivElement>(null);
   const voucherRef = useRef<HTMLDivElement>(null);
+
+  // Validation
+  const isNameValid = name.trim().length >= 2;
+  const phoneValidation = validateRecipientPhone(phone);
+  const isPhoneValid = phoneValidation.isValid;
+  const isFormValid = isNameValid && isPhoneValid;
 
   const voucher = vouchers.find(
     (item) =>
@@ -76,35 +86,115 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
     setIsVoucherOpen(false);
   };
 
+  const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    let val = event.target.value;
+    // Chỉ cho phép nhập các ký tự liên quan đến số điện thoại
+    val = val.replace(/[^\d+\s-]/g, '');
+
+    // Nếu người dùng nhập hoặc paste đầu số quốc tế +84 -> tự động chuyển thành 0
+    if (val.startsWith('+84')) {
+      val = '0' + val.slice(3).replace(/\D/g, '');
+    } else if (val.startsWith('84') && val.replace(/\D/g, '').length >= 10) {
+      val = '0' + val.slice(2).replace(/\D/g, '');
+    }
+
+    // Giới hạn số lượng chữ số tối đa là 10
+    const digitsOnly = val.replace(/\D/g, '');
+    if (digitsOnly.length <= 10) {
+      setPhone(val);
+      if (!phoneTouched) setPhoneTouched(true);
+    }
+  };
+
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setName(event.target.value);
+    if (!nameTouched) setNameTouched(true);
+  };
+
   return (
     <div className="customer-screen customer-checkout-screen">
       <ScreenHeader title="Xác nhận đơn hàng" onBack={onBack} />
 
-      <FormSection title="Thông tin khách hàng">
+      <FormSection title="Thông tin người nhận">
         <label className="customer-field-label">
-          <span>Họ và tên</span>
-          <span className="customer-input-wrap">
+          <div className="customer-field-label-header">
+            <span>Họ và tên người nhận</span>
+            {nameTouched && !isNameValid && (
+              <span className="customer-field-counter is-error">Tối thiểu 2 ký tự</span>
+            )}
+          </div>
+          <span
+            className={`customer-input-wrap ${
+              nameTouched && !isNameValid ? 'has-error' : ''
+            } ${isNameValid && nameTouched ? 'is-valid' : ''}`}
+          >
             <UserIcon size={18} />
             <input
               type="text"
               value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Nhập họ và tên"
+              onChange={handleNameChange}
+              onBlur={() => setNameTouched(true)}
+              placeholder="Nhập họ và tên người nhận"
             />
+            {isNameValid && nameTouched && (
+              <Check size={18} className="customer-field-success-icon" />
+            )}
           </span>
+          {nameTouched && !isNameValid && (
+            <span className="customer-field-error-msg">
+              <AlertCircle size={14} />
+              <span>Vui lòng nhập họ và tên người nhận (ít nhất 2 ký tự).</span>
+            </span>
+          )}
         </label>
+
         <label className="customer-field-label">
-          <span>Số điện thoại</span>
-          <span className="customer-input-wrap">
+          <div className="customer-field-label-header">
+            <span>Số điện thoại người nhận</span>
+            <span
+              className={`customer-field-counter ${
+                isPhoneValid
+                  ? 'is-valid'
+                  : phoneTouched && phone.trim().length > 0 && !isPhoneValid
+                  ? 'is-error'
+                  : ''
+              }`}
+            >
+              {isPhoneValid
+                ? '10/10 số (Hợp lệ)'
+                : `${phoneValidation.digitsCount}/10 số`}
+            </span>
+          </div>
+          <span
+            className={`customer-input-wrap ${
+              phoneTouched && !isPhoneValid ? 'has-error' : ''
+            } ${isPhoneValid ? 'is-valid' : ''}`}
+          >
             <Phone size={18} />
             <input
               type="tel"
               value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder="Nhập số điện thoại"
-              inputMode="tel"
+              onChange={handlePhoneChange}
+              onBlur={() => setPhoneTouched(true)}
+              placeholder="Ví dụ: 0912 345 678"
+              inputMode="numeric"
+              maxLength={15}
             />
+            {isPhoneValid && (
+              <Check size={18} className="customer-field-success-icon" />
+            )}
           </span>
+          {phoneTouched && !isPhoneValid && (
+            <span className="customer-field-error-msg">
+              <AlertCircle size={14} />
+              <span>{phoneValidation.errorMessage}</span>
+            </span>
+          )}
+          {!phoneTouched && !phone.trim() && (
+            <span className="customer-field-hint-msg">
+              Nhập đủ 10 số di động Việt Nam (đầu 03, 05, 07, 08, 09) để nhận mã đơn hàng.
+            </span>
+          )}
         </label>
       </FormSection>
 
@@ -410,12 +500,16 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
           <Button
             fullWidth
             size="lg"
-            disabled={!name.trim() || !phone.trim() || isSubmitting}
+            disabled={!isFormValid || isSubmitting}
             onClick={() => {
               if (isSubmitting) return;
+              setNameTouched(true);
+              setPhoneTouched(true);
+              if (!isFormValid) return;
+
               onContinue({
-                customerName: name,
-                phone,
+                customerName: name.trim(),
+                phone: phoneValidation.cleaned,
                 pickupTime,
                 voucherCode: voucher?.code,
                 discountAmount,
