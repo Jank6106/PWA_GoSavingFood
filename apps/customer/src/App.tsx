@@ -79,6 +79,17 @@ function loadInitialHistory(): AppRoute[] {
     window.history.replaceState({}, '', `${cleanPath}${window.location.search}${window.location.hash}`);
   }
 
+  // Khôi phục từ history.state khi reload / F5
+  if (typeof window !== 'undefined') {
+    const state = window.history.state as { route?: AppRoute } | null;
+    if (state?.route) {
+      if (state.route.name === 'tabs' && state.route.tab === 'home') {
+        return [state.route];
+      }
+      return [{ name: 'tabs', tab: 'home' }, state.route];
+    }
+  }
+
   const fromUrl = parseRouteFromUrl();
   if (fromUrl) {
     if (fromUrl.name === 'tabs' && fromUrl.tab === 'home') {
@@ -89,46 +100,12 @@ function loadInitialHistory(): AppRoute[] {
   return [{ name: 'tabs', tab: 'home' }];
 }
 
-function getRouteUrl(route: AppRoute): string {
-  const pathname = window.location.pathname;
-  switch (route.name) {
-    case 'tabs':
-      return route.tab === 'home' ? pathname : `${pathname}?tab=${route.tab}`;
-    case 'search':
-      return `${pathname}?view=search`;
-    case 'bags':
-      return `${pathname}?view=bags`;
-    case 'bag':
-      return `${pathname}?view=bag&id=${encodeURIComponent(route.id)}`;
-    case 'merchant':
-      return `${pathname}?view=merchant&id=${encodeURIComponent(route.id)}`;
-    case 'brand':
-      return `${pathname}?view=brand&id=${encodeURIComponent(route.id)}`;
-    case 'checkout':
-      return `${pathname}?view=checkout`;
-    case 'payment': {
-      const qOrderId = route.order?.id || route.orderId;
-      const qOrderCode = route.order?.orderCode || route.orderCode;
-      const q = new URLSearchParams({ view: 'payment' });
-      if (qOrderId) q.set('orderId', qOrderId);
-      if (qOrderCode) q.set('orderCode', qOrderCode);
-      return `${pathname}?${q.toString()}`;
-    }
-    case 'success':
-      return `${pathname}?view=success&orderId=${encodeURIComponent(route.orderId)}`;
-    case 'order':
-      return `${pathname}?view=order&id=${encodeURIComponent(route.id)}`;
-    case 'review':
-      return `${pathname}?view=review&id=${encodeURIComponent(route.id)}`;
-    case 'report':
-      return `${pathname}?view=report&id=${encodeURIComponent(route.id)}`;
-    case 'notifications':
-      return `${pathname}?view=notifications`;
-    case 'location':
-      return `${pathname}?view=location`;
-    default:
-      return pathname;
+function getRouteUrl(_route?: AppRoute): string {
+  // In-Memory routing: Giấu toàn bộ query/view/id trên thanh URL, luôn trả về pathname gốc sạch sẽ
+  if (typeof window !== 'undefined') {
+    return window.location.pathname;
   }
+  return '/explore/';
 }
 
 function parseRouteFromUrl(): AppRoute | null {

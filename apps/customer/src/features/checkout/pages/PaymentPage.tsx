@@ -113,7 +113,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
   const isPaidConfirmedRef = useRef(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Lưu vào sessionStorage & cập nhật URL Query để giữ trạng thái khi mobile chuyển app ngân hàng
+  // Lưu vào sessionStorage để giữ trạng thái khi mobile chuyển app ngân hàng (giấu sạch URL)
   useEffect(() => {
     try {
       if (effectiveOrderId) sessionStorage.setItem(SESSION_ORDER_ID_KEY, effectiveOrderId);
@@ -122,18 +122,9 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
       if (targetExpiresAt > 0) sessionStorage.setItem(SESSION_EXPIRES_AT_KEY, String(targetExpiresAt));
     } catch {}
 
-    const url = new URL(window.location.href);
-    let updated = false;
-    if (effectiveOrderId && url.searchParams.get('orderId') !== effectiveOrderId) {
-      url.searchParams.set('orderId', effectiveOrderId);
-      updated = true;
-    }
-    if (effectiveOrderCode && url.searchParams.get('orderCode') !== effectiveOrderCode) {
-      url.searchParams.set('orderCode', effectiveOrderCode);
-      updated = true;
-    }
-    if (updated) {
-      window.history.replaceState(window.history.state, '', url.toString());
+    // Dọn sạch query parameters nếu có để thanh URL luôn sạch sẽ
+    if (typeof window !== 'undefined' && window.location.search) {
+      window.history.replaceState(window.history.state, '', window.location.pathname);
     }
   }, [effectiveOrderId, effectiveOrderCode, effectiveTotal, targetExpiresAt]);
 
