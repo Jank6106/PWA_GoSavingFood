@@ -66,10 +66,12 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
                 ? 'Hiện chưa có túi hàng nào đang trong thời gian mở bán.'
                 : state.statusFilter === 'in_storage'
                 ? 'Các túi chưa đến giờ mở bán hoặc đã gỡ kệ sẽ xuất hiện tại đây.'
-                : 'Các túi loại có hạn sử dụng khi quá hạn sẽ xuất hiện tại đây.'
+                : undefined
             }
             action={
-              <Button onClick={() => state.setIsCreateModalOpen(true)}>Tạo túi mới</Button>
+              state.statusFilter !== 'expired' ? (
+                <Button onClick={() => state.setIsCreateModalOpen(true)}>Tạo túi mới</Button>
+              ) : undefined
             }
           />
         )}
