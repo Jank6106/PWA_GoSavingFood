@@ -112,43 +112,67 @@ export async function ensureUserStore(
   extra?: { address?: string; phone?: string; category?: string; latitude?: number; longitude?: number }
 ) {
   try {
-    let { data: store } = await supabase
+    const { data: stores } = await supabase
       .from('stores')
       .select('id, name, owner_user_id, phone, address, latitude, longitude, description')
       .eq('owner_user_id', user.id)
-      .maybeSingle();
+      .limit(1);
+
+    let store = stores?.[0] || null;
 
     if (!store) {
       const storeName =
         user.user_metadata?.store_name || user.user_metadata?.name || defaultName || 'Cửa hàng mới';
-      const storePhone = extra?.phone || user.user_metadata?.phone || '';
-      const storeAddress = extra?.address || user.user_metadata?.address || '';
+      const storePhone = extra?.phone || user.user_metadata?.phone || '0900000000';
+      const storeAddress = extra?.address || user.user_metadata?.address || 'Hà Nội';
       const storeCategory = extra?.category || 'bakery';
-      const storeLat = extra?.latitude ?? null;
-      const storeLng = extra?.longitude ?? null;
+      const storeLat = extra?.latitude ?? 21.0285;
+      const storeLng = extra?.longitude ?? 105.8542;
 
-      const { data: insertedStore } = await supabase
-        .from('stores')
-        .insert({
-          owner_user_id: user.id,
-          name: storeName,
-          description: 'Cửa hàng đối tác giảm lãng phí thực phẩm cùng GoSavingFood',
-          phone: storePhone,
-          address: storeAddress,
-          latitude: storeLat,
-          longitude: storeLng,
-          logo_url: optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 200, 75),
-          banner_url: optimizeImageUrl('https://images.unsplash.com/photo-1504674900247-0877df9cc836', 800, 75),
-          food_categories: [storeCategory],
-          open_time: '07:00:00',
-          close_time: '21:00:00',
-          is_open: true,
-        })
-        .select()
-        .maybeSingle();
+      // Thử tạo qua RPC create_store trước (SECURITY DEFINER)
+      const { data: newStores } = await supabase.rpc('create_store', {
+        p_owner_user_id: user.id,
+        p_name: storeName,
+        p_description: 'Cửa hàng đối tác giảm lãng phí thực phẩm cùng GoSavingFood',
+        p_phone: storePhone,
+        p_address: storeAddress,
+        p_latitude: storeLat,
+        p_longitude: storeLng,
+        p_logo_url: optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 200, 75),
+        p_banner_url: optimizeImageUrl('https://images.unsplash.com/photo-1504674900247-0877df9cc836', 800, 75),
+        p_food_categories: [storeCategory],
+        p_open_time: '07:00:00',
+        p_close_time: '21:00:00',
+        p_is_open: true,
+      });
 
-      if (insertedStore) {
-        store = insertedStore;
+      if (newStores && newStores.length > 0) {
+        store = newStores[0];
+      } else {
+        // Fallback chèn trực tiếp vào bảng stores
+        const { data: insertedStore } = await supabase
+          .from('stores')
+          .insert({
+            owner_user_id: user.id,
+            name: storeName,
+            description: 'Cửa hàng đối tác giảm lãng phí thực phẩm cùng GoSavingFood',
+            phone: storePhone,
+            address: storeAddress,
+            latitude: storeLat,
+            longitude: storeLng,
+            logo_url: optimizeImageUrl('https://images.unsplash.com/photo-1555396273-367ea4eb4db5', 200, 75),
+            banner_url: optimizeImageUrl('https://images.unsplash.com/photo-1504674900247-0877df9cc836', 800, 75),
+            food_categories: [storeCategory],
+            open_time: '07:00:00',
+            close_time: '21:00:00',
+            is_open: true,
+          })
+          .select()
+          .maybeSingle();
+
+        if (insertedStore) {
+          store = insertedStore;
+        }
       }
     }
     return store;

@@ -194,6 +194,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   const [pickupTimeEnd, setPickupTimeEnd] = useState(bag?.pickupTimeEnd ?? '20:00');
   const [imageUrls, setImageUrls] = useState<string[]>(bag?.imageUrls?.length ? bag.imageUrls : (bag?.imageUrl ? [bag.imageUrl] : []));
   const [imageError, setImageError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -214,6 +215,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
       setPickupTimeEnd(bag?.pickupTimeEnd ?? '20:00');
       setImageUrls(bag?.imageUrls?.length ? bag.imageUrls : (bag?.imageUrl ? [bag.imageUrl] : []));
       setImageError(null);
+      setFormError(null);
     }
   }, [bag, open]);
 
@@ -254,26 +256,51 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    setFormError(null);
+    setImageError(null);
+
     if (imageUrls.length === 0) {
       setImageError('Vui lòng tải lên ít nhất 1 ảnh cho túi hàng.');
       return;
     }
-    setImageError(null);
+
     const original = Number(originalPrice);
     if (!originalPrice || isNaN(original) || original <= 0) {
+      setFormError('Giá gốc phải là số dương lớn hơn 0.');
       return;
     }
+
     const calculatedPrice =
       pricingMode === 'discount'
         ? Math.round(original * (1 - Number(discountPercent || 0) / 100))
         : Number(salePrice);
-    if (pricingMode === 'amount' && (!salePrice || Number(salePrice) < 0)) {
+
+    if (isNaN(calculatedPrice) || calculatedPrice <= 0) {
+      setFormError('Vui lòng nhập giá giải cứu hợp lệ.');
       return;
     }
+
+    if (calculatedPrice >= original) {
+      setFormError('Giá giải cứu phải nhỏ hơn giá gốc (ít nhất 1.000đ).');
+      return;
+    }
+
     const qty = Number(quantity);
     if (!quantity || isNaN(qty) || qty <= 0) {
+      setFormError('Số lượng túi phải lớn hơn 0.');
       return;
     }
+
+    if (pickupTimeStart >= pickupTimeEnd) {
+      setFormError('Giờ kết thúc nhận hàng phải sau giờ bắt đầu (Ví dụ: 18:00 - 20:00).');
+      return;
+    }
+
+    if (bagType === 'shelf_life' && !expiryDate) {
+      setFormError('Vui lòng chọn ngày hết hạn sử dụng cho sản phẩm.');
+      return;
+    }
+
     onSubmit({
       name,
       category,
@@ -295,6 +322,22 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   return (
     <Modal open={open} title={bag ? 'Chỉnh sửa túi hàng' : 'Tạo túi hàng mới'} onClose={onClose} size="large">
       <form className="merchant-form" onSubmit={submit}>
+        {formError && (
+          <div
+            style={{
+              padding: '10px 14px',
+              background: '#fef2f2',
+              border: '1px solid #fee2e2',
+              borderRadius: 10,
+              color: '#b91c1c',
+              fontSize: 13,
+              fontWeight: 600,
+              marginBottom: 12,
+            }}
+          >
+            ⚠️ {formError}
+          </div>
+        )}
         <div className="merchant-form-grid">
           <Field
             label={

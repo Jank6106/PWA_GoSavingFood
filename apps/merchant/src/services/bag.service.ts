@@ -242,14 +242,53 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     } = await supabase.auth.getUser();
 
     if (user) {
-      const { data: userStore } = await supabase
-        .from('stores')
-        .select('id')
-        .eq('owner_user_id', user.id)
-        .maybeSingle();
+      // 1. Kiểm tra xem storeId truyền vào có thuộc về user này không
+      if (storeId && storeId !== 'b0000000-0000-0000-0000-000000000002') {
+        const { data: matchedStore } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('id', storeId)
+          .eq('owner_user_id', user.id)
+          .maybeSingle();
 
-      if (userStore?.id) {
-        targetStoreId = userStore.id;
+        if (matchedStore?.id) {
+          targetStoreId = matchedStore.id;
+        }
+      }
+
+      // 2. Nếu targetStoreId chưa khớp hoặc đang là mock store, tìm store của user (dùng limit 1 để tránh lỗi khi user sở hữu nhiều store)
+      if (!targetStoreId || targetStoreId === 'b0000000-0000-0000-0000-000000000002') {
+        const { data: userStores } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('owner_user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (userStores && userStores.length > 0) {
+          targetStoreId = userStores[0].id;
+        } else {
+          // 3. Nếu user chưa có store nào, tự tạo store cho user qua RPC create_store
+          const storeName = user.user_metadata?.store_name || user.user_metadata?.name || 'Cửa hàng của tôi';
+          const { data: newStores } = await supabase.rpc('create_store', {
+            p_owner_user_id: user.id,
+            p_name: storeName,
+            p_description: 'Cửa hàng đối tác GoSavingFood',
+            p_phone: user.user_metadata?.phone || '0900000000',
+            p_address: user.user_metadata?.address || 'Hà Nội',
+            p_latitude: 21.0285,
+            p_longitude: 105.8542,
+            p_logo_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
+            p_banner_url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
+            p_food_categories: ['bakery'],
+            p_open_time: '07:00:00',
+            p_close_time: '21:00:00',
+            p_is_open: true,
+          });
+          if (newStores && newStores.length > 0) {
+            targetStoreId = newStores[0].id;
+          }
+        }
       }
     } else {
       throw new Error('Chưa đăng nhập. Vui lòng đăng nhập tài khoản cửa hàng trước khi tạo túi.');
@@ -260,6 +299,23 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     }
     console.warn('Lỗi lấy thông tin user store:', err);
   }
+
+  // Tính toán thời gian hết hạn (expires_at) luôn đảm bảo lớn hơn thời điểm hiện tại
+  const calculatedExpiresAt = (() => {
+    if (input.bagType === 'shelf_life' && input.expiryDate) {
+      const parsed = new Date(`${input.expiryDate}T23:59:59+07:00`);
+      if (!isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
+        return parsed.toISOString();
+      }
+    }
+    const [endH, endM] = (input.pickupTimeEnd || '21:00').split(':').map(Number);
+    const exp = new Date();
+    exp.setHours(endH || 21, endM || 0, 0, 0);
+    if (exp.getTime() <= Date.now()) {
+      exp.setDate(exp.getDate() + 1);
+    }
+    return exp.toISOString();
+  })();
 
   const { data, error } = await supabase
     .from('surprise_bags')
@@ -288,18 +344,7 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
       expiry_date: input.bagType === 'shelf_life' ? (input.expiryDate || null) : null,
       status: input.quantity > 0 ? 'active' : 'sold_out',
       is_available: true,
-      expires_at: (() => {
-        if (input.bagType === 'shelf_life' && input.expiryDate) {
-          return `${input.expiryDate}T23:59:59.999Z`;
-        }
-        const [endH, endM] = (input.pickupTimeEnd || '21:00').split(':').map(Number);
-        const exp = new Date();
-        exp.setHours(endH || 21, endM || 0, 0, 0);
-        if (exp.getTime() <= Date.now()) {
-          exp.setDate(exp.getDate() + 1);
-        }
-        return exp.toISOString();
-      })(),
+      expires_at: calculatedExpiresAt,
     })
     .select()
     .single();
