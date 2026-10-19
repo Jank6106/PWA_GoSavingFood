@@ -417,7 +417,7 @@ export function CancelOrderModal({
         <div style={{ padding: '12px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', color: '#9a3412', fontSize: '13px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
           <span>
-            Hủy đơn sẽ hoàn lại số lượng túi thực phẩm về kệ hàng và gửi thông báo hoàn tiền cho khách.
+            Đơn hàng sẽ bị hủy, hoàn trả suất ăn về kho và tự động kích hoạt hoàn tiền 100% cho khách hàng.
           </span>
         </div>
 

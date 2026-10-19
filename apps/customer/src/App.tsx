@@ -991,8 +991,8 @@ function CustomerApp() {
           onSaveNote={(orderId, note) => {
             void customerService.updateOrderNote(orderId, note);
           }}
-          onCancelOrder={(orderId, reason) => {
-            void customerService.cancelOrder(orderId, reason);
+          onCancelOrder={(orderId, reason, bankInfo) => {
+            void customerService.cancelOrder(orderId, reason, bankInfo);
           }}
           onUpdateOrder={(updated) => {
             setOrders((prev) =>

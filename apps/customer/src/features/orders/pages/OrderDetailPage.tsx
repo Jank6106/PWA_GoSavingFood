@@ -38,7 +38,11 @@ interface OrderDetailPageProps {
   onReorder?: (order: Order) => void;
   onOpenBag?: (bagId: string) => void;
   onSaveNote?: (orderId: string, note: string) => void;
-  onCancelOrder?: (orderId: string, reason: string) => void;
+  onCancelOrder?: (
+    orderId: string,
+    reason: string,
+    bankInfo?: { bankName: string; accountNumber: string; accountHolder: string }
+  ) => void;
 }
 
 function formatDateTime(dateStr?: string): string {
@@ -95,6 +99,22 @@ const CANCEL_REASONS = [
   'Lý do khác',
 ];
 
+const VIETNAM_BANKS = [
+  'Vietcombank',
+  'MB Bank',
+  'Techcombank',
+  'BIDV',
+  'VietinBank',
+  'ACB',
+  'VPBank',
+  'TPBank',
+  'Sacombank',
+  'HDBank',
+  'VIB',
+  'Agribank',
+  'MoMo / Khác',
+];
+
 export function OrderDetailPage({
   order,
   onBack,
@@ -112,6 +132,9 @@ export function OrderDetailPage({
   const [noteValue, setNoteValue] = useState(order.note || '');
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedCancelReason, setSelectedCancelReason] = useState(CANCEL_REASONS[0]);
+  const [refundBank, setRefundBank] = useState('Vietcombank');
+  const [refundAccountNumber, setRefundAccountNumber] = useState('');
+  const [refundAccountHolder, setRefundAccountHolder] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -171,7 +194,21 @@ export function OrderDetailPage({
   };
 
   const handleConfirmCancel = () => {
-    const isPaidOrder = currentOrder.paymentStatus === 'success';
+    const isPaidOrder = currentOrder.paymentStatus === 'success' || currentOrder.status === 'paid';
+
+    let bankInfo: { bankName: string; accountNumber: string; accountHolder: string } | undefined = undefined;
+    if (isPaidOrder) {
+      if (!refundAccountNumber.trim() || !refundAccountHolder.trim()) {
+        showToast('Vui lòng nhập đầy đủ số tài khoản và tên chủ tài khoản để nhận tiền hoàn.');
+        return;
+      }
+      bankInfo = {
+        bankName: refundBank,
+        accountNumber: refundAccountNumber.trim(),
+        accountHolder: refundAccountHolder.trim().toUpperCase(),
+      };
+    }
+
     const updated: Order = {
       ...currentOrder,
       status: 'cancelled',
@@ -181,11 +218,11 @@ export function OrderDetailPage({
     };
     setCurrentOrder(updated);
     onUpdateOrder?.(updated);
-    onCancelOrder?.(updated.id, updated.cancelReason ?? '');
+    onCancelOrder?.(updated.id, updated.cancelReason ?? '', bankInfo);
     setIsCancelModalOpen(false);
     showToast(
       isPaidOrder
-        ? 'Đã hủy đơn. Yêu cầu hoàn tiền đang được GoSavingFood xử lý!'
+        ? 'Đã gửi yêu cầu hủy đơn & hoàn tiền 100% thành công!'
         : 'Đã hủy đơn hàng thành công!'
     );
   };
@@ -209,7 +246,8 @@ export function OrderDetailPage({
     isCompleted ||
     Boolean(currentOrder.paidAt);
   const isPending = isPendingPayment || isPaid || isPendingLegacy;
-  const canCancel = isPendingPayment || isPaid || isPendingLegacy || isConfirmedLegacy;
+  // Khách CHỈ được hủy khi Chờ thanh toán (pending_payment) hoặc Chờ xác nhận (paid). Khóa chặt khi Đang xử lý hoặc Chờ lấy!
+  const canCancel = isPendingPayment || isPaid || isPendingLegacy;
 
   const savingsAmount = Math.max(
     0,
@@ -593,7 +631,7 @@ export function OrderDetailPage({
         )}
       </div>
 
-      {/* Modal Hủy Đơn Hàng cho mục Chờ xác nhận */}
+      {/* Modal Hủy Đơn Hàng */}
       {isCancelModalOpen && (
         <div
           className="gsf-drawer-backdrop"
@@ -614,9 +652,13 @@ export function OrderDetailPage({
                   <AlertCircle size={20} />
                 </div>
                 <div>
-                  <h2 className="gsf-drawer-title text-danger">Hủy đơn hàng</h2>
+                  <h2 className="gsf-drawer-title text-danger">
+                    {isPaid || currentOrder.paymentStatus === 'success' ? 'Hủy đơn & Hoàn tiền' : 'Hủy đơn hàng'}
+                  </h2>
                   <p className="gsf-drawer-subtitle">
-                    Đơn hàng sẽ bị hủy và tiền được hoàn 100%
+                    {isPaid || currentOrder.paymentStatus === 'success'
+                      ? 'Đơn hàng sẽ bị hủy và hoàn tiền 100%'
+                      : 'Hủy đơn hàng chưa thanh toán'}
                   </p>
                 </div>
               </div>
@@ -634,16 +676,15 @@ export function OrderDetailPage({
               <div className="customer-delete-warning-card">
                 <h4>Xác nhận hủy đơn #{currentOrder.orderCode}?</h4>
                 <p>
-                  Quán chưa chuẩn bị đơn này nên bạn được hủy hoàn toàn miễn phí.
-                  Số tiền{' '}
-                  <strong>{currentOrder.finalAmount.toLocaleString('vi-VN')}đ</strong>{' '}
-                  sẽ được hoàn về tài khoản trong 1 - 3 ngày làm việc.
+                  {isPaid || currentOrder.paymentStatus === 'success'
+                    ? `Quán chưa chuẩn bị món nên bạn được hủy miễn phí. Số tiền ${currentOrder.finalAmount.toLocaleString('vi-VN')}đ sẽ được hoàn 100% về tài khoản bạn cung cấp.`
+                    : 'Đơn hàng chưa thanh toán sẽ được hủy ngay lập tức và không phát sinh bất kỳ khoản phí nào.'}
                 </p>
               </div>
 
               <div className="customer-form-field">
                 <label className="customer-form-label">
-                  Vui lòng chọn lý do hủy đơn:
+                  Lý do hủy đơn:
                 </label>
                 <div className="customer-cancel-reasons-list">
                   {CANCEL_REASONS.map((reason) => (
@@ -664,6 +705,80 @@ export function OrderDetailPage({
                   ))}
                 </div>
               </div>
+
+              {(isPaid || currentOrder.paymentStatus === 'success') && (
+                <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <label className="customer-form-label" style={{ fontWeight: 750, color: 'var(--color-text-primary)' }}>
+                    Thông tin nhận tiền hoàn (100%):
+                  </label>
+
+                  <div>
+                    <label style={{ fontSize: '12px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>
+                      Ngân hàng thụ hưởng
+                    </label>
+                    <select
+                      value={refundBank}
+                      onChange={(e) => setRefundBank(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--color-border-subtle)',
+                        fontSize: '13.5px',
+                        background: '#ffffff',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {VIETNAM_BANKS.map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>
+                      Số tài khoản
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Nhập số tài khoản ngân hàng..."
+                      value={refundAccountNumber}
+                      onChange={(e) => setRefundAccountNumber(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--color-border-subtle)',
+                        fontSize: '13.5px',
+                        background: '#ffffff',
+                        fontWeight: 600,
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>
+                      Tên chủ tài khoản
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ví dụ: NGUYEN VAN A"
+                      value={refundAccountHolder}
+                      onChange={(e) => setRefundAccountHolder(e.target.value.toUpperCase())}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--color-border-subtle)',
+                        fontSize: '13.5px',
+                        background: '#ffffff',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="gsf-drawer-footer customer-delete-actions">
@@ -681,7 +796,7 @@ export function OrderDetailPage({
                 size="md"
                 onClick={handleConfirmCancel}
               >
-                Xác nhận hủy đơn
+                {isPaid || currentOrder.paymentStatus === 'success' ? 'Xác nhận hủy & Hoàn tiền' : 'Xác nhận hủy đơn'}
               </Button>
             </div>
           </div>

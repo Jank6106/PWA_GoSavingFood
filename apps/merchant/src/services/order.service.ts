@@ -214,29 +214,41 @@ export async function updateMerchantOrderStatus(
       if (note) updatePayload.cancel_reason = note;
     }
 
-    // 1. Direct update is 10x faster
-    const { error: directErr } = await supabase
-      .from('orders')
-      .update(updatePayload)
-      .eq('id', orderId);
-
-    // 2. If direct update fails (e.g. strict RLS), try RPC transition
-    if (directErr && user) {
-      try {
-        await supabase.rpc('transition_order_status_transaction', {
-          p_order_id: orderId,
-          p_target_status: targetDbStatus,
-          p_actor_id: user.id,
-          p_actor_role: 'merchant',
-        });
-        if (status === 'cancelled' && note) {
-          await supabase.rpc('set_order_cancel_reason', {
+    if (status === 'cancelled') {
+      // Khi quán hủy đơn: BẮT BUỘC gọi RPC transition_order_status_transaction
+      // để tự động kích hoạt hoàn kho túi, hoàn voucher, sinh refund_requests hoàn tiền cho khách và gửi thông báo
+      if (user) {
+        try {
+          await supabase.rpc('transition_order_status_transaction', {
             p_order_id: orderId,
-            p_reason: note,
+            p_target_status: 'cancelled',
+            p_actor_id: user.id,
+            p_actor_role: 'merchant',
+            p_reason: note || 'Chủ quán hủy đơn',
           });
+        } catch (rpcErr) {
+          console.warn('RPC cancel transition warning:', rpcErr);
         }
-      } catch (rpcErr) {
-        console.warn('RPC transition warning:', rpcErr);
+      }
+    } else {
+      // 1. Tiến trình thông thường (processing, confirmed, completed): Direct update
+      const { error: directErr } = await supabase
+        .from('orders')
+        .update(updatePayload)
+        .eq('id', orderId);
+
+      // 2. If direct update fails (e.g. strict RLS), try RPC transition
+      if (directErr && user) {
+        try {
+          await supabase.rpc('transition_order_status_transaction', {
+            p_order_id: orderId,
+            p_target_status: targetDbStatus,
+            p_actor_id: user.id,
+            p_actor_role: 'merchant',
+          });
+        } catch (rpcErr) {
+          console.warn('RPC transition warning:', rpcErr);
+        }
       }
     }
 

@@ -2060,18 +2060,25 @@ export const customerService = {
     }
   },
 
-  async cancelOrder(orderId: string, reason: string) {
+  async cancelOrder(
+    orderId: string,
+    reason: string,
+    bankInfo?: { bankName: string; accountNumber: string; accountHolder: string }
+  ) {
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return false;
 
+      const trimmedReason = reason.trim() || 'Khách hàng yêu cầu hủy đơn';
       const { error } = await supabase.rpc('transition_order_status_transaction', {
         p_order_id: orderId,
         p_target_status: 'cancelled',
         p_actor_id: user.id,
         p_actor_role: 'customer',
+        p_reason: trimmedReason,
+        p_bank_info: bankInfo || null,
       });
 
       if (error) {
@@ -2079,13 +2086,11 @@ export const customerService = {
         return false;
       }
 
-      if (reason.trim()) {
-        const { error: reasonError } = await supabase.rpc('set_order_cancel_reason', {
-          p_order_id: orderId,
-          p_reason: reason.trim(),
-        });
-        if (reasonError) console.warn('Lưu lý do hủy đơn lỗi:', reasonError.message);
-      }
+      // Đóng link thanh toán trên PayOS nếu đơn chưa thanh toán
+      void this.cancelPayOSPayment({
+        orderId,
+        cancellationReason: trimmedReason,
+      });
 
       return true;
     } catch (err) {
