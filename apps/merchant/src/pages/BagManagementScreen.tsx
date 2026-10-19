@@ -24,16 +24,16 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
           <span>Danh mục túi hàng</span>
           <h1>Quản lý túi hàng</h1>
         </div>
-        <strong>{state.onShelfCount} đang lên kệ / {state.allBags.length} tổng</strong>
+        <strong>{state.onShelfCount} trên kệ / {state.inStorageCount} trong kho</strong>
       </div>
       <BagFilterBar
         searchQuery={state.searchQuery}
         onSearchQueryChange={state.setSearchQuery}
         statusFilter={state.statusFilter}
         onStatusFilterChange={state.setStatusFilter}
-        allCount={state.allBags.length}
         onShelfCount={state.onShelfCount}
-        offShelfCount={state.offShelfCount}
+        inStorageCount={state.inStorageCount}
+        expiredCount={state.expiredCount}
         onOpenCreateModal={() => state.setIsCreateModalOpen(true)}
       />
       <div className="merchant-list">
@@ -56,20 +56,20 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
             icon={<PackageOpen size={28} />}
             title={
               state.statusFilter === 'on_shelf'
-                ? 'Không có túi nào đang lên kệ'
-                : state.statusFilter === 'off_shelf'
-                ? 'Không có túi nào đã gỡ kệ'
-                : 'Chưa có túi hàng'
+                ? 'Không có túi nào trên kệ hàng'
+                : state.statusFilter === 'in_storage'
+                ? 'Không có túi nào trong kho'
+                : 'Không có hàng hết hạn'
             }
             message={
-              state.statusFilter === 'all'
-                ? 'Tạo túi đầu tiên để bắt đầu giải cứu thực phẩm.'
-                : 'Thử chuyển bộ lọc hoặc đưa túi lên kệ.'
+              state.statusFilter === 'on_shelf'
+                ? 'Hiện chưa có túi hàng nào đang trong thời gian mở bán.'
+                : state.statusFilter === 'in_storage'
+                ? 'Các túi chưa đến giờ mở bán hoặc đã gỡ kệ sẽ xuất hiện tại đây.'
+                : 'Các túi loại có hạn sử dụng khi quá hạn sẽ xuất hiện tại đây.'
             }
             action={
-              state.statusFilter === 'all' ? (
-                <Button onClick={() => state.setIsCreateModalOpen(true)}>Tạo túi mới</Button>
-              ) : undefined
+              <Button onClick={() => state.setIsCreateModalOpen(true)}>Tạo túi mới</Button>
             }
           />
         )}

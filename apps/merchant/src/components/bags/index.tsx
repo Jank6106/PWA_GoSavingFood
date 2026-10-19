@@ -3,6 +3,7 @@ import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES } from '../../mocks';
 import { compressImageFile, optimizeImageUrl } from '../../services/utils';
 import type { BagInput, BagItem } from '../../types';
+import { getBagCategory, getVnTimeMinutes, parseTimeToMinutes, type BagTabCategory } from '../../utils/bagTiming';
 import { Button, Field, Modal, SelectField, TextAreaField } from '../ui';
 
 const readImageFiles = async (files: FileList) => {
@@ -16,18 +17,18 @@ export function BagFilterBar({
   onSearchQueryChange,
   statusFilter,
   onStatusFilterChange,
-  allCount,
   onShelfCount,
-  offShelfCount,
+  inStorageCount,
+  expiredCount,
   onOpenCreateModal,
 }: {
   searchQuery: string;
   onSearchQueryChange: (value: string) => void;
-  statusFilter?: 'all' | 'on_shelf' | 'off_shelf';
-  onStatusFilterChange?: (filter: 'all' | 'on_shelf' | 'off_shelf') => void;
-  allCount?: number;
+  statusFilter?: BagTabCategory;
+  onStatusFilterChange?: (filter: BagTabCategory) => void;
   onShelfCount?: number;
-  offShelfCount?: number;
+  inStorageCount?: number;
+  expiredCount?: number;
   onOpenCreateModal: () => void;
 }) {
   return (
@@ -49,24 +50,24 @@ export function BagFilterBar({
         <div className="merchant-status-tabs">
           <button
             type="button"
-            className={statusFilter === 'all' ? 'is-active' : ''}
-            onClick={() => onStatusFilterChange('all')}
-          >
-            Tất cả {allCount !== undefined ? `(${allCount})` : ''}
-          </button>
-          <button
-            type="button"
             className={statusFilter === 'on_shelf' ? 'is-active' : ''}
             onClick={() => onStatusFilterChange('on_shelf')}
           >
-            Đang lên kệ {onShelfCount !== undefined ? `(${onShelfCount})` : ''}
+            Trên kệ hàng {onShelfCount !== undefined ? `(${onShelfCount})` : ''}
           </button>
           <button
             type="button"
-            className={statusFilter === 'off_shelf' ? 'is-active' : ''}
-            onClick={() => onStatusFilterChange('off_shelf')}
+            className={statusFilter === 'in_storage' ? 'is-active' : ''}
+            onClick={() => onStatusFilterChange('in_storage')}
           >
-            Đã gỡ kệ {offShelfCount !== undefined ? `(${offShelfCount})` : ''}
+            Trong kho {inStorageCount !== undefined ? `(${inStorageCount})` : ''}
+          </button>
+          <button
+            type="button"
+            className={statusFilter === 'expired' ? 'is-active' : ''}
+            onClick={() => onStatusFilterChange('expired')}
+          >
+            Hàng hết hạn {expiredCount !== undefined ? `(${expiredCount})` : ''}
           </button>
         </div>
       )}
@@ -89,12 +90,44 @@ export function BagCard({
   onEdit: (bag: BagItem) => void;
   onDelete: (bag: BagItem) => void;
 }) {
-  const isOnShelf = bag.status !== 'hidden';
-  const statusLabel = isOnShelf
-    ? bag.status === 'active'
-      ? 'Đang lên kệ'
-      : 'Hết hàng'
-    : 'Đã gỡ kệ';
+  const category = getBagCategory(bag);
+  const isOnShelf = category === 'on_shelf';
+
+  let statusLabel = 'Đang mở bán';
+  let badgeVariant = 'active';
+
+  if (category === 'expired') {
+    statusLabel = 'Hết hạn sử dụng';
+    badgeVariant = 'expired';
+  } else if (category === 'in_storage') {
+    if (bag.status === 'hidden') {
+      statusLabel = 'Đã gỡ kệ';
+      badgeVariant = 'hidden';
+    } else if ((bag.availableQuantity ?? bag.quantity ?? 0) <= 0) {
+      statusLabel = 'Hết hàng';
+      badgeVariant = 'sold_out';
+    } else if (bag.bagType !== 'shelf_life') {
+      const nowMinutes = getVnTimeMinutes();
+      const startM = parseTimeToMinutes(bag.pickupTimeStart);
+      const endM = parseTimeToMinutes(bag.pickupTimeEnd);
+      if (nowMinutes < startM) {
+        statusLabel = `Sắp mở (${bag.pickupTimeStart})`;
+        badgeVariant = 'upcoming';
+      } else if (nowMinutes > endM) {
+        statusLabel = 'Hết giờ hôm nay';
+        badgeVariant = 'closed';
+      } else {
+        statusLabel = 'Trong kho';
+        badgeVariant = 'hidden';
+      }
+    } else {
+      statusLabel = 'Trong kho';
+      badgeVariant = 'hidden';
+    }
+  } else {
+    statusLabel = 'Đang mở bán';
+    badgeVariant = 'active';
+  }
 
   return (
     <article className={`merchant-card merchant-product-card ${!isOnShelf ? 'merchant-product-card--off-shelf' : ''}`}>
@@ -105,7 +138,7 @@ export function BagCard({
             <span className="merchant-eyebrow">{bag.category}</span>
             <h3>{bag.name}</h3>
           </div>
-          <span className={`merchant-badge merchant-badge--${bag.status}`}>
+          <span className={`merchant-badge merchant-badge--${badgeVariant}`}>
             {statusLabel}
           </span>
         </div>
@@ -143,14 +176,16 @@ export function BagCard({
             <small>túi còn lại</small>
           </div>
           <div className="merchant-card-actions">
-            <Button
-              size="small"
-              variant={isOnShelf ? 'secondary' : 'primary'}
-              onClick={() => onToggleStatus(bag.id)}
-            >
-              {isOnShelf ? <EyeOff size={16} /> : <Eye size={16} />}
-              {isOnShelf ? 'Gỡ khỏi kệ' : 'Đưa lên kệ'}
-            </Button>
+            {category !== 'expired' && (
+              <Button
+                size="small"
+                variant={bag.status !== 'hidden' ? 'secondary' : 'primary'}
+                onClick={() => onToggleStatus(bag.id)}
+              >
+                {bag.status !== 'hidden' ? <EyeOff size={16} /> : <Eye size={16} />}
+                {bag.status !== 'hidden' ? 'Gỡ khỏi kệ' : 'Đưa lên kệ'}
+              </Button>
+            )}
             <Button size="small" variant="outline" onClick={() => onEdit(bag)}>
               <Pencil size={15} /> Sửa
             </Button>
@@ -376,14 +411,14 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
               className={bagType === 'daily' ? 'is-active' : ''}
               onClick={() => setBagType('daily')}
             >
-              🍱 Dùng trong ngày
+              Dùng trong ngày
             </button>
             <button
               type="button"
               className={bagType === 'shelf_life' ? 'is-active' : ''}
               onClick={() => setBagType('shelf_life')}
             >
-              📦 Có hạn sử dụng
+              Có hạn sử dụng
             </button>
           </div>
         </div>
@@ -428,9 +463,6 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
                   )}
                 </select>
               </div>
-              <small style={{ color: '#64748b', marginTop: 4, display: 'block', fontSize: 11 }}>
-                *Trước giờ: Khách xem trước (chưa mua được). Trong giờ: Khách đặt & thanh toán.
-              </small>
             </div>
 
             <div className="merchant-field">

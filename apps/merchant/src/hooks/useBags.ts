@@ -11,9 +11,10 @@ import {
 } from '../services/bag.service';
 import { supabase } from '../services/supabase';
 import type { BagInput, BagItem, BagStatus } from '../types';
+import { getBagCategory, type BagTabCategory } from '../utils/bagTiming';
 import { useToast } from './useToast';
 
-export type BagStatusFilter = 'all' | 'on_shelf' | 'off_shelf';
+export type BagStatusFilter = BagTabCategory;
 
 export function useBags(storeId: string) {
   // SWR: Render danh sách túi tức thì 0ms từ cache localStorage
@@ -23,7 +24,7 @@ export function useBags(storeId: string) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<BagStatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<BagStatusFilter>('on_shelf');
   const [selectedBag, setSelectedBag] = useState<BagItem | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -108,8 +109,19 @@ export function useBags(storeId: string) {
     };
   }, [loadBags, storeId]);
 
-  const onShelfCount = useMemo(() => allBags.filter((b) => b.status !== 'hidden').length, [allBags]);
-  const offShelfCount = useMemo(() => allBags.filter((b) => b.status === 'hidden').length, [allBags]);
+  const onShelfCount = useMemo(
+    () => allBags.filter((b) => getBagCategory(b) === 'on_shelf').length,
+    [allBags]
+  );
+  const inStorageCount = useMemo(
+    () => allBags.filter((b) => getBagCategory(b) === 'in_storage').length,
+    [allBags]
+  );
+  const expiredCount = useMemo(
+    () => allBags.filter((b) => getBagCategory(b) === 'expired').length,
+    [allBags]
+  );
+  const offShelfCount = inStorageCount;
 
   const bags = useMemo(
     () =>
@@ -118,9 +130,8 @@ export function useBags(storeId: string) {
           .toLocaleLowerCase('vi-VN')
           .includes(searchQuery.toLocaleLowerCase('vi-VN'));
         if (!matchesQuery) return false;
-        if (statusFilter === 'on_shelf') return bag.status !== 'hidden';
-        if (statusFilter === 'off_shelf') return bag.status === 'hidden';
-        return true;
+
+        return getBagCategory(bag) === statusFilter;
       }),
     [allBags, searchQuery, statusFilter]
   );
@@ -305,6 +316,8 @@ export function useBags(storeId: string) {
     searchQuery,
     statusFilter,
     onShelfCount,
+    inStorageCount,
+    expiredCount,
     offShelfCount,
     selectedBag,
     isCreateModalOpen,

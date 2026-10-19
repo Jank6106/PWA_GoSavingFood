@@ -169,6 +169,9 @@ h1, h2, h3, p { margin: 0; }
 .merchant-badge--active { background: #D8ED9B; color: #193B2C; }
 .merchant-badge--sold_out { background: #fff7ed; color: #c2410c; }
 .merchant-badge--hidden { background: #fee2e2; color: #991b1b; }
+.merchant-badge--upcoming { background: #fef9c3; color: #854d0e; }
+.merchant-badge--closed { background: #ffedd5; color: #9a3412; }
+.merchant-badge--expired { background: #fee2e2; color: #991b1b; }
 .merchant-clamp { display: -webkit-box; overflow: hidden; color: var(--text-secondary); font-size: 13px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .merchant-product-meta { display: flex; flex-wrap: wrap; gap: 14px; color: var(--text-secondary); font-size: 12px; }
 .merchant-product-meta span { display: flex; align-items: center; gap: 5px; }
@@ -358,8 +361,10 @@ h1, h2, h3, p { margin: 0; }
 .merchant-settings-actions > button.is-danger > span { background: var(--danger-soft); }
 
 /* Modal and notifications */
-.merchant-modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; overflow-y: auto; place-items: center; padding: 18px; background: rgba(71, 85, 105, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-.merchant-modal { width: min(100%, 520px); max-height: min(88vh, 900px); overflow: auto; border: 1px solid #D9D5CB; border-radius: 22px; background: #fff; box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18), 0 4px 16px rgba(15, 23, 42, 0.08); }
+.merchant-modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; overflow-y: auto; place-items: center; padding: 18px; background: rgba(71, 85, 105, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); scrollbar-width: none; -ms-overflow-style: none; }
+.merchant-modal-backdrop::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.merchant-modal { width: min(100%, 520px); max-height: min(88vh, 900px); overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none; border: 1px solid #D9D5CB; border-radius: 22px; background: #fff; box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18), 0 4px 16px rgba(15, 23, 42, 0.08); }
+.merchant-modal::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .merchant-modal--small { max-width: 420px; }
 .merchant-modal--large { max-width: 680px; }
 .merchant-modal > header { position: sticky; z-index: 3; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px; border-bottom: 1px solid #edf4ef; background: #fff; }
