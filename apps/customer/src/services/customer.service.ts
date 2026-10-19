@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { calculateDistanceKm, formatDistance, mapboxService } from './mapbox.service';
+import { isBagVisibleOnMarket } from '../shared/utils/bagTiming';
 import {
   parseIdentifier,
   isValidEmail,
@@ -1076,30 +1077,7 @@ export const customerService = {
       }
 
       if (bagsSource.length > 0) {
-        const now = new Date();
-        const timeInVn = now.toLocaleTimeString('en-US', {
-          timeZone: 'Asia/Ho_Chi_Minh',
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        const [vnH, vnM] = timeInVn.split(':').map(Number);
-        const currentVnMinutes = vnH * 60 + vnM;
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
         remoteBags = bagsSource
-          .filter((b: any) => {
-            // Ẩn túi đã hết hạn / archived khỏi mục khám phá
-            if (b.status === 'archived' || b.status === 'expired') return false;
-            if (b.expiry_date && b.expiry_date < todayStr) return false;
-            if (b.bag_type === 'daily' && b.repeat_mode === 'today_only' && b.pickup_end) {
-              const [endH, endM] = b.pickup_end.split(':').map(Number);
-              if (!isNaN(endH) && currentVnMinutes > endH * 60 + (endM || 0)) {
-                return false;
-              }
-            }
-            return true;
-          })
           .map((b: any) => ({
             id: b.id,
             merchantId: b.store_id,
@@ -1123,7 +1101,8 @@ export const customerService = {
             expiresAt: b.expires_at || undefined,
             rating: b.stores?.rating != null ? Number(b.stores.rating) : (typeof b.rating === 'number' ? Number(b.rating) : 4.8),
             createdAt: b.created_at,
-          }));
+          }))
+          .filter(isBagVisibleOnMarket);
 
         remoteBags.sort((a: any, b: any) => {
           if (!a.createdAt || !b.createdAt) return 0;
@@ -1168,7 +1147,7 @@ export const customerService = {
         bagMap.set(b.id, b);
       }
     }
-    const allBags = Array.from(new Set(bagMap.values()));
+    const allBags = Array.from(new Set(bagMap.values())).filter(isBagVisibleOnMarket);
 
     const brands: Brand[] = allStores.map((m) => ({
       id: m.id,
@@ -1277,28 +1256,7 @@ export const customerService = {
           longitude: store.longitude != null ? Number(store.longitude) : undefined,
         };
 
-        const now = new Date();
-        const timeInVn = now.toLocaleTimeString('en-US', {
-          timeZone: 'Asia/Ho_Chi_Minh',
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        const [vnH, vnM] = timeInVn.split(':').map(Number);
-        const currentVnMinutes = vnH * 60 + vnM;
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
         const mappedBags: SurpriseBag[] = (bags || [])
-          .filter((b: any) => {
-            if (b.expiry_date && b.expiry_date < todayStr) return false;
-            if (b.bag_type === 'daily' && b.repeat_mode === 'today_only' && b.pickup_end) {
-              const [endH, endM] = b.pickup_end.split(':').map(Number);
-              if (!isNaN(endH) && currentVnMinutes > endH * 60 + (endM || 0)) {
-                return false;
-              }
-            }
-            return true;
-          })
           .map((b: any) => ({
             id: b.id,
             merchantId: b.store_id,
@@ -1321,7 +1279,8 @@ export const customerService = {
             isAvailable: b.is_available ?? true,
             expiresAt: b.expires_at || undefined,
             rating: typeof store.rating === 'number' && store.rating > 0 ? Number(store.rating) : 4.9,
-          }));
+          }))
+          .filter(isBagVisibleOnMarket);
 
         return { merchant, bags: mappedBags };
       }

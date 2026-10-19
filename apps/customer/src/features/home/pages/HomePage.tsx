@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { ErrorState, Skeleton } from '@gosavingfood/ui';
 import { BagCard, MerchantCard, SectionHeading } from '../../../shared/components';
+import { isBagVisibleOnMarket } from '../../../shared/utils/bagTiming';
 import { BrandMarquee, CategoryBar, HomeBanner } from '../components';
 import type { Banner, Brand, Category, FoodCategory, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
@@ -60,7 +61,7 @@ export function HomePage({
   }, [banners.length]);
 
   const visibleBags = useMemo(
-    () => bags.filter((bag) => category === 'all' || bag.category === category),
+    () => bags.filter((bag) => isBagVisibleOnMarket(bag) && (category === 'all' || bag.category === category)),
     [bags, category]
   );
 

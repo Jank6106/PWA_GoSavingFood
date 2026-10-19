@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { customerService } from '../services/customer.service';
 import { supabase } from '../services/supabase';
+import { isBagVisibleOnMarket } from '../shared/utils/bagTiming';
 import type { Banner, Brand, Category, Merchant, SurpriseBag } from '../shared/types/customer.types';
 
 interface CatalogState {
@@ -26,12 +27,16 @@ function getInitialCatalog(): CatalogState {
           categories: parsed.categories?.length ? parsed.categories : customerService.getStaticHome().categories,
           brands: parsed.brands || [],
           merchants: (parsed.merchants || []).filter((m: any) => !m.id?.startsWith('store-hn-')),
-          bags: (parsed.bags || []).filter((b: any) => !b.id?.startsWith('bag-hn-')),
+          bags: (parsed.bags || []).filter((b: any) => !b.id?.startsWith('bag-hn-') && isBagVisibleOnMarket(b)),
         };
       }
     }
   } catch {}
-  return customerService.getStaticHome();
+  const staticHome = customerService.getStaticHome();
+  return {
+    ...staticHome,
+    bags: staticHome.bags.filter(isBagVisibleOnMarket),
+  };
 }
 
 export function useCustomerCatalog(coords?: { lat: number; lng: number }) {

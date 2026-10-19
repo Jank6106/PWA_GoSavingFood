@@ -14,6 +14,7 @@ import {
 import { EmptyState } from '@gosavingfood/ui';
 import { ScreenHeader, SearchField } from '../../../shared/components';
 import { MAPBOX_TOKEN, calculateDistanceKm, mapboxService } from '../../../services/mapbox.service';
+import { isBagVisibleOnMarket } from '../../../shared/utils/bagTiming';
 import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const formatPrice = (price: number) => {
@@ -191,13 +192,13 @@ export function SearchPage({
   }, [merchants, effectiveMerchants]);
 
   const selectedStoreBags = useMemo(
-    () => (selectedMerchantId ? bags.filter((b) => b.merchantId === selectedMerchantId) : []),
+    () => (selectedMerchantId ? bags.filter((b) => b.merchantId === selectedMerchantId && isBagVisibleOnMarket(b)) : []),
     [bags, selectedMerchantId]
   );
 
   // Lọc danh sách túi theo từ khóa (cho List View)
   const filteredBags = useMemo(() => {
-    let list = bags;
+    let list = bags.filter(isBagVisibleOnMarket);
 
     if (query.trim()) {
       const q = query.trim().toLocaleLowerCase('vi-VN');
@@ -244,7 +245,7 @@ export function SearchPage({
       // TRƯỜNG HỢP 1: Cửa hàng riêng lẻ -> Hiện vòng tròn nhỏ kèm logo cửa hàng (Yindii style)
       if (cluster.count === 1) {
         const store = cluster.stores[0];
-        const storeBags = bags.filter((b) => b.merchantId === store.id);
+        const storeBags = bags.filter((b) => b.merchantId === store.id && isBagVisibleOnMarket(b));
         const isStoreClosed = store.isOpen === false;
 
         const el = document.createElement('div');
@@ -579,7 +580,7 @@ export function SearchPage({
 
                 <div className="customer-cluster-list">
                   {clusterModalStores.map((store) => {
-                    const storeBags = bags.filter((b) => b.merchantId === store.id);
+                    const storeBags = bags.filter((b) => b.merchantId === store.id && isBagVisibleOnMarket(b));
                     return (
                       <div
                         key={store.id}

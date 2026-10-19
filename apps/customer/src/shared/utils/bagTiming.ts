@@ -110,3 +110,20 @@ export function getBagTimingInfo(bag?: SurpriseBag | null): BagTimingInfo {
     detailMessage: 'Đã kết thúc thời gian nhận đơn hôm nay. Quán hiện chỉ mở để giao túi cho các đơn đã đặt trước.',
   };
 }
+
+/**
+ * Kiểm tra xem túi hàng có đủ điều kiện để hiển thị trên sàn Customer hay không.
+ * Quy tắc: Trên sàn CHỈ hiển thị những mặt hàng:
+ * 1. Sắp mở bán trong hôm nay (phase === 'upcoming')
+ * 2. Đang trong thời gian mở bán (phase === 'available')
+ * Toàn bộ các mặt hàng đã hết hạn (expired) hoặc đã quá giờ nhận hôm nay (order_closed) hoặc hết hàng (sold_out)
+ * sẽ được gỡ bỏ hoàn toàn khỏi sàn.
+ */
+export function isBagVisibleOnMarket(bag?: SurpriseBag | null): boolean {
+  if (!bag) return false;
+  if (!bag.isAvailable || (bag.quantity ?? 0) <= 0) return false;
+  if (bag.status === 'archived' || bag.status === 'expired') return false;
+
+  const timing = getBagTimingInfo(bag);
+  return timing.phase === 'upcoming' || timing.phase === 'available';
+}

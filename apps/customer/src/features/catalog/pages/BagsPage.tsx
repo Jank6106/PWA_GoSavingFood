@@ -1,6 +1,7 @@
 import { ChevronLeft } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
 import { RecommendedBagCard } from '../../../shared/components';
+import { isBagVisibleOnMarket } from '../../../shared/utils/bagTiming';
 import type { Category, SurpriseBag } from '../../../shared/types/customer.types';
 
 interface BagsPageProps {
@@ -12,6 +13,8 @@ interface BagsPageProps {
 }
 
 export function BagsPage({ bags, onBack, onOpen }: BagsPageProps) {
+  const visibleBags = bags.filter(isBagVisibleOnMarket);
+
   return (
     <div className="customer-recommended-screen">
       <header className="customer-recommended-header">
@@ -27,9 +30,9 @@ export function BagsPage({ bags, onBack, onOpen }: BagsPageProps) {
         <div className="customer-recommended-spacer" />
       </header>
 
-      {bags.length > 0 ? (
+      {visibleBags.length > 0 ? (
         <div className="customer-recommended-list">
-          {bags.map((bag) => (
+          {visibleBags.map((bag) => (
             <RecommendedBagCard
               key={bag.id}
               bag={bag}
