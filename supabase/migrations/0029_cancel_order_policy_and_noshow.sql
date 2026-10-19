@@ -248,33 +248,7 @@ BEGIN
 END;
 $function$;
 
--- Overload 5 tham số để tương thích ngược với code cũ
-CREATE OR REPLACE FUNCTION public.transition_order_status_transaction(
-  p_order_id uuid,
-  p_target_status text,
-  p_actor_id uuid,
-  p_actor_role text,
-  p_reason text
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $function$
-BEGIN
-  RETURN public.transition_order_status_transaction(
-    p_order_id,
-    p_target_status,
-    p_actor_id,
-    p_actor_role,
-    p_reason,
-    NULL::jsonb
-  );
-END;
-$function$;
-
 GRANT EXECUTE ON FUNCTION public.transition_order_status_transaction(uuid, text, uuid, text, text, jsonb) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.transition_order_status_transaction(uuid, text, uuid, text, text) TO authenticated, service_role;
 
 -- 2. Hàm expire_noshow_orders: Quá 15 phút sau khung giờ pickup_end của túi -> Hủy no-show (KHÔNG hoàn tiền, KHÔNG hoàn kho)
 CREATE OR REPLACE FUNCTION public.expire_noshow_orders()
