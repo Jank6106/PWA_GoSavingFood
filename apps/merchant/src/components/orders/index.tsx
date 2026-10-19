@@ -110,12 +110,12 @@ export function OrderCard({
             (order.recipientPhone || order.customerPhone).trim() !== '' &&
             (order.recipientPhone || order.customerPhone) !== 'Chưa cập nhật' && (
               <a
-                href={`tel:${order.recipientPhone || order.customerPhone}`}
+                href={`tel:${(order.recipientPhone || order.customerPhone).replace(/\s+/g, '')}`}
                 className="merchant-phone-link"
-                title="Gọi điện cho khách hàng"
+                title="Gọi điện cho người nhận"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Phone size={12} /> {order.recipientPhone || order.customerPhone}
+                <Phone size={12} /> {formatPhoneNumber(order.recipientPhone || order.customerPhone)}
               </a>
             )}
         </div>
@@ -170,6 +170,15 @@ function formatDateTime(value?: string) {
   }
 }
 
+function formatPhoneNumber(phone?: string): string {
+  if (!phone) return '';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 10 && digits.startsWith('0')) {
+    return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+  }
+  return phone;
+}
+
 export function OrderDetailsModal({
   order,
   open,
@@ -210,7 +219,7 @@ Thời gian đặt: ${formatDateTime(order.placedAt || order.createdAt)}
 Thời gian thanh toán: ${order.paidAt ? formatDateTime(order.paidAt) : 'Đã thanh toán'}
 Khung giờ nhận: ${order.pickupTime}
 Tên người nhận: ${recipientName}
-Số điện thoại thanh toán: ${recipientPhone || 'Chưa cập nhật'}
+Số điện thoại người nhận: ${formatPhoneNumber(recipientPhone) || 'Chưa cập nhật'}
 Tổng thanh toán: ${order.price.toLocaleString('vi-VN')}đ${order.note ? `\nGhi chú: ${order.note}` : ''}`;
 
     try {
@@ -319,13 +328,13 @@ Tổng thanh toán: ${order.price.toLocaleString('vi-VN')}đ${order.note ? `\nGh
           </dd>
         </div>
         <div>
-          <dt>Số điện thoại thanh toán</dt>
+          <dt>Số điện thoại người nhận</dt>
           <dd>
             {recipientPhone && recipientPhone !== 'Chưa cập nhật' ? (
               <a
-                href={`tel:${recipientPhone}`}
+                href={`tel:${recipientPhone.replace(/\s+/g, '')}`}
                 className="merchant-phone-link"
-                title="Gọi khách hàng"
+                title="Gọi người nhận"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -336,7 +345,7 @@ Tổng thanh toán: ${order.price.toLocaleString('vi-VN')}đ${order.note ? `\nGh
                   textDecoration: 'none',
                 }}
               >
-                <Phone size={13} /> {recipientPhone}
+                <Phone size={13} /> {formatPhoneNumber(recipientPhone)}
               </a>
             ) : (
               'Chưa cập nhật'

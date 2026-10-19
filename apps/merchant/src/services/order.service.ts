@@ -22,15 +22,17 @@ const mapDbStatusToUi = (status: string): OrderStatus => {
 const mapDbOrder = (o: any): MerchantOrder => {
   const firstItem = o.order_items?.[0];
   const customer = Array.isArray(o.users) ? o.users[0] : o.users;
-  const orderPhone = (o.recipient_phone && String(o.recipient_phone).trim()) || customer?.phone || '';
+  const recipientPhone = (o.recipient_phone && String(o.recipient_phone).trim()) || '';
+  const customerPhone = (customer?.phone && String(customer.phone).trim()) || '';
+  const orderPhone = recipientPhone || customerPhone;
   const orderRecipient = (o.recipient_name && String(o.recipient_name).trim()) || customer?.name || 'Khách hàng';
   return {
     id: o.id,
     storeId: o.store_id,
     orderCode: `GSF-${String(o.id).slice(0, 6).toUpperCase()}`,
     customerName: customer?.name || orderRecipient,
-    customerPhone: orderPhone,
-    recipientPhone: orderPhone,
+    customerPhone: customerPhone,
+    recipientPhone: recipientPhone || orderPhone,
     customerAvatar: customer?.avatar_url || undefined,
     recipientName: orderRecipient,
     storeName: 'Cửa hàng của tôi',
