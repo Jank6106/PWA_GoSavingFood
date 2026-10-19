@@ -124,8 +124,8 @@ h1, h2, h3, p { margin: 0; }
 .merchant-profile-button { overflow: hidden; background: #fff; color: var(--primary-dark); font-size: 12px; font-weight: 800; padding: 2px; }
 .merchant-profile-button img { width: 100%; height: 100%; border-radius: 50%; object-fit: contain; display: block; }
 .merchant-tab-bar { position: fixed; z-index: 45; right: 0; bottom: 0; left: 0; border-top: 1px solid #193B2C; background: var(--primary); box-shadow: 0 -4px 18px rgba(25, 59, 44, .14); }
-.merchant-tab-bar > div { display: grid; width: min(100%, 800px); grid-template-columns: repeat(5, 1fr); margin: 0 auto; padding: 7px 8px 9px; }
-.merchant-tab-bar button { display: flex; align-items: center; flex-direction: column; gap: 2px; border: 0; background: transparent; color: rgba(216,237,155,.75); cursor: pointer; }
+.merchant-tab-bar > div { display: grid; width: min(100%, 800px); grid-template-columns: repeat(4, 1fr); margin: 0 auto; padding: 7px 8px 9px; align-items: center; justify-items: center; }
+.merchant-tab-bar button { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px; width: 100%; border: 0; background: transparent; color: rgba(216,237,155,.75); cursor: pointer; }
 .merchant-tab-bar button > span { position: relative; display: grid; width: 44px; height: 28px; place-items: center; border-radius: 14px; }
 .merchant-tab-bar button small { font-size: 11px; font-weight: 500; letter-spacing: -.1px; }
 .merchant-tab-bar button.is-active { color: #fff; }
