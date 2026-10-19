@@ -1,4 +1,4 @@
-export type AppRoute = 'login' | 'setup' | 'bags' | 'orders' | 'inventory' | 'analytics' | 'settings';
+export type AppRoute = 'login' | 'setup' | 'bags' | 'orders' | 'analytics' | 'settings';
 export type TabRoute = Exclude<AppRoute, 'login' | 'setup'>;
 
 export interface AuthUser {
@@ -94,29 +94,6 @@ export interface OrderSummaryMetrics {
   completed: number;
   cancelled: number;
 }
-
-export type InventorySchedule = 'today' | 'tomorrow';
-export type InventoryScheduleFilter = InventorySchedule;
-
-export interface InventoryItem {
-  id: string;
-  bagId?: string;
-  storeId: string;
-  name: string;
-  sku: string;
-  category: string;
-  imageUrl: string;
-  price: number;
-  originalPrice?: number;
-  quantity: number;
-  minQuantity: number;
-  unit: string;
-  schedule: InventorySchedule;
-  appliesTomorrow: boolean;
-  lastUpdated: string;
-}
-
-export type InventoryInput = Omit<InventoryItem, 'id' | 'storeId' | 'lastUpdated'>;
 
 export interface StoreProfile {
   id: string;

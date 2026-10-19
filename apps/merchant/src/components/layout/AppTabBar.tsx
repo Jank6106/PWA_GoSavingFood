@@ -1,10 +1,9 @@
-import { BarChart3, Box, FileText, Settings, ShoppingBag } from 'lucide-react';
+import { BarChart3, FileText, Settings, ShoppingBag } from 'lucide-react';
 import type { TabRoute } from '../../types';
 
 const tabs: Array<{ key: TabRoute; label: string; icon: typeof ShoppingBag }> = [
   { key: 'bags', label: 'Túi hàng', icon: ShoppingBag },
   { key: 'orders', label: 'Đơn hàng', icon: FileText },
-  { key: 'inventory', label: 'Kệ hàng', icon: Box },
   { key: 'analytics', label: 'Thống kê', icon: BarChart3 },
   { key: 'settings', label: 'Cài đặt', icon: Settings },
 ];

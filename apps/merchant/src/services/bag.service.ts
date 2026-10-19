@@ -1,5 +1,4 @@
 import type { BagInput, BagItem, BagStatus } from '../types';
-import { removeBagFromInventoryShelf, syncBagToInventoryShelf } from './inventory.service';
 import { supabase } from './supabase';
 import { optimizeImageUrl } from './utils';
 
@@ -192,7 +191,6 @@ export async function updateBagStatus(bagId: string, status: BagStatus): Promise
 
   const bag = await fetchBagRow(bagId);
   if (!bag) throw new Error('Không tìm thấy túi hàng.');
-  syncBagToInventoryShelf(bag);
   return bag;
 }
 
@@ -228,7 +226,6 @@ export async function updateBagQuantity(bagId: string, quantity: number): Promis
 
   const bag = await fetchBagRow(bagId);
   if (!bag) throw new Error('Không tìm thấy túi hàng.');
-  syncBagToInventoryShelf(bag);
   return bag;
 }
 
@@ -365,7 +362,6 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     status: input.quantity > 0 ? 'active' : 'sold_out',
     createdAt: data.created_at || new Date().toISOString(),
   };
-  syncBagToInventoryShelf(newBag);
   return newBag;
 }
 
@@ -414,7 +410,6 @@ export async function updateBagItem(bagId: string, input: BagInput): Promise<Bag
 
   const bag = await fetchBagRow(bagId);
   if (!bag) throw new Error('Không tìm thấy túi hàng.');
-  syncBagToInventoryShelf(bag);
   return bag;
 }
 
@@ -436,6 +431,5 @@ export async function deleteBagItem(bagId: string): Promise<boolean> {
     throw new Error('Không thể xóa túi hàng: ' + error.message);
   }
 
-  removeBagFromInventoryShelf(bagId);
   return true;
 }

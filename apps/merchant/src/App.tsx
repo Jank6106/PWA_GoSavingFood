@@ -15,7 +15,6 @@ import type { LoginCredentials, NotificationItem, TabRoute } from './types';
 
 import { BagManagementScreen } from './pages/BagManagementScreen';
 import { OrderManagementScreen } from './pages/OrderManagementScreen';
-import { InventoryManagementScreen } from './pages/InventoryManagementScreen';
 import { AnalyticsScreen } from './pages/AnalyticsScreen';
 import { SettingsScreen } from './pages/SettingsScreen';
 
@@ -64,7 +63,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab') as TabRoute | null;
-      if (tabParam && ['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(tabParam)) {
+      if (tabParam && ['bags', 'orders', 'analytics', 'settings'].includes(tabParam)) {
         return tabParam;
       }
     }
@@ -111,7 +110,7 @@ export default function App() {
   }));
 
   useEffect(() => {
-    if (['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(route)) {
+    if (['bags', 'orders', 'analytics', 'settings'].includes(route)) {
       setVisitedTabs((prev) => (prev[route] ? prev : { ...prev, [route]: true }));
     }
   }, [route]);
@@ -120,7 +119,7 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab') as TabRoute | null;
-    const initialRoute = tabParam && ['bags', 'orders', 'inventory', 'analytics', 'settings'].includes(tabParam)
+    const initialRoute = tabParam && ['bags', 'orders', 'analytics', 'settings'].includes(tabParam)
       ? tabParam
       : 'bags';
     const initialUrl = initialRoute === 'bags' ? window.location.pathname : `${window.location.pathname}?tab=${initialRoute}`;
@@ -294,11 +293,6 @@ export default function App() {
               isGlobalQROpen={isGlobalQRScannerOpen}
               onCloseGlobalQR={() => setIsGlobalQRScannerOpen(false)}
             />
-          </div>
-        )}
-        {visitedTabs.inventory && (
-          <div style={{ display: route === 'inventory' ? 'contents' : 'none' }}>
-            <InventoryManagementScreen storeId={storeId} />
           </div>
         )}
         {visitedTabs.analytics && (
