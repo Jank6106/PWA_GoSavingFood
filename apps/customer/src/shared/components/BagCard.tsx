@@ -42,30 +42,37 @@ export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen
         <span className="customer-discount-tag">-{discount}%</span>
         {timing.phase !== 'available' ? (
           <span
-            className="customer-distance-tag"
+            className="customer-status-tag"
             style={{
               background:
                 timing.badgeVariant === 'yellow'
                   ? '#fef08a'
                   : timing.badgeVariant === 'orange'
                   ? '#ffedd5'
+                  : timing.badgeVariant === 'red'
+                  ? '#fee2e2'
                   : '#e5e7eb',
               color:
                 timing.badgeVariant === 'yellow'
                   ? '#854d0e'
                   : timing.badgeVariant === 'orange'
                   ? '#9a3412'
+                  : timing.badgeVariant === 'red'
+                  ? '#991b1b'
                   : '#374151',
               fontWeight: 600,
             }}
           >
             <Clock3 size={11} /> {timing.badgeLabel}
           </span>
-        ) : (
-          <span className="customer-distance-tag">
-            <MapPin size={11} /> {distanceLabel}
+        ) : (bag.bagType === 'shelf_life' && bag.expiryDate) ? (
+          <span
+            className="customer-status-tag"
+            style={{ background: '#dcfce7', color: '#166534', fontWeight: 600 }}
+          >
+            <Clock3 size={11} /> {timing.badgeLabel}
           </span>
-        )}
+        ) : null}
       </div>
 
       <div className="customer-bag-overlay">
@@ -73,9 +80,16 @@ export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen
           <span className="customer-bag-merchant">{bag.merchantName}</span>
           <h3 className="customer-bag-title">{bag.name}</h3>
           <div className="customer-bag-meta-row">
-            <span className="customer-bag-time">
-              <Clock3 size={11} /> {bag.pickupStart}–{bag.pickupEnd}
-            </span>
+            <div className="customer-bag-time-group">
+              <span className="customer-bag-time">
+                <Clock3 size={11} /> {bag.pickupStart}–{bag.pickupEnd}
+              </span>
+              {distanceLabel && (
+                <span className="customer-bag-distance">
+                  • <MapPin size={10} /> {distanceLabel}
+                </span>
+              )}
+            </div>
             <span className="customer-bag-stock">Còn {bag.quantity} túi</span>
           </div>
         </div>

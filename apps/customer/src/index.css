@@ -270,15 +270,17 @@ img { display: block; max-width: 100%; }
 .customer-bag-photo { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
 .customer-bag-card:hover .customer-bag-photo { transform: scale(1.06); }
 .customer-bag-top-badges { position: absolute; z-index: 3; top: 9px; left: 9px; right: 9px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
-.customer-discount-tag { padding: 3px 7px; border-radius: 7px; background: #ef4444; color: #ffffff; font-size: 11px; font-weight: 850; letter-spacing: -0.2px; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35); }
-.customer-distance-tag { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 7px; background: rgba(0, 0, 0, 0.52); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; font-size: 10px; font-weight: 700; }
+.customer-discount-tag { padding: 3.5px 8px; border-radius: 8px; background: #ef4444; color: #ffffff; font-size: 13px; font-weight: 850; letter-spacing: -0.2px; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); }
+.customer-distance-tag, .customer-status-tag { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 7px; background: rgba(0, 0, 0, 0.52); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; font-size: 10px; font-weight: 700; }
 .customer-bag-overlay { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 3px; padding: 26px 10px 10px 10px; background: linear-gradient(to top, rgba(0, 14, 8, 0.92) 0%, rgba(0, 20, 12, 0.75) 45%, rgba(0, 20, 12, 0.35) 75%, rgba(0, 20, 12, 0.08) 90%, transparent 100%); color: #ffffff; }
 .customer-bag-info { display: flex; flex-direction: column; gap: 2px; }
 .customer-bag-merchant { font-size: 10px; font-weight: 750; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
 .customer-bag-title { margin: 0; font-size: 13px; font-weight: 800; color: #ffffff; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.95); }
 .customer-bag-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 2px; font-size: 10px; color: rgba(255, 255, 255, 0.9); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
+.customer-bag-time-group { display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .customer-bag-time { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; white-space: nowrap; }
-.customer-bag-stock { color: #fef08a; font-weight: 750; font-size: 9.5px; background: rgba(0, 0, 0, 0.5); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.2); white-space: nowrap; text-shadow: none; }
+.customer-bag-distance { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; white-space: nowrap; color: rgba(255, 255, 255, 0.9); }
+.customer-bag-stock { color: #fef08a; font-weight: 750; font-size: 9.5px; background: rgba(0, 0, 0, 0.5); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.2); white-space: nowrap; text-shadow: none; flex-shrink: 0; }
 .customer-bag-bottom-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: 3px; padding-top: 5px; border-top: 1px solid rgba(255, 255, 255, 0.16); }
 .customer-price-stack { display: flex; flex-direction: column; gap: 1px; }
 .customer-bag-bottom-row .customer-price-stack { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
