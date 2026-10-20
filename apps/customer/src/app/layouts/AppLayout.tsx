@@ -7,6 +7,7 @@ interface AppLayoutProps {
   children: ReactNode;
   activeTab: CustomerTab;
   cartCount: number;
+  ordersBadgeCount?: number;
   location: string;
   unreadCount: number;
   showHeader?: boolean;
@@ -20,6 +21,7 @@ export function AppLayout({
   children,
   activeTab,
   cartCount,
+  ordersBadgeCount = 0,
   location,
   unreadCount,
   showHeader = true,
@@ -42,7 +44,12 @@ export function AppLayout({
         {children}
       </main>
       {showBottomNav && (
-        <BottomNav activeTab={activeTab} cartCount={cartCount} onTabChange={onTabChange} />
+        <BottomNav
+          activeTab={activeTab}
+          cartCount={cartCount}
+          ordersBadgeCount={ordersBadgeCount}
+          onTabChange={onTabChange}
+        />
       )}
     </div>
   );

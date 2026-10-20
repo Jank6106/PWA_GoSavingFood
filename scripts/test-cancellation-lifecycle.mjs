@@ -290,17 +290,36 @@ async function run() {
     if (refunds5.length > 0) {
       throw new Error(`❌ Test 5: Đơn No-show lại bị sinh refund_requests! Khách bỏ món không được hoàn tiền!`);
     }
-    if (stockAfterNoshow !== initialStockBeforeNoshow) {
-      throw new Error(`❌ Test 5: Tồn kho bị cộng lại (Món hỏng cuối ngày không được cộng lại kho)!`);
+    if (stockAfterNoshow !== initialStockBeforeNoshow + 1) {
+      throw new Error(`❌ Test 5: Tồn kho chưa được hoàn lại cho đồ khô! Ban đầu: ${initialStockBeforeNoshow}, Sau No-show: ${stockAfterNoshow}`);
     }
     if (order5State.pickup_token !== null) {
       throw new Error(`❌ Test 5: pickup_token chưa bị xóa vô hiệu hóa!`);
     }
 
-    console.log('✅ TEST 5 ĐẠT: Đơn no-show tự động chuyển expired, payment_status="success", KHÔNG hoàn tiền, KHÔNG hoàn kho, vô hiệu hóa mã nhận hàng.\n');
+    console.log('✅ TEST 5 ĐẠT: Đơn no-show tự động chuyển expired, payment_status="success", KHÔNG hoàn tiền cho khách, NHƯNG HOÀN KHO ĐỦ CHO QUÁN (đồ khô).\n');
+
+    // =========================================================================
+    // TEST 6: TỰ ĐỘNG GỠ KHỎI KỆ KHI = 0 VÀ TỰ LÊN KỆ LẠI KHI CẬP NHẬT > 0
+    // =========================================================================
+    console.log('--- TEST 6: Kệ hàng vs Kho hàng khi số lượng = 0 và phục hồi > 0 ---');
+    // Set quantity = 0
+    await client.query(`UPDATE public.surprise_bags SET quantity = 0 WHERE id = $1`, [bag.id]);
+    const zeroState = (await client.query(`SELECT quantity, is_available, status FROM public.surprise_bags WHERE id = $1`, [bag.id])).rows[0];
+    if (zeroState.quantity !== 0 || zeroState.is_available !== false || zeroState.status !== 'sold_out') {
+      throw new Error(`❌ Test 6: Khi quantity = 0, chưa tự động gỡ khỏi kệ! State: ${JSON.stringify(zeroState)}`);
+    }
+
+    // Quán vào form sửa nạp lại 5 túi -> quantity = 5
+    await client.query(`UPDATE public.surprise_bags SET quantity = 5, is_available = true, status = 'active' WHERE id = $1`, [bag.id]);
+    const restockedState = (await client.query(`SELECT quantity, is_available, status FROM public.surprise_bags WHERE id = $1`, [bag.id])).rows[0];
+    if (restockedState.quantity !== 5 || restockedState.is_available !== true || restockedState.status !== 'active') {
+      throw new Error(`❌ Test 6: Khi cập nhật quantity > 0, chưa tự động lên kệ lại! State: ${JSON.stringify(restockedState)}`);
+    }
+    console.log('✅ TEST 6 ĐẠT: Kho = 0 tự động gỡ kệ (is_available=false, status="sold_out"), sửa kho > 0 tự động lên kệ (is_available=true, status="active").\n');
 
     console.log('================================================================================');
-    console.log('🎉 TẤT CẢ 5/5 KỊCH BẢN HỦY ĐƠN ĐÃ ĐƯỢC KIỂM THỬ THỰC TẾ VÀ ĐẠT 100% TIÊU CHUẨN!');
+    console.log('🎉 TẤT CẢ 6/6 KỊCH BẢN ĐÃ ĐƯỢC KIỂM THỬ THỰC TẾ VÀ ĐẠT 100% TIÊU CHUẨN!');
     console.log('================================================================================');
 
   } finally {

@@ -90,7 +90,12 @@ export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen
                 </span>
               )}
             </div>
-            <span className="customer-bag-stock">Còn {bag.quantity} túi</span>
+            <span
+              className="customer-bag-stock"
+              style={bag.quantity <= 0 ? { color: '#ef4444', fontWeight: 700 } : undefined}
+            >
+              {bag.quantity > 0 ? `Còn ${bag.quantity} túi` : 'Hết hàng'}
+            </span>
           </div>
         </div>
 

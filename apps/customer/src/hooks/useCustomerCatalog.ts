@@ -152,7 +152,11 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
               return updated;
             });
           } else if (payload.eventType === 'UPDATE' && payload.new) {
-            if (payload.new.is_available === false || payload.new.deleted_at != null) {
+            if (
+              payload.new.is_available === false ||
+              payload.new.deleted_at != null ||
+              (payload.new.quantity != null && payload.new.quantity <= 0)
+            ) {
               setCatalog((current) => {
                 const updated = {
                   ...current,

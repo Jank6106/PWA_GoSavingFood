@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { AppLayout } from './app/layouts/AppLayout';
 import { AuthProvider } from './contexts/AuthContext';
@@ -217,6 +217,8 @@ function CustomerApp() {
   };
 
   const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersBadgeCount, setOrdersBadgeCount] = useState<number>(0);
+  const recentlyCreatedOrderIds = useRef<Set<string>>(new Set());
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -298,6 +300,7 @@ function CustomerApp() {
     if (!auth.user) {
       setOrders([]);
       setNotifications([]);
+      setOrdersBadgeCount(0);
       return;
     }
 
@@ -316,6 +319,14 @@ function CustomerApp() {
       auth.user.id,
       (orderPayload) => {
         console.log('[Realtime Customer App] onOrderChange received:', orderPayload?.eventType, orderPayload?.new?.status, orderPayload?.new?.id);
+        if (orderPayload?.eventType === 'INSERT') {
+          const newId = orderPayload.new?.id;
+          if (!newId || !recentlyCreatedOrderIds.current.has(newId)) {
+            setOrdersBadgeCount((prev) => prev + 1);
+          }
+        } else if (orderPayload?.eventType === 'UPDATE') {
+          setOrdersBadgeCount((prev) => prev + 1);
+        }
         if (orderPayload?.new && orderPayload.new.id) {
           const rawStatus = orderPayload.new.status;
           const normalizedStatus = rawStatus === 'picked_up' ? 'completed' : rawStatus;
@@ -410,6 +421,21 @@ function CustomerApp() {
   const route = history[history.length - 1] || { name: 'tabs', tab: 'home' };
   const activeTab: CustomerTab = route.name === 'tabs' ? route.tab : 'home';
 
+  const previousRouteRef = useRef<AppRoute>(route);
+  useEffect(() => {
+    const prevRoute = previousRouteRef.current;
+    previousRouteRef.current = route;
+
+    const isCurrentOrdersTab = route.name === 'tabs' && route.tab === 'orders';
+    const wasPrevOrdersTab = prevRoute.name === 'tabs' && prevRoute.tab === 'orders';
+
+    // 1. Khi người dùng vào tab 'orders' để check -> xoá số báo đơn hàng
+    // 2. Nếu đang ở tab 'orders' mà có thông báo, khi chuyển sang trang khác -> xoá số báo
+    if (isCurrentOrdersTab || wasPrevOrdersTab) {
+      setOrdersBadgeCount(0);
+    }
+  }, [route]);
+
   const push = (nextRoute: AppRoute) => {
     setHistory((current) => {
       const nextHistory = [...current, nextRoute];
@@ -432,6 +458,9 @@ function CustomerApp() {
   };
 
   const openTab = (tab: CustomerTab) => {
+    if (tab === 'orders') {
+      setOrdersBadgeCount(0);
+    }
     setHistory((current) => {
       const active = current[current.length - 1];
       if (active && active.name === 'tabs' && active.tab === tab) {
@@ -754,7 +783,9 @@ function CustomerApp() {
         phone: draft.phone,
       });
       auth.updateProfile({ name: draft.customerName, phone: draft.phone });
+      recentlyCreatedOrderIds.current.add(created.id);
       setOrders((current) => [created, ...current]);
+      setOrdersBadgeCount((prev) => prev + 1);
       if (!buyNowItem) {
         cart.clear();
       }
@@ -1084,6 +1115,7 @@ function CustomerApp() {
       <AppLayout
         activeTab={activeTab}
         cartCount={cart.summary.count}
+        ordersBadgeCount={ordersBadgeCount}
         location={location}
         unreadCount={notifications.filter((item) => !item.read).length}
         showHeader={isTabs && route.tab === 'home'}

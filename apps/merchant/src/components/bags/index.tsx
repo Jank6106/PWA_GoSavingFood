@@ -1,4 +1,4 @@
-import { Clock3, Eye, EyeOff, ImagePlus, Minus, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
+import { Clock3, Eye, EyeOff, ImagePlus, Package, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES } from '../../mocks';
 import { compressImageFile, optimizeImageUrl } from '../../services/utils';
@@ -78,15 +78,13 @@ export function BagFilterBar({
 export function BagCard({
   bag,
   onToggleStatus,
-  onIncreaseQuantity,
-  onDecreaseQuantity,
   onEdit,
   onDelete,
 }: {
   bag: BagItem;
   onToggleStatus: (id: string) => void;
-  onIncreaseQuantity: (id: string) => void;
-  onDecreaseQuantity: (id: string) => void;
+  onIncreaseQuantity?: (id: string) => void;
+  onDecreaseQuantity?: (id: string) => void;
   onEdit: (bag: BagItem) => void;
   onDelete: (bag: BagItem) => void;
 }) {
@@ -157,23 +155,41 @@ export function BagCard({
           </span>
         </div>
         <footer>
-          <div className="merchant-quantity">
-            <button
-              type="button"
-              onClick={() => onDecreaseQuantity(bag.id)}
-              aria-label="Giảm số lượng"
+          <div
+            className="merchant-quantity"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '10px',
+              background: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#ecfdf5' : '#fef2f2',
+              border: `1px solid ${(bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#a7f3d0' : '#fecaca'}`,
+            }}
+          >
+            <Package
+              size={15}
+              style={{
+                color: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#059669' : '#dc2626',
+              }}
+            />
+            <strong
+              style={{
+                fontSize: '15px',
+                color: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#065f46' : '#b91c1c',
+              }}
             >
-              <Minus size={16} />
-            </button>
-            <strong>{bag.availableQuantity}</strong>
-            <button
-              type="button"
-              onClick={() => onIncreaseQuantity(bag.id)}
-              aria-label="Tăng số lượng"
+              {bag.availableQuantity ?? bag.quantity ?? 0}
+            </strong>
+            <small
+              style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#047857' : '#dc2626',
+              }}
             >
-              <Plus size={16} />
-            </button>
-            <small>túi còn lại</small>
+              túi còn lại
+            </small>
           </div>
           <div className="merchant-card-actions">
             {category !== 'expired' && (

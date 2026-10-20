@@ -45,8 +45,6 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
               key={bag.id}
               bag={bag}
               onToggleStatus={(id) => void state.toggleStatus(id)}
-              onIncreaseQuantity={(id) => void state.changeQuantity(id, 1)}
-              onDecreaseQuantity={(id) => void state.changeQuantity(id, -1)}
               onEdit={openEdit}
               onDelete={(item) => setBagToDelete(item)}
             />

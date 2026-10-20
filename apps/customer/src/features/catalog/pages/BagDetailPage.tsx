@@ -297,7 +297,7 @@ export function BagDetailPage({
           <div className="customer-product-urgency-row">
             <div className="customer-product-stock-pill">
               <ShoppingBag size={14} strokeWidth={2.2} />
-              <span>Còn {bag.quantity} túi</span>
+              <span>{bag.quantity > 0 ? `Còn ${bag.quantity} túi` : 'Hết hàng'}</span>
             </div>
 
             <div

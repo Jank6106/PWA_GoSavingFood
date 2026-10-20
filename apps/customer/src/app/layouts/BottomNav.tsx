@@ -4,6 +4,7 @@ import type { CustomerTab } from '../../shared/types/customer.types';
 interface BottomNavProps {
   activeTab: CustomerTab;
   cartCount: number;
+  ordersBadgeCount?: number;
   onTabChange: (tab: CustomerTab) => void;
 }
 
@@ -14,7 +15,7 @@ const items = [
   { tab: 'profile' as const, label: 'Cá nhân', Icon: UserRound },
 ];
 
-export function BottomNav({ activeTab, cartCount, onTabChange }: BottomNavProps) {
+export function BottomNav({ activeTab, cartCount, ordersBadgeCount = 0, onTabChange }: BottomNavProps) {
   return (
     <nav className="customer-bottom-nav" aria-label="Điều hướng chính">
       <div className="customer-bottom-nav-inner">
@@ -29,6 +30,7 @@ export function BottomNav({ activeTab, cartCount, onTabChange }: BottomNavProps)
             <span className="customer-nav-icon">
               <Icon size={22} />
               {tab === 'cart' && cartCount > 0 && <span>{cartCount}</span>}
+              {tab === 'orders' && ordersBadgeCount > 0 && <span>{ordersBadgeCount}</span>}
             </span>
             <small>{label}</small>
           </button>
