@@ -1127,21 +1127,6 @@ function CustomerApp() {
             void customerService.markAllNotificationsRead();
             setNotifications((current) => current.map((item) => ({ ...item, read: true })));
           }}
-          onSelectNotification={(item) => {
-            void customerService.markNotificationRead(item.id);
-            setNotifications((current) =>
-              current.map((n) => (n.id === item.id ? { ...n, read: true } : n))
-            );
-            const targetOrderId = item.data?.orderId;
-            if (targetOrderId) {
-              push({ name: 'order', id: targetOrderId });
-            } else if (
-              item.title?.toLowerCase().includes('đơn') ||
-              item.body?.toLowerCase().includes('đơn')
-            ) {
-              openTab('orders');
-            }
-          }}
         />
       );
     if (route.name === 'location')
