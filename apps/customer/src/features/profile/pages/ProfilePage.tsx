@@ -58,6 +58,15 @@ export function ProfilePage(props: ProfilePageProps) {
   const [avatar, setAvatar] = useState(props.user.avatar || '');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
+  // Sync name, phone, email with props.user if updated externally (e.g. from onboarding modal)
+  useEffect(() => {
+    if (!isEditing && props.user) {
+      setName(props.user.name || '');
+      setPhone(props.user.phone || '');
+      setEmail(props.user.email || '');
+    }
+  }, [props.user?.name, props.user?.phone, props.user?.email, isEditing]);
+
   // Sync avatar with props.user.avatar if updated externally
   useEffect(() => {
     if (!isUploadingAvatar) {

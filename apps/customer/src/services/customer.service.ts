@@ -1672,7 +1672,7 @@ export const customerService = {
 
       const meta = user.user_metadata || {};
       const fallbackName =
-        meta.full_name || meta.name || user.email?.split('@')[0] || 'Khách hàng';
+        meta.custom_name || meta.full_name || meta.name || user.email?.split('@')[0] || 'Khách hàng';
       const fallbackAvatar =
         meta.avatar_url || meta.picture || meta.avatar || undefined;
 
@@ -2529,8 +2529,10 @@ export const customerService = {
 
       const metaPayload: Record<string, any> = {};
       if (updates.name) {
-        metaPayload.full_name = updates.name;
-        metaPayload.name = updates.name;
+        const trimmedName = updates.name.trim();
+        metaPayload.full_name = trimmedName;
+        metaPayload.name = trimmedName;
+        metaPayload.custom_name = trimmedName;
       }
       if (updates.phone) metaPayload.phone = updates.phone;
       if (updates.avatar) {

@@ -131,23 +131,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (session?.user) {
           const meta = session.user.user_metadata || {};
+          const metaName =
+            meta.custom_name ||
+            meta.full_name ||
+            meta.name ||
+            session.user.email?.split('@')[0] ||
+            'Khách hàng';
+
+          const cached = getCachedCustomerUser();
+          const effectiveName =
+            cached?.id === session.user.id && cached.name ? cached.name : metaName;
+          const effectivePhone =
+            cached?.id === session.user.id && cached.phone !== undefined
+              ? cached.phone
+              : meta.phone || '';
+
           const quickUser: User = {
             id: session.user.id,
-            name:
-              meta.full_name ||
-              meta.name ||
-              session.user.email?.split('@')[0] ||
-              'Khách hàng',
-            phone: meta.phone || '',
+            name: effectiveName,
+            phone: effectivePhone,
             email: session.user.email,
-            avatar: meta.avatar_url || meta.picture || meta.avatar,
+            avatar: cached?.avatar || meta.avatar_url || meta.picture || meta.avatar,
           };
 
-          // Nếu chưa có user trong state, đặt quickUser ngay lập tức
-          setUser((prev) => prev || quickUser);
+          // Giữ lại custom user hiện có trong state/cache
+          setUser((prev) => (prev ? { ...quickUser, ...prev } : quickUser));
           setCachedCustomerUser(quickUser);
 
-          // Cập nhật background profile chi tiết từ DB mà không làm giật UI
+          // Cập nhật background profile chi tiết từ DB (chính xác nhất) mà không làm giật UI
           void customerService.getUser().then((existing) => {
             if (existing && isMounted) {
               setUser(existing);
@@ -177,26 +188,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_OUT') {
         setCachedCustomerUser(null);
         if (isMounted) setUser(null);
-      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+      } else if (
+        (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') &&
+        session?.user
+      ) {
         cleanAuthUrl();
         requestPersistentStorage();
 
         const meta = session.user.user_metadata || {};
-        const quickUser: User = {
-          id: session.user.id,
-          name:
-            meta.full_name ||
-            meta.name ||
-            session.user.email?.split('@')[0] ||
-            'Khách hàng',
-          phone: meta.phone || '',
-          email: session.user.email,
-          avatar: meta.avatar_url || meta.picture || meta.avatar,
-        };
+        const metaName =
+          meta.custom_name ||
+          meta.full_name ||
+          meta.name ||
+          session.user.email?.split('@')[0] ||
+          'Khách hàng';
 
         if (isMounted) {
           setUser((prev) => {
-            const next = prev ? { ...prev, ...quickUser } : quickUser;
+            const currentName =
+              prev && prev.id === session.user.id && prev.name ? prev.name : metaName;
+            const currentPhone =
+              prev && prev.id === session.user.id && prev.phone !== undefined
+                ? prev.phone
+                : meta.phone || '';
+            const next: User = {
+              id: session.user.id,
+              name: currentName,
+              phone: currentPhone,
+              email: session.user.email,
+              avatar: prev?.avatar || meta.avatar_url || meta.picture || meta.avatar,
+            };
             setCachedCustomerUser(next);
             return next;
           });
@@ -241,23 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const cleanedName = name.trim();
         const cleanedPhone = phone.replace(/\D/g, '');
 
-        await customerService.updateUserProfile(targetId, {
-          name: cleanedName,
-          phone: cleanedPhone,
-        });
-
-        try {
-          await supabase.auth.updateUser({
-            data: {
-              name: cleanedName,
-              full_name: cleanedName,
-              phone: cleanedPhone,
-            },
-          });
-        } catch (err) {
-          console.warn('[auth] Cập nhật Supabase metadata warning:', err);
-        }
-
+        // 1. Cập nhật optimistic ngay lập tức vào state & cache
         const updatedUser: User = {
           ...user,
           name: cleanedName,
@@ -266,6 +271,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(updatedUser);
         setCachedCustomerUser(updatedUser);
         requestPersistentStorage();
+
+        // 2. Cập nhật đồng bộ vào database và Supabase metadata
+        await customerService.updateUserProfile(targetId, {
+          name: cleanedName,
+          phone: cleanedPhone,
+        });
+
         setIsAuthOpen(false);
       },
       login: async (identifier, password) => {
