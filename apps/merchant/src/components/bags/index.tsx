@@ -1,5 +1,5 @@
 import { ChevronDown, Clock3, Eye, EyeOff, ImagePlus, Package, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
-import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES } from '../../mocks';
 import { compressImageFile, optimizeImageUrl } from '../../services/utils';
 import type { BagInput, BagItem } from '../../types';
@@ -255,6 +255,119 @@ export function BagCard({
 const HOURS_24: string[] = Array.from({ length: 25 }, (_, i) => String(i).padStart(2, '0'));
 const MINUTES_60: string[] = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
+function TimeUnitPicker({
+  value,
+  options,
+  title,
+  ariaLabel,
+  onCommit,
+}: {
+  value: string;
+  options: string[];
+  title: string;
+  ariaLabel: string;
+  onCommit: (val: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(value);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  // Đóng dropdown khi click/chạm ra ngoài
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // Tự động cuộn đến mục đang chọn khi vừa mở
+  useEffect(() => {
+    if (isOpen && listRef.current) {
+      const selectedEl = listRef.current.querySelector('.is-selected') as HTMLElement | null;
+      if (selectedEl) {
+        selectedEl.scrollIntoView({ block: 'center' });
+      }
+    }
+  }, [isOpen]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setInputValue(raw);
+    if (raw.length === 2) {
+      onCommit(raw);
+    }
+  };
+
+  const handleInputBlur = () => {
+    onCommit(inputValue);
+  };
+
+  const handleSelectOption = (opt: string) => {
+    setInputValue(opt);
+    onCommit(opt);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="merchant-time-unit" ref={containerRef}>
+      <input
+        type="text"
+        inputMode="numeric"
+        maxLength={2}
+        value={inputValue}
+        onChange={handleInputChange}
+        onBlur={handleInputBlur}
+        onFocus={() => setIsOpen(false)}
+        className="merchant-time-num-input"
+        title={title}
+        aria-label={ariaLabel}
+      />
+      <button
+        type="button"
+        className="merchant-time-dropdown-toggle"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-label={`Mở danh sách ${ariaLabel}`}
+        aria-expanded={isOpen}
+      >
+        <ChevronDown
+          size={12}
+          className={`merchant-time-select-icon ${isOpen ? 'is-open' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="merchant-time-dropdown-popover" ref={listRef} role="listbox">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              className={`merchant-time-dropdown-item ${opt === value ? 'is-selected' : ''}`}
+              onClick={() => handleSelectOption(opt)}
+              role="option"
+              aria-selected={opt === value}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MerchantTimePicker({
   value,
   onChange,
@@ -265,117 +378,42 @@ function MerchantTimePicker({
   ariaLabel?: string;
 }) {
   const [h, m] = (value || '18:00').split(':');
-  const [hourInput, setHourInput] = useState(h?.padStart(2, '0') || '18');
-  const [minuteInput, setMinuteInput] = useState(m?.padStart(2, '0') || '00');
+  const safeH = h?.padStart(2, '0') || '18';
+  const safeM = m?.padStart(2, '0') || '00';
 
-  useEffect(() => {
-    const [curH, curM] = (value || '18:00').split(':');
-    setHourInput(curH?.padStart(2, '0') || '18');
-    setMinuteInput(curM?.padStart(2, '0') || '00');
-  }, [value]);
-
-  const commitTime = (nextH: string, nextM: string) => {
-    let parsedH = parseInt(nextH, 10);
+  const commitHour = (newH: string) => {
+    let parsedH = parseInt(newH, 10);
     if (isNaN(parsedH) || parsedH < 0) parsedH = 0;
     if (parsedH > 24) parsedH = 24;
+    const formattedH = String(parsedH).padStart(2, '0');
+    onChange(`${formattedH}:${safeM}`);
+  };
 
-    let parsedM = parseInt(nextM, 10);
+  const commitMinute = (newM: string) => {
+    let parsedM = parseInt(newM, 10);
     if (isNaN(parsedM) || parsedM < 0) parsedM = 0;
     if (parsedM > 59) parsedM = 59;
-
-    const formattedH = String(parsedH).padStart(2, '0');
     const formattedM = String(parsedM).padStart(2, '0');
-
-    setHourInput(formattedH);
-    setMinuteInput(formattedM);
-    onChange(`${formattedH}:${formattedM}`);
-  };
-
-  const handleHourChange = (raw: string) => {
-    const clean = raw.replace(/\D/g, '').slice(0, 2);
-    setHourInput(clean);
-    if (clean.length === 2) {
-      commitTime(clean, minuteInput);
-    }
-  };
-
-  const handleHourBlur = () => {
-    commitTime(hourInput, minuteInput);
-  };
-
-  const handleMinuteChange = (raw: string) => {
-    const clean = raw.replace(/\D/g, '').slice(0, 2);
-    setMinuteInput(clean);
-    if (clean.length === 2) {
-      commitTime(hourInput, clean);
-    }
-  };
-
-  const handleMinuteBlur = () => {
-    commitTime(hourInput, minuteInput);
+    onChange(`${safeH}:${formattedM}`);
   };
 
   return (
     <div className="merchant-time-picker-group" aria-label={ariaLabel}>
-      <div className="merchant-time-unit">
-        <input
-          type="text"
-          inputMode="numeric"
-          maxLength={2}
-          value={hourInput}
-          onChange={(e) => handleHourChange(e.target.value)}
-          onBlur={handleHourBlur}
-          className="merchant-time-num-input"
-          title="Nhập giờ (00-24)"
-          aria-label="Nhập giờ"
-        />
-        <div className="merchant-time-select-wrap">
-          <ChevronDown size={11} className="merchant-time-select-icon" />
-          <select
-            value={hourInput.padStart(2, '0')}
-            onChange={(e) => commitTime(e.target.value, minuteInput)}
-            className="merchant-time-native-select"
-            aria-label="Chọn giờ"
-          >
-            {HOURS_24.map((hour) => (
-              <option key={hour} value={hour}>
-                {hour}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
+      <TimeUnitPicker
+        value={safeH}
+        options={HOURS_24}
+        title="Nhập giờ (00-24)"
+        ariaLabel="Giờ"
+        onCommit={commitHour}
+      />
       <span className="merchant-time-colon">:</span>
-
-      <div className="merchant-time-unit">
-        <input
-          type="text"
-          inputMode="numeric"
-          maxLength={2}
-          value={minuteInput}
-          onChange={(e) => handleMinuteChange(e.target.value)}
-          onBlur={handleMinuteBlur}
-          className="merchant-time-num-input"
-          title="Nhập phút (00-59)"
-          aria-label="Nhập phút"
-        />
-        <div className="merchant-time-select-wrap">
-          <ChevronDown size={11} className="merchant-time-select-icon" />
-          <select
-            value={minuteInput.padStart(2, '0')}
-            onChange={(e) => commitTime(hourInput, e.target.value)}
-            className="merchant-time-native-select"
-            aria-label="Chọn phút"
-          >
-            {MINUTES_60.map((minute) => (
-              <option key={minute} value={minute}>
-                {minute}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <TimeUnitPicker
+        value={safeM}
+        options={MINUTES_60}
+        title="Nhập phút (00-59)"
+        ariaLabel="Phút"
+        onCommit={commitMinute}
+      />
     </div>
   );
 }
