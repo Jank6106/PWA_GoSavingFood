@@ -80,7 +80,13 @@ function loadInitialHistory(): AppRoute[] {
   }
 
   // Khôi phục từ history.state khi reload / F5
-  if (typeof window !== 'undefined') {
+  const isOAuthCallback =
+    typeof window !== 'undefined' &&
+    (window.location.search.includes('code=') ||
+      window.location.hash.includes('access_token') ||
+      window.location.pathname.includes('/auth/callback'));
+
+  if (!isOAuthCallback && typeof window !== 'undefined') {
     const state = window.history.state as { route?: AppRoute } | null;
     if (state?.route) {
       if (state.route.name === 'tabs' && state.route.tab === 'home') {

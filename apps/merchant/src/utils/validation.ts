@@ -215,8 +215,30 @@ export function mapSupabaseAuthError(error: any): string {
     return 'Tài khoản này đã tồn tại trên hệ thống. Vui lòng chuyển sang Đăng nhập.';
   }
 
+  if (
+    msg.includes('Current password required') ||
+    msg.includes('current_password')
+  ) {
+    return 'Mật khẩu hiện tại không chính xác hoặc cần được cung cấp.';
+  }
+
   if (msg.includes('Password should be at least')) {
     return 'Mật khẩu phải có ít nhất 6 ký tự.';
+  }
+
+  if (
+    msg.includes('same_password') ||
+    msg.includes('New password should be different') ||
+    msg.includes('should be different from the old password')
+  ) {
+    return 'Mật khẩu mới không được trùng với mật khẩu hiện tại.';
+  }
+
+  if (
+    code === 'reauthentication_needed' ||
+    msg.includes('Reauthentication required')
+  ) {
+    return 'Vui lòng xác thực lại mật khẩu hiện tại trước khi đổi.';
   }
 
   if (msg.includes('Email not confirmed')) {

@@ -87,15 +87,20 @@ export function useAuth() {
     }
   };
 
-  const changePassword = async (oldPassword: string, newPassword: string) => {
-    if (!user) return false;
+  const changePassword = async (oldPassword: string, newPassword: string): Promise<boolean> => {
+    if (!user) {
+      setError('Chưa đăng nhập.');
+      throw new Error('Chưa đăng nhập.');
+    }
     setLoading(true);
     setError(null);
     try {
-      return await changePasswordService(user.id, oldPassword, newPassword);
+      await changePasswordService(user.id, oldPassword, newPassword);
+      return true;
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Không thể đổi mật khẩu.');
-      return false;
+      const msg = reason instanceof Error ? reason.message : 'Không thể đổi mật khẩu.';
+      setError(msg);
+      throw new Error(msg);
     } finally {
       setLoading(false);
     }

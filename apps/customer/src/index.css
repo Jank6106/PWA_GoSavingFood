@@ -22,6 +22,12 @@
 html { background: #FFFFFF; }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: #FFFFFF; color: var(--color-text-primary); font-family: var(--font-family-base); -webkit-font-smoothing: antialiased; }
 button, input, select, textarea { font: inherit; }
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
 button { color: inherit; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 img { display: block; max-width: 100%; }

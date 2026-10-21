@@ -33,9 +33,13 @@ export function SettingsScreen({
 
   if (state.error && !state.profile) return <ErrorState message={state.error} onRetry={() => void state.loadProfile()} />;
   const changePassword = async (oldPassword: string, newPassword: string) => {
-    const done = await onChangePassword(oldPassword, newPassword);
-    if (done) state.showToast('Đã cập nhật mật khẩu');
-    return done;
+    try {
+      const done = await onChangePassword(oldPassword, newPassword);
+      if (done) state.showToast('Đã cập nhật mật khẩu');
+      return done;
+    } catch (err) {
+      throw err;
+    }
   };
   return (
     <>

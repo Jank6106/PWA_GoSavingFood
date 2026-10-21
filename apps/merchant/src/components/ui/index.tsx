@@ -15,7 +15,7 @@ export function Button({ variant = 'primary', size = 'medium', loading, fullWidt
 interface FieldProps extends InputHTMLAttributes<HTMLInputElement> { label: ReactNode; error?: string; icon?: ReactNode; isPassword?: boolean; }
 export function Field({ label, error, icon, isPassword, className = '', ...props }: FieldProps) {
   const id = useId(); const [visible, setVisible] = useState(false);
-  return <label className={`merchant-field ${error ? 'has-error' : ''} ${className}`} htmlFor={id}><span>{label}</span><div className="merchant-field-control">{icon}<input id={id} type={isPassword && !visible ? 'password' : props.type} {...props} />{isPassword && <button type="button" aria-label={visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setVisible((value) => !value)}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button>}</div>{error && <small>{error}</small>}</label>;
+  return <label className={`merchant-field ${error ? 'has-error' : ''} ${className}`} htmlFor={id}><span>{label}</span><div className="merchant-field-control">{icon}<input id={id} type={isPassword ? (visible ? 'text' : 'password') : (props.type || 'text')} {...props} />{isPassword && <button type="button" tabIndex={-1} aria-label={visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setVisible((value) => !value)}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button>}</div>{error && <small>{error}</small>}</label>;
 }
 
 interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> { label: ReactNode; error?: string; }

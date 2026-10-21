@@ -208,7 +208,103 @@ export function StoreActionsListCard({ onPassword, onSupport, onLogout, onDelete
   );
 }
 
-export function ChangePasswordModal({ open, saving, onClose, onSubmit }: { open: boolean; saving: boolean; onClose: () => void; onSubmit: (oldPassword: string, newPassword: string) => Promise<boolean> }) { const [oldPassword, setOldPassword] = useState(''); const [newPassword, setNewPassword] = useState(''); const [confirm, setConfirm] = useState(''); const [error, setError] = useState(''); const submit = async (event: FormEvent) => { event.preventDefault(); if (newPassword.length < 6) return setError('Mật khẩu mới cần ít nhất 6 ký tự.'); if (newPassword !== confirm) return setError('Mật khẩu xác nhận chưa khớp.'); if (await onSubmit(oldPassword, newPassword)) onClose(); }; return <Modal open={open} title="Đổi mật khẩu" onClose={onClose} size="small"><form className="merchant-form" onSubmit={submit}><Field label="Mật khẩu hiện tại" isPassword value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} required /><Field label="Mật khẩu mới" isPassword value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /><Field label="Xác nhận mật khẩu" isPassword value={confirm} onChange={(event) => setConfirm(event.target.value)} error={error} required /><Button type="submit" fullWidth loading={saving}>Cập nhật mật khẩu</Button></form></Modal>; }
+export function ChangePasswordModal({
+  open,
+  saving,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  saving: boolean;
+  onClose: () => void;
+  onSubmit: (oldPassword: string, newPassword: string) => Promise<boolean>;
+}) {
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setOldPassword('');
+      setNewPassword('');
+      setConfirm('');
+      setError('');
+    }
+  }, [open]);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError('');
+
+    if (!oldPassword) {
+      return setError('Vui lòng nhập mật khẩu hiện tại.');
+    }
+    if (newPassword.length < 6) {
+      return setError('Mật khẩu mới cần ít nhất 6 ký tự.');
+    }
+    if (newPassword === oldPassword) {
+      return setError('Mật khẩu mới không được trùng với mật khẩu hiện tại.');
+    }
+    if (newPassword !== confirm) {
+      return setError('Mật khẩu xác nhận chưa khớp.');
+    }
+
+    try {
+      const success = await onSubmit(oldPassword, newPassword);
+      if (success) {
+        onClose();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi đổi mật khẩu.');
+    }
+  };
+
+  return (
+    <Modal open={open} title="Đổi mật khẩu" onClose={onClose} size="small">
+      <form className="merchant-form" onSubmit={submit}>
+        {error && (
+          <div className="merchant-form-error" role="alert">
+            {error}
+          </div>
+        )}
+        <Field
+          label="Mật khẩu hiện tại"
+          isPassword
+          value={oldPassword}
+          onChange={(event) => {
+            setOldPassword(event.target.value);
+            if (error) setError('');
+          }}
+          required
+        />
+        <Field
+          label="Mật khẩu mới"
+          isPassword
+          value={newPassword}
+          onChange={(event) => {
+            setNewPassword(event.target.value);
+            if (error) setError('');
+          }}
+          required
+        />
+        <Field
+          label="Xác nhận mật khẩu"
+          isPassword
+          value={confirm}
+          onChange={(event) => {
+            setConfirm(event.target.value);
+            if (error) setError('');
+          }}
+          required
+        />
+        <Button type="submit" fullWidth loading={saving}>
+          Cập nhật mật khẩu
+        </Button>
+      </form>
+    </Modal>
+  );
+}
 
 const MERCHANT_TOPICS = [
   '📦 Sự cố đơn hàng & Khách lấy',
