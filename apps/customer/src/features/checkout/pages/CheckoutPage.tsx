@@ -48,6 +48,20 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
   const pickupRef = useRef<HTMLDivElement>(null);
   const voucherRef = useRef<HTMLDivElement>(null);
 
+  // Mặc định điền Họ tên và Số điện thoại từ tài khoản đã đăng nhập
+  // Nếu người dùng chưa chủ động chỉnh sửa (!nameTouched / !phoneTouched) thì tiếp tục đồng bộ
+  useEffect(() => {
+    if (!nameTouched && user.name) {
+      setName(user.name);
+    }
+  }, [user.name, nameTouched]);
+
+  useEffect(() => {
+    if (!phoneTouched && user.phone) {
+      setPhone(user.phone);
+    }
+  }, [user.phone, phoneTouched]);
+
   // Validation
   const isNameValid = name.trim().length >= 2;
   const phoneValidation = validateRecipientPhone(phone);

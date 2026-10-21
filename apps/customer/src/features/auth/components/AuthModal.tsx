@@ -1,117 +1,75 @@
-import { useState, useEffect, useCallback, useMemo, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Button } from '@gosavingfood/ui';
 import {
-  ArrowLeft,
+  AlertCircle,
   CheckCircle2,
-  Eye,
-  EyeOff,
-  KeyRound,
   Lock,
+  LogOut,
   Mail,
-  Smartphone,
+  Phone,
+  Sparkles,
   UserRound,
   X,
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import {
-  parseIdentifier,
-  evaluatePasswordStrength,
-  isValidEmail,
   isValidVietnamesePhone,
+  validateRecipientPhone,
 } from '../../../shared/utils/validation';
-
-type AuthMode = 'login' | 'register' | 'forgot';
-type RegisterStep = 'input' | 'otp';
 
 export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
   const {
     isAuthOpen,
     hideAuthModal,
-    login,
     loginWithGoogle,
-    registerInit,
-    verifyRegisterOtp,
-    resendRegisterOtp,
-    resetPassword,
+    user,
+    needsProfileCompletion,
+    completeProfile,
+    logout,
   } = useAuth();
 
-  const [mode, setMode] = useState<AuthMode>('login');
-  const [registerStep, setRegisterStep] = useState<RegisterStep>('input');
-
-  // Login form state
-  const [loginIdentifier, setLoginIdentifier] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-
-  // Register form state
-  const [regName, setRegName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regConfirmPassword, setRegConfirmPassword] = useState('');
-  const [showRegPassword, setShowRegPassword] = useState(false);
-  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
-  const [regOtpCode, setRegOtpCode] = useState('');
-
-  // Forgot password form state
-  const [forgotEmail, setForgotEmail] = useState('');
+  // State cho Form hoàn tất thông tin cá nhân
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profilePhone, setProfilePhone] = useState(user?.phone || '');
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
 
   // UI & loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [otpCountdown, setOtpCountdown] = useState(0);
 
-  // Phân tích định danh ô đăng nhập
-  const loginIdentifierInfo = useMemo(() => {
-    if (!loginIdentifier.trim()) return null;
-    return parseIdentifier(loginIdentifier);
-  }, [loginIdentifier]);
-
-  // Kiểm tra email đăng ký
-  const isRegEmailValid = useMemo(() => {
-    if (!regEmail.trim()) return null;
-    return isValidEmail(regEmail);
-  }, [regEmail]);
-
-  // Kiểm tra số điện thoại đăng ký (nếu có nhập)
-  const isRegPhoneValid = useMemo(() => {
-    if (!regPhone.trim()) return null;
-    return isValidVietnamesePhone(regPhone);
-  }, [regPhone]);
-
-  // Phân tích độ mạnh mật khẩu khi đăng ký
-  const passwordStrength = useMemo(() => {
-    return evaluatePasswordStrength(regPassword);
-  }, [regPassword]);
-
-  // Đếm ngược 60s cho gửi lại mã OTP đăng ký / reset password
+  // Đồng bộ thông tin khi user load xong
   useEffect(() => {
-    if (otpCountdown <= 0) return;
-    const timer = setInterval(() => {
-      setOtpCountdown((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [otpCountdown]);
+    if (user) {
+      if (!nameTouched) {
+        setProfileName(user.name || '');
+      }
+      if (!phoneTouched) {
+        setProfilePhone(user.phone || '');
+      }
+    }
+  }, [user, nameTouched, phoneTouched]);
 
-  const handleClose = useCallback(() => {
+  const clearFeedback = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
+  };
+
+  const handleClose = useCallback(() => {
+    // Không cho phép đóng nếu tài khoản chưa hoàn tất thông tin bắt buộc
+    if (needsProfileCompletion) return;
+    clearFeedback();
     setIsSubmitting(false);
     setIsGoogleSubmitting(false);
-    setLoginPassword('');
-    setRegPassword('');
-    setRegConfirmPassword('');
-    setRegOtpCode('');
-    setRegisterStep('input');
     hideAuthModal();
     onClose?.();
-  }, [hideAuthModal, onClose]);
+  }, [needsProfileCompletion, hideAuthModal, onClose]);
 
-  // Nhấn ESC để đóng modal
+  // Nhấn ESC để đóng modal (chỉ khi không bắt buộc onboarding)
   useEffect(() => {
-    if (!isAuthOpen) return;
+    if (!isAuthOpen || needsProfileCompletion) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         handleClose();
@@ -119,237 +77,85 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isAuthOpen, handleClose]);
+  }, [isAuthOpen, needsProfileCompletion, handleClose]);
 
-  const clearFeedback = () => {
-    setErrorMessage(null);
-    setSuccessMessage(null);
-  };
-
-  const switchToLogin = () => {
-    clearFeedback();
-    setMode('login');
-    setRegisterStep('input');
-  };
-
-  const switchToRegister = () => {
-    clearFeedback();
-    setMode('register');
-    setRegisterStep('input');
-    // Nếu ở ô login có nhập email hợp lệ, điền sẵn vào email đăng ký
-    if (loginIdentifierInfo?.type === 'email') {
-      setRegEmail(loginIdentifierInfo.normalized);
-    }
-  };
-
-  const switchToForgot = () => {
-    clearFeedback();
-    if (loginIdentifierInfo?.type === 'email') {
-      setForgotEmail(loginIdentifierInfo.normalized);
-    }
-    setMode('forgot');
-  };
-
-  // ---------------------------------------------------------
-  // 1. SUBMIT ĐĂNG NHẬP (Email / Số điện thoại + Mật khẩu)
-  // ---------------------------------------------------------
-  const handleLoginSubmit = async (e?: FormEvent) => {
-    if (e) e.preventDefault();
-    clearFeedback();
-
-    if (!loginIdentifier.trim()) {
-      setErrorMessage('Vui lòng nhập email hoặc số điện thoại.');
-      return;
-    }
-
-    const parsed = parseIdentifier(loginIdentifier);
-    if (parsed.type === 'invalid') {
-      setErrorMessage(
-        parsed.errorMessage || 'Số điện thoại hoặc email không đúng định dạng.'
-      );
-      return;
-    }
-
-    if (!loginPassword) {
-      setErrorMessage('Vui lòng nhập mật khẩu.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await login(loginIdentifier.trim(), loginPassword);
-      handleClose();
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Đăng nhập không thành công.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // ---------------------------------------------------------
-  // 2. BƯỚC 1 ĐĂNG KÝ: Nhập thông tin & Gửi mã OTP về Mail
-  // ---------------------------------------------------------
-  const handleRegisterInitSubmit = async (e?: FormEvent) => {
-    if (e) e.preventDefault();
-    clearFeedback();
-
-    if (!regName.trim() || regName.trim().length < 2) {
-      setErrorMessage('Họ và tên phải có ít nhất 2 ký tự.');
-      return;
-    }
-
-    if (!regEmail.trim()) {
-      setErrorMessage('Vui lòng nhập địa chỉ email để nhận mã OTP xác thực.');
-      return;
-    }
-
-    if (!isValidEmail(regEmail)) {
-      setErrorMessage('Địa chỉ email không đúng định dạng (ví dụ: ten@domain.com).');
-      return;
-    }
-
-    if (regPhone.trim() && !isValidVietnamesePhone(regPhone)) {
-      setErrorMessage(
-        'Số điện thoại không đúng chuẩn di động Việt Nam (10 số, đầu 03, 05, 07, 08, 09).'
-      );
-      return;
-    }
-
-    if (!regPassword) {
-      setErrorMessage('Vui lòng nhập mật khẩu.');
-      return;
-    }
-
-    if (regPassword.length < 6) {
-      setErrorMessage('Mật khẩu phải có ít nhất 6 ký tự.');
-      return;
-    }
-
-    if (!regConfirmPassword) {
-      setErrorMessage('Vui lòng xác nhận lại mật khẩu.');
-      return;
-    }
-
-    if (regPassword !== regConfirmPassword) {
-      setErrorMessage('Mật khẩu xác nhận không khớp.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const res = await registerInit(
-        regName.trim(),
-        regEmail.trim(),
-        regPassword,
-        regPhone.trim()
-      );
-
-      // Nếu Supabase đã tự động kích hoạt tài khoản
-      if (res.autoConfirmed) {
-        handleClose();
-        return;
-      }
-
-      setRegisterStep('otp');
-      setOtpCountdown(60);
-      setSuccessMessage(
-        `Mã xác thực 6 chữ số đã được gửi đến email ${regEmail.trim().toLowerCase()}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam).`
-      );
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể đăng ký tài khoản. Vui lòng thử lại.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // ---------------------------------------------------------
-  // 3. BƯỚC 2 ĐĂNG KÝ: Xác thực 6 số OTP trong Mail
-  // ---------------------------------------------------------
-  const handleVerifyRegisterOtp = async (e?: FormEvent) => {
-    if (e) e.preventDefault();
-    clearFeedback();
-
-    const code = regOtpCode.trim();
-    if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
-      setErrorMessage('Vui lòng nhập đúng 6 chữ số mã OTP gửi trong email.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await verifyRegisterOtp(regEmail.trim().toLowerCase(), code);
-      handleClose();
-    } catch (err: any) {
-      setErrorMessage(
-        err.message || 'Mã xác thực không chính xác hoặc đã hết hạn. Vui lòng thử lại.'
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Gửi lại mã OTP đăng ký
-  const handleResendRegisterOtp = async () => {
-    clearFeedback();
-    setIsSubmitting(true);
-    try {
-      await resendRegisterOtp(regEmail.trim().toLowerCase());
-      setOtpCountdown(60);
-      setSuccessMessage(
-        `Đã gửi lại mã OTP mới đến ${regEmail.trim().toLowerCase()}. Vui lòng kiểm tra hộp thư.`
-      );
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể gửi lại mã OTP. Vui lòng thử lại sau.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // ---------------------------------------------------------
-  // 4. QUÊN MẬT KHẨU: Gửi link khôi phục qua email
-  // ---------------------------------------------------------
-  const handleResetPassword = async (e?: FormEvent) => {
-    if (e) e.preventDefault();
-    clearFeedback();
-
-    const targetEmail = forgotEmail.trim().toLowerCase();
-    if (!targetEmail || !isValidEmail(targetEmail)) {
-      setErrorMessage('Vui lòng nhập địa chỉ email hợp lệ để nhận liên kết khôi phục.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await resetPassword(targetEmail);
-      setSuccessMessage(
-        `Đã gửi liên kết đặt lại mật khẩu đến ${targetEmail}. Vui lòng mở email để tiếp tục.`
-      );
-      setOtpCountdown(60);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể gửi email đặt lại mật khẩu.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+  // Đăng nhập bằng Google
   const handleGoogleLogin = async () => {
     setIsGoogleSubmitting(true);
     clearFeedback();
     try {
       await loginWithGoogle();
     } catch (err: any) {
-      setErrorMessage(err.message || 'Đăng nhập bằng Google không thành công.');
+      setErrorMessage(err.message || 'Đăng nhập bằng Google không thành công. Vui lòng thử lại.');
       setIsGoogleSubmitting(false);
     }
   };
 
+  // Hoàn tất thông tin cá nhân
+  const handleProfileSubmit = async (e?: FormEvent) => {
+    if (e) e.preventDefault();
+    clearFeedback();
+    setNameTouched(true);
+    setPhoneTouched(true);
+
+    const trimmedName = profileName.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      setErrorMessage('Vui lòng nhập họ và tên của bạn (tối thiểu 2 ký tự).');
+      return;
+    }
+
+    const phoneValidation = validateRecipientPhone(profilePhone);
+    if (!phoneValidation.isValid) {
+      setErrorMessage(
+        phoneValidation.errorMessage ||
+          'Số điện thoại không đúng chuẩn di động Việt Nam (10 số, đầu 03, 05, 07, 08, 09).'
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await completeProfile({
+        name: trimmedName,
+        phone: phoneValidation.cleaned,
+      });
+      setSuccessMessage('Cập nhật thông tin thành công!');
+      setTimeout(() => {
+        handleClose();
+      }, 500);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Không thể lưu thông tin cá nhân. Vui lòng thử lại.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePhoneInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digitsOnly = e.target.value.replace(/\D/g, '');
+    if (digitsOnly.length <= 10) {
+      setProfilePhone(digitsOnly);
+      if (!phoneTouched) setPhoneTouched(true);
+      if (errorMessage) setErrorMessage(null);
+    }
+  };
+
+  const handleLogout = () => {
+    clearFeedback();
+    logout();
+    hideAuthModal();
+    onClose?.();
+  };
+
   if (!isAuthOpen) return null;
+
+  const isNameValid = profileName.trim().length >= 2;
+  const isPhoneValid = isValidVietnamesePhone(profilePhone);
 
   return (
     <div
       className="customer-auth-overlay"
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (e.target === e.currentTarget && !needsProfileCompletion) {
           handleClose();
         }
       }}
@@ -363,49 +169,33 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
       >
         {/* Header Modal */}
         <div className="customer-auth-header">
-          <div>
-            {mode === 'forgot' && (
-              <button
-                type="button"
-                className="customer-auth-back-link"
-                onClick={switchToLogin}
-              >
-                <ArrowLeft size={16} /> Quay lại đăng nhập
-              </button>
-            )}
-            {mode === 'register' && registerStep === 'otp' && (
-              <button
-                type="button"
-                className="customer-auth-back-link"
-                onClick={() => {
-                  clearFeedback();
-                  setRegisterStep('input');
-                }}
-              >
-                <ArrowLeft size={16} /> Chỉnh sửa thông tin
-              </button>
-            )}
-            <h2 id="customer-auth-title">
-              {mode === 'login' && 'Đăng nhập'}
-              {mode === 'register' && registerStep === 'input' && 'Tạo tài khoản mới'}
-              {mode === 'register' && registerStep === 'otp' && 'Xác thực OTP Email'}
-              {mode === 'forgot' && 'Khôi phục mật khẩu'}
+          <div className="flex-1">
+            <h2 id="customer-auth-title" className="text-xl font-bold text-gray-900">
+              {needsProfileCompletion ? 'Hoàn tất thông tin cá nhân' : 'Đăng nhập GoSavingFood'}
             </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {needsProfileCompletion
+                ? 'Vui lòng cung cấp số điện thoại để quán liên hệ khi nhận đồ ăn'
+                : 'Tiếp cận hàng trăm món ngon giảm giá mỗi ngày quanh bạn'}
+            </p>
           </div>
-          <button
-            type="button"
-            className="customer-auth-close-btn"
-            onClick={handleClose}
-            aria-label="Đóng"
-          >
-            <X size={20} />
-          </button>
+          {!needsProfileCompletion && (
+            <button
+              type="button"
+              className="customer-auth-close-btn"
+              onClick={handleClose}
+              aria-label="Đóng"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         {/* Thông báo lỗi / thành công */}
         {errorMessage && (
-          <div className="customer-auth-error-banner" role="alert">
-            {errorMessage}
+          <div className="customer-auth-error-banner flex items-start gap-2" role="alert">
+            <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
           </div>
         )}
 
@@ -417,341 +207,134 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
         )}
 
         {/* ========================================================================= */}
-        {/* FORM ĐĂNG NHẬP (Chỉ Email/SĐT + Mật khẩu, KHÔNG CÓ OTP ĐĂNG NHẬP)        */}
+        {/* MÀN HÌNH 1: BƯỚC HOÀN TẤT THÔNG TIN CÁ NHÂN (PROFILE ONBOARDING)         */}
         {/* ========================================================================= */}
-        {mode === 'login' && (
-          <form className="customer-auth-form" onSubmit={handleLoginSubmit}>
+        {needsProfileCompletion ? (
+          <form className="customer-auth-form" onSubmit={handleProfileSubmit}>
+            {/* Trường Email Google (Read-only để minh bạch) */}
+            {user?.email && (
+              <div className="customer-auth-field">
+                <div className="customer-auth-field-header">
+                  <label>Tài khoản Google liên kết</label>
+                  <span className="customer-auth-badge is-email flex items-center gap-1">
+                    <Lock size={10} /> Đã xác thực
+                  </span>
+                </div>
+                <div
+                  className="customer-auth-input-wrap"
+                  style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0', cursor: 'not-allowed' }}
+                >
+                  <Mail size={18} className="customer-auth-icon" style={{ opacity: 0.6 }} />
+                  <input
+                    type="email"
+                    value={user.email}
+                    readOnly
+                    disabled
+                    style={{ color: '#64748b', cursor: 'not-allowed' }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Trường Họ và tên */}
             <div className="customer-auth-field">
               <div className="customer-auth-field-header">
-                <label>Email hoặc số điện thoại</label>
-                {loginIdentifierInfo && (
+                <label>Họ và tên của bạn</label>
+                {nameTouched && (
                   <span
-                    className={`customer-auth-badge ${
-                      loginIdentifierInfo.type === 'phone'
-                        ? 'is-phone'
-                        : loginIdentifierInfo.type === 'email'
-                        ? 'is-email'
-                        : 'is-invalid'
-                    }`}
+                    className={`customer-auth-badge ${isNameValid ? 'is-phone' : 'is-invalid'}`}
                   >
-                    {loginIdentifierInfo.type === 'phone' && '🇻🇳 SĐT Việt Nam'}
-                    {loginIdentifierInfo.type === 'email' && '✉️ Email hợp lệ'}
-                    {loginIdentifierInfo.type === 'invalid' && 'Chưa đúng định dạng'}
+                    {isNameValid ? 'Hợp lệ' : 'Tối thiểu 2 ký tự'}
                   </span>
                 )}
               </div>
-              <div className="customer-auth-input-wrap">
-                {loginIdentifierInfo?.type === 'email' ? (
-                  <Mail size={18} className="customer-auth-icon" />
-                ) : (
-                  <Smartphone size={18} className="customer-auth-icon" />
-                )}
-                <input
-                  type="text"
-                  value={loginIdentifier}
-                  onChange={(e) => setLoginIdentifier(e.target.value)}
-                  placeholder="0912345678 hoặc email@domain.com"
-                  autoComplete="username"
-                  autoFocus
-                />
-              </div>
-            </div>
-
-            <div className="customer-auth-field">
-              <div className="customer-auth-field-header">
-                <label>Mật khẩu</label>
-                <button
-                  type="button"
-                  className="customer-auth-forgot-link"
-                  onClick={switchToForgot}
-                >
-                  Quên mật khẩu?
-                </button>
-              </div>
-              <div className="customer-auth-input-wrap">
-                <Lock size={18} className="customer-auth-icon" />
-                <input
-                  type={showLoginPassword ? 'text' : 'password'}
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu của bạn"
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  className="customer-auth-eye-btn"
-                  onClick={() => setShowLoginPassword(!showLoginPassword)}
-                  aria-label={showLoginPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                >
-                  {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              fullWidth
-              size="lg"
-              isLoading={isSubmitting}
-              className="customer-auth-submit-btn"
-            >
-              Đăng nhập
-            </Button>
-          </form>
-        )}
-
-        {/* ========================================================================= */}
-        {/* FORM ĐĂNG KÝ BƯỚC 1: Nhập thông tin & Gửi mã xác thực về Email           */}
-        {/* ========================================================================= */}
-        {mode === 'register' && registerStep === 'input' && (
-          <form className="customer-auth-form" onSubmit={handleRegisterInitSubmit}>
-            <div className="customer-auth-field">
-              <label>Họ và tên</label>
-              <div className="customer-auth-input-wrap">
+              <div className={`customer-auth-input-wrap ${nameTouched && !isNameValid ? 'border-red-400' : ''}`}>
                 <UserRound size={18} className="customer-auth-icon" />
                 <input
                   type="text"
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  placeholder="Nguyễn Văn A"
-                  autoComplete="name"
+                  value={profileName}
+                  onChange={(e) => {
+                    setProfileName(e.target.value);
+                    if (!nameTouched) setNameTouched(true);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  onBlur={() => setNameTouched(true)}
+                  placeholder="Nhập họ và tên đầy đủ"
                   autoFocus
                 />
               </div>
             </div>
 
+            {/* Trường Số điện thoại */}
             <div className="customer-auth-field">
               <div className="customer-auth-field-header">
-                <label>Email (Nhận mã OTP xác thực)</label>
-                {isRegEmailValid !== null && (
+                <label>Số điện thoại nhận hàng</label>
+                {phoneTouched && (
                   <span
-                    className={`customer-auth-badge ${
-                      isRegEmailValid ? 'is-email' : 'is-invalid'
-                    }`}
+                    className={`customer-auth-badge ${isPhoneValid ? 'is-phone' : 'is-invalid'}`}
                   >
-                    {isRegEmailValid ? '✉️ Email hợp lệ' : 'Email chưa đúng'}
+                    {isPhoneValid ? '🇻🇳 SĐT Việt Nam hợp lệ' : '10 số (03, 05, 07, 08, 09)'}
                   </span>
                 )}
               </div>
-              <div className="customer-auth-input-wrap">
-                <Mail size={18} className="customer-auth-icon" />
-                <input
-                  type="email"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="vidu@gmail.com"
-                  autoComplete="email"
-                />
-              </div>
-            </div>
-
-            <div className="customer-auth-field">
-              <div className="customer-auth-field-header">
-                <label>Số điện thoại (Tùy chọn)</label>
-                {isRegPhoneValid !== null && (
-                  <span
-                    className={`customer-auth-badge ${
-                      isRegPhoneValid ? 'is-phone' : 'is-invalid'
-                    }`}
-                  >
-                    {isRegPhoneValid ? '🇻🇳 SĐT hợp lệ' : 'Chưa đúng chuẩn VN'}
-                  </span>
-                )}
-              </div>
-              <div className="customer-auth-input-wrap">
-                <Smartphone size={18} className="customer-auth-icon" />
+              <div className={`customer-auth-input-wrap ${phoneTouched && !isPhoneValid ? 'border-red-400' : ''}`}>
+                <Phone size={18} className="customer-auth-icon" />
                 <input
                   type="tel"
-                  value={regPhone}
-                  onChange={(e) => setRegPhone(e.target.value)}
-                  placeholder="0912345678 (tùy chọn)"
-                  autoComplete="tel"
-                />
-              </div>
-            </div>
-
-            <div className="customer-auth-field">
-              <label>Mật khẩu</label>
-              <div className="customer-auth-input-wrap">
-                <Lock size={18} className="customer-auth-icon" />
-                <input
-                  type={showRegPassword ? 'text' : 'password'}
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="Mật khẩu tối thiểu 6 ký tự"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  className="customer-auth-eye-btn"
-                  onClick={() => setShowRegPassword(!showRegPassword)}
-                  aria-label={showRegPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                >
-                  {showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-
-              {regPassword.length > 0 && (
-                <div className="customer-auth-strength-meter">
-                  <div className="customer-auth-strength-bars">
-                    {[1, 2, 3, 4].map((step) => (
-                      <div
-                        key={step}
-                        className={`customer-auth-strength-bar ${
-                          passwordStrength.score >= step
-                            ? `is-${passwordStrength.level}`
-                            : ''
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="customer-auth-strength-text">
-                    {passwordStrength.feedback}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="customer-auth-field">
-              <label>Xác nhận mật khẩu</label>
-              <div className="customer-auth-input-wrap">
-                <Lock size={18} className="customer-auth-icon" />
-                <input
-                  type={showRegConfirmPassword ? 'text' : 'password'}
-                  value={regConfirmPassword}
-                  onChange={(e) => setRegConfirmPassword(e.target.value)}
-                  placeholder="Nhập lại mật khẩu"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  className="customer-auth-eye-btn"
-                  onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                  aria-label={showRegConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                >
-                  {showRegConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              fullWidth
-              size="lg"
-              isLoading={isSubmitting}
-              className="customer-auth-submit-btn"
-            >
-              Tiếp tục & Nhận mã OTP Email
-            </Button>
-          </form>
-        )}
-
-        {/* ========================================================================= */}
-        {/* FORM ĐĂNG KÝ BƯỚC 2: Nhập mã OTP 6 số trong Mail để kích hoạt tài khoản   */}
-        {/* ========================================================================= */}
-        {mode === 'register' && registerStep === 'otp' && (
-          <form className="customer-auth-form" onSubmit={handleVerifyRegisterOtp}>
-            <div className="customer-auth-field">
-              <label>Nhập mã xác thực 6 số gửi đến {regEmail}</label>
-              <div className="customer-auth-input-wrap">
-                <KeyRound size={18} className="customer-auth-icon" />
-                <input
-                  type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  value={regOtpCode}
-                  onChange={(e) => setRegOtpCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="123456"
-                  className="customer-auth-otp-input"
-                  autoFocus
-                />
-              </div>
-              <div className="customer-auth-resend-wrap">
-                <span>Chưa nhận được mã?</span>
-                <button
-                  type="button"
-                  className="customer-auth-resend-btn"
-                  disabled={otpCountdown > 0 || isSubmitting}
-                  onClick={handleResendRegisterOtp}
-                >
-                  {otpCountdown > 0
-                    ? `Gửi lại mã (${otpCountdown}s)`
-                    : 'Gửi lại mã mới'}
-                </button>
-              </div>
-              <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
-                💡 <i>Mẹo: Mã OTP có hiệu lực trong <b>5 phút</b>. Vui lòng kiểm tra kỹ cả mục <b>Thư rác (Spam)</b> hoặc <b>Quảng cáo</b>.</i>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              fullWidth
-              size="lg"
-              isLoading={isSubmitting}
-              className="customer-auth-submit-btn"
-            >
-              Xác nhận & Hoàn tất đăng ký
-            </Button>
-          </form>
-        )}
-
-        {/* ========================================================================= */}
-        {/* FORM KHÔI PHỤC MẬT KHẨU                                                   */}
-        {/* ========================================================================= */}
-        {mode === 'forgot' && (
-          <form className="customer-auth-form" onSubmit={handleResetPassword}>
-            <div className="customer-auth-field">
-              <label>Email đăng ký tài khoản</label>
-              <div className="customer-auth-input-wrap">
-                <Mail size={18} className="customer-auth-icon" />
-                <input
-                  type="email"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  placeholder="vidu@gmail.com"
-                  autoComplete="email"
-                  autoFocus
+                  maxLength={10}
+                  value={profilePhone}
+                  onChange={handlePhoneInputChange}
+                  onBlur={() => setPhoneTouched(true)}
+                  placeholder="0912345678"
                 />
               </div>
             </div>
 
             <Button
               type="submit"
+              variant="primary"
               fullWidth
-              size="lg"
               isLoading={isSubmitting}
-              disabled={otpCountdown > 0}
               className="customer-auth-submit-btn"
             >
-              {otpCountdown > 0
-                ? `Đã gửi (thử lại sau ${otpCountdown}s)`
-                : 'Gửi liên kết đặt lại mật khẩu'}
+              Lưu & Bắt đầu trải nghiệm
             </Button>
-          </form>
-        )}
 
-        {/* GOOGLE OAUTH DIVIDER & BUTTON (Chỉ hiển thị ở login hoặc register step 1) */}
-        {(mode === 'login' || (mode === 'register' && registerStep === 'input')) && (
-          <>
-            <div className="customer-auth-divider">
-              <span>hoặc</span>
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                className="customer-auth-back-link text-xs text-gray-500 hover:text-red-600 inline-flex items-center gap-1.5 transition-colors"
+                onClick={handleLogout}
+              >
+                <LogOut size={14} /> Đăng xuất hoặc đổi tài khoản khác
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* ========================================================================= */
+          /* MÀN HÌNH 2: ĐĂNG NHẬP GOOGLE-ONLY DUY NHẤT                               */
+          /* ========================================================================= */
+          <div className="flex flex-col gap-5 py-2">
+            <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 text-center">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2.5 shadow-sm border border-emerald-100 text-emerald-600">
+                <Sparkles size={24} />
+              </div>
+              <h3 className="text-sm font-bold text-emerald-950 mb-1">
+                Giải cứu món ngon - Tiết kiệm đến 70%
+              </h3>
+              <p className="text-xs text-emerald-800 leading-relaxed">
+                Đăng nhập nhanh chóng, an toàn bằng tài khoản Google để đặt túi đồ ăn bất ngờ và theo dõi đơn hàng tiện lợi.
+              </p>
             </div>
 
             <button
               type="button"
-              className="customer-auth-google-btn"
+              className="customer-auth-google-btn customer-auth-google-btn--primary"
               onClick={handleGoogleLogin}
-              disabled={isSubmitting || isGoogleSubmitting}
+              disabled={isGoogleSubmitting}
             >
-              <svg
-                className="customer-auth-google-icon"
-                viewBox="0 0 24 24"
-                width="20"
-                height="20"
-                aria-hidden="true"
-              >
+              <svg className="customer-auth-google-icon" width="20" height="20" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -769,23 +352,21 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>
-                {isGoogleSubmitting
-                  ? 'Đang chuyển hướng sang Google...'
-                  : 'Tiếp tục với Google'}
-              </span>
+              <span>{isGoogleSubmitting ? 'Đang chuyển hướng sang Google...' : 'Tiếp tục với Google'}</span>
             </button>
 
-            <div className="customer-auth-footer">
-              <span>{mode === 'login' ? 'Chưa có tài khoản?' : 'Đã có tài khoản?'}</span>
-              <button
-                type="button"
-                onClick={mode === 'login' ? switchToRegister : switchToLogin}
-              >
-                {mode === 'login' ? 'Đăng ký ngay' : 'Đăng nhập'}
-              </button>
-            </div>
-          </>
+            <p className="text-[11.5px] text-gray-500 text-center leading-normal px-2">
+              Bằng việc tiếp tục, bạn đồng ý với{' '}
+              <span className="text-emerald-700 font-semibold underline cursor-pointer">
+                Điều khoản dịch vụ
+              </span>{' '}
+              và{' '}
+              <span className="text-emerald-700 font-semibold underline cursor-pointer">
+                Chính sách bảo mật
+              </span>{' '}
+              của GoSavingFood.
+            </p>
+          </div>
         )}
       </div>
     </div>

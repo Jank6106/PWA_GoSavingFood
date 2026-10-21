@@ -43,6 +43,14 @@ export function requestPersistentStorage(): void {
   }
 }
 
+export const isCustomerProfileComplete = (user: User | null): boolean => {
+  if (!user) return false;
+  const hasValidName = Boolean(user.name && user.name.trim().length >= 2);
+  const digitsOnly = (user.phone || '').replace(/\D/g, '');
+  const hasValidPhone = digitsOnly.length === 10 && /^0[3|5|7|8|9]\d{8}$/.test(digitsOnly);
+  return hasValidName && hasValidPhone;
+};
+
 function cleanAuthUrl() {
   if (typeof window === 'undefined') return;
   try {
@@ -75,6 +83,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Khởi tạo cờ initializing thông minh: nếu đã có user trong cache thì false ngay từ đầu
   const [initializing, setInitializing] = useState(() => !getCachedCustomerUser());
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+
+  const needsProfileCompletion = Boolean(user && !isCustomerProfileComplete(user));
+
+  // Tự động mở modal bổ sung thông tin nếu tài khoản đăng nhập chưa có SĐT / Họ tên
+  useEffect(() => {
+    if (!initializing && user && !isCustomerProfileComplete(user)) {
+      setIsAuthOpen(true);
+    }
+  }, [initializing, user]);
 
   useEffect(() => {
     let isMounted = true;
@@ -208,20 +225,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(user),
       initializing,
       isAuthOpen,
+      needsProfileCompletion,
       showAuthModal: () => setIsAuthOpen(true),
-      hideAuthModal: () => setIsAuthOpen(false),
+      hideAuthModal: () => {
+        // Nếu tài khoản còn thiếu thông tin bắt buộc thì không cho tắt modal ra ngoài
+        if (needsProfileCompletion) return;
+        setIsAuthOpen(false);
+      },
+      loginWithGoogle: async () => {
+        await customerService.loginWithGoogle();
+      },
+      completeProfile: async ({ name, phone }: { name: string; phone: string }) => {
+        if (!user) throw new Error('Chưa đăng nhập.');
+        const targetId = user.id;
+        const cleanedName = name.trim();
+        const cleanedPhone = phone.replace(/\D/g, '');
+
+        await customerService.updateUserProfile(targetId, {
+          name: cleanedName,
+          phone: cleanedPhone,
+        });
+
+        try {
+          await supabase.auth.updateUser({
+            data: {
+              name: cleanedName,
+              full_name: cleanedName,
+              phone: cleanedPhone,
+            },
+          });
+        } catch (err) {
+          console.warn('[auth] Cập nhật Supabase metadata warning:', err);
+        }
+
+        const updatedUser: User = {
+          ...user,
+          name: cleanedName,
+          phone: cleanedPhone,
+        };
+        setUser(updatedUser);
+        setCachedCustomerUser(updatedUser);
+        requestPersistentStorage();
+        setIsAuthOpen(false);
+      },
       login: async (identifier, password) => {
         const nextUser = await customerService.login(identifier, password);
         setUser(nextUser);
         setCachedCustomerUser(nextUser);
         requestPersistentStorage();
         setIsAuthOpen(false);
-      },
-      loginWithGoogle: async () => {
-        await customerService.loginWithGoogle();
-      },
-      register: async (name: string, identifier: string, password?: string) => {
-        await customerService.registerInit(name, identifier, password);
       },
       registerInit: async (name: string, email: string, password?: string, phone?: string) => {
         const res = await customerService.registerInit(name, email, password, phone);
@@ -270,7 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [initializing, isAuthOpen, user]
+    [initializing, isAuthOpen, needsProfileCompletion, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
