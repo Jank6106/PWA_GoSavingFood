@@ -459,54 +459,22 @@ export function BagDetailPage({
       <footer className="customer-product-bottom-bar">
         {merchant?.isOpen === false ? (
           <div
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              background: '#fef2f2',
-              border: '1px solid #fee2e2',
-              borderRadius: 14,
-              textAlign: 'center',
-              color: '#991b1b',
-              fontSize: 13,
-              fontWeight: 700,
-            }}
+            className="customer-product-bottom-banner customer-product-bottom-banner--closed"
+            style={{ gridColumn: '1 / -1' }}
           >
-            ⚠️ Quán hiện đang tạm đóng cửa — Chưa thể đặt hàng
+            <span>⚠️ Quán hiện đang tạm đóng cửa — Chưa thể đặt hàng</span>
           </div>
         ) : !timing.canOrder ? (
           <div
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              background:
-                timing.phase === 'upcoming'
-                  ? '#fefce8'
-                  : timing.phase === 'order_closed'
-                  ? '#fff7ed'
-                  : '#f3f4f6',
-              border: `1px solid ${
-                timing.phase === 'upcoming'
-                  ? '#fef08a'
-                  : timing.phase === 'order_closed'
-                  ? '#fed7aa'
-                  : '#e5e7eb'
-              }`,
-              borderRadius: 14,
-              textAlign: 'center',
-              color:
-                timing.phase === 'upcoming'
-                  ? '#854d0e'
-                  : timing.phase === 'order_closed'
-                  ? '#9a3412'
-                  : '#4b5563',
-              fontSize: 13,
-              fontWeight: 700,
-            }}
+            className={`customer-product-bottom-banner customer-product-bottom-banner--${timing.phase}`}
+            style={{ gridColumn: '1 / -1' }}
           >
-            {timing.phase === 'upcoming' && `🟡 ${timing.detailMessage}`}
-            {timing.phase === 'order_closed' && `🟠 ${timing.detailMessage}`}
-            {timing.phase === 'sold_out' && `⚪ ${timing.detailMessage}`}
-            {timing.phase === 'expired' && `🔴 ${timing.detailMessage}`}
+            <span>
+              {timing.phase === 'upcoming' && `🟡 ${timing.detailMessage}`}
+              {timing.phase === 'order_closed' && `🟠 ${timing.detailMessage}`}
+              {timing.phase === 'sold_out' && `⚪ ${timing.detailMessage}`}
+              {timing.phase === 'expired' && `🔴 ${timing.detailMessage}`}
+            </span>
           </div>
         ) : (
           <>
