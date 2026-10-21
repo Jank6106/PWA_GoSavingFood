@@ -1,4 +1,4 @@
-import { Clock3, Eye, EyeOff, ImagePlus, Package, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
+import { ChevronDown, Clock3, Eye, EyeOff, ImagePlus, Package, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES } from '../../mocks';
 import { compressImageFile, optimizeImageUrl } from '../../services/utils';
@@ -252,10 +252,132 @@ export function BagCard({
   );
 }
 
-const TIME_OPTIONS_24H: string[] = [];
-for (let h = 0; h < 24; h++) {
-  const hh = String(h).padStart(2, '0');
-  TIME_OPTIONS_24H.push(`${hh}:00`, `${hh}:15`, `${hh}:30`, `${hh}:45`);
+const HOURS_24: string[] = Array.from({ length: 25 }, (_, i) => String(i).padStart(2, '0'));
+const MINUTES_60: string[] = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+
+function MerchantTimePicker({
+  value,
+  onChange,
+  ariaLabel = 'Thời gian',
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  ariaLabel?: string;
+}) {
+  const [h, m] = (value || '18:00').split(':');
+  const [hourInput, setHourInput] = useState(h?.padStart(2, '0') || '18');
+  const [minuteInput, setMinuteInput] = useState(m?.padStart(2, '0') || '00');
+
+  useEffect(() => {
+    const [curH, curM] = (value || '18:00').split(':');
+    setHourInput(curH?.padStart(2, '0') || '18');
+    setMinuteInput(curM?.padStart(2, '0') || '00');
+  }, [value]);
+
+  const commitTime = (nextH: string, nextM: string) => {
+    let parsedH = parseInt(nextH, 10);
+    if (isNaN(parsedH) || parsedH < 0) parsedH = 0;
+    if (parsedH > 24) parsedH = 24;
+
+    let parsedM = parseInt(nextM, 10);
+    if (isNaN(parsedM) || parsedM < 0) parsedM = 0;
+    if (parsedM > 59) parsedM = 59;
+
+    const formattedH = String(parsedH).padStart(2, '0');
+    const formattedM = String(parsedM).padStart(2, '0');
+
+    setHourInput(formattedH);
+    setMinuteInput(formattedM);
+    onChange(`${formattedH}:${formattedM}`);
+  };
+
+  const handleHourChange = (raw: string) => {
+    const clean = raw.replace(/\D/g, '').slice(0, 2);
+    setHourInput(clean);
+    if (clean.length === 2) {
+      commitTime(clean, minuteInput);
+    }
+  };
+
+  const handleHourBlur = () => {
+    commitTime(hourInput, minuteInput);
+  };
+
+  const handleMinuteChange = (raw: string) => {
+    const clean = raw.replace(/\D/g, '').slice(0, 2);
+    setMinuteInput(clean);
+    if (clean.length === 2) {
+      commitTime(hourInput, clean);
+    }
+  };
+
+  const handleMinuteBlur = () => {
+    commitTime(hourInput, minuteInput);
+  };
+
+  return (
+    <div className="merchant-time-picker-group" aria-label={ariaLabel}>
+      <div className="merchant-time-unit">
+        <input
+          type="text"
+          inputMode="numeric"
+          maxLength={2}
+          value={hourInput}
+          onChange={(e) => handleHourChange(e.target.value)}
+          onBlur={handleHourBlur}
+          className="merchant-time-num-input"
+          title="Nhập giờ (00-24)"
+          aria-label="Nhập giờ"
+        />
+        <div className="merchant-time-select-wrap">
+          <ChevronDown size={11} className="merchant-time-select-icon" />
+          <select
+            value={hourInput.padStart(2, '0')}
+            onChange={(e) => commitTime(e.target.value, minuteInput)}
+            className="merchant-time-native-select"
+            aria-label="Chọn giờ"
+          >
+            {HOURS_24.map((hour) => (
+              <option key={hour} value={hour}>
+                {hour}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <span className="merchant-time-colon">:</span>
+
+      <div className="merchant-time-unit">
+        <input
+          type="text"
+          inputMode="numeric"
+          maxLength={2}
+          value={minuteInput}
+          onChange={(e) => handleMinuteChange(e.target.value)}
+          onBlur={handleMinuteBlur}
+          className="merchant-time-num-input"
+          title="Nhập phút (00-59)"
+          aria-label="Nhập phút"
+        />
+        <div className="merchant-time-select-wrap">
+          <ChevronDown size={11} className="merchant-time-select-icon" />
+          <select
+            value={minuteInput.padStart(2, '0')}
+            onChange={(e) => commitTime(hourInput, e.target.value)}
+            className="merchant-time-native-select"
+            aria-label="Chọn phút"
+          >
+            {MINUTES_60.map((minute) => (
+              <option key={minute} value={minute}>
+                {minute}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?: BagItem; open: boolean; saving: boolean; onClose: () => void; onSubmit: (input: BagInput) => void }) {
@@ -479,37 +601,17 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
                 Khung giờ nhận túi hôm nay <b style={{ color: 'var(--danger)' }}>*</b>
               </span>
               <div className="merchant-field-control merchant-time-range-control">
-                <select
+                <MerchantTimePicker
                   value={pickupTimeStart}
-                  onChange={(event) => setPickupTimeStart(event.target.value)}
-                  aria-label="Giờ bắt đầu nhận (24h)"
-                  required
-                >
-                  {TIME_OPTIONS_24H.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                  {!TIME_OPTIONS_24H.includes(pickupTimeStart) && (
-                    <option value={pickupTimeStart}>{pickupTimeStart}</option>
-                  )}
-                </select>
+                  onChange={setPickupTimeStart}
+                  ariaLabel="Giờ bắt đầu nhận"
+                />
                 <span className="merchant-time-dash">-</span>
-                <select
+                <MerchantTimePicker
                   value={pickupTimeEnd}
-                  onChange={(event) => setPickupTimeEnd(event.target.value)}
-                  aria-label="Giờ kết thúc nhận (24h)"
-                  required
-                >
-                  {TIME_OPTIONS_24H.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                  {!TIME_OPTIONS_24H.includes(pickupTimeEnd) && (
-                    <option value={pickupTimeEnd}>{pickupTimeEnd}</option>
-                  )}
-                </select>
+                  onChange={setPickupTimeEnd}
+                  ariaLabel="Giờ kết thúc nhận"
+                />
               </div>
             </div>
 
@@ -557,37 +659,17 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
                 Khung giờ khách lấy hàng mỗi ngày <b style={{ color: 'var(--danger)' }}>*</b>
               </span>
               <div className="merchant-field-control merchant-time-range-control">
-                <select
+                <MerchantTimePicker
                   value={pickupTimeStart}
-                  onChange={(event) => setPickupTimeStart(event.target.value)}
-                  aria-label="Giờ bắt đầu nhận (24h)"
-                  required
-                >
-                  {TIME_OPTIONS_24H.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                  {!TIME_OPTIONS_24H.includes(pickupTimeStart) && (
-                    <option value={pickupTimeStart}>{pickupTimeStart}</option>
-                  )}
-                </select>
+                  onChange={setPickupTimeStart}
+                  ariaLabel="Giờ bắt đầu nhận"
+                />
                 <span className="merchant-time-dash">-</span>
-                <select
+                <MerchantTimePicker
                   value={pickupTimeEnd}
-                  onChange={(event) => setPickupTimeEnd(event.target.value)}
-                  aria-label="Giờ kết thúc nhận (24h)"
-                  required
-                >
-                  {TIME_OPTIONS_24H.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                  {!TIME_OPTIONS_24H.includes(pickupTimeEnd) && (
-                    <option value={pickupTimeEnd}>{pickupTimeEnd}</option>
-                  )}
-                </select>
+                  onChange={setPickupTimeEnd}
+                  ariaLabel="Giờ kết thúc nhận"
+                />
               </div>
               <small style={{ color: '#64748b', marginTop: 4, display: 'block', fontSize: 11 }}>
                 *Mở bán liên tục đến hết ngày HSD (23:59:59).
