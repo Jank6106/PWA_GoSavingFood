@@ -7,9 +7,15 @@ interface NotificationsPageProps {
   notifications: NotificationItem[];
   onBack: () => void;
   onReadAll: () => void;
+  onSelectNotification?: (item: NotificationItem) => void;
 }
 
-export function NotificationsPage({ notifications, onBack, onReadAll }: NotificationsPageProps) {
+export function NotificationsPage({
+  notifications,
+  onBack,
+  onReadAll,
+  onSelectNotification,
+}: NotificationsPageProps) {
   const hasUnread = notifications.some((item) => !item.read);
 
   return (
@@ -33,13 +39,23 @@ export function NotificationsPage({ notifications, onBack, onReadAll }: Notifica
       {notifications.length ? (
         <div className="customer-notification-list">
           {notifications.map((item) => (
-            <article key={item.id} className={item.read ? '' : 'is-unread'}>
+            <article
+              key={item.id}
+              className={`${item.read ? '' : 'is-unread'} ${onSelectNotification ? 'is-clickable' : ''}`}
+              onClick={() => onSelectNotification?.(item)}
+              style={onSelectNotification ? { cursor: 'pointer' } : undefined}
+            >
               <div className="customer-notification-content">
                 <div className="customer-notification-top-row">
                   <strong>{item.title}</strong>
                   <small>{item.time}</small>
                 </div>
                 <p>{item.body}</p>
+                {item.data?.orderId && (
+                  <span style={{ fontSize: '12px', color: '#005639', fontWeight: 700, marginTop: '2px' }}>
+                    Xem chi tiết đơn hàng →
+                  </span>
+                )}
               </div>
             </article>
           ))}

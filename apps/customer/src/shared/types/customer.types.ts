@@ -167,6 +167,11 @@ export interface NotificationItem {
   body: string;
   time: string;
   read: boolean;
+  data?: {
+    orderId?: string;
+    status?: string;
+    [key: string]: any;
+  } | null;
 }
 
 export interface CustomerReview {

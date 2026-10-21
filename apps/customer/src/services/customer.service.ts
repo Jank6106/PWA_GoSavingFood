@@ -1442,6 +1442,7 @@ export const customerService = {
           body: n.body || '',
           time: formatRelativeTime(n.created_at),
           read: Boolean(n.is_read),
+          data: n.data || null,
         }));
       }
       if (error) console.warn('Lấy thông báo từ Supabase lỗi:', error.message);
@@ -1449,6 +1450,20 @@ export const customerService = {
       console.warn('Lấy thông báo từ Supabase lỗi:', err);
     }
     return [];
+  },
+
+  async markNotificationRead(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id);
+      if (error) console.warn('Đánh dấu đã đọc thông báo lỗi:', error.message);
+      return !error;
+    } catch (err) {
+      console.warn('Đánh dấu đã đọc thông báo lỗi:', err);
+      return false;
+    }
   },
 
   async markAllNotificationsRead(): Promise<boolean> {

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { AppLayout } from './app/layouts/AppLayout';
 import { AuthProvider } from './contexts/AuthContext';
@@ -226,7 +226,22 @@ function CustomerApp() {
     () => window.matchMedia('(display-mode: standalone)').matches
   );
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    actionText?: string;
+    onAction?: () => void;
+  } | null>(null);
+
+  const showToast = useCallback(
+    (config: string | { message: string; actionText?: string; onAction?: () => void }) => {
+      if (typeof config === 'string') {
+        setToast({ message: config });
+      } else {
+        setToast(config);
+      }
+    },
+    []
+  );
 
   // Tối ưu định vị không chặn (Non-blocking): Timeout 2.5s, dùng vị trí sẵn có ngay 0ms
   useEffect(() => {
@@ -252,10 +267,11 @@ function CustomerApp() {
   }, []);
 
   useEffect(() => {
-    if (!toastMessage) return;
-    const timer = window.setTimeout(() => setToastMessage(null), 2500);
+    if (!toast) return;
+    const duration = toast.actionText ? 4000 : 2500;
+    const timer = window.setTimeout(() => setToast(null), duration);
     return () => window.clearTimeout(timer);
-  }, [toastMessage]);
+  }, [toast]);
 
   // Trì hoãn nạp Voucher (Deferred Loading) sau khi Home đã render mượt mà
   useEffect(() => {
@@ -283,7 +299,7 @@ function CustomerApp() {
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       if (isIOS) {
         window.setTimeout(() => {
-          setToastMessage('Nhấn nút Chia sẻ ⎋ và chọn "Thêm vào MH chính" ➕ để cài đặt GoSavingFood');
+          showToast('Nhấn nút Chia sẻ ⎋ và chọn "Thêm vào MH chính" ➕ để cài đặt GoSavingFood');
         }, 1000);
       }
     }
@@ -367,7 +383,18 @@ function CustomerApp() {
         if (notificationPayload.eventType === 'INSERT' && notificationPayload.new) {
           const title = notificationPayload.new.title || 'Thông báo mới';
           const body = notificationPayload.new.body || '';
-          setToastMessage(body ? `${title}: ${body}` : title);
+          const targetOrderId = notificationPayload.new.data?.orderId;
+          showToast({
+            message: body ? `${title}: ${body}` : title,
+            actionText: 'Xem đơn',
+            onAction: () => {
+              if (targetOrderId) {
+                push({ name: 'order', id: targetOrderId });
+              } else {
+                openTab('orders');
+              }
+            },
+          });
         }
       }
     );
@@ -592,7 +619,11 @@ function CustomerApp() {
       return false;
     }
     cart.addItem(bag, quantity);
-    setToastMessage(`Đã thêm “${bag.name}” vào giỏ hàng`);
+    showToast({
+      message: `Đã thêm “${bag.name}” vào giỏ hàng`,
+      actionText: 'Xem giỏ',
+      onAction: () => openTab('cart'),
+    });
     return true;
   };
   const buyNow = (bag: SurpriseBag, quantity = 1) => {
@@ -664,7 +695,11 @@ function CustomerApp() {
           push({ name: 'checkout', buyNowItem });
         } else {
           cart.addItem(targetBag, quantity);
-          setToastMessage(`Đã thêm “${targetBag.name}” vào giỏ hàng`);
+          showToast({
+            message: `Đã thêm “${targetBag.name}” vào giỏ hàng`,
+            actionText: 'Xem giỏ',
+            onAction: () => openTab('cart'),
+          });
         }
       }
     }
@@ -832,7 +867,7 @@ function CustomerApp() {
           onDeleteAccount={async () => {
             const res = await auth.deleteAccount();
             if (res.success) {
-              setToastMessage('Tài khoản của bạn đã được xóa vĩnh viễn khỏi hệ thống.');
+              showToast('Tài khoản của bạn đã được xóa vĩnh viễn khỏi hệ thống.');
               openTab('home');
             } else {
               window.alert(res.message || 'Không thể xóa tài khoản. Vui lòng thử lại.');
@@ -1070,14 +1105,14 @@ function CustomerApp() {
                     : o
                 )
               );
-              setToastMessage('Cảm ơn bạn đã đánh giá! Nhận xét đã được gửi đến quán.');
+              showToast('Cảm ơn bạn đã đánh giá! Nhận xét đã được gửi đến quán.');
             } else {
               await customerService.submitIssue(
                 selectedOrder.id,
                 feedback.tags[0] || 'Báo cáo sự cố',
                 feedback.comment
               );
-              setToastMessage('Đã gửi báo cáo sự cố. Đội ngũ CSKH sẽ sớm liên hệ hỗ trợ bạn.');
+              showToast('Đã gửi báo cáo sự cố. Đội ngũ CSKH sẽ sớm liên hệ hỗ trợ bạn.');
             }
             back();
           }}
@@ -1091,6 +1126,21 @@ function CustomerApp() {
           onReadAll={() => {
             void customerService.markAllNotificationsRead();
             setNotifications((current) => current.map((item) => ({ ...item, read: true })));
+          }}
+          onSelectNotification={(item) => {
+            void customerService.markNotificationRead(item.id);
+            setNotifications((current) =>
+              current.map((n) => (n.id === item.id ? { ...n, read: true } : n))
+            );
+            const targetOrderId = item.data?.orderId;
+            if (targetOrderId) {
+              push({ name: 'order', id: targetOrderId });
+            } else if (
+              item.title?.toLowerCase().includes('đơn') ||
+              item.body?.toLowerCase().includes('đơn')
+            ) {
+              openTab('orders');
+            }
           }}
         />
       );
@@ -1129,22 +1179,25 @@ function CustomerApp() {
         </Suspense>
       </AppLayout>
 
-      {toastMessage && (
+      {toast && (
         <aside className="customer-toast-popup" role="status" aria-live="polite">
           <div className="customer-toast-icon">
             <CheckCircle2 size={18} />
           </div>
-          <span className="customer-toast-text">{toastMessage}</span>
-          <button
-            type="button"
-            className="customer-toast-cta"
-            onClick={() => {
-              setToastMessage(null);
-              openTab('cart');
-            }}
-          >
-            Xem giỏ
-          </button>
+          <span className="customer-toast-text">{toast.message}</span>
+          {toast.actionText && (
+            <button
+              type="button"
+              className="customer-toast-cta"
+              onClick={() => {
+                const action = toast.onAction;
+                setToast(null);
+                action?.();
+              }}
+            >
+              {toast.actionText}
+            </button>
+          )}
         </aside>
       )}
 
