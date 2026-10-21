@@ -56,6 +56,17 @@ img { display: block; max-width: 100%; }
   margin: 0 auto;
 }
 
+.customer-main-content:has(.customer-yindii-search-container),
+.customer-main-content:has(.customer-location-page-fullscreen) {
+  padding: 0 !important;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 .customer-main-content.has-navigation {
   padding-bottom: 96px;
 }
@@ -2124,7 +2135,9 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   position: relative;
   width: min(100%, 1200px);
   height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
   overflow: hidden;
   background: #ffffff;
@@ -2380,13 +2393,13 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 .customer-map-fullscreen {
   position: relative;
   width: 100%;
-  height: calc(100vh - 210px);
-  min-height: 480px;
-  border-radius: 20px;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+  border: none;
   overflow: hidden;
-  border: 1px solid #d2ddd6;
   background: #e8efe9;
-  margin-top: 0;
+  margin: 0;
 }
 .customer-map-fullscreen .mapboxgl-map {
   width: 100%;
