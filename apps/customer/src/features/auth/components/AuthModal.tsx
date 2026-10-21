@@ -298,7 +298,7 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
               isLoading={isSubmitting}
               className="customer-auth-submit-btn"
             >
-              Lưu & Bắt đầu trải nghiệm
+              Lưu
             </Button>
 
             <div className="text-center pt-2">
