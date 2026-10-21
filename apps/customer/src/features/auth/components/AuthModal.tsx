@@ -244,7 +244,7 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
                   <span
                     className={`customer-auth-badge ${isNameValid ? 'is-phone' : 'is-invalid'}`}
                   >
-                    {isNameValid ? 'Hợp lệ' : 'Tối thiểu 2 ký tự'}
+                    {isNameValid ? 'Hợp lệ' : 'Không hợp lệ'}
                   </span>
                 )}
               </div>
@@ -273,7 +273,7 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
                   <span
                     className={`customer-auth-badge ${isPhoneValid ? 'is-phone' : 'is-invalid'}`}
                   >
-                    {isPhoneValid ? '🇻🇳 SĐT Việt Nam hợp lệ' : '10 số (03, 05, 07, 08, 09)'}
+                    {isPhoneValid ? 'Hợp lệ' : 'Không hợp lệ'}
                   </span>
                 )}
               </div>
