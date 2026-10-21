@@ -2,19 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import {
+  ArrowLeft,
   ChevronRight,
   Clock,
   Crosshair,
   List,
   Map as MapIcon,
-  SlidersHorizontal,
   Star,
   X,
 } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
-import { ScreenHeader, SearchField } from '../../../shared/components';
 import { MAPBOX_TOKEN, calculateDistanceKm, mapboxService } from '../../../services/mapbox.service';
-import { isBagVisibleOnMarket } from '../../../shared/utils/bagTiming';
 import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const formatPrice = (price: number) => {
@@ -44,14 +42,81 @@ interface SearchPageProps {
   coords?: { lat: number; lng: number } | null;
   onBack: () => void;
   onOpenBag: (bag: SurpriseBag) => void;
-  onAdd: (bag: SurpriseBag) => void;
   onOpenLocation?: () => void;
   onOpenMerchant?: (merchant: Merchant) => void;
   onLocationChange?: (location: string, coords: { lat: number; lng: number }) => void;
+  onAdd?: (bag: SurpriseBag) => void;
 }
 
+const filterOptions = [
+  { id: 'in_stock', label: 'Còn hàng' },
+  { id: 'pickup_now', label: 'Nhận ngay' },
+];
 
 const DEFAULT_CENTER: [number, number] = [106.7032, 10.7798];
+
+/**
+ * Chuẩn hóa tiếng Việt để tìm kiếm thông minh:
+ * - Chuyển chữ thường
+ * - Khử dấu thanh (bánh mì -> banh mi)
+ * - Đồng nhất các biến thể i/y (mì <-> mỳ, ly <-> li, v.v.)
+ */
+function normalizeVietnamese(text?: string | null): string {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .replace(/\bmy\b/g, 'mi') // "mỳ" -> "mi"
+    .replace(/banh\s+my/g, 'banh mi')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Thuật toán tìm kiếm thông minh tiếng Việt:
+ * 1. Khớp cụm trực tiếp không dấu (vd: 'banh mi' khớp cả 'bánh mì' và 'bánh mỳ')
+ * 2. Khớp từng từ khóa (token matching: 'bánh' & 'mì' đều có trong tên/mô tả)
+ * 3. Tìm kiếm chéo từ khóa danh mục (bakery, chay, nước, cơm...)
+ */
+function matchVietnameseQuery(
+  poolText: string,
+  rawQuery: string,
+  categoryTags: (string | undefined)[] = []
+): boolean {
+  const normQuery = normalizeVietnamese(rawQuery);
+  if (!normQuery) return true;
+
+  const normPool = normalizeVietnamese(poolText);
+
+  // 1. Khớp nguyên cụm trực tiếp
+  if (normPool.includes(normQuery)) return true;
+
+  // 2. Khớp tất cả các từ trong query
+  const tokens = normQuery.split(' ').filter(Boolean);
+  if (tokens.length > 0 && tokens.every((tok) => normPool.includes(tok))) {
+    return true;
+  }
+
+  // 3. Khớp danh mục thực phẩm & từ khóa tương đương
+  const isBakery = /banh|mi|bread|cake|croissant|bakery|ngot|pate/.test(normQuery);
+  const isVegetarian = /chay|rau|salad|healthy|thuc duong|vegetarian|xanh|nam/.test(normQuery);
+  const isBeverage = /nuoc|uong|ca phe|cafe|coffee|tra|ep|smoothie|beverage|juice/.test(normQuery);
+  const isMeat = /com|bun|pho|thit|nong|man|meat|nieu|ga|bo|heo/.test(normQuery);
+
+  for (const cat of categoryTags) {
+    if (!cat) continue;
+    const c = normalizeVietnamese(cat);
+    if (isBakery && (c.includes('bakery') || c.includes('banh'))) return true;
+    if (isVegetarian && (c.includes('vegetarian') || c.includes('chay') || c.includes('xanh'))) return true;
+    if (isBeverage && (c.includes('beverage') || c.includes('uong') || c.includes('nuoc') || c.includes('ca phe'))) return true;
+    if (isMeat && (c.includes('meat') || c.includes('nong') || c.includes('man') || c.includes('com'))) return true;
+  }
+
+  return false;
+}
 
 interface StoreCluster {
   id: string;
@@ -128,7 +193,6 @@ export function SearchPage({
   coords,
   onBack,
   onOpenBag,
-  onAdd: _onAdd,
   onOpenLocation,
   onOpenMerchant,
   onLocationChange,
@@ -136,6 +200,7 @@ export function SearchPage({
   // Chế độ xem: 'map' (bản đồ full) hoặc 'list' (danh sách món/quán gợi ý)
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [query, setQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [clusterModalStores, setClusterModalStores] = useState<Merchant[] | null>(null);
 
@@ -151,15 +216,62 @@ export function SearchPage({
     return DEFAULT_CENTER;
   }, [coords]);
 
-  // Lọc danh sách quán theo từ khóa
-  const filteredMerchants = useMemo(() => {
-    if (!query.trim()) return merchants;
+  // Nhóm túi đồ theo cửa hàng để phục vụ tìm kiếm thông minh
+  const bagsByMerchant = useMemo(() => {
+    const map = new Map<string, SurpriseBag[]>();
+    for (const b of bags) {
+      const list = map.get(b.merchantId);
+      if (list) {
+        list.push(b);
+      } else {
+        map.set(b.merchantId, [b]);
+      }
+    }
+    return map;
+  }, [bags]);
 
-    const q = query.trim().toLocaleLowerCase('vi-VN');
-    return merchants.filter((m) =>
-      `${m.name} ${m.address}`.toLocaleLowerCase('vi-VN').includes(q)
-    );
-  }, [merchants, query]);
+  // Lọc danh sách quán theo từ khóa tiếng Việt thông minh và bộ lọc
+  const filteredMerchants = useMemo(() => {
+    let list = merchants;
+
+    if (query.trim()) {
+      list = list.filter((m) => {
+        const storeBags = bagsByMerchant.get(m.id) || [];
+        const bagInfo = storeBags.map((b) => `${b.name} ${b.description}`).join(' ');
+        const categories = storeBags.map((b) => b.category);
+        const pool = `${m.name} ${m.address} ${m.description} ${bagInfo}`;
+        return matchVietnameseQuery(pool, query, categories);
+      });
+    }
+
+    if (activeFilter === 'in_stock') {
+      const merchantsWithStock = new Set(
+        bags.filter((b) => b.quantity > 0).map((b) => b.merchantId)
+      );
+      list = list.filter((m) => merchantsWithStock.has(m.id));
+    } else if (activeFilter === 'pickup_now') {
+      const currentHour = new Date().getHours();
+      const currentMinute = new Date().getMinutes();
+      const currentMinutes = currentHour * 60 + currentMinute;
+
+      const merchantsAvailableNow = new Set(
+        bags
+          .filter((b) => {
+            if (b.quantity <= 0) return false;
+            if (!b.pickupStart || !b.pickupEnd) return true;
+            const [sH, sM] = b.pickupStart.split(':').map(Number);
+            const [eH, eM] = b.pickupEnd.split(':').map(Number);
+            const startMin = (sH || 0) * 60 + (sM || 0);
+            const endMin = (eH || 0) * 60 + (eM || 0);
+            return currentMinutes >= startMin - 30 && currentMinutes <= endMin;
+          })
+          .map((b) => b.merchantId)
+      );
+      list = list.filter((m) => merchantsAvailableNow.has(m.id));
+    }
+
+    return list;
+  }, [merchants, bags, bagsByMerchant, query, activeFilter]);
 
   // Tọa độ các quán hiển thị trên bản đồ (100% tọa độ thực tế, không giả lập offset)
   const effectiveMerchants = useMemo(() => {
@@ -192,28 +304,49 @@ export function SearchPage({
   }, [merchants, effectiveMerchants]);
 
   const selectedStoreBags = useMemo(
-    () => (selectedMerchantId ? bags.filter((b) => b.merchantId === selectedMerchantId && isBagVisibleOnMarket(b)) : []),
+    () => (selectedMerchantId ? bags.filter((b) => b.merchantId === selectedMerchantId) : []),
     [bags, selectedMerchantId]
   );
 
-  // Lọc danh sách túi theo từ khóa (cho List View)
+  // Lọc danh sách túi theo từ khóa tiếng Việt thông minh và bộ lọc (cho List View)
   const filteredBags = useMemo(() => {
-    let list = bags.filter(isBagVisibleOnMarket);
+    let list = bags;
 
     if (query.trim()) {
-      const q = query.trim().toLocaleLowerCase('vi-VN');
-      list = list.filter((b) =>
-        `${b.name} ${b.merchantName}`.toLocaleLowerCase('vi-VN').includes(q)
-      );
+      list = list.filter((b) => {
+        const merchant = merchantsMap.get(b.merchantId);
+        const pool = `${b.name} ${b.description} ${b.merchantName} ${merchant?.name || ''} ${merchant?.address || ''} ${merchant?.description || ''}`;
+        return matchVietnameseQuery(pool, query, [b.category]);
+      });
     }
 
-    // Mặc định: sắp xếp theo khoảng cách từ gần đến xa
-    return [...list].sort((a, b) => {
+    if (activeFilter === 'in_stock') {
+      list = list.filter((b) => b.quantity > 0);
+    } else if (activeFilter === 'pickup_now') {
+      const currentHour = new Date().getHours();
+      const currentMinute = new Date().getMinutes();
+      const currentMinutes = currentHour * 60 + currentMinute;
+
+      list = list.filter((b) => {
+        if (b.quantity <= 0) return false;
+        if (!b.pickupStart || !b.pickupEnd) return true;
+        const [sH, sM] = b.pickupStart.split(':').map(Number);
+        const [eH, eM] = b.pickupEnd.split(':').map(Number);
+        const startMin = (sH || 0) * 60 + (sM || 0);
+        const endMin = (eH || 0) * 60 + (eM || 0);
+        return currentMinutes >= startMin - 30 && currentMinutes <= endMin;
+      });
+    }
+
+    // Luôn sắp xếp theo khoảng cách từ gần đến xa
+    list = [...list].sort((a, b) => {
       const distA = merchantsMap.get(a.merchantId)?.distance ?? 999999;
       const distB = merchantsMap.get(b.merchantId)?.distance ?? 999999;
       return distA - distB;
     });
-  }, [bags, merchantsMap, query]);
+
+    return list;
+  }, [bags, merchantsMap, query, activeFilter]);
 
   const updateUserMarker = useCallback((lngLat: [number, number]) => {
     if (!mapRef.current) return;
@@ -245,13 +378,12 @@ export function SearchPage({
       // TRƯỜNG HỢP 1: Cửa hàng riêng lẻ -> Hiện vòng tròn nhỏ kèm logo cửa hàng (Yindii style)
       if (cluster.count === 1) {
         const store = cluster.stores[0];
-        const storeBags = bags.filter((b) => b.merchantId === store.id && isBagVisibleOnMarket(b));
-        const isStoreClosed = store.isOpen === false;
+        const storeBags = bags.filter((b) => b.merchantId === store.id);
 
         const el = document.createElement('div');
         el.className = `gsf-yindii-store-marker ${
           selectedMerchantId === store.id ? 'is-active' : ''
-        } ${isStoreClosed ? 'is-closed' : ''}`;
+        }`;
 
         const logoUrl =
           store.logo ||
@@ -261,9 +393,7 @@ export function SearchPage({
           <img src="${logoUrl}" alt="${store.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
           <div class="gsf-yindii-store-fallback" style="display:none;">${store.name.charAt(0).toUpperCase()}</div>
           ${
-            isStoreClosed
-              ? '<span class="gsf-yindii-store-badge is-closed">Đóng</span>'
-              : storeBags.length > 0
+            storeBags.length > 0
               ? `<span class="gsf-yindii-store-badge">${storeBags.length}</span>`
               : ''
           }
@@ -424,47 +554,76 @@ export function SearchPage({
   };
 
   return (
-    <div className="customer-screen customer-yindii-search-container">
-      {/* Header thanh tìm kiếm phong cách Yindii */}
-      <ScreenHeader
-        title="Tìm quanh bạn"
-        subtitle={`${merchants.filter((m) => m.isOpen !== false).length} cửa hàng đang mở`}
-        onBack={onBack}
-      />
+    <div className={`customer-yindii-search-container ${viewMode === 'map' ? 'is-map-view' : 'is-list-view'}`}>
+      {/* 1. Header xanh phong cách Yindii với thanh tìm kiếm pill trắng */}
+      <div className="customer-yindii-search-header">
+        <div className="customer-yindii-search-pill">
+          <button
+            type="button"
+            className="customer-yindii-pill-back"
+            onClick={onBack}
+            aria-label="Quay lại"
+          >
+            <ArrowLeft size={21} />
+          </button>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm món ăn hoặc quán gần bạn..."
+            className="customer-yindii-pill-input"
+          />
+          {query.trim().length > 0 && (
+            <button
+              type="button"
+              className="customer-yindii-pill-clear"
+              onClick={() => setQuery('')}
+              aria-label="Xóa tìm kiếm"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      </div>
 
-      <SearchField
-        value={query}
-        onChange={setQuery}
-        placeholder="Tìm món ăn, quán ăn, thương hiệu..."
-        trailing={<SlidersHorizontal size={19} />}
-      />
-
-
-      {/* VÙNG NỘI DUNG CHÍNH (Chứa toggle button và 2 view map/list) */}
-      <div className="customer-search-content-area">
-        {/* Nút chuyển đổi View Mode cố định ở 1 vị trí duy nhất: List view <-> Map view */}
-        <button
-          type="button"
-          className="customer-viewmode-toggle"
-          onClick={() => {
-            setSelectedMerchantId(null);
-            setViewMode((prev) => (prev === 'map' ? 'list' : 'map'));
-          }}
-          aria-label={viewMode === 'map' ? 'Chuyển sang chế độ danh sách' : 'Chuyển sang chế độ bản đồ'}
-        >
-          {viewMode === 'map' ? (
-            <>
-              <List size={16} />
-              <span>List view</span>
-            </>
-          ) : (
-            <>
+      {/* 2. Thanh lọc trắng Yindii: [Map view nếu ở List view] + Chips */}
+      <div className="customer-yindii-filter-bar">
+        <div className="customer-yindii-filter-scroll">
+          {/* Trong List View: Item đầu tiên là button 'Map view' màu xanh (Yindii style) */}
+          {viewMode === 'list' && (
+            <button
+              type="button"
+              className="customer-yindii-mapview-pill-btn"
+              onClick={() => {
+                setSelectedMerchantId(null);
+                setViewMode('map');
+              }}
+              aria-label="Chuyển sang Map view"
+            >
               <MapIcon size={16} />
               <span>Map view</span>
-            </>
+            </button>
           )}
-        </button>
 
+          {/* Các nút Filter: Tất cả, Gần nhất, Giảm nhiều... */}
+          {filterOptions.map((opt) => {
+            const isSelected = activeFilter === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                className={`customer-yindii-chip-btn ${isSelected ? 'is-selected' : ''}`}
+                onClick={() => setActiveFilter(isSelected ? 'all' : opt.id)}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* VÙNG NỘI DUNG CHÍNH (Chứa 2 view map/list) */}
+      <div className="customer-search-content-area">
         {/* ================= GIAO DIỆN BẢN ĐỒ (MAP VIEW) ================= */}
         <div
           className="customer-map-fullscreen"
@@ -472,32 +631,119 @@ export function SearchPage({
         >
           <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
+          {/* Floating List view button trên bản đồ góc trên bên phải (Yindii style) */}
+          <button
+            type="button"
+            className="customer-floating-listview-btn"
+            onClick={() => {
+              setSelectedMerchantId(null);
+              setViewMode('list');
+            }}
+            aria-label="Chuyển sang List view"
+          >
+            <List size={16} />
+            <span>List view</span>
+          </button>
+
           {/* Nút Recenter GPS nổi ở góc dưới */}
           <button
             type="button"
-            className="customer-map-recenter-btn"
+            className={`customer-map-recenter-btn ${selectedMerchant ? 'is-sheet-open' : ''}`}
             onClick={handleRecenterGPS}
             title="Về vị trí hiện tại của tôi"
           >
             <Crosshair size={20} />
           </button>
 
-          {/* Thanh hiển thị vị trí hiện tại & Đổi vị trí */}
+          {/* Thanh đề xuất ở dưới (Bottom Suggestion Carousel phong cách Yindii) */}
           {!selectedMerchant && (
-            <div
-              className="customer-map-banner"
-              onClick={onOpenLocation}
-              role="button"
-              tabIndex={0}
-            >
-              <div className="customer-map-banner-info">
-                <strong>📍 {currentLocation || 'Khu vực của bạn'}</strong>
-                <small>{effectiveMerchants.length} quán cứu trợ đang mở quanh đây</small>
+            <div className="customer-map-bottom-container">
+              {/* Header thanh đề xuất: Vị trí hiện tại + Đổi vị trí */}
+              <div
+                className="customer-map-banner"
+                onClick={onOpenLocation}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="customer-map-banner-info">
+                  <strong>📍 {currentLocation || 'Khu vực của bạn'}</strong>
+                  <small>{filteredBags.length} món & túi cứu trợ quanh đây</small>
+                </div>
+                <div className="customer-map-banner-action">
+                  <span>Đổi vị trí</span>
+                  <ChevronRight size={15} />
+                </div>
               </div>
-              <div className="customer-map-banner-action">
-                <span>Đổi vị trí</span>
-                <ChevronRight size={15} />
-              </div>
+
+              {/* Danh sách thẻ món đề xuất cuộn ngang */}
+              {filteredBags.length > 0 && (
+                <div className="customer-map-carousel-track">
+                  {filteredBags.slice(0, 10).map((bag) => {
+                    const store = merchantsMap.get(bag.merchantId);
+                    const discountPct =
+                      bag.originalPrice > bag.discountPrice
+                        ? Math.round(
+                            ((bag.originalPrice - bag.discountPrice) / bag.originalPrice) * 100
+                          )
+                        : 50;
+                    const rating = store?.rating ?? bag.rating ?? 0;
+                    const distanceText = store?.distance
+                      ? formatDistance(store.distance)
+                      : 'Gần đây';
+
+                    return (
+                      <div
+                        key={bag.id}
+                        className="customer-map-carousel-card"
+                        onClick={() => onOpenBag(bag)}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <div className="customer-map-carousel-thumb-wrap">
+                          <img
+                            src={
+                              bag.imageUrl ||
+                              'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600'
+                            }
+                            alt={bag.name}
+                            className="customer-map-carousel-thumb"
+                            loading="lazy"
+                          />
+                          {discountPct > 0 && (
+                            <span className="customer-map-carousel-discount">
+                              -{discountPct}%
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="customer-map-carousel-details">
+                          <div className="customer-map-carousel-store">
+                            {bag.merchantName || store?.name || 'Cửa hàng'}
+                          </div>
+                          <div className="customer-map-carousel-name">{bag.name}</div>
+                          <div className="customer-map-carousel-meta">
+                            <span>{distanceText}</span>
+                            {rating > 0 && (
+                              <>
+                                <span>•</span>
+                                <span className="customer-map-carousel-rating">
+                                  ★ {rating.toFixed(1)}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className="customer-map-carousel-price">
+                            <strong>{formatPrice(bag.discountPrice)}</strong>
+                            {bag.originalPrice > bag.discountPrice && (
+                              <del>{formatPrice(bag.originalPrice)}</del>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -525,15 +771,8 @@ export function SearchPage({
                         ? `Cách ~${(selectedMerchant.distance / 1000).toFixed(1)} km`
                         : 'Gần đây'}
                     </span>
-                    <span
-                      style={{
-                        color: selectedMerchant.isOpen === false ? '#ef4444' : '#10b981',
-                        fontWeight: 700,
-                      }}
-                    >
-                      {selectedMerchant.isOpen === false
-                        ? '• Tạm đóng cửa'
-                        : `• Còn ${selectedStoreBags.length} túi`}
+                    <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
+                      • Còn {selectedStoreBags.length} túi
                     </span>
                   </div>
                 </div>
@@ -580,7 +819,7 @@ export function SearchPage({
 
                 <div className="customer-cluster-list">
                   {clusterModalStores.map((store) => {
-                    const storeBags = bags.filter((b) => b.merchantId === store.id && isBagVisibleOnMarket(b));
+                    const storeBags = bags.filter((b) => b.merchantId === store.id);
                     return (
                       <div
                         key={store.id}
@@ -615,7 +854,7 @@ export function SearchPage({
                             {store.address}
                           </small>
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)' }}>
                           {storeBags.length} túi
                         </span>
                       </div>
@@ -629,27 +868,15 @@ export function SearchPage({
 
       {/* ================= GIAO DIỆN DANH SÁCH (LIST VIEW YINDII STYLE) ================= */}
       <div
+        className="customer-yindii-list-scroll-area"
         style={{
           display: viewMode === 'list' ? 'block' : 'none',
-          marginTop: 12,
-          paddingBottom: 60,
         }}
       >
-          {/* Header hiển thị số lượng túi (có padding-right để nhường chỗ cho button Map view trùng vị trí) */}
-          <div
-            style={{
-              minHeight: 38,
-              paddingRight: 135,
-              display: 'flex',
-              alignItems: 'center',
-              marginBottom: 10,
-              paddingLeft: 2,
-            }}
-          >
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#475569' }}>
-              <span>{filteredBags.length} món & túi cứu trợ quanh bạn</span>
-            </div>
-          </div>
+        {/* Header hiển thị số lượng túi */}
+        <div className="customer-yindii-list-count">
+          <span>{filteredBags.length} món & túi cứu trợ quanh bạn</span>
+        </div>
 
           {filteredBags.length > 0 ? (
             <div className="customer-yindii-list-container">
@@ -696,21 +923,6 @@ export function SearchPage({
                       <div>
                         <h3 className="customer-yindii-item-store">
                           {bag.merchantName || store?.name || 'Cửa hàng đối tác'}
-                          {store?.isOpen === false && (
-                            <span
-                              style={{
-                                marginLeft: 6,
-                                fontSize: 11,
-                                fontWeight: 700,
-                                color: '#ef4444',
-                                background: '#fee2e2',
-                                padding: '1px 6px',
-                                borderRadius: 6,
-                              }}
-                            >
-                              Tạm đóng
-                            </span>
-                          )}
                         </h3>
                         <p className="customer-yindii-item-bag">{bag.name}</p>
                         {discountPct > 0 && (
@@ -736,7 +948,7 @@ export function SearchPage({
                                 </span>
                               </>
                             ) : (
-                              <span className="customer-yindii-item-rating" style={{ color: '#10b981', fontWeight: 600 }}>
+                              <span className="customer-yindii-item-rating" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
                                 Mới
                               </span>
                             )}

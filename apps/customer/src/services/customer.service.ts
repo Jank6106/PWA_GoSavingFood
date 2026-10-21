@@ -1149,6 +1149,13 @@ export const customerService = {
     }
     const allBags = Array.from(new Set(bagMap.values())).filter(isBagVisibleOnMarket);
 
+    // Ưu tiên hiển thị túi từ các cửa hàng gần vị trí người dùng nhất
+    allBags.sort((a, b) => {
+      const storeA = storeMap.get(a.merchantId);
+      const storeB = storeMap.get(b.merchantId);
+      return (storeA?.distance ?? 999999) - (storeB?.distance ?? 999999);
+    });
+
     const brands: Brand[] = allStores.map((m) => ({
       id: m.id,
       name: m.name,
