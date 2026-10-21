@@ -31,8 +31,8 @@ export const parseTimeToMinutes = (timeStr?: string): number => {
 /**
  * Phân loại vị trí hiển thị của túi hàng trong app Merchant:
  * 1. 'expired': Hàng hết hạn (loại có hạn sử dụng mà quá ngày)
- * 2. 'on_shelf': Trên kệ hàng (đang được mở bán, còn hàng, trong khung giờ)
- * 3. 'in_storage': Trong kho (chưa mở bán, ngoài khung giờ, hết hàng, hoặc chủ quán gỡ kệ)
+ * 2. 'in_storage': Trong kho (chủ quán chủ động gỡ kệ, hết hàng, hoặc đã quá khung giờ kết thúc hôm nay)
+ * 3. 'on_shelf': Trên kệ hàng (đang được mở bán, còn hàng, và chưa qua giờ kết thúc hôm nay)
  */
 export function getBagCategory(bag: BagItem): BagTabCategory {
   const todayStr = getVnDateString();
@@ -46,25 +46,23 @@ export function getBagCategory(bag: BagItem): BagTabCategory {
     }
   }
 
-  // 2. Mục "Trên kệ hàng": Đang được mở bán
   const qty = bag.availableQuantity ?? bag.quantity ?? 0;
-  const isAvailable = bag.status !== 'hidden' && qty > 0;
 
-  if (isAvailable) {
-    // Hàng có HSD: Chưa hết hạn và đang mở bán -> Trên kệ hàng
-    if (isShelfLife) {
-      return 'on_shelf';
-    }
+  // 2. Mục "Trong kho":
+  // - Chủ quán chủ động gỡ kệ (status === 'hidden')
+  // - Hoặc đã hết hàng (qty <= 0)
+  if (bag.status === 'hidden' || qty <= 0) {
+    return 'in_storage';
+  }
 
-    // Hàng dùng trong ngày: Bắt buộc phải đang nằm trong khung giờ mở bán
-    const startM = parseTimeToMinutes(bag.pickupTimeStart);
+  // - Đối với túi dùng trong ngày: Nếu đã qua khung giờ nhận hôm nay (nowMinutes > endM) -> Vào kho chờ ca tiếp theo
+  if (!isShelfLife) {
     const endM = parseTimeToMinutes(bag.pickupTimeEnd);
-
-    if (nowMinutes >= startM && nowMinutes <= endM) {
-      return 'on_shelf';
+    if (nowMinutes > endM) {
+      return 'in_storage';
     }
   }
 
-  // 3. Mục "Trong kho": Chưa đến giờ, đã qua giờ hôm nay, hết hàng, hoặc chủ quán gỡ khỏi kệ
-  return 'in_storage';
+  // 3. Mục "Trên kệ hàng": Còn hàng (qty > 0), đang bật mở bán (status !== 'hidden'), và chưa qua giờ kết thúc hôm nay (kể cả đang trong ca hoặc sắp mở hôm nay)
+  return 'on_shelf';
 }

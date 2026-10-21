@@ -106,12 +106,8 @@ export function BagCard({
       badgeVariant = 'sold_out';
     } else if (bag.bagType !== 'shelf_life') {
       const nowMinutes = getVnTimeMinutes();
-      const startM = parseTimeToMinutes(bag.pickupTimeStart);
       const endM = parseTimeToMinutes(bag.pickupTimeEnd);
-      if (nowMinutes < startM) {
-        statusLabel = `Sắp mở (${bag.pickupTimeStart})`;
-        badgeVariant = 'upcoming';
-      } else if (nowMinutes > endM) {
+      if (nowMinutes > endM) {
         statusLabel = 'Hết giờ hôm nay';
         badgeVariant = 'closed';
       } else {
@@ -123,8 +119,21 @@ export function BagCard({
       badgeVariant = 'hidden';
     }
   } else {
-    statusLabel = 'Đang mở bán';
-    badgeVariant = 'active';
+    // Trên kệ hàng (on_shelf)
+    if (bag.bagType !== 'shelf_life') {
+      const nowMinutes = getVnTimeMinutes();
+      const startM = parseTimeToMinutes(bag.pickupTimeStart);
+      if (nowMinutes < startM) {
+        statusLabel = `Sắp mở (${bag.pickupTimeStart})`;
+        badgeVariant = 'upcoming';
+      } else {
+        statusLabel = 'Đang mở bán';
+        badgeVariant = 'active';
+      }
+    } else {
+      statusLabel = 'Đang mở bán';
+      badgeVariant = 'active';
+    }
   }
 
   return (
@@ -195,11 +204,34 @@ export function BagCard({
             {category !== 'expired' && (
               <Button
                 size="small"
-                variant={bag.status !== 'hidden' ? 'secondary' : 'primary'}
-                onClick={() => onToggleStatus(bag.id)}
+                variant={isOnShelf ? 'secondary' : 'primary'}
+                onClick={() => {
+                  if (!isOnShelf) {
+                    const qty = bag.availableQuantity ?? bag.quantity ?? 0;
+                    if (qty <= 0) {
+                      onEdit(bag);
+                      return;
+                    }
+                    if (bag.bagType !== 'shelf_life') {
+                      const nowMinutes = getVnTimeMinutes();
+                      const endM = parseTimeToMinutes(bag.pickupTimeEnd);
+                      if (nowMinutes > endM) {
+                        onEdit(bag);
+                        return;
+                      }
+                    }
+                  }
+                  onToggleStatus(bag.id);
+                }}
               >
-                {bag.status !== 'hidden' ? <EyeOff size={16} /> : <Eye size={16} />}
-                {bag.status !== 'hidden' ? 'Gỡ khỏi kệ' : 'Đưa lên kệ'}
+                {isOnShelf ? <EyeOff size={16} /> : <Eye size={16} />}
+                {isOnShelf
+                  ? 'Gỡ khỏi kệ'
+                  : (bag.availableQuantity ?? bag.quantity ?? 0) <= 0
+                  ? 'Nạp thêm túi'
+                  : bag.bagType !== 'shelf_life' && getVnTimeMinutes() > parseTimeToMinutes(bag.pickupTimeEnd)
+                  ? 'Chỉnh giờ mở'
+                  : 'Đưa lên kệ'}
               </Button>
             )}
             <Button size="small" variant="outline" onClick={() => onEdit(bag)}>

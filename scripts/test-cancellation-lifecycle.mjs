@@ -22,9 +22,12 @@ let dbUrl = process.env.DATABASE_URL;
 if (!dbUrl) {
   try {
     const envLocal = readFileSync(resolve(ROOT_DIR, 'apps', 'web', '.env.local'), 'utf8');
+    const vars = {};
     for (const l of envLocal.split(/\r?\n/)) {
-      if (l.startsWith('DATABASE_URL=')) dbUrl = l.split('=')[1].trim();
+      const idx = l.indexOf('=');
+      if (idx > 0) vars[l.slice(0, idx).trim()] = l.slice(idx + 1).trim();
     }
+    dbUrl = vars.DIRECT_URL || vars.DATABASE_URL;
   } catch {}
 }
 
@@ -44,7 +47,7 @@ async function run() {
   try {
     // Lấy dữ liệu cơ sở: 1 túi hàng, 1 quán, 1 khách
     const bagRes = await client.query(
-      `SELECT id, store_id, name, quantity, discount_price, pickup_start, pickup_end FROM public.surprise_bags WHERE deleted_at IS NULL AND is_available = true AND quantity > 5 LIMIT 1`
+      `SELECT id, store_id, name, quantity, discount_price, pickup_start, pickup_end FROM public.surprise_bags WHERE deleted_at IS NULL AND is_available = true AND quantity >= 4 LIMIT 1`
     );
     bag = bagRes.rows[0];
 
