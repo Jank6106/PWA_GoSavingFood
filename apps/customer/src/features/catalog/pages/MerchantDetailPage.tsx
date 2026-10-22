@@ -384,20 +384,77 @@ export function MerchantDetailPage({
 
         {reviews.length > 0 && (
           <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {reviews.slice(0, 3).map((rev) => (
-              <section key={rev.id} className="customer-review-card" style={{ padding: '12px 14px', background: '#ffffff', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="customer-review-avatar" style={{ width: 28, height: 28, borderRadius: '50%', background: '#e2e8f0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '12px' }}>{rev.avatar || 'K'}</span>
-                    <strong style={{ fontSize: '13px' }}>{rev.customerName}</strong>
+            {reviews.slice(0, 3).map((rev) => {
+              const isImageAvatar = Boolean(rev.avatar && (rev.avatar.startsWith('http') || rev.avatar.startsWith('data:')));
+              const initial = rev.customerName?.trim().charAt(0).toUpperCase() || 'K';
+
+              return (
+                <section
+                  key={rev.id}
+                  className="customer-review-card"
+                  style={{
+                    padding: '12px 14px',
+                    background: '#ffffff',
+                    borderRadius: '14px',
+                    border: '1px solid #f1f5f9',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: isImageAvatar ? '#f1f5f9' : 'linear-gradient(135deg, #166B4A, #10b981)',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          fontSize: '13px',
+                        }}
+                      >
+                        {isImageAvatar ? (
+                          <img
+                            src={rev.avatar}
+                            alt={rev.customerName}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <span>{initial}</span>
+                        )}
+                      </div>
+                      <div>
+                        <strong style={{ fontSize: '13.5px', color: '#1e293b', display: 'block', fontWeight: 700 }}>
+                          {rev.customerName}
+                        </strong>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '2px' }}>
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              size={12}
+                              fill={s <= rev.rating ? '#f59e0b' : '#e2e8f0'}
+                              color={s <= rev.rating ? '#f59e0b' : '#cbd5e1'}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <span style={{ color: '#f59e0b', fontSize: '12px' }}>
-                    {'★'.repeat(Math.min(5, Math.max(1, rev.rating)))}
-                  </span>
-                </div>
-                {rev.comment && <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{rev.comment}</p>}
-              </section>
-            ))}
+                  {rev.comment && (
+                    <p style={{ margin: 0, fontSize: '13px', color: '#475569', lineHeight: 1.5, paddingLeft: '42px' }}>
+                      {rev.comment}
+                    </p>
+                  )}
+                </section>
+              );
+            })}
           </div>
         )}
       </section>
