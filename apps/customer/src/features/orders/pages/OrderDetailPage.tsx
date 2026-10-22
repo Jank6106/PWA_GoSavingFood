@@ -234,7 +234,6 @@ export function OrderDetailPage({
   const isReady = status === 'ready_for_pickup';
   const isPendingLegacy = status === 'pending';
   const isConfirmedLegacy = status === 'confirmed';
-  const isConfirmedOrPreparing = isConfirmedLegacy || isPreparing;
   const isCompleted = status === 'completed' || (status as string) === 'picked_up';
   const isCancelled = status === 'cancelled';
   const isExpired = status === 'expired';
@@ -266,6 +265,7 @@ export function OrderDetailPage({
 
       <ScreenHeader
         title="Chi tiết đơn hàng"
+        subtitle={`Mã đơn: #${currentOrder.orderCode}`}
         onBack={onBack}
       />
 
@@ -337,8 +337,8 @@ export function OrderDetailPage({
         )}
       </section>
 
-      {/* Pickup Code Section - For Confirmed, Preparing or Ready for pickup */}
-      {(isReady || isConfirmedOrPreparing || (isPending && currentOrder.paymentStatus === 'success')) && (
+      {/* Pickup Code Section - CHỈ hiển thị khi đơn ở trạng thái Sẵn sàng lấy món (ready_for_pickup) */}
+      {isReady && (
         <section className="customer-pickup-code">
           <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
             <QRCodeSVG value={currentOrder.pickupToken || currentOrder.qrCode || currentOrder.id} size={148} level="M" />
