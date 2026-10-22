@@ -312,9 +312,9 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
           /* ========================================================================= */
           /* MÀN HÌNH 2: ĐĂNG NHẬP GOOGLE-ONLY DUY NHẤT                               */
           /* ========================================================================= */
-          <div className="flex flex-col items-center justify-center pt-2 pb-1 text-center">
+          <div className="customer-auth-brand-wrap">
             {/* Logo Wrapper */}
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[#edf6f1] flex items-center justify-center p-5 mb-3 shadow-sm border border-[#dcebe1]">
+            <div className="customer-auth-logo-circle">
               <img
                 src={logoSvg}
                 alt="GoSavingFood Logo"
@@ -324,12 +324,12 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
                     target.src = logoPng;
                   }
                 }}
-                className="w-full h-full object-contain"
+                className="customer-auth-logo-img"
               />
             </div>
 
-            {/* Brand Title */}
-            <h3 className="text-2xl sm:text-[26px] font-extrabold text-[#163e2e] tracking-tight mb-6">
+            {/* Brand Title (Căn giữa chuẩn xác) */}
+            <h3 className="customer-auth-brand-name">
               GoSavingFood
             </h3>
 
@@ -363,7 +363,7 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span className="text-[#163e2e] font-bold text-[15.5px]">
+              <span>
                 {isGoogleSubmitting
                   ? 'Đang chuyển hướng sang Google...'
                   : 'Tiếp tục với Google'}
@@ -371,13 +371,13 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
             </button>
 
             {/* Disclaimer */}
-            <p className="text-[12px] text-gray-500 text-center leading-relaxed mt-4 px-2">
+            <p className="customer-auth-terms-note">
               Bằng việc tiếp tục, bạn đồng ý với{' '}
-              <span className="text-[#163e2e] font-semibold underline cursor-pointer">
+              <span className="customer-auth-terms-link">
                 Điều khoản dịch vụ
               </span>{' '}
               và{' '}
-              <span className="text-[#163e2e] font-semibold underline cursor-pointer">
+              <span className="customer-auth-terms-link">
                 Chính sách bảo mật
               </span>{' '}
               của GoSavingFood.
