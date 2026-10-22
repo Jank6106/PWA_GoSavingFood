@@ -22,7 +22,7 @@ export function CartPage(props: CartPageProps) {
     return <AuthRequiredState onLogin={props.onLogin} />;
   }
   if (!props.items.length) {
-    return <div className="customer-screen"><h1 className="customer-page-title">Giỏ hàng</h1><EmptyState title="Giỏ hàng trống" description="Khám phá các túi thực phẩm ngon đang chờ được giải cứu." action={<Button onClick={props.onExplore}>Khám phá ngay</Button>} /></div>;
+    return <div className="customer-screen"><h1 className="customer-page-title">Giỏ hàng</h1><EmptyState title="Giỏ hàng trống" action={<Button onClick={props.onExplore}>Khám phá ngay</Button>} /></div>;
   }
 
   const handleItemClick = (e: React.MouseEvent, bag: SurpriseBag) => {
