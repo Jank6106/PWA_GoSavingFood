@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gsf-customer-v9';
+const CACHE_NAME = 'gsf-customer-v10';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -60,7 +60,12 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match(event.request))
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          // Google PWA Standard: SPA App Shell offline fallback
+          return (await caches.match('./index.html')) || (await caches.match('./')) || Response.error();
+        })
     );
     return;
   }

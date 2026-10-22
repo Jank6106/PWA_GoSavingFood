@@ -165,7 +165,7 @@ export function BagDetailPage({
       <div className="customer-product-screen">
         <div className="customer-product-hero" style={{ background: 'var(--color-bg-muted)' }}>
           <div className="customer-product-hero-nav">
-            <button type="button" className="customer-product-round-btn" onClick={onBack}>
+            <button type="button" className="customer-product-round-btn" onClick={onBack} aria-label="Quay lại">
               <ChevronLeft size={22} />
             </button>
           </div>
@@ -184,7 +184,7 @@ export function BagDetailPage({
     return (
       <div className="customer-screen">
         <div className="customer-screen-header">
-          <button type="button" className="customer-round-button" onClick={onBack}>
+          <button type="button" className="customer-round-button" onClick={onBack} aria-label="Quay lại">
             <ChevronLeft size={20} />
           </button>
           <h1>Chi tiết túi</h1>
