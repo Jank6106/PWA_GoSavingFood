@@ -134,10 +134,7 @@ export function LoginScreen({
               <Info size={16} />
             </div>
             <div className="merchant-contract-notice-text">
-              <strong>Tài khoản cấp theo hợp đồng</strong>
-              <p>
-                Tài khoản đối tác được cấp bởi Ban quản trị GoSavingFood khi ký kết hợp đồng. Liên hệ hotline để được hỗ trợ.
-              </p>
+              <span>Dành riêng cho đối tác đã ký hợp đồng với GoSavingFood.</span>
             </div>
           </div>
 

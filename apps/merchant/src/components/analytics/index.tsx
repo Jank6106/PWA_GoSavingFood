@@ -4,7 +4,6 @@ import {
   Clock3,
   Download,
   Flame,
-  Trophy,
   PackageCheck,
   Receipt,
   ShoppingBag,
@@ -39,7 +38,7 @@ export function RevenueOverviewCard({
   return (
     <section className="merchant-revenue-card">
       <div className="merchant-revenue-info">
-        <span className="merchant-revenue-label">Doanh thu tháng này</span>
+        <span className="merchant-revenue-label">Doanh thu tháng</span>
         <strong className="merchant-revenue-amount">
           {metrics.monthlyRevenue.toLocaleString('vi-VN')}đ
         </strong>
@@ -48,11 +47,11 @@ export function RevenueOverviewCard({
             className={`merchant-revenue-growth ${isPositiveGrowth ? 'is-up' : 'is-down'}`}
           >
             {isPositiveGrowth ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}
-            {isPositiveGrowth ? 'Tăng' : 'Giảm'} {Math.abs(metrics.monthlyGrowthPercent)}% so với tháng trước
+            {isPositiveGrowth ? '+' : '-'}{Math.abs(metrics.monthlyGrowthPercent)}% so với tháng trước
           </small>
           <span className="merchant-revenue-divider">•</span>
           <span className="merchant-revenue-avg">
-            TB: ~{dailyAverage.toLocaleString('vi-VN')}đ/ngày
+            ~{Math.round(dailyAverage / 1000)}k/ngày
           </span>
         </div>
       </div>
@@ -84,9 +83,9 @@ export function AnalyticsMetricsGrid({ metrics }: { metrics: AnalyticsMetrics })
     },
     {
       icon: Receipt,
-      label: 'Giá trị đơn TB (AOV)',
+      label: 'Giá trị đơn (AOV)',
       value: `${(metrics.averageOrderValue || 0).toLocaleString('vi-VN')}đ`,
-      subtext: 'Mỗi đơn hàng',
+      subtext: '',
       iconBg: '#fef3c7',
       iconColor: '#d97706',
     },
@@ -94,7 +93,7 @@ export function AnalyticsMetricsGrid({ metrics }: { metrics: AnalyticsMetrics })
       icon: Star,
       label: 'Đánh giá cửa hàng',
       value: `${metrics.averageRating > 0 ? metrics.averageRating.toFixed(1) : '5.0'}/5`,
-      subtext: metrics.totalReviewsCount > 0 ? `${metrics.totalReviewsCount} nhận xét` : '100% hài lòng',
+      subtext: metrics.totalReviewsCount > 0 ? `${metrics.totalReviewsCount} nhận xét` : '',
       iconBg: '#fdf2f8',
       iconColor: '#db2777',
     },
@@ -229,7 +228,6 @@ export function RevenueChartCard({
             <TrendingUp size={18} className="merchant-chart-icon" />
             <span>Biểu đồ doanh thu</span>
           </div>
-          <small className="merchant-chart-unit">Đơn vị: VNĐ • Biểu đồ đường thời gian thực</small>
         </div>
 
         {/* Nút lọc Tuần / Tháng */}
@@ -239,14 +237,14 @@ export function RevenueChartCard({
             className={timeframe === 'week' ? 'is-active' : ''}
             onClick={() => onTimeframe('week')}
           >
-            Tuần (7 ngày)
+            Tuần
           </button>
           <button
             type="button"
             className={timeframe === 'month' ? 'is-active' : ''}
             onClick={() => onTimeframe('month')}
           >
-            Tháng (4 tuần)
+            Tháng
           </button>
         </div>
       </header>
@@ -254,18 +252,18 @@ export function RevenueChartCard({
       {/* Thanh tóm tắt nhanh chỉ số của kỳ */}
       <div className="merchant-chart-summary-bar">
         <div className="merchant-summary-chip">
-          <span className="chip-label">Tổng kỳ:</span>
+          <span className="chip-label">Tổng:</span>
           <strong className="chip-val">{totalRevenue.toLocaleString('vi-VN')}đ</strong>
         </div>
         <div className="merchant-summary-chip">
-          <span className="chip-label">Đỉnh điểm:</span>
+          <span className="chip-label">Đỉnh:</span>
           <strong className="chip-val">
             {peakPoint.value > 0 ? `${formatShortVnd(peakPoint.value)} (${peakPoint.label})` : '0đ'}
           </strong>
         </div>
         <div className="merchant-summary-chip">
-          <span className="chip-label">Trung bình:</span>
-          <strong className="chip-val">{formatShortVnd(avgRevenue)}/kỳ</strong>
+          <span className="chip-label">TB:</span>
+          <strong className="chip-val">{formatShortVnd(avgRevenue)}</strong>
         </div>
 
         {/* Tooltip hiển thị điểm đang chọn */}
@@ -466,7 +464,7 @@ export function MerchantBusinessInsights({ metrics }: { metrics: AnalyticsMetric
           <div className="merchant-insight-tip">
             <Sparkles size={14} className="tip-icon" />
             <span>
-              <strong>Gợi ý vận hành:</strong> Nên chuẩn bị sẵn các túi cứu trợ trước <strong>17:30</strong> vì khung giờ tan tầm (18h-22h) luôn có lượng khách ghé đông nhất.
+              Cao điểm nhận hàng: <strong>18:00 – 22:00</strong>
             </span>
           </div>
         </section>
@@ -479,15 +477,13 @@ export function MerchantBusinessInsights({ metrics }: { metrics: AnalyticsMetric
             </span>
             <div>
               <h3>Túi bán chạy nhất</h3>
-              <p>Xếp hạng mặt hàng cứu trợ được người tiêu dùng mua nhiều nhất</p>
             </div>
           </header>
 
           {topBags.length === 0 ? (
             <div className="merchant-top-bags-empty">
               <PackageCheck size={28} style={{ color: '#94a3b8' }} />
-              <p>Chưa có dữ liệu bán túi trong kỳ này</p>
-              <small>Khi có khách đặt hàng, danh sách túi bán chạy sẽ hiển thị tại đây.</small>
+              <p>Chưa có dữ liệu bán túi</p>
             </div>
           ) : (
             <div className="merchant-top-bags-list">
@@ -529,16 +525,6 @@ export function MerchantBusinessInsights({ metrics }: { metrics: AnalyticsMetric
               })}
             </div>
           )}
-
-          {topBags.length > 0 && topBags[0].soldCount > 0 && (
-            <div className="merchant-insight-tip is-green">
-              <Trophy size={14} className="tip-icon" />
-              <span>
-                <strong>Quán quân bán chạy:</strong> <strong>{topBags[0].name}</strong> chiếm{' '}
-                <strong>{topBags[0].percentage}%</strong> lượng túi giải cứu thành công của quán!
-              </span>
-            </div>
-          )}
         </section>
       </div>
     </div>
@@ -551,13 +537,12 @@ export function RecentReviewsList({ reviews }: { reviews: ReviewItem[] }) {
     <section className="merchant-reviews">
       <header>
         <h2>Đánh giá gần đây</h2>
-        <span>{reviews.length} đánh giá mới</span>
+        <span>{reviews.length} đánh giá</span>
       </header>
       {reviews.length === 0 ? (
         <article className="merchant-card merchant-reviews-empty">
           <Star size={24} style={{ color: '#cbd5e1' }} />
-          <p>Chưa có đánh giá nào từ khách hàng trong kỳ này.</p>
-          <small>Đánh giá và nhận xét của khách sau khi nhận túi sẽ hiển thị tại đây.</small>
+          <p>Chưa có đánh giá nào</p>
         </article>
       ) : (
         <div className="merchant-reviews-grid">

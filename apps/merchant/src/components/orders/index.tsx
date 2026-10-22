@@ -417,7 +417,7 @@ export function CancelOrderModal({
         <div style={{ padding: '12px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', color: '#9a3412', fontSize: '13px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
           <span>
-            Đơn hàng sẽ bị hủy, hoàn trả suất ăn về kho và tự động kích hoạt hoàn tiền 100% cho khách hàng.
+            Tự động hoàn tiền 100% và trả hàng về kho.
           </span>
         </div>
 
@@ -438,7 +438,7 @@ export function CancelOrderModal({
             label="Chi tiết lý do hủy"
             value={customReason}
             onChange={(e) => setCustomReason(e.target.value)}
-            placeholder="Nhập lý do hủy cụ thể để lưu lại hệ thống..."
+            placeholder="Nhập lý do cụ thể..."
             required
           />
         )}
@@ -553,20 +553,17 @@ export function QRScannerModal({
           )}
           <div style={{ textAlign: 'center' }}>
             <small style={{ color: 'var(--text-secondary)', fontSize: 11 }}>
-              Đưa mã QR trên ứng dụng của khách vào khung camera để hoàn tất
+              Quét mã QR của khách để hoàn tất
             </small>
           </div>
         </div>
       ) : (
         <form className="merchant-qr-form" onSubmit={submit}>
-          <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            Sử dụng trong trường hợp camera không khả dụng hoặc khách hàng đọc mã trực tiếp tại quầy.
-          </p>
           <Field
-            label="Mã nhận hàng điện tử hoặc Mã đơn"
+            label="Mã nhận hàng hoặc Mã đơn"
             value={code}
             onChange={(event) => setCode(event.target.value)}
-            placeholder="Ví dụ: GSF-123456 hoặc mã pickup token"
+            placeholder="Nhập mã đơn hoặc token"
             error={error}
             required
           />
