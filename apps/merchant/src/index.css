@@ -23,6 +23,26 @@
 }
 
 * { box-sizing: border-box; }
+
+/* ==========================================================================
+   GLOBAL SCROLLBAR HIDING (Native smooth scrolling without scrollbars)
+   ========================================================================== */
+html,
+body,
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
 html { min-width: 320px; min-height: 100%; background: var(--page); }
 body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--page); }
 button, input, textarea, select { font: inherit; }
@@ -156,7 +176,8 @@ h1, h2, h3, p { margin: 0; }
 .merchant-list { display: flex; flex-direction: column; gap: 14px; }
 .merchant-bag-filter-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
 .merchant-filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.merchant-status-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.merchant-status-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+.merchant-status-tabs::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .merchant-status-tabs button { padding: 7px 14px; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--text-secondary); font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .15s ease; }
 .merchant-status-tabs button:hover { border-color: var(--primary); color: var(--primary); }
 .merchant-status-tabs button.is-active { border-color: var(--primary); background: var(--primary); color: #fff; }

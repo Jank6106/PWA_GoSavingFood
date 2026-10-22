@@ -30,21 +30,25 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Custom modern scrollbar for light theme */
-::-webkit-scrollbar {
-  width: 8px;
+/* ==========================================================================
+   GLOBAL SCROLLBAR HIDING (Native smooth scrolling without scrollbars)
+   ========================================================================== */
+html,
+body,
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
-::-webkit-scrollbar-track {
-  background: #f1f5f2;
+
+*::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
-::-webkit-scrollbar-thumb {
-  background: #c3d9cc;
-  border-radius: 9999px;
-  border: 2px solid #f1f5f2;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #00a854;
-}
+
 
 /* Marquee Running Animation */
 @keyframes marquee {

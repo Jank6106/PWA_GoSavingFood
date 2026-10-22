@@ -7,6 +7,20 @@
   font-family: var(--font-family-base);
 }
 
+/* Global scrollbar hiding for UI components */
+.gsf-component,
+.gsf-component * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.gsf-component::-webkit-scrollbar,
+.gsf-component *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+
 /* ==========================================================================
    BUTTON
    ========================================================================== */
