@@ -44,7 +44,7 @@ export function BagsPage({ bags, onBack, onOpen }: BagsPageProps) {
         <div style={{ padding: '40px 16px' }}>
           <EmptyState
             title="Không tìm thấy túi phù hợp"
-            description="Hiện tại chưa có túi nào được đề xuất."
+
           />
         </div>
       )}

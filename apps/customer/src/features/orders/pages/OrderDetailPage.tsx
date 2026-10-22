@@ -343,7 +343,7 @@ export function OrderDetailPage({
           <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
             <QRCodeSVG value={currentOrder.pickupToken || currentOrder.qrCode || currentOrder.id} size={148} level="M" />
           </div>
-          <span>Mã nhận hàng điện tử (Bảo mật)</span>
+          <span>Mã nhận hàng</span>
           <strong>{currentOrder.orderCode}</strong>
         </section>
       )}

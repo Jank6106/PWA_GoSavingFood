@@ -121,7 +121,7 @@ export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: Or
         })}
       </div>
       {!visibleOrders.length ? (
-        <EmptyState title="Chưa có đơn phù hợp" description="Các đơn của bạn sẽ xuất hiện tại đây." />
+        <EmptyState title="Chưa có đơn phù hợp" />
       ) : (
         <div className="customer-orders-list">
           {visibleOrders.map((order) => {
