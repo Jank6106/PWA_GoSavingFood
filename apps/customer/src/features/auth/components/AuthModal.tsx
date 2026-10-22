@@ -7,10 +7,11 @@ import {
   LogOut,
   Mail,
   Phone,
-  Sparkles,
   UserRound,
   X,
 } from 'lucide-react';
+import logoSvg from '../../../assets/logo.svg';
+import logoPng from '../../../assets/logo.png';
 import { useAuth } from '../../../hooks/useAuth';
 import {
   isValidVietnamesePhone,
@@ -168,24 +169,17 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
         aria-labelledby="customer-auth-title"
       >
         {/* Header Modal */}
-        <div className={`customer-auth-header ${needsProfileCompletion ? 'is-centered justify-center' : ''}`}>
-          <div className={needsProfileCompletion ? 'w-full text-center' : 'flex-1'}>
-            <h2
-              id="customer-auth-title"
-              className={`text-xl font-bold text-gray-900 ${needsProfileCompletion ? 'text-center w-full' : ''}`}
-            >
-              {needsProfileCompletion ? 'Hoàn tất thông tin cá nhân' : 'Đăng nhập GoSavingFood'}
-            </h2>
-            {!needsProfileCompletion && (
-              <p className="text-xs text-gray-500 mt-0.5">
-                Tiếp cận hàng trăm món ngon giảm giá mỗi ngày quanh bạn
-              </p>
-            )}
-          </div>
+        <div className="customer-auth-header is-centered relative w-full">
+          <h2
+            id="customer-auth-title"
+            className="text-xl sm:text-2xl font-bold text-[#163e2e] text-center w-full"
+          >
+            {needsProfileCompletion ? 'Hoàn tất thông tin cá nhân' : 'Đăng nhập'}
+          </h2>
           {!needsProfileCompletion && (
             <button
               type="button"
-              className="customer-auth-close-btn"
+              className="customer-auth-close-btn absolute right-0"
               onClick={handleClose}
               aria-label="Đóng"
             >
@@ -318,26 +312,40 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
           /* ========================================================================= */
           /* MÀN HÌNH 2: ĐĂNG NHẬP GOOGLE-ONLY DUY NHẤT                               */
           /* ========================================================================= */
-          <div className="flex flex-col gap-5 py-2">
-            <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 text-center">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2.5 shadow-sm border border-emerald-100 text-emerald-600">
-                <Sparkles size={24} />
-              </div>
-              <h3 className="text-sm font-bold text-emerald-950 mb-1">
-                Giải cứu món ngon - Tiết kiệm đến 70%
-              </h3>
-              <p className="text-xs text-emerald-800 leading-relaxed">
-                Đăng nhập nhanh chóng, an toàn bằng tài khoản Google để đặt túi đồ ăn bất ngờ và theo dõi đơn hàng tiện lợi.
-              </p>
+          <div className="flex flex-col items-center justify-center pt-2 pb-1 text-center">
+            {/* Logo Wrapper */}
+            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[#edf6f1] flex items-center justify-center p-5 mb-3 shadow-sm border border-[#dcebe1]">
+              <img
+                src={logoSvg}
+                alt="GoSavingFood Logo"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (target.src !== logoPng) {
+                    target.src = logoPng;
+                  }
+                }}
+                className="w-full h-full object-contain"
+              />
             </div>
 
+            {/* Brand Title */}
+            <h3 className="text-2xl sm:text-[26px] font-extrabold text-[#163e2e] tracking-tight mb-6">
+              GoSavingFood
+            </h3>
+
+            {/* Google Button */}
             <button
               type="button"
               className="customer-auth-google-btn customer-auth-google-btn--primary"
               onClick={handleGoogleLogin}
               disabled={isGoogleSubmitting}
             >
-              <svg className="customer-auth-google-icon" width="20" height="20" viewBox="0 0 24 24">
+              <svg
+                className="customer-auth-google-icon"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+              >
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -355,16 +363,21 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>{isGoogleSubmitting ? 'Đang chuyển hướng sang Google...' : 'Tiếp tục với Google'}</span>
+              <span className="text-[#163e2e] font-bold text-[15.5px]">
+                {isGoogleSubmitting
+                  ? 'Đang chuyển hướng sang Google...'
+                  : 'Tiếp tục với Google'}
+              </span>
             </button>
 
-            <p className="text-[11.5px] text-gray-500 text-center leading-normal px-2">
+            {/* Disclaimer */}
+            <p className="text-[12px] text-gray-500 text-center leading-relaxed mt-4 px-2">
               Bằng việc tiếp tục, bạn đồng ý với{' '}
-              <span className="text-emerald-700 font-semibold underline cursor-pointer">
+              <span className="text-[#163e2e] font-semibold underline cursor-pointer">
                 Điều khoản dịch vụ
               </span>{' '}
               và{' '}
-              <span className="text-emerald-700 font-semibold underline cursor-pointer">
+              <span className="text-[#163e2e] font-semibold underline cursor-pointer">
                 Chính sách bảo mật
               </span>{' '}
               của GoSavingFood.
