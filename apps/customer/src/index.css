@@ -2025,6 +2025,8 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 @keyframes customerAuthScaleUp { from { opacity: 0; transform: scale(0.96) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 .customer-auth-header { display: flex; align-items: center; justify-content: space-between; }
 .customer-auth-header h2 { margin: 0; font-size: 20px; font-weight: 750; color: var(--color-text-primary); letter-spacing: -0.2px; }
+.customer-auth-header.is-centered { justify-content: center; text-align: center; }
+.customer-auth-header.is-centered h2 { text-align: center; width: 100%; }
 .customer-auth-close-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: none; background: var(--color-bg-muted, #f3f5f3); color: var(--color-text-secondary); border-radius: 50%; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
 .customer-auth-close-btn:hover { background: #e2e8e4; color: var(--color-text-primary); }
 .customer-auth-form { display: flex; flex-direction: column; gap: 13px; }

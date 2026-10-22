@@ -168,16 +168,19 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
         aria-labelledby="customer-auth-title"
       >
         {/* Header Modal */}
-        <div className="customer-auth-header">
-          <div className="flex-1">
-            <h2 id="customer-auth-title" className="text-xl font-bold text-gray-900">
+        <div className={`customer-auth-header ${needsProfileCompletion ? 'is-centered justify-center' : ''}`}>
+          <div className={needsProfileCompletion ? 'w-full text-center' : 'flex-1'}>
+            <h2
+              id="customer-auth-title"
+              className={`text-xl font-bold text-gray-900 ${needsProfileCompletion ? 'text-center w-full' : ''}`}
+            >
               {needsProfileCompletion ? 'Hoàn tất thông tin cá nhân' : 'Đăng nhập GoSavingFood'}
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {needsProfileCompletion
-                ? 'Vui lòng cung cấp số điện thoại để quán liên hệ khi nhận đồ ăn'
-                : 'Tiếp cận hàng trăm món ngon giảm giá mỗi ngày quanh bạn'}
-            </p>
+            {!needsProfileCompletion && (
+              <p className="text-xs text-gray-500 mt-0.5">
+                Tiếp cận hàng trăm món ngon giảm giá mỗi ngày quanh bạn
+              </p>
+            )}
           </div>
           {!needsProfileCompletion && (
             <button
