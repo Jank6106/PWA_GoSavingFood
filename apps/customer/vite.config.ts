@@ -18,6 +18,11 @@ export default defineConfig({
     },
   },
   build: {
+    modulePreload: {
+      resolveDependencies(_filename, deps) {
+        return deps.filter((dep) => !dep.includes('mapbox-gl'));
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
