@@ -28,19 +28,6 @@ const DEFAULT_COVER =
 const DEFAULT_LOGO =
   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80';
 
-const COMMUNITY_PHOTOS = [
-  'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=300&auto=format&fit=crop&q=80',
-];
-
 const formatDistance = (dist?: number) => {
   if (dist === undefined || dist === null) return '0.5 km';
   const meters = dist < 50 ? dist * 1000 : dist;
@@ -350,7 +337,27 @@ export function MerchantDetailPage({
         )}
       </section>
 
-      {/* 4. User Ratings Section */}
+      {/* 4. About Store Section */}
+      <section className="customer-store-section">
+        <div className="customer-store-section-header">
+          <h2 className="customer-store-section-title">Giới thiệu cửa hàng</h2>
+          <button
+            type="button"
+            className="customer-store-link-btn"
+            onClick={() => setShowAllAbout((v) => !v)}
+          >
+            {showAllAbout ? 'Thu gọn' : 'Xem thêm'}
+          </button>
+        </div>
+
+        <div className="customer-store-about-body">
+          {(showAllAbout ? aboutParagraphs : aboutParagraphs.slice(0, 2)).map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
+        </div>
+      </section>
+
+      {/* 5. User Ratings Section */}
       <section className="customer-store-section">
         <div className="customer-store-section-header">
           <h2 className="customer-store-section-title">Đánh giá của khách hàng</h2>
@@ -457,41 +464,6 @@ export function MerchantDetailPage({
             })}
           </div>
         )}
-      </section>
-
-      {/* 5. Rescued by the Community Section */}
-      <section className="customer-store-section">
-        <div className="customer-store-section-header">
-          <h2 className="customer-store-section-title">Cộng đồng đã giải cứu</h2>
-        </div>
-
-        <div className="customer-store-community-grid">
-          {COMMUNITY_PHOTOS.map((photoUrl, idx) => (
-            <div key={idx} className="customer-store-community-item">
-              <img src={photoUrl} alt={`Rescued meal ${idx + 1}`} loading="lazy" />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 6. About Store Section */}
-      <section className="customer-store-section">
-        <div className="customer-store-section-header">
-          <h2 className="customer-store-section-title">Giới thiệu cửa hàng</h2>
-          <button
-            type="button"
-            className="customer-store-link-btn"
-            onClick={() => setShowAllAbout((v) => !v)}
-          >
-            {showAllAbout ? 'Thu gọn' : 'Xem thêm'}
-          </button>
-        </div>
-
-        <div className="customer-store-about-body">
-          {(showAllAbout ? aboutParagraphs : aboutParagraphs.slice(0, 2)).map((para, i) => (
-            <p key={i}>{para}</p>
-          ))}
-        </div>
       </section>
     </div>
   );

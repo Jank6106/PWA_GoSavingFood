@@ -21,20 +21,6 @@ interface ReviewItem {
   photos?: string[];
 }
 
-const GALLERY_PHOTOS = [
-  'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=300&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=300&auto=format&fit=crop&q=80',
-];
-
 const INITIAL_REVIEWS: ReviewItem[] = [
   {
     id: 'rev-1',
@@ -216,23 +202,7 @@ export function MerchantReviewsView({ merchant, onBack }: MerchantReviewsViewPro
         </div>
       </section>
 
-      {/* 3. Photo Gallery Grid */}
-      <section className="customer-reviews-gallery-wrap">
-        <div className="customer-reviews-gallery-grid">
-          {GALLERY_PHOTOS.map((src, i) => (
-            <button
-              key={i}
-              type="button"
-              className="customer-reviews-gallery-thumb"
-              onClick={() => setActivePhoto(src)}
-            >
-              <img src={src} alt={`Ảnh đánh giá ${i + 1}`} loading="lazy" />
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* 4. Filter Tabs Segmented Control */}
+      {/* 3. Filter Tabs Segmented Control */}
       <section className="customer-reviews-tabs-wrap">
         <div className="customer-reviews-segmented">
           <button
