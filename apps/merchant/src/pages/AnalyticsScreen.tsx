@@ -1,5 +1,11 @@
 import { RotateCcw } from 'lucide-react';
-import { AnalyticsMetricsGrid, RecentReviewsList, RevenueChartCard, RevenueOverviewCard } from '../components/analytics';
+import {
+  AnalyticsMetricsGrid,
+  MerchantBusinessInsights,
+  RecentReviewsList,
+  RevenueChartCard,
+  RevenueOverviewCard,
+} from '../components/analytics';
 import { Button, ErrorState, SkeletonCard, ToastBar } from '../components/ui';
 import { useAnalytics } from '../hooks/useAnalytics';
 
@@ -33,13 +39,15 @@ export function AnalyticsScreen({ storeId }: { storeId: string }) {
             <SkeletonCard height={90} />
             <SkeletonCard height={90} />
           </div>
-          <SkeletonCard height={220} />
+          <SkeletonCard height={240} />
+          <SkeletonCard height={160} />
         </div>
       ) : (
         <>
           <RevenueOverviewCard metrics={state.metrics} exporting={state.exporting} onExport={() => void state.exportReport()} />
           <AnalyticsMetricsGrid metrics={state.metrics} />
           <RevenueChartCard data={state.chartData} timeframe={state.timeframe} onTimeframe={state.changeTimeframe} />
+          <MerchantBusinessInsights metrics={state.metrics} />
           <RecentReviewsList reviews={state.reviews} />
         </>
       )}

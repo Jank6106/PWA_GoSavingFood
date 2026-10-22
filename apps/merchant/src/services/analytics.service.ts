@@ -46,10 +46,22 @@ const EMPTY_METRICS: AnalyticsMetrics = {
   monthlyGrowthPercent: 0,
   previousMonthRevenue: 0,
   totalOrders: 0,
+  completedOrders: 0,
   totalSoldBags: 0,
   bagsOnShelf: 0,
   averageRating: 0,
   totalReviewsCount: 0,
+  averageOrderValue: 0,
+  rescueRate: 100,
+  co2SavedKg: 0,
+  foodSavedKg: 0,
+  topSellingBags: [],
+  peakHours: [
+    { slot: 'Giờ tan tầm & Tối', timeRange: '18:00 - 22:00', orderCount: 0, percentage: 60 },
+    { slot: 'Buổi chiều', timeRange: '14:00 - 18:00', orderCount: 0, percentage: 25 },
+    { slot: 'Bữa trưa', timeRange: '11:00 - 14:00', orderCount: 0, percentage: 15 },
+    { slot: 'Buổi sáng', timeRange: '06:00 - 11:00', orderCount: 0, percentage: 0 },
+  ],
 };
 
 const EMPTY_ANALYTICS: CachedAnalyticsData = {
@@ -92,12 +104,12 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
         supabase.from('orders').select('id, status, final_amount, created_at').eq('store_id', storeId),
         supabase
           .from('order_items')
-          .select('quantity, orders!inner(store_id, status)')
+          .select('quantity, bag_name, unit_price, total_price, orders!inner(store_id, status)')
           .eq('orders.store_id', storeId),
         supabase.from('stores').select('rating, total_ratings').eq('id', storeId).maybeSingle(),
         supabase
           .from('surprise_bags')
-          .select('id', { count: 'exact', head: true })
+          .select('id, name', { count: 'exact' })
           .eq('store_id', storeId)
           .eq('is_available', true)
           .is('deleted_at', null),
@@ -126,40 +138,122 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
     })
     .reduce((sum: number, order: any) => sum + Number(order.final_amount || 0), 0);
 
-  const totalSoldBags = (soldResult.data || []).reduce(
-    (sum: number, item: any) =>
-      isRevenueStatus(item.orders?.status) ? sum + Number(item.quantity || 0) : sum,
+  const totalSoldBags = (soldResult.data as any[] || []).reduce(
+    (sum: number, item: any) => {
+      const st = Array.isArray(item.orders) ? item.orders[0]?.status : item.orders?.status;
+      return isRevenueStatus(st) ? sum + Number(item.quantity || 0) : sum;
+    },
     0
   );
 
-    if (orders.length === 0 && totalSoldBags === 0) {
-      return {
-        totalRevenue: 0,
-        monthlyRevenue: 0,
-        monthlyGrowthPercent: 0,
-        previousMonthRevenue: 0,
-        totalOrders: 0,
-        totalSoldBags: 0,
-        bagsOnShelf: bagsResult.count || 0,
-        averageRating: Number(storeResult.data?.rating || 0),
-        totalReviewsCount: Number(storeResult.data?.total_ratings || 0),
-      };
-    }
+  const completedOrders = revenueOrders.length;
+  const averageOrderValue = completedOrders > 0 ? Math.round(totalRevenue / completedOrders) : 0;
+  const rescueRate = orders.length > 0 ? Math.min(100, Math.round((completedOrders / orders.length) * 100)) : 100;
+  const foodSavedKg = Number((totalSoldBags * 1.25).toFixed(1));
+  const co2SavedKg = Number((foodSavedKg * 2.5).toFixed(1));
 
+  // 1. Phân tích Top túi bán chạy nhất (Top Selling Bags)
+  const bagMap = new Map<string, { name: string; soldCount: number; revenue: number }>();
+  for (const item of (soldResult.data as any[] || [])) {
+    const st = Array.isArray(item.orders) ? item.orders[0]?.status : item.orders?.status;
+    if (!isRevenueStatus(st)) continue;
+    const name = item.bag_name || 'Túi cứu trợ';
+    const qty = Number(item.quantity || 1);
+    const rev = Number(item.total_price || (item.unit_price ? item.unit_price * qty : 0));
+    const curr = bagMap.get(name) || { name, soldCount: 0, revenue: 0 };
+    curr.soldCount += qty;
+    curr.revenue += rev;
+    bagMap.set(name, curr);
+  }
+  const allBags = Array.from(bagMap.values()).sort((a, b) => b.soldCount - a.soldCount);
+  const totalBagsSoldSum = allBags.reduce((s, b) => s + b.soldCount, 0) || 1;
+  const topSellingBags = allBags.slice(0, 4).map((b) => ({
+    ...b,
+    percentage: Math.round((b.soldCount / totalBagsSoldSum) * 100),
+  }));
+
+  // 2. Phân tích khung giờ khách đặt & nhận túi (Peak Hours)
+  const hourCounts = { morning: 0, noon: 0, afternoon: 0, evening: 0 };
+  for (const o of revenueOrders) {
+    if (!o.created_at) continue;
+    const h = new Date(o.created_at).getHours();
+    if (h >= 6 && h < 11) hourCounts.morning++;
+    else if (h >= 11 && h < 14) hourCounts.noon++;
+    else if (h >= 14 && h < 18) hourCounts.afternoon++;
+    else hourCounts.evening++;
+  }
+  const totalHourCount = revenueOrders.length;
+  const peakHours = [
+    {
+      slot: 'Giờ tan tầm & Tối',
+      timeRange: '18:00 - 22:00',
+      orderCount: hourCounts.evening,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 60,
+    },
+    {
+      slot: 'Buổi chiều',
+      timeRange: '14:00 - 18:00',
+      orderCount: hourCounts.afternoon,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 25,
+    },
+    {
+      slot: 'Bữa trưa',
+      timeRange: '11:00 - 14:00',
+      orderCount: hourCounts.noon,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 15,
+    },
+    {
+      slot: 'Buổi sáng',
+      timeRange: '06:00 - 11:00',
+      orderCount: hourCounts.morning,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.morning / totalHourCount) * 100) : 0,
+    },
+  ];
+
+  const bagsCount = bagsResult.count ?? (Array.isArray(bagsResult.data) ? bagsResult.data.length : 0);
+
+  if (orders.length === 0 && totalSoldBags === 0) {
     return {
-      totalRevenue,
-      monthlyRevenue,
-      monthlyGrowthPercent:
-        previousMonthRevenue > 0
-          ? Number((((monthlyRevenue - previousMonthRevenue) / previousMonthRevenue) * 100).toFixed(1))
-          : 0,
-      previousMonthRevenue,
-      totalOrders: orders.length,
-      totalSoldBags,
-      bagsOnShelf: bagsResult.count || 0,
+      totalRevenue: 0,
+      monthlyRevenue: 0,
+      monthlyGrowthPercent: 0,
+      previousMonthRevenue: 0,
+      totalOrders: 0,
+      completedOrders: 0,
+      totalSoldBags: 0,
+      bagsOnShelf: bagsCount,
       averageRating: Number(storeResult.data?.rating || 0),
       totalReviewsCount: Number(storeResult.data?.total_ratings || 0),
+      averageOrderValue: 0,
+      rescueRate: 100,
+      co2SavedKg: 0,
+      foodSavedKg: 0,
+      topSellingBags: [],
+      peakHours,
     };
+  }
+
+  return {
+    totalRevenue,
+    monthlyRevenue,
+    monthlyGrowthPercent:
+      previousMonthRevenue > 0
+        ? Number((((monthlyRevenue - previousMonthRevenue) / previousMonthRevenue) * 100).toFixed(1))
+        : 0,
+    previousMonthRevenue,
+    totalOrders: orders.length,
+    completedOrders,
+    totalSoldBags,
+    bagsOnShelf: bagsCount,
+    averageRating: Number(storeResult.data?.rating || 0),
+    totalReviewsCount: Number(storeResult.data?.total_ratings || 0),
+    averageOrderValue,
+    rescueRate,
+    co2SavedKg,
+    foodSavedKg,
+    topSellingBags,
+    peakHours,
+  };
   } finally {
     metricsInFlight.delete(storeId);
   }
@@ -201,10 +295,21 @@ export async function fetchRevenueChart(
         return Array.from({ length: 7 }, (_, index) => {
           const date = new Date(rangeStart);
           date.setDate(rangeStart.getDate() + index);
-          const value = revenueOrders
-            .filter((order: any) => new Date(order.created_at).toDateString() === date.toDateString())
-            .reduce((sum: number, order: any) => sum + Number(order.final_amount || 0), 0);
-          return { label: DAY_LABELS[date.getDay()], value };
+          const matchingOrders = revenueOrders.filter(
+            (order: any) => new Date(order.created_at).toDateString() === date.toDateString()
+          );
+          const value = matchingOrders.reduce(
+            (sum: number, order: any) => sum + Number(order.final_amount || 0),
+            0
+          );
+          const dayName = DAY_LABELS[date.getDay()];
+          const dayDate = `${date.getDate()}/${date.getMonth() + 1}`;
+          return {
+            label: dayName,
+            date: `${dayName}, ${dayDate}`,
+            value,
+            orderCount: matchingOrders.length,
+          };
         });
       }
 
@@ -213,13 +318,22 @@ export async function fetchRevenueChart(
         bucketStart.setDate(rangeStart.getDate() + index * 7);
         const bucketEnd = new Date(bucketStart);
         bucketEnd.setDate(bucketStart.getDate() + 7);
-        const value = revenueOrders
-          .filter((order: any) => {
-            const created = new Date(order.created_at);
-            return created >= bucketStart && created < bucketEnd;
-          })
-          .reduce((sum: number, order: any) => sum + Number(order.final_amount || 0), 0);
-        return { label: `Tuần ${index + 1}`, value };
+        const matchingOrders = revenueOrders.filter((order: any) => {
+          const created = new Date(order.created_at);
+          return created >= bucketStart && created < bucketEnd;
+        });
+        const value = matchingOrders.reduce(
+          (sum: number, order: any) => sum + Number(order.final_amount || 0),
+          0
+        );
+        const startStr = `${bucketStart.getDate()}/${bucketStart.getMonth() + 1}`;
+        const endStr = `${bucketEnd.getDate()}/${bucketEnd.getMonth() + 1}`;
+        return {
+          label: `Tuần ${index + 1}`,
+          date: `${startStr} - ${endStr}`,
+          value,
+          orderCount: matchingOrders.length,
+        };
       });
     } finally {
       chartInFlight.delete(cacheKey);

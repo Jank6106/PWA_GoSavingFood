@@ -123,21 +123,44 @@ export interface StoreProfile {
 export type StoreUpdateInput = Partial<Pick<StoreProfile, 'name' | 'description' | 'phone' | 'address' | 'latitude' | 'longitude' | 'openingHours' | 'closingHours' | 'category'>>;
 export type StoreImageUpdate = Partial<Pick<StoreProfile, 'coverImage' | 'avatar'>>;
 
+export interface TopSellingBag {
+  name: string;
+  soldCount: number;
+  revenue: number;
+  percentage: number;
+}
+
+export interface PeakHourStat {
+  slot: string;
+  timeRange: string;
+  orderCount: number;
+  percentage: number;
+}
+
 export interface AnalyticsMetrics {
   totalRevenue: number;
   monthlyRevenue: number;
   monthlyGrowthPercent: number;
   previousMonthRevenue: number;
   totalOrders: number;
+  completedOrders: number;
   totalSoldBags: number;
   bagsOnShelf: number;
   averageRating: number;
   totalReviewsCount: number;
+  averageOrderValue: number;
+  rescueRate: number;
+  co2SavedKg: number;
+  foodSavedKg: number;
+  topSellingBags: TopSellingBag[];
+  peakHours: PeakHourStat[];
 }
 
 export interface RevenueChartPoint {
   label: string;
   value: number;
+  date?: string;
+  orderCount?: number;
 }
 
 export interface ReviewItem {
