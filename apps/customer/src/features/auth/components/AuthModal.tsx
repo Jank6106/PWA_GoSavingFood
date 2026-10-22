@@ -169,17 +169,14 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
         aria-labelledby="customer-auth-title"
       >
         {/* Header Modal */}
-        <div className="customer-auth-header is-centered relative w-full">
-          <h2
-            id="customer-auth-title"
-            className="text-xl sm:text-2xl font-bold text-[#163e2e] text-center w-full"
-          >
+        <div className="customer-auth-header is-centered">
+          <h2 id="customer-auth-title">
             {needsProfileCompletion ? 'Hoàn tất thông tin cá nhân' : 'Đăng nhập'}
           </h2>
           {!needsProfileCompletion && (
             <button
               type="button"
-              className="customer-auth-close-btn absolute right-0"
+              className="customer-auth-close-btn"
               onClick={handleClose}
               aria-label="Đóng"
             >

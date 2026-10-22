@@ -2025,8 +2025,29 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 @keyframes customerAuthScaleUp { from { opacity: 0; transform: scale(0.96) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 .customer-auth-header { display: flex; align-items: center; justify-content: space-between; }
 .customer-auth-header h2 { margin: 0; font-size: 20px; font-weight: 750; color: var(--color-text-primary); letter-spacing: -0.2px; }
-.customer-auth-header.is-centered { justify-content: center; text-align: center; }
-.customer-auth-header.is-centered h2 { text-align: center; width: 100%; }
+.customer-auth-header.is-centered {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  min-height: 34px;
+}
+.customer-auth-header.is-centered h2 {
+  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+.customer-auth-header.is-centered .customer-auth-close-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+}
 
 .customer-auth-brand-wrap {
   display: flex;
