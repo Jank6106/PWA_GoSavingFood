@@ -1,11 +1,10 @@
 import {
   ArrowDownRight,
   ArrowUpRight,
-  CheckCircle2,
   Clock3,
   Download,
   Flame,
-  Leaf,
+  Trophy,
   PackageCheck,
   Receipt,
   ShoppingBag,
@@ -472,82 +471,76 @@ export function MerchantBusinessInsights({ metrics }: { metrics: AnalyticsMetric
           </div>
         </section>
 
-        {/* KHỐI 2: Tác động môi trường & Tiết kiệm xanh */}
-        <section className="merchant-card merchant-insight-card">
-          <header className="merchant-insight-header">
-            <span className="merchant-insight-badge" style={{ background: '#dcfce7', color: '#166534' }}>
-              <Leaf size={17} />
-            </span>
-            <div>
-              <h3>Tác động xanh & Môi trường</h3>
-              <p>Đóng góp tích cực của cửa hàng qua việc giải cứu thực phẩm dư thừa</p>
-            </div>
-          </header>
-
-          <div className="merchant-impact-stats-grid">
-            <div className="merchant-impact-box">
-              <span className="impact-emoji">🥗</span>
-              <strong className="impact-num">{metrics.foodSavedKg || 15} kg</strong>
-              <small className="impact-label">Thực phẩm được giải cứu</small>
-            </div>
-            <div className="merchant-impact-box">
-              <span className="impact-emoji">🌍</span>
-              <strong className="impact-num">{metrics.co2SavedKg || 37.5} kg</strong>
-              <small className="impact-label">Khí CO₂e giảm phát thải</small>
-            </div>
-            <div className="merchant-impact-box">
-              <span className="impact-emoji">💰</span>
-              <strong className="impact-num">
-                {((metrics.totalSoldBags || 12) * 28000).toLocaleString('vi-VN')}đ
-              </strong>
-              <small className="impact-label">Tiết kiệm cho khách hàng</small>
-            </div>
-          </div>
-
-          <div className="merchant-insight-tip is-green">
-            <CheckCircle2 size={14} className="tip-icon" />
-            <span>
-              Mỗi túi hàng bán ra đã giúp giảm thiểu lãng phí thực phẩm, tăng tỷ lệ thu hồi vốn và thu hút thêm khách hàng mới trung thành cho quán.
-            </span>
-          </div>
-        </section>
-      </div>
-
-      {/* KHỐI 3: Top túi cứu trợ bán chạy nhất */}
-      {topBags.length > 0 && (
-        <section className="merchant-card merchant-top-bags-card">
+        {/* KHỐI 2: THỐNG KÊ TÚI NÀO BÁN ĐƯỢC NHIỀU NHẤT */}
+        <section className="merchant-card merchant-insight-card merchant-top-bags-card">
           <header className="merchant-insight-header">
             <span className="merchant-insight-badge" style={{ background: '#fee2e2', color: '#b91c1c' }}>
               <Flame size={17} />
             </span>
             <div>
-              <h3>Top túi cứu trợ bán chạy</h3>
-              <p>Các món hàng được người tiêu dùng giải cứu nhiều nhất</p>
+              <h3>Túi bán chạy nhất</h3>
+              <p>Xếp hạng mặt hàng cứu trợ được người tiêu dùng mua nhiều nhất</p>
             </div>
           </header>
 
-          <div className="merchant-top-bags-list">
-            {topBags.map((bag, i) => (
-              <div className="merchant-top-bag-item" key={i}>
-                <div className="bag-rank">#{i + 1}</div>
-                <div className="bag-details">
-                  <div className="bag-row-top">
-                    <strong className="bag-title">{bag.name}</strong>
-                    <span className="bag-sold">{bag.soldCount} túi đã bán</span>
+          {topBags.length === 0 ? (
+            <div className="merchant-top-bags-empty">
+              <PackageCheck size={28} style={{ color: '#94a3b8' }} />
+              <p>Chưa có dữ liệu bán túi trong kỳ này</p>
+              <small>Khi có khách đặt hàng, danh sách túi bán chạy sẽ hiển thị tại đây.</small>
+            </div>
+          ) : (
+            <div className="merchant-top-bags-list">
+              {topBags.map((bag, i) => {
+                const rankBadgeClass = i === 0 ? 'is-gold' : i === 1 ? 'is-silver' : i === 2 ? 'is-bronze' : 'is-default';
+                const rankText = i === 0 ? '1' : i === 1 ? '2' : i === 2 ? '3' : `${i + 1}`;
+
+                return (
+                  <div className="merchant-top-bag-item" key={i}>
+                    <div className={`bag-rank-badge ${rankBadgeClass}`} title={`Hạng ${i + 1}`}>
+                      {rankText}
+                    </div>
+
+                    <div className="bag-details">
+                      <div className="bag-row-top">
+                        <strong className="bag-title" title={bag.name}>
+                          {bag.name}
+                        </strong>
+                        <span className="bag-sold">{bag.soldCount} túi đã bán</span>
+                      </div>
+
+                      <div className="bag-progress-wrap">
+                        <div
+                          className="bag-progress-fill"
+                          style={{
+                            width: `${Math.max(bag.percentage, 8)}%`,
+                            background:
+                              i === 0
+                                ? 'linear-gradient(90deg, #166B4A, #34d399)'
+                                : 'linear-gradient(90deg, #2a9d6e, #6ee7b7)',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bag-revenue">{bag.revenue.toLocaleString('vi-VN')}đ</div>
                   </div>
-                  <div className="bag-progress-wrap">
-                    <div
-                      className="bag-progress-fill"
-                      style={{ width: `${Math.max(bag.percentage, 8)}%` }}
-                    />
-                  </div>
-                </div>
-                <div className="bag-revenue">{bag.revenue.toLocaleString('vi-VN')}đ</div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
+
+          {topBags.length > 0 && topBags[0].soldCount > 0 && (
+            <div className="merchant-insight-tip is-green">
+              <Trophy size={14} className="tip-icon" />
+              <span>
+                <strong>Quán quân bán chạy:</strong> <strong>{topBags[0].name}</strong> chiếm{' '}
+                <strong>{topBags[0].percentage}%</strong> lượng túi giải cứu thành công của quán!
+              </span>
+            </div>
+          )}
         </section>
-      )}
+      </div>
     </div>
   );
 }
