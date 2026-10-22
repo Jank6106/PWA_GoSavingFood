@@ -26,7 +26,7 @@ const formatPickupTime = (start?: string, end?: string) => {
   if (!start && !end) return 'Hôm nay';
   const cleanStart = (start || '17:00').slice(0, 5);
   const cleanEnd = (end || '20:00').slice(0, 5);
-  return `Today ${cleanStart} - ${cleanEnd}`;
+  return `Hôm nay ${cleanStart} - ${cleanEnd}`;
 };
 
 const formatDistance = (meters?: number) => {
@@ -902,7 +902,7 @@ export function SearchPage({
                     className="customer-yindii-item-card"
                     onClick={() => onOpenBag(bag)}
                   >
-                    {/* Ảnh món ăn vuông bo tròn bên trái */}
+                    {/* Ảnh món ăn vuông bo tròn bên trái với badge giảm giá */}
                     <div className="customer-yindii-item-thumb-wrapper">
                       <img
                         src={
@@ -913,26 +913,28 @@ export function SearchPage({
                         className="customer-yindii-item-thumb"
                         loading="lazy"
                       />
+                      {discountPct > 0 && (
+                        <div className="customer-yindii-thumb-discount-badge">
+                          -{discountPct}%
+                        </div>
+                      )}
                       {bag.quantity <= 0 && (
-                        <div className="customer-yindii-sold-out-badge">Sold out</div>
+                        <div className="customer-yindii-sold-out-badge">Hết hàng</div>
                       )}
                     </div>
 
                     {/* Nội dung thông tin món và quán bên phải */}
                     <div className="customer-yindii-item-content">
-                      <div>
-                        <h3 className="customer-yindii-item-store">
+                      <div className="customer-yindii-item-top">
+                        <h3 className="customer-yindii-item-store" title={bag.merchantName || store?.name}>
                           {bag.merchantName || store?.name || 'Cửa hàng đối tác'}
                         </h3>
-                        <p className="customer-yindii-item-bag">{bag.name}</p>
-                        {discountPct > 0 && (
-                          <span className="customer-yindii-item-discount-tag">
-                            -{discountPct}%
-                          </span>
-                        )}
+                        <p className="customer-yindii-item-bag" title={bag.name}>
+                          {bag.name}
+                        </p>
                       </div>
 
-                      <div>
+                      <div className="customer-yindii-item-bottom">
                         <div className="customer-yindii-item-pickup">
                           <Clock size={12} />
                           <span>{formatPickupTime(bag.pickupStart, bag.pickupEnd)}</span>
@@ -948,11 +950,11 @@ export function SearchPage({
                                 </span>
                               </>
                             ) : (
-                              <span className="customer-yindii-item-rating" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                              <span className="customer-yindii-item-rating is-new">
                                 Mới
                               </span>
                             )}
-                            <span>–</span>
+                            <span className="customer-yindii-item-dot">•</span>
                             <span>{distanceText}</span>
                           </div>
 
