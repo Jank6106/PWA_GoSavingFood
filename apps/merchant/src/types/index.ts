@@ -137,6 +137,45 @@ export interface PeakHourStat {
   percentage: number;
 }
 
+export type AnalyticsTimeframe =
+  | 'yesterday'
+  | 'today'
+  | 'this_week'
+  | 'this_month'
+  | 'last_month'
+  | 'this_year'
+  | 'last_year'
+  | '24h'
+  | '7d'
+  | '30d'
+  | '1y'
+  | 'all'
+  | 'custom';
+
+export interface PaymentChannelStat {
+  name: string;
+  amount: number;
+  orderCount: number;
+  percentage: number;
+}
+
+export interface OrderStatusSlice {
+  key: 'completed' | 'cancelled' | 'pending';
+  label: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface PeriodKpiData {
+  periodLabel: string;
+  totalRevenue: number;
+  completedOrders: number;
+  totalOrders: number;
+  paymentChannels: PaymentChannelStat[];
+  statusBreakdown: OrderStatusSlice[];
+}
+
 export interface AnalyticsMetrics {
   totalRevenue: number;
   monthlyRevenue: number;
