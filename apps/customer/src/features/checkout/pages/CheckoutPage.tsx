@@ -354,7 +354,6 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
                             Giảm {item.discountValue.toLocaleString('vi-VN')}đ
                           </span>
                         </div>
-                        <p>{item.description}</p>
                         {!isEligible && (
                           <small className="customer-voucher-min-alert">
                             Đơn tối thiểu {item.minOrderValue.toLocaleString('vi-VN')}đ
@@ -385,7 +384,7 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
                     setIsVoucherOpen(false);
                   }}
                 >
-                  Bỏ áp dụng mã khuyến mãi
+                  Bỏ chọn voucher
                 </button>
               )}
             </div>
@@ -425,12 +424,12 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
         </div>
       </FormSection>
 
-      <FormSection title="Ghi chú cho cửa hàng">
+      <FormSection title="Ghi chú">
         <textarea
           className="customer-checkout-note"
           value={note}
           onChange={(event) => setNote(event.target.value)}
-          placeholder="Ví dụ: Không lấy dụng cụ dùng một lần, lấy ít cay..."
+          placeholder="Ghi chú cho quán (tuỳ chọn)..."
         />
       </FormSection>
 

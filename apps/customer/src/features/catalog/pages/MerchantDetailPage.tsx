@@ -332,7 +332,7 @@ export function MerchantDetailPage({
           </div>
         ) : (
           <div className="customer-store-empty-bags">
-            <EmptyState title="Hôm nay chưa có túi bất ngờ" description="Vui lòng quay lại sau ít phút hoặc chọn cửa hàng khác!" />
+            <EmptyState title="Hôm nay chưa có túi bất ngờ" />
           </div>
         )}
       </section>
@@ -360,7 +360,7 @@ export function MerchantDetailPage({
       {/* 5. User Ratings Section */}
       <section className="customer-store-section">
         <div className="customer-store-section-header">
-          <h2 className="customer-store-section-title">Đánh giá của khách hàng</h2>
+          <h2 className="customer-store-section-title">Đánh giá</h2>
           <button
             type="button"
             className="customer-store-link-btn"

@@ -11,7 +11,7 @@
     "dev:web": "pnpm --filter web dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "private": true,
   "keywords": [],
@@ -21,6 +21,7 @@
   "type": "module",
   "devDependencies": {
     "pg": "^8.23.0",
-    "turbo": "^2.10.12"
+    "turbo": "^2.10.12",
+    "vitest": "^5.0.5"
   }
 }

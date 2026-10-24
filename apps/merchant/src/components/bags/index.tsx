@@ -53,7 +53,7 @@ export function BagFilterBar({
             className={statusFilter === 'on_shelf' ? 'is-active' : ''}
             onClick={() => onStatusFilterChange('on_shelf')}
           >
-            Trên kệ hàng {onShelfCount !== undefined ? `(${onShelfCount})` : ''}
+            Trên kệ {onShelfCount !== undefined ? `(${onShelfCount})` : ''}
           </button>
           <button
             type="button"
@@ -67,7 +67,7 @@ export function BagFilterBar({
             className={statusFilter === 'expired' ? 'is-active' : ''}
             onClick={() => onStatusFilterChange('expired')}
           >
-            Hàng hết hạn {expiredCount !== undefined ? `(${expiredCount})` : ''}
+            Hết hạn {expiredCount !== undefined ? `(${expiredCount})` : ''}
           </button>
         </div>
       )}
@@ -95,7 +95,7 @@ export function BagCard({
   let badgeVariant = 'active';
 
   if (category === 'expired') {
-    statusLabel = 'Hết hạn sử dụng';
+    statusLabel = 'Hết hạn';
     badgeVariant = 'expired';
   } else if (category === 'in_storage') {
     if (bag.status === 'hidden') {
@@ -671,11 +671,6 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
                   Mọi ngày
                 </button>
               </div>
-              <small style={{ color: '#64748b', marginTop: 4, display: 'block', fontSize: 11 }}>
-                {repeatMode === 'today_only'
-                  ? '*Hết giờ nhận sẽ tự chuyển vào lưu trữ.'
-                  : '*Cố định khung giờ, tự nạp lại kho vào 00h01 mỗi ngày.'}
-              </small>
             </div>
           </div>
         ) : (
@@ -694,7 +689,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
             />
             <div className="merchant-field">
               <span>
-                Khung giờ khách lấy hàng mỗi ngày <b style={{ color: 'var(--danger)' }}>*</b>
+                Giờ nhận hàng <b style={{ color: 'var(--danger)' }}>*</b>
               </span>
               <div className="merchant-field-control merchant-time-range-control">
                 <MerchantTimePicker
@@ -709,9 +704,6 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
                   ariaLabel="Giờ kết thúc nhận"
                 />
               </div>
-              <small style={{ color: '#64748b', marginTop: 4, display: 'block', fontSize: 11 }}>
-                *Mở bán liên tục đến hết ngày HSD (23:59:59).
-              </small>
             </div>
           </div>
         )}

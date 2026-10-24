@@ -101,13 +101,7 @@ async function run() {
       proxied: false,
       comment: 'Trỏ Merchant PWA về Vercel',
     },
-    {
-      type: 'CNAME',
-      name: 'api',
-      content: 'nyxovkcokjsjdnwiddmc.supabase.co',
-      proxied: true, // Bật Proxy Cam để ẩn Supabase và tối ưu CDN
-      comment: 'Trỏ API về Supabase Cloud Backend',
-    },
+    // api.gosavingfood.app được quản lý trực tiếp bởi Cloudflare Worker Custom Domain
   ];
 
   // Bước 3: Áp dụng hoặc cập nhật từng bản ghi

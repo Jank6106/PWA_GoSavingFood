@@ -978,7 +978,7 @@ export function SearchPage({
           ) : (
             <EmptyState
               title="Không tìm thấy món ăn phù hợp"
-              description="Hãy thử từ khóa khác hoặc chuyển sang chế độ bản đồ để khám phá thêm quán quanh bạn."
+              description="Thử tìm bằng từ khoá khác"
             />
           )}
         </div>

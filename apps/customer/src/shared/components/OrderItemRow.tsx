@@ -39,6 +39,7 @@ export function OrderItemRow({ imageUrl, name, quantity, unitPrice, onClick }: O
         type="button"
         className="customer-checkout-item is-clickable"
         onClick={onClick}
+        aria-label={`Xem chi tiết ${name}`}
         title={`Xem chi tiết ${name}`}
       >
         {content}

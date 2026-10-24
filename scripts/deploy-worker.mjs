@@ -40,10 +40,10 @@ const workerCode = `
 export default {
   async fetch(request) {
     const url = new URL(request.url);
-    url.hostname = 'nyxovkcokjsjdnwiddmc.supabase.co';
+    url.hostname = 'lblwvbedtlxjtkcuxmsf.supabase.co';
 
     const newHeaders = new Headers(request.headers);
-    newHeaders.set('Host', 'nyxovkcokjsjdnwiddmc.supabase.co');
+    newHeaders.set('Host', 'lblwvbedtlxjtkcuxmsf.supabase.co');
 
     return fetch(url.toString(), {
       method: request.method,

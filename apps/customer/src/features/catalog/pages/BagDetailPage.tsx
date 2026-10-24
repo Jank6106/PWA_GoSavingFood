@@ -165,7 +165,7 @@ export function BagDetailPage({
       <div className="customer-product-screen">
         <div className="customer-product-hero" style={{ background: 'var(--color-bg-muted)' }}>
           <div className="customer-product-hero-nav">
-            <button type="button" className="customer-product-round-btn" onClick={onBack}>
+            <button type="button" className="customer-product-round-btn" onClick={onBack} aria-label="Quay lại">
               <ChevronLeft size={22} />
             </button>
           </div>
@@ -184,7 +184,7 @@ export function BagDetailPage({
     return (
       <div className="customer-screen">
         <div className="customer-screen-header">
-          <button type="button" className="customer-round-button" onClick={onBack}>
+          <button type="button" className="customer-round-button" onClick={onBack} aria-label="Quay lại">
             <ChevronLeft size={20} />
           </button>
           <h1>Chi tiết túi</h1>
@@ -321,7 +321,7 @@ export function BagDetailPage({
                 ) : countdown === 'Đã hết hạn' ? (
                   <strong style={{ color: '#dc2626' }}>Đã hết hạn nhận</strong>
                 ) : (
-                  <>Hết hạn sau: <strong>{countdown}</strong></>
+                  <>Còn <strong>{countdown}</strong></>
                 )}
               </span>
             </div>
@@ -344,9 +344,6 @@ export function BagDetailPage({
                   ? `Hàng ngày ${bag.pickupStart} – ${bag.pickupEnd} (HSD: ${bag.expiryDate ? bag.expiryDate.split('-').reverse().join('/') : 'Nhiều ngày'})`
                   : `Hôm nay ${bag.pickupStart} – ${bag.pickupEnd}`}
               </div>
-              <p className="customer-product-pickup-desc">
-                Vui lòng đến đúng giờ để lấy phần ăn tươi ngon nhất. Quét mã QR tại quán để nhận túi nhanh chóng.
-              </p>
               {merchant?.address && (
                 <div className="customer-product-pickup-addr">
                   <MapPin size={13} strokeWidth={2.2} />
@@ -419,7 +416,7 @@ export function BagDetailPage({
         {/* 5. Section: Mô tả túi hàng */}
         <section className="customer-store-section">
           <div className="customer-store-section-header">
-            <h2 className="customer-store-section-title">Mô tả túi hàng</h2>
+            <h2 className="customer-store-section-title">Mô tả</h2>
           </div>
 
           <div className="customer-product-description-wrap">
@@ -433,7 +430,7 @@ export function BagDetailPage({
         {reviews.length > 0 && (
           <section className="customer-store-section">
             <div className="customer-store-section-header">
-              <h2 className="customer-store-section-title">Đánh giá từ khách hàng ({reviews.length})</h2>
+              <h2 className="customer-store-section-title">Đánh giá ({reviews.length})</h2>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

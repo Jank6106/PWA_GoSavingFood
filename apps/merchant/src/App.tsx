@@ -13,10 +13,18 @@ import { LoginScreen } from './pages/LoginScreen';
 import { getCachedMerchantUser } from './services/auth.service';
 import type { LoginCredentials, NotificationItem, TabRoute } from './types';
 
-import { BagManagementScreen } from './pages/BagManagementScreen';
-import { OrderManagementScreen } from './pages/OrderManagementScreen';
-import { AnalyticsScreen } from './pages/AnalyticsScreen';
-import { SettingsScreen } from './pages/SettingsScreen';
+const BagManagementScreen = lazy(() =>
+  import('./pages/BagManagementScreen').then((m) => ({ default: m.BagManagementScreen }))
+);
+const OrderManagementScreen = lazy(() =>
+  import('./pages/OrderManagementScreen').then((m) => ({ default: m.OrderManagementScreen }))
+);
+const AnalyticsScreen = lazy(() =>
+  import('./pages/AnalyticsScreen').then((m) => ({ default: m.AnalyticsScreen }))
+);
+const SettingsScreen = lazy(() =>
+  import('./pages/SettingsScreen').then((m) => ({ default: m.SettingsScreen }))
+);
 
 // FirstTimeSetupScreen chỉ dùng 1 lần cho đối tác mới nên giữ lazy
 const FirstTimeSetupScreen = lazy(() =>
@@ -279,6 +287,7 @@ export default function App() {
         onProfilePress={() => navigateTo('settings')}
       />
       <main className={`merchant-main merchant-main--${route}`}>
+        <Suspense fallback={<ScreenLoadingSkeleton />}>
         {visitedTabs.bags && (
           <div style={{ display: route === 'bags' ? 'contents' : 'none' }}>
             <BagManagementScreen storeId={storeId} />
@@ -320,6 +329,7 @@ export default function App() {
             />
           </div>
         )}
+      </Suspense>
       </main>
       <DraggableQRFab
         onClick={() => {
