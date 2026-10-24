@@ -3,7 +3,7 @@ import {
   KpiSummaryCards,
   MerchantBusinessInsights,
   OrderStatusDonutChart,
-  PaymentChannelCard,
+  PeakHoursCard,
   PeriodFilterBar,
   RecentReviewsList,
   RevenueBarChartCard,
@@ -22,9 +22,7 @@ export function AnalyticsScreen({ storeId }: { storeId: string }) {
   const totalRevenue = state.periodKpi?.totalRevenue ?? state.metrics?.monthlyRevenue ?? 0;
   const completedOrders = state.periodKpi?.completedOrders ?? state.metrics?.completedOrders ?? 0;
   const totalOrders = state.periodKpi?.totalOrders ?? state.metrics?.totalOrders ?? 0;
-  const paymentChannels = state.periodKpi?.paymentChannels || [
-    { name: 'Kênh: GoSavingFood', amount: totalRevenue, orderCount: completedOrders, percentage: 100 },
-  ];
+  const peakHours = state.periodKpi?.peakHours || state.metrics?.peakHours || [];
   const statusSlices = state.periodKpi?.statusBreakdown || [
     { key: 'completed', label: 'Đã thanh toán', count: completedOrders, percentage: 100, color: '#166B4A' },
     { key: 'cancelled', label: 'Hủy', count: 0, percentage: 0, color: '#059669' },
@@ -93,9 +91,9 @@ export function AnalyticsScreen({ storeId }: { storeId: string }) {
             completedOrders={completedOrders}
           />
 
-          {/* HÀNG 2 KHỐI: Thu theo kênh thanh toán + Thống kê trạng thái đơn (Donut) */}
+          {/* HÀNG 2 KHỐI: Khung giờ nhận hàng cao điểm + Thống kê trạng thái đơn (Donut) */}
           <div className="merchant-analytics-middle-grid">
-            <PaymentChannelCard channels={paymentChannels} />
+            <PeakHoursCard peakHours={peakHours} />
             <OrderStatusDonutChart totalOrders={totalOrders} slices={statusSlices} />
           </div>
 

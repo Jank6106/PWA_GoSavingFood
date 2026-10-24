@@ -52,6 +52,7 @@ export function useAnalytics(storeId: string) {
           completedOrders: res.completedOrders,
           totalOrders: res.totalOrders,
           paymentChannels: res.paymentChannels,
+          peakHours: res.peakHours,
           statusBreakdown: res.statusBreakdown,
         });
         setChartData(res.chartData);
@@ -79,6 +80,7 @@ export function useAnalytics(storeId: string) {
         completedOrders: nextPeriod.completedOrders,
         totalOrders: nextPeriod.totalOrders,
         paymentChannels: nextPeriod.paymentChannels,
+        peakHours: nextPeriod.peakHours,
         statusBreakdown: nextPeriod.statusBreakdown,
       });
       setChartData(nextPeriod.chartData);

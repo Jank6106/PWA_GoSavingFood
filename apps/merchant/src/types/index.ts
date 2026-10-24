@@ -172,7 +172,8 @@ export interface PeriodKpiData {
   totalRevenue: number;
   completedOrders: number;
   totalOrders: number;
-  paymentChannels: PaymentChannelStat[];
+  paymentChannels?: PaymentChannelStat[];
+  peakHours?: PeakHourStat[];
   statusBreakdown: OrderStatusSlice[];
 }
 

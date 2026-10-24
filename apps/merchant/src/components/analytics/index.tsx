@@ -1,8 +1,10 @@
 import {
   ChevronDown,
+  Clock,
   CreditCard,
   Flame,
   PackageCheck,
+  Sparkles,
   Star,
   Store,
   Wallet,
@@ -13,6 +15,7 @@ import type {
   AnalyticsTimeframe,
   OrderStatusSlice,
   PaymentChannelStat,
+  PeakHourStat,
   RevenueChartPoint,
   ReviewItem,
 } from '../../types';
@@ -227,8 +230,73 @@ export function KpiSummaryCards({
 }
 
 // ============================================================================
-// 3. KHỐI THU THEO KÊNH THANH TOÁN
 // ============================================================================
+// 3. KHỐI KHUNG GIỜ NHẬN HÀNG CAO ĐIỂM (PEAK HOURS)
+// ============================================================================
+export function PeakHoursCard({
+  peakHours,
+}: {
+  peakHours?: PeakHourStat[];
+}) {
+  const items = peakHours && peakHours.length > 0 ? peakHours : [
+    { slot: 'Giờ tan tầm & Tối', timeRange: '18:00 - 22:00', orderCount: 0, percentage: 60 },
+    { slot: 'Buổi chiều', timeRange: '14:00 - 18:00', orderCount: 0, percentage: 25 },
+    { slot: 'Bữa trưa', timeRange: '11:00 - 14:00', orderCount: 0, percentage: 15 },
+    { slot: 'Buổi sáng', timeRange: '06:00 - 11:00', orderCount: 0, percentage: 0 },
+  ];
+
+  const maxItem = items.reduce((max, cur) => (cur.percentage > max.percentage ? cur : max), items[0]);
+  const hasOrders = items.some((item) => item.orderCount > 0);
+
+  return (
+    <section className="merchant-card merchant-peak-hours-card">
+      <header className="merchant-card-header-simple">
+        <div className="peak-hours-title-wrapper">
+          <Clock size={17} className="peak-hours-header-icon" />
+          <h3>Khung giờ nhận hàng cao điểm</h3>
+        </div>
+        {maxItem && maxItem.percentage > 0 && (
+          <span className="merchant-peak-tag">
+            <Flame size={12} /> {maxItem.timeRange}
+          </span>
+        )}
+      </header>
+
+      <div className="merchant-peak-hours-list">
+        {items.map((item, idx) => {
+          const isTop = (hasOrders && item.slot === maxItem?.slot) || (!hasOrders && idx === 0);
+          return (
+            <div className={`merchant-peak-row ${isTop ? 'is-peak' : ''}`} key={idx}>
+              <div className="peak-row-meta">
+                <div className="peak-slot-info">
+                  <span className="peak-slot-name">{item.slot}</span>
+                  <span className="peak-slot-badge">{item.timeRange}</span>
+                </div>
+                <div className="peak-slot-stats">
+                  <strong className="peak-slot-percent">{item.percentage}%</strong>
+                  <span className="peak-slot-count">({item.orderCount} đơn)</span>
+                </div>
+              </div>
+              <div className="peak-bar-track">
+                <div
+                  className={`peak-bar-fill ${isTop ? 'is-primary' : ''}`}
+                  style={{ width: `${Math.max(item.percentage > 0 ? 5 : 0, Math.min(100, item.percentage))}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <footer className="merchant-peak-footer">
+        <Sparkles size={13} className="peak-footer-icon" />
+        <span>Gợi ý: Đóng gói sẵn tại quầy trước khung giờ cao điểm để khách nhận nhanh.</span>
+      </footer>
+    </section>
+  );
+}
+
+// Giữ lại PaymentChannelCard nếu cần dùng lại
 export function PaymentChannelCard({
   channels,
 }: {

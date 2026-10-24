@@ -507,6 +507,141 @@ h1, h2, h3, p { margin: 0; }
   margin: 0;
 }
 
+/* Thẻ Khung giờ nhận hàng cao điểm */
+.merchant-peak-hours-card {
+  padding: 20px 22px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.peak-hours-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.peak-hours-header-icon {
+  color: #166B4A;
+  flex-shrink: 0;
+}
+
+.merchant-peak-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #c2410c;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+
+.merchant-peak-hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 14px 0 16px;
+}
+
+.merchant-peak-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.merchant-peak-row.is-peak .peak-slot-name {
+  color: #0f172a;
+  font-weight: 750;
+}
+
+.peak-row-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.peak-slot-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.peak-slot-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.peak-slot-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.peak-slot-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.peak-slot-percent {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: #166B4A;
+}
+
+.peak-slot-count {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.peak-bar-track {
+  width: 100%;
+  height: 7px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.peak-bar-fill {
+  height: 100%;
+  background: #94a3b8;
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+
+.peak-bar-fill.is-primary {
+  background: linear-gradient(90deg, #166B4A 0%, #10b981 100%);
+}
+
+.merchant-peak-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+  border-radius: 10px;
+  font-size: 11.5px;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.peak-footer-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
 .merchant-payment-channel-card {
   padding: 20px 22px;
   border-radius: 18px;

@@ -534,12 +534,51 @@ export async function fetchPeriodAnalytics(
     });
   }
 
+  // Khung giờ nhận hàng cao điểm theo kỳ lọc
+  const hourCounts = { morning: 0, noon: 0, afternoon: 0, evening: 0 };
+  for (const o of revenueOrders) {
+    if (!o.created_at) continue;
+    const h = new Date(o.created_at).getHours();
+    if (h >= 6 && h < 11) hourCounts.morning++;
+    else if (h >= 11 && h < 14) hourCounts.noon++;
+    else if (h >= 14 && h < 18) hourCounts.afternoon++;
+    else hourCounts.evening++;
+  }
+  const totalHourCount = revenueOrders.length;
+  const peakHours = [
+    {
+      slot: 'Giờ tan tầm & Tối',
+      timeRange: '18:00 - 22:00',
+      orderCount: hourCounts.evening,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 60,
+    },
+    {
+      slot: 'Buổi chiều',
+      timeRange: '14:00 - 18:00',
+      orderCount: hourCounts.afternoon,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 25,
+    },
+    {
+      slot: 'Bữa trưa',
+      timeRange: '11:00 - 14:00',
+      orderCount: hourCounts.noon,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 15,
+    },
+    {
+      slot: 'Buổi sáng',
+      timeRange: '06:00 - 11:00',
+      orderCount: hourCounts.morning,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.morning / totalHourCount) * 100) : 0,
+    },
+  ];
+
   return {
     periodLabel: label,
     totalRevenue,
     completedOrders,
     totalOrders,
     paymentChannels,
+    peakHours,
     statusBreakdown,
     chartData,
   };
