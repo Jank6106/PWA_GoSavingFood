@@ -45,3 +45,6 @@ next-env.d.ts
 
 # agents / skills
 .agents/
+
+# scratch & temporary migration scripts
+scratch/
