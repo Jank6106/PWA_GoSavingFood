@@ -1,4 +1,12 @@
 import type { NextConfig } from "next";
+import path from "node:path";
+import fs from "node:fs";
+
+// Nạp file .env tập trung từ thư mục gốc Monorepo
+const rootEnvPath = path.resolve(process.cwd(), process.cwd().endsWith("web") ? "../../.env" : ".env");
+if (fs.existsSync(rootEnvPath)) {
+  process.loadEnvFile(rootEnvPath);
+}
 
 const nextConfig: NextConfig = {
   typescript: {
