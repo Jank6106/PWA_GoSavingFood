@@ -6,6 +6,7 @@ import type { CustomerTab, NotificationItem } from '../../shared/types/customer.
 interface AppLayoutProps {
   children: ReactNode;
   activeTab: CustomerTab;
+  activeNav?: string;
   cartCount: number;
   ordersBadgeCount?: number;
   location: string;
@@ -22,6 +23,7 @@ interface AppLayoutProps {
 export function AppLayout({
   children,
   activeTab,
+  activeNav,
   cartCount,
   ordersBadgeCount = 0,
   location,
@@ -40,6 +42,7 @@ export function AppLayout({
         location={location}
         unreadCount={unreadCount}
         activeTab={activeTab}
+        activeNav={activeNav}
         cartCount={cartCount}
         ordersBadgeCount={ordersBadgeCount}
         showOnMobile={showHeader}

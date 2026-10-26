@@ -9,6 +9,7 @@ interface AppHeaderProps {
   location?: string;
   unreadCount: number;
   activeTab?: CustomerTab;
+  activeNav?: string;
   cartCount?: number;
   ordersBadgeCount?: number;
   showOnMobile?: boolean;
@@ -23,6 +24,7 @@ export function AppHeader({
   location,
   unreadCount,
   activeTab = 'home',
+  activeNav,
   cartCount = 0,
   ordersBadgeCount = 0,
   showOnMobile = true,
@@ -32,6 +34,7 @@ export function AppHeader({
   onNotificationClick,
   onSelectNotification,
 }: AppHeaderProps) {
+  const currentNav = activeNav || activeTab;
   const [isScrolled, setIsScrolled] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -124,7 +127,7 @@ export function AppHeader({
         <nav className="customer-desktop-nav-links" aria-label="Điều hướng chính">
           <button
             type="button"
-            className={`customer-desktop-nav-link ${activeTab === 'home' ? 'is-active' : ''}`}
+            className={`customer-desktop-nav-link ${currentNav === 'home' ? 'is-active' : ''}`}
             onClick={() => onTabChange?.('home')}
           >
             <Compass size={18} />
@@ -133,7 +136,7 @@ export function AppHeader({
 
           <button
             type="button"
-            className={`customer-desktop-nav-link ${activeTab === 'orders' ? 'is-active' : ''}`}
+            className={`customer-desktop-nav-link ${currentNav === 'orders' ? 'is-active' : ''}`}
             onClick={() => onTabChange?.('orders')}
           >
             <ReceiptText size={18} />
@@ -146,7 +149,7 @@ export function AppHeader({
           <div className="customer-desktop-nav-notif-wrapper" ref={popoverRef}>
             <button
               type="button"
-              className={`customer-desktop-nav-link ${isNotificationOpen ? 'is-active' : ''}`}
+              className={`customer-desktop-nav-link ${isNotificationOpen || currentNav === 'notifications' ? 'is-active' : ''}`}
               onClick={() => setIsNotificationOpen((prev) => !prev)}
               aria-expanded={isNotificationOpen}
               aria-haspopup="dialog"
@@ -233,7 +236,7 @@ export function AppHeader({
 
           <button
             type="button"
-            className={`customer-desktop-nav-link ${activeTab === 'cart' ? 'is-active' : ''}`}
+            className={`customer-desktop-nav-link ${currentNav === 'cart' ? 'is-active' : ''}`}
             onClick={() => onTabChange?.('cart')}
           >
             <ShoppingBag size={18} />
@@ -245,7 +248,7 @@ export function AppHeader({
 
           <button
             type="button"
-            className={`customer-desktop-nav-link ${activeTab === 'profile' ? 'is-active' : ''}`}
+            className={`customer-desktop-nav-link ${currentNav === 'profile' ? 'is-active' : ''}`}
             onClick={() => onTabChange?.('profile')}
           >
             <UserRound size={18} />

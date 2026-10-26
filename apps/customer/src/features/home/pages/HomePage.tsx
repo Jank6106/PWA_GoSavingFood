@@ -91,30 +91,33 @@ export function HomePage({
 
   return (
     <div className="customer-screen customer-home-screen">
-      <HomeBanner
-        banners={banners}
-        currentIndex={bannerIndex}
-        onSelectIndex={setBannerIndex}
-      />
+      {/* KHỐI 1: TỔNG HỢP BANNER + TÌM KIẾM + DANH MỤC + ĐỊA ĐIỂM TRONG 1 KHỐI DUY NHẤT (DESKTOP) */}
+      <section className="customer-home-top-unified-block">
+        <HomeBanner
+          banners={banners}
+          currentIndex={bannerIndex}
+          onSelectIndex={setBannerIndex}
+        />
 
-      <button type="button" className="customer-search-trigger" onClick={onSearch}>
-        <Search size={19} />
-        <span>Tìm cửa hàng hoặc túi thực phẩm...</span>
-      </button>
+        <button type="button" className="customer-search-trigger" onClick={onSearch}>
+          <Search size={19} />
+          <span>Tìm cửa hàng hoặc túi thực phẩm...</span>
+        </button>
 
-      <CategoryBar
-        categories={categories}
-        selectedCategory={category}
-        onSelectCategory={(id: FoodCategory) => setCategory(id)}
-      />
+        <CategoryBar
+          categories={categories}
+          selectedCategory={category}
+          onSelectCategory={(id: FoodCategory) => setCategory(id)}
+        />
 
-      <button type="button" className="customer-location-card" onClick={onLocation}>
-        <span className="customer-location-pin"><MapPin size={20} /></span>
-        <span><small>Đang khám phá quanh</small><strong>{location}</strong></span>
-        <ArrowRight size={18} />
-      </button>
+        <button type="button" className="customer-location-card" onClick={onLocation}>
+          <span className="customer-location-pin"><MapPin size={20} /></span>
+          <span><small>Đang khám phá quanh</small><strong>{location}</strong></span>
+          <ArrowRight size={18} />
+        </button>
+      </section>
 
-      <section className="customer-content-section">
+      <section className="customer-content-section customer-home-block customer-home-bags-section">
         <SectionHeading
           icon={<Gift size={24} strokeWidth={2.4} />}
           title="Túi bất ngờ"
@@ -154,7 +157,7 @@ export function HomePage({
         )}
       </section>
 
-      <section className="customer-content-section">
+      <section className="customer-content-section customer-home-block customer-home-brands-section">
         <SectionHeading
           icon={<Award size={24} strokeWidth={2.4} />}
           title="Thương hiệu nổi bật"
@@ -168,7 +171,7 @@ export function HomePage({
         )}
       </section>
 
-      <section className="customer-content-section">
+      <section className="customer-content-section customer-home-block customer-home-merchants-section">
         <SectionHeading
           icon={<MapPin size={24} strokeWidth={2.4} />}
           title="Các cửa hàng gần bạn"

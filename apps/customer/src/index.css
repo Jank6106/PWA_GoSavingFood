@@ -1747,6 +1747,23 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 .customer-read-all-btn:active:not(:disabled) { transform: scale(0.97); }
 .customer-read-all-btn:disabled { opacity: 0.45; cursor: not-allowed; background: #f7faf8; border-color: #e2ece5; color: #8ba194; box-shadow: none; }
 
+/* Mobile Preservation: Đảm bảo trên màn hình điện thoại (<768px) các khối giữ nguyên 100% không ảnh hưởng */
+@media (max-width: 767px) {
+  .customer-home-top-unified-block,
+  .customer-home-categories-block {
+    display: contents !important;
+  }
+
+  .customer-home-block {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+}
+
 /* Notification List & Card (Mobile-First) */
 .customer-notification-list {
   display: flex;
@@ -5321,11 +5338,16 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 
 /* 2. Home Page Desktop Layout (Shopee Web Style Grid) */
 @media (min-width: 768px) {
+  .customer-app-shell:has(.customer-home-screen) {
+    background: #f6f8f7;
+  }
+
   .customer-home-screen {
     width: min(100%, 1200px);
     margin: 0 auto;
     padding-top: 24px;
-    gap: 32px;
+    padding-bottom: 48px;
+    gap: 24px;
   }
 
   .customer-banner-bleed {
@@ -5373,12 +5395,74 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     box-shadow: 0 6px 20px rgba(22, 107, 74, 0.12);
   }
 
-  .customer-category-bar {
-    margin: 0;
-    padding: 6px 0 12px;
-    gap: 24px;
-    justify-content: center;
-    overflow-x: visible;
+  .customer-location-card {
+    width: min(100%, 520px);
+    margin: 0 auto;
+    border-radius: 16px;
+    padding: 13px 18px;
+    box-shadow: 0 3px 14px rgba(0, 40, 20, 0.05);
+  }
+
+  /* Shopee Desktop Style Blocks */
+  /* Khối 1: Tổng hợp Banner + Tìm kiếm + Danh mục + Địa điểm trong 1 khối duy nhất */
+  .customer-home-top-unified-block {
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 28px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    margin: 0 !important;
+  }
+
+  .customer-home-top-unified-block .customer-banner-bleed {
+    margin: 0 !important;
+    width: 100% !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 16px rgba(0, 50, 30, 0.08) !important;
+  }
+
+  .customer-home-top-unified-block .customer-campaign-slider {
+    border-radius: 16px !important;
+  }
+
+  .customer-home-top-unified-block .customer-search-trigger {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 14px;
+    border: 1.5px solid var(--color-border-subtle);
+    box-shadow: 0 2px 8px rgba(0, 40, 20, 0.04);
+  }
+
+  .customer-home-top-unified-block .customer-category-bar {
+    margin: 0 !important;
+    padding: 4px 0 8px !important;
+    gap: 28px !important;
+    justify-content: center !important;
+    overflow-x: visible !important;
+  }
+
+  .customer-home-top-unified-block .customer-location-card {
+    width: min(100%, 540px);
+    margin: 0 auto;
+    border-radius: 14px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 8px rgba(0, 40, 20, 0.04);
+  }
+
+  .customer-home-block {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 28px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
   }
 
   .customer-category-circle {
@@ -5397,12 +5481,33 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     min-width: 72px;
   }
 
-  .customer-location-card {
-    width: min(100%, 520px);
-    margin: 0 auto;
-    border-radius: 16px;
-    padding: 13px 18px;
-    box-shadow: 0 3px 14px rgba(0, 40, 20, 0.05);
+  /* Tiêu đề khối trên Desktop chuẩn Shopee */
+  .customer-home-block .customer-section-heading {
+    padding-bottom: 16px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    margin-bottom: 20px !important;
+  }
+
+  .customer-home-block .customer-section-heading h2 {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #1e293b !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  /* Khối 3: Thương hiệu nổi bật - marquee vừa vặn trong khối */
+  .customer-home-brands-section .customer-brand-marquee-viewport {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 6px 0 !important;
+    border-radius: 12px !important;
+  }
+
+  /* Khối 4: Cửa hàng gần bạn - nút xem thêm cách đều */
+  .customer-home-merchants-section .customer-merchant-load-more-wrap {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px dashed #f1f5f9;
   }
 
   .customer-brand-track {
@@ -6419,8 +6524,27 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   }
 
   .customer-notifications-screen .customer-screen-header {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     padding: 0 4px;
+  }
+
+  /* Ẩn nút Back trên Desktop Web */
+  .customer-notifications-screen .customer-screen-header .customer-round-button {
+    display: none !important;
+  }
+
+  /* Căn tiêu đề Thông báo chuẩn Desktop Web */
+  .customer-notifications-screen .customer-screen-header-title {
+    position: static !important;
+    transform: none !important;
+    text-align: left !important;
+    max-width: none !important;
+  }
+
+  .customer-notifications-screen .customer-screen-header h1 {
+    text-align: left !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
   }
 
   .customer-notifications-screen .customer-notification-list {

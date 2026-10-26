@@ -454,6 +454,15 @@ function CustomerApp() {
   const route = history[history.length - 1] || { name: 'tabs', tab: 'home' };
   const activeTab: CustomerTab = route.name === 'tabs' ? route.tab : 'home';
 
+  const activeNav = useMemo(() => {
+    if (route.name === 'tabs') return route.tab;
+    if (route.name === 'notifications') return 'notifications';
+    if (route.name === 'order' || route.name === 'review' || route.name === 'report') return 'orders';
+    if (route.name === 'checkout' || route.name === 'payment' || route.name === 'success') return 'cart';
+    if (route.name === 'search' || route.name === 'bags' || route.name === 'bag' || route.name === 'merchant' || route.name === 'merchant_reviews' || route.name === 'brand' || route.name === 'location') return 'home';
+    return 'home';
+  }, [route]);
+
   const previousRouteRef = useRef<AppRoute>(route);
   useEffect(() => {
     const prevRoute = previousRouteRef.current;
@@ -1234,6 +1243,7 @@ function CustomerApp() {
     <>
       <AppLayout
         activeTab={activeTab}
+        activeNav={activeNav}
         cartCount={cart.summary.count}
         ordersBadgeCount={ordersBadgeCount}
         location={location}
