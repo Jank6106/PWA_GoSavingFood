@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ChevronLeft,
   Clock,
-  Heart,
   MapPin,
   Share2,
   ShoppingBag,
@@ -42,7 +41,6 @@ export function MerchantDetailPage({
   onOpenBag,
   onOpenReviews,
 }: MerchantDetailPageProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
   const [showAllAbout, setShowAllAbout] = useState(false);
   const [viewingAllReviews, setViewingAllReviews] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -124,15 +122,6 @@ export function MerchantDetailPage({
     }
   };
 
-  const handleToggleFavorite = () => {
-    setIsFavorite((prev) => {
-      const next = !prev;
-      setToastMsg(next ? 'Đã thêm vào danh sách yêu thích!' : 'Đã bỏ yêu thích cửa hàng');
-      setTimeout(() => setToastMsg(null), 2500);
-      return next;
-    });
-  };
-
   const aboutParagraphs = useMemo(() => {
     const p1 =
       merchant.description ||
@@ -147,128 +136,136 @@ export function MerchantDetailPage({
       {/* Toast Notification */}
       {toastMsg && <div className="customer-store-toast">{toastMsg}</div>}
 
-      {/* 1. Hero Cover Header */}
-      <section className="customer-store-hero">
-        <img
-          src={coverUrl}
-          alt={merchant.name}
-          className="customer-store-hero-img"
-          loading="lazy"
-          onError={(e) => {
-            if (!coverFailed) {
-              setCoverFailed(true);
-            } else {
-              (e.currentTarget as HTMLImageElement).src =
-                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><rect width="100%" height="100%" fill="%231e3a29"/></svg>';
-            }
-          }}
-        />
-        <div className="customer-store-hero-scrim" />
+      {/* Desktop Breadcrumb Navigation */}
+      <div className="customer-store-desktop-breadcrumb">
+        <button
+          type="button"
+          onClick={onBack}
+          className="customer-store-breadcrumb-back"
+          aria-label="Quay lại"
+        >
+          <ChevronLeft size={16} strokeWidth={2.5} />
+          <span>Quay lại</span>
+        </button>
+        <span className="customer-store-breadcrumb-sep">/</span>
+        <span className="customer-store-breadcrumb-current">{merchant.name}</span>
+      </div>
 
-        {/* Floating Nav Buttons */}
-        <div className="customer-store-hero-nav">
-          <button
-            type="button"
-            className="customer-store-circle-btn"
-            onClick={onBack}
-            aria-label="Quay lại"
-          >
-            <ChevronLeft size={22} strokeWidth={2.5} />
-          </button>
-
-          <div className="customer-store-hero-actions">
-            <button
-              type="button"
-              className={`customer-store-circle-btn ${isFavorite ? 'is-fav' : ''}`}
-              onClick={handleToggleFavorite}
-              aria-label="Yêu thích"
-            >
-              <Heart
-                size={20}
-                fill={isFavorite ? '#ef4444' : 'none'}
-                color={isFavorite ? '#ef4444' : '#ffffff'}
-                strokeWidth={2.2}
-              />
-            </button>
-
-            <button
-              type="button"
-              className="customer-store-circle-btn"
-              onClick={handleShare}
-              aria-label="Chia sẻ"
-            >
-              <Share2 size={19} strokeWidth={2.2} />
-            </button>
-          </div>
-        </div>
-
-        {/* Floating Brand Logo Badge (Avatar tràn viền 1:1) */}
-        <div className="customer-store-floating-logo">
+      {/* 1. KHỐI TỔNG QUAN CỬA HÀNG (Header & Info Card) */}
+      <div className="customer-store-header-card">
+        {/* Hero Cover Header */}
+        <section className="customer-store-hero">
           <img
-            src={logoUrl}
+            src={coverUrl}
             alt={merchant.name}
+            className="customer-store-hero-img"
             loading="lazy"
             onError={(e) => {
-              if (!logoFailed) {
-                setLogoFailed(true);
+              if (!coverFailed) {
+                setCoverFailed(true);
               } else {
                 (e.currentTarget as HTMLImageElement).src =
-                  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="100%" height="100%" fill="%2322c55e"/></svg>';
+                  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><rect width="100%" height="100%" fill="%231e3a29"/></svg>';
               }
             }}
           />
-        </div>
-      </section>
+          <div className="customer-store-hero-scrim" />
 
-      {/* 2. Store Info Section */}
-      <section className="customer-store-info-section">
-        <h1 className="customer-store-title">{merchant.name}</h1>
+          {/* Floating Nav Buttons */}
+          <div className="customer-store-hero-nav">
+            <button
+              type="button"
+              className="customer-store-circle-btn"
+              onClick={onBack}
+              aria-label="Quay lại"
+            >
+              <ChevronLeft size={22} strokeWidth={2.5} />
+            </button>
 
-        <div style={{ marginTop: 6, marginBottom: 8 }}>
-          <span className={`customer-merchant-status-badge ${merchant.isOpen !== false ? 'is-open' : 'is-closed'}`}>
-            <span className="customer-merchant-status-dot" />
-            {merchant.isOpen !== false ? 'Đang mở cửa' : 'Đã đóng cửa'}
-          </span>
-        </div>
-
-        <div className="customer-store-address-row">
-          <MapPin size={15} strokeWidth={2} className="customer-store-address-pin" />
-          <span>{merchant.address}</span>
-        </div>
-
-        <div className="customer-store-meta-row">
-          <Star size={16} fill="#f59e0b" color="#f59e0b" />
-          <span>
-            {ratingValue} ({totalReviews})
-          </span>
-          <span className="customer-store-meta-bullet">•</span>
-          <span>{distanceFormatted}</span>
-        </div>
-
-        {merchant.isOpen === false && (
-          <div
-            style={{
-              marginTop: 12,
-              padding: '10px 14px',
-              borderRadius: 12,
-              background: '#fef2f2',
-              border: '1px solid #fee2e2',
-              color: '#991b1b',
-              fontSize: 13,
-              fontWeight: 500,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <Clock size={16} />
-            <span>Cửa hàng hiện đang tạm đóng cửa. Quý khách vui lòng quay lại sau!</span>
+            <div className="customer-store-hero-actions">
+              <button
+                type="button"
+                className="customer-store-circle-btn"
+                onClick={handleShare}
+                aria-label="Chia sẻ"
+              >
+                <Share2 size={19} strokeWidth={2.2} />
+              </button>
+            </div>
           </div>
-        )}
-      </section>
 
-      {/* 3. Lucky Bags List Section */}
-      <section className="customer-store-bags-section">
+          {/* Floating Brand Logo Badge */}
+          <div className="customer-store-floating-logo">
+            <img
+              src={logoUrl}
+              alt={merchant.name}
+              loading="lazy"
+              onError={(e) => {
+                if (!logoFailed) {
+                  setLogoFailed(true);
+                } else {
+                  (e.currentTarget as HTMLImageElement).src =
+                    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="100%" height="100%" fill="%2322c55e"/></svg>';
+                }
+              }}
+            />
+          </div>
+        </section>
+
+        {/* Store Info Section */}
+        <section className="customer-store-info-section">
+          <h1 className="customer-store-title">{merchant.name}</h1>
+
+          <div style={{ marginTop: 6, marginBottom: 8 }}>
+            <span className={`customer-merchant-status-badge ${merchant.isOpen !== false ? 'is-open' : 'is-closed'}`}>
+              <span className="customer-merchant-status-dot" />
+              {merchant.isOpen !== false ? 'Đang mở cửa' : 'Đã đóng cửa'}
+            </span>
+          </div>
+
+          <div className="customer-store-address-row">
+            <MapPin size={15} strokeWidth={2} className="customer-store-address-pin" />
+            <span>{merchant.address}</span>
+          </div>
+
+          <div className="customer-store-meta-row">
+            <Star size={16} fill="#f59e0b" color="#f59e0b" />
+            <span>
+              {ratingValue} ({totalReviews})
+            </span>
+            <span className="customer-store-meta-bullet">•</span>
+            <span>{distanceFormatted}</span>
+          </div>
+
+          {merchant.isOpen === false && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: '10px 14px',
+                borderRadius: 12,
+                background: '#fef2f2',
+                border: '1px solid #fee2e2',
+                color: '#991b1b',
+                fontSize: 13,
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <Clock size={16} />
+              <span>Cửa hàng hiện đang tạm đóng cửa. Quý khách vui lòng quay lại sau!</span>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* 2. KHỐI TÚI BẤT NGỜ (Lucky Bags Section) */}
+      <section className="customer-store-section customer-store-bags-card customer-store-bags-section">
+        <div className="customer-store-section-header customer-store-bags-header">
+          <h2 className="customer-store-section-title">Túi thực phẩm cứu trợ ({bags.length})</h2>
+        </div>
+
         {bags.length > 0 ? (
           <div className="customer-store-bags-list">
             {bags.map((bag) => {
@@ -337,8 +334,8 @@ export function MerchantDetailPage({
         )}
       </section>
 
-      {/* 4. About Store Section */}
-      <section className="customer-store-section">
+      {/* 3. KHỐI GIỚI THIỆU CỬA HÀNG (About Section) */}
+      <section className="customer-store-section customer-store-about-card">
         <div className="customer-store-section-header">
           <h2 className="customer-store-section-title">Giới thiệu cửa hàng</h2>
           <button
@@ -357,8 +354,8 @@ export function MerchantDetailPage({
         </div>
       </section>
 
-      {/* 5. User Ratings Section */}
-      <section className="customer-store-section">
+      {/* 4. KHỐI ĐÁNH GIÁ (Reviews Section) */}
+      <section className="customer-store-section customer-store-reviews-card">
         <div className="customer-store-section-header">
           <h2 className="customer-store-section-title">Đánh giá</h2>
           <button

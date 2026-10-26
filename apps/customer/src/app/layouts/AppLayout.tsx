@@ -32,14 +32,17 @@ export function AppLayout({
 }: AppLayoutProps) {
   return (
     <div className="customer-app-shell">
-      {showHeader && (
-        <AppHeader
-          location={location}
-          unreadCount={unreadCount}
-          onLocationClick={onLocationClick}
-          onNotificationClick={onNotificationClick}
-        />
-      )}
+      <AppHeader
+        location={location}
+        unreadCount={unreadCount}
+        activeTab={activeTab}
+        cartCount={cartCount}
+        ordersBadgeCount={ordersBadgeCount}
+        showOnMobile={showHeader}
+        onTabChange={onTabChange}
+        onLocationClick={onLocationClick}
+        onNotificationClick={onNotificationClick}
+      />
       <main className={showBottomNav ? 'customer-main-content has-navigation' : 'customer-main-content'}>
         {children}
       </main>

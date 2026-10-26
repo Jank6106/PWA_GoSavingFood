@@ -162,6 +162,33 @@ img { display: block; max-width: 100%; }
   padding: 8px 16px;
 }
 
+/* Mobile Header Default (Viewport < 768px) */
+.customer-header-desktop {
+  display: none !important;
+}
+.customer-header.hide-on-mobile {
+  display: none !important;
+}
+.customer-header-mobile {
+  display: flex !important;
+}
+
+/* Checkout Form Layout Default (Mobile) */
+.customer-checkout-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.customer-checkout-form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.customer-checkout-summary-col {
+  display: flex;
+  flex-direction: column;
+}
+
 @media (min-width: 768px) {
   .customer-header,
   .customer-header.is-transparent,
@@ -175,8 +202,8 @@ img { display: block; max-width: 100%; }
 
   .customer-header-inner {
     padding: 8px 24px;
-    height: 60px;
-    min-height: 60px;
+    height: 64px;
+    min-height: 64px;
   }
 }
 
@@ -996,6 +1023,21 @@ img { display: block; max-width: 100%; }
   min-height: 100vh;
   background: var(--color-bg-page);
   padding-bottom: 50px;
+}
+
+/* Store Base Layout Blocks (Mobile First) */
+.customer-store-desktop-breadcrumb {
+  display: none !important;
+}
+
+.customer-store-header-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.customer-store-bags-header {
+  display: none !important;
 }
 
 .customer-store-toast {
@@ -4273,6 +4315,28 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   width: 100%;
 }
 
+/* Product Detail Base Layout Blocks (Mobile First) */
+.customer-product-desktop-breadcrumb {
+  display: none !important;
+}
+
+.customer-product-desktop-sub-actions {
+  display: none !important;
+}
+
+.customer-product-desktop-actions {
+  display: none !important;
+}
+
+.customer-product-top-card,
+.customer-product-gallery-col,
+.customer-product-summary-col,
+.customer-product-bottom-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 @keyframes customerProductFadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -4797,14 +4861,6 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   color: #b91c1c;
 }
 
-@media (min-width: 768px) {
-  .customer-product-bottom-bar {
-    border-radius: 20px 20px 0 0;
-    border-left: 1px solid var(--color-border-subtle);
-    border-right: 1px solid var(--color-border-subtle);
-  }
-}
-
 .customer-product-btn-cart,
 .customer-product-btn-buy {
   height: 48px !important;
@@ -4847,19 +4903,135 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 }
 
 /* ==========================================================================
-   DESKTOP & TABLET RESPONSIVE SCALING (MATCHING MERCHANT APP)
+   DESKTOP & TABLET RESPONSIVE SCALING (SHOPEE WEB INSPIRED LAYOUT)
    ========================================================================== */
 
-/* 1. Shell, Screens & Main Container */
+/* 1. Shell, Header, Navigation & Main Container */
 @media (min-width: 768px) {
   .customer-app-shell {
     background: var(--color-bg-page);
   }
 
+  /* Header Desktop Styles */
+  .customer-header-mobile {
+    display: none !important;
+  }
+
+  .customer-header.hide-on-mobile {
+    display: block !important;
+  }
+
+  .customer-header-desktop {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    width: min(100%, 1200px);
+    margin: 0 auto;
+    padding: 8px 20px;
+    height: 64px;
+    min-height: 64px;
+  }
+
+  .customer-desktop-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .customer-desktop-location-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    max-width: 260px;
+  }
+
+  .customer-desktop-location-chip:hover {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .customer-desktop-location-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .customer-desktop-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .customer-desktop-nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+
+  .customer-desktop-nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+  }
+
+  .customer-desktop-nav-link.is-active {
+    background: rgba(255, 255, 255, 0.24);
+    color: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+
+  .customer-desktop-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .customer-desktop-badge.is-cart {
+    background: #f59e0b;
+    color: #ffffff;
+  }
+
+  /* Ẩn thanh BottomNav trên Desktop */
+  .customer-bottom-nav {
+    display: none !important;
+  }
+
   .customer-main-content {
     width: min(100%, 1200px);
     margin: 0 auto;
-    padding-inline: 16px;
+    padding-inline: 20px;
+  }
+
+  .customer-main-content.has-navigation {
+    padding-bottom: 36px !important;
   }
 
   .customer-toast-popup {
@@ -4869,9 +5041,11 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   }
 }
 
-/* 2. Home Page Desktop Layout */
+/* 2. Home Page Desktop Layout (Shopee Web Style Grid) */
 @media (min-width: 768px) {
   .customer-home-screen {
+    width: min(100%, 1200px);
+    margin: 0 auto;
     padding-top: 24px;
     gap: 32px;
   }
@@ -4904,20 +5078,53 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     line-height: 22px !important;
   }
 
+  .customer-search-trigger {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    height: 50px;
+    border-radius: 16px;
+    font-size: 14.5px;
+    border: 1.5px solid var(--color-border-subtle);
+    box-shadow: 0 4px 16px rgba(0, 40, 20, 0.05);
+    background: #ffffff;
+    transition: all 0.2s ease;
+  }
+
+  .customer-search-trigger:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 6px 20px rgba(22, 107, 74, 0.12);
+  }
+
   .customer-category-bar {
     margin: 0;
-    padding: 6px 0 10px;
-    gap: 20px;
+    padding: 6px 0 12px;
+    gap: 24px;
+    justify-content: center;
+    overflow-x: visible;
   }
 
   .customer-category-circle {
     width: 62px;
     height: 62px;
     border-radius: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .customer-category-circle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   }
 
   .customer-category-pill {
     min-width: 72px;
+  }
+
+  .customer-location-card {
+    width: min(100%, 520px);
+    margin: 0 auto;
+    border-radius: 16px;
+    padding: 13px 18px;
+    box-shadow: 0 3px 14px rgba(0, 40, 20, 0.05);
   }
 
   .customer-brand-track {
@@ -4931,22 +5138,26 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     padding: 16px 12px;
   }
 
+  /* Túi bất ngờ dạng Lưới sản phẩm Shopee trên máy tính */
   .customer-horizontal-list {
-    margin: 0;
-    padding: 6px 0 14px;
-    gap: 16px;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
   }
 
-  .customer-bag-card.is-compact {
-    min-width: 250px;
-    width: 250px;
-    flex: 0 0 250px;
-    height: 250px;
+  .customer-horizontal-list .customer-bag-card.is-compact {
+    min-width: 0 !important;
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    height: 250px !important;
   }
 
   .customer-merchant-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
   }
 
@@ -4957,6 +5168,14 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 }
 
 @media (min-width: 1024px) {
+  .customer-horizontal-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact {
+    height: 260px !important;
+  }
+
   .customer-merchant-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -4981,7 +5200,7 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   .customer-recommended-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 18px;
+    gap: 20px;
     background-color: transparent;
     padding-bottom: 0;
   }
@@ -5000,9 +5219,11 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   }
 }
 
-/* 4. Cart Page Desktop 2-Column Split */
+/* 4. Cart Page Desktop 2-Column Split (Shopee Web Style) */
 @media (min-width: 860px) {
   .customer-cart-screen {
+    width: min(100%, 1100px);
+    margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 380px;
     gap: 32px;
@@ -5015,89 +5236,573 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     grid-column: 1 / -1;
   }
 
+  .customer-cart-item {
+    grid-template-columns: 100px 1fr;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+  }
+
+  .customer-cart-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 40, 20, 0.08);
+    border-color: rgba(22, 107, 74, 0.25);
+  }
+
   .customer-cart-screen .gsf-order-summary {
     position: sticky;
-    top: 90px;
+    top: 88px;
+    box-shadow: 0 8px 26px rgba(0, 40, 20, 0.08);
+    border-radius: 20px;
   }
 }
 
-/* 5. Orders Page Desktop Grid */
+/* 5. Orders Page Desktop Grid (Shopee Web Style) */
 @media (min-width: 768px) {
   .customer-orders-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .customer-order-card {
+    border-radius: 20px;
+    padding: 18px 20px;
+    transition: all 0.2s ease;
+    background: #ffffff;
+    box-shadow: 0 4px 18px rgba(0, 40, 20, 0.04);
+  }
+
+  .customer-order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(0, 40, 20, 0.1);
+    border-color: rgba(22, 107, 74, 0.3);
   }
 
   .customer-filter-tabs {
     gap: 10px;
-    padding: 4px 0 10px;
+    padding: 4px 0 16px;
+    margin: 0;
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 }
 
-/* 6. Product Detail (BagDetailPage) Desktop Layout */
-@media (min-width: 860px) {
+/* 6. Product Detail (BagDetailPage) Shopee-Style Desktop Web Layout */
+@media (min-width: 768px) {
   .customer-product-screen {
-    display: grid;
-    grid-template-columns: 460px 1fr;
-    gap: 36px;
-    align-items: start;
-    padding: 24px 20px 120px;
     max-width: 1200px;
     margin: 0 auto;
+    padding: 18px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: calc(100dvh - 64px);
+    background: transparent;
+  }
+
+  /* Breadcrumb Navigation */
+  .customer-product-desktop-breadcrumb {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: #64748b;
+    padding: 2px 4px;
+  }
+
+  .customer-product-breadcrumb-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-primary, #166B4A);
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .customer-product-breadcrumb-back:hover {
+    opacity: 0.8;
+  }
+
+  .customer-product-breadcrumb-sep {
+    color: #cbd5e1;
+  }
+
+  .customer-product-breadcrumb-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #64748b;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .customer-product-breadcrumb-link:hover {
+    color: var(--color-primary, #166B4A);
+  }
+
+  .customer-product-breadcrumb-current {
+    color: #1e293b;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 320px;
+  }
+
+  /* KHỐI 1: Top Product Card (Shopee Main Showcase Box) */
+  .customer-product-top-card {
+    display: grid !important;
+    grid-template-columns: minmax(360px, 450px) 1fr;
+    gap: 36px;
+    align-items: start;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    padding: 28px;
+  }
+
+  /* Cột trái: Gallery & Ảnh sản phẩm (Cuộn tự nhiên theo card, KHÔNG STICKY) */
+  .customer-product-gallery-col {
+    display: flex !important;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 450px;
   }
 
   .customer-product-hero {
-    position: sticky;
-    top: 90px;
-    height: 480px;
-    border-radius: 24px;
+    position: relative !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 450px !important;
+    aspect-ratio: 1 / 1 !important;
+    height: auto !important;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+    box-shadow: none;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
   }
 
-  .customer-product-main-content {
+  .customer-product-hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .customer-product-hero:hover .customer-product-hero-img {
+    transform: scale(1.02);
+  }
+
+  /* Ẩn floating buttons trên desktop */
+  .customer-product-hero-nav,
+  .customer-product-hero-scrim {
+    display: none !important;
+  }
+
+  /* Nút Chia sẻ dưới ảnh trên Desktop */
+  .customer-product-desktop-sub-actions {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding-top: 4px;
+  }
+
+  .customer-product-desktop-sub-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+  }
+
+  .customer-product-desktop-sub-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+
+  /* Cột phải: Thông tin & Đặt hàng */
+  .customer-product-summary-col {
+    display: flex !important;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  .customer-product-info-card {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    gap: 14px;
+  }
+
+  .customer-product-title {
+    font-size: 24px !important;
+    font-weight: 750 !important;
+    line-height: 1.35 !important;
+    color: #1e293b !important;
+  }
+
+  .customer-product-meta-row {
+    font-size: 14px !important;
+    gap: 10px;
+  }
+
+  /* Khung Giá Shopee (Hộp xám nổi bật) */
+  .customer-product-price-row {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-top: 4px;
+  }
+
+  .customer-product-price {
+    font-size: 32px !important;
+    font-weight: 800 !important;
+    color: var(--color-primary, #166B4A) !important;
+  }
+
+  .customer-product-orig-price {
+    font-size: 16px !important;
+  }
+
+  .customer-product-discount-pill {
+    font-size: 12px !important;
+    padding: 3px 8px !important;
+  }
+
+  .customer-product-urgency-row {
+    padding-top: 2px;
+    gap: 10px;
+  }
+
+  /* Khung giờ nhận túi (Inline trong cột phải trên Desktop) */
+  .customer-product-pickup-section {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  .customer-product-pickup-section .customer-store-section-header {
+    margin-bottom: 8px;
+  }
+
+  .customer-product-pickup-section .customer-store-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .customer-product-pickup-card {
+    background: #f0fdf4 !important;
+    border: 1px solid #dcfce7 !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+  }
+
+  /* Cụm Mua hàng & Thao tác trên Desktop (Shopee style) */
+  .customer-product-desktop-actions {
+    display: block !important;
+    margin-top: 4px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .customer-product-desktop-buy-box {
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    gap: 20px;
+  }
+
+  .customer-product-desktop-quantity-row {
+    display: flex;
+    align-items: center;
     gap: 16px;
   }
 
-  .customer-product-main-content .customer-product-info-card,
-  .customer-product-main-content .customer-store-section {
-    border-radius: 20px;
-    border: 1px solid var(--color-border-subtle);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  .customer-product-desktop-label {
+    width: 80px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
   }
 
-  .customer-product-hero-nav {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    right: 16px;
+  .customer-product-desktop-stock-hint {
+    font-size: 13.5px;
+    color: #94a3b8;
   }
 
-  .customer-product-bottom-bar {
-    width: min(100%, 840px);
-    border-radius: 20px 20px 0 0;
-    border-left: 1px solid var(--color-border-subtle);
-    border-right: 1px solid var(--color-border-subtle);
+  .customer-product-desktop-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .customer-product-desktop-btn-cart {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    height: 48px !important;
+    min-width: 200px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--color-primary, #166B4A) !important;
+    border: 1.5px solid var(--color-primary, #166B4A) !important;
+    background: rgba(22, 107, 74, 0.08) !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+  }
+
+  .customer-product-desktop-btn-cart:hover {
+    background: rgba(22, 107, 74, 0.16) !important;
+    transform: translateY(-1px);
+  }
+
+  .customer-product-desktop-btn-buy {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 48px !important;
+    min-width: 200px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    background: var(--color-primary, #166B4A) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+    box-shadow: 0 4px 14px rgba(22, 107, 74, 0.28) !important;
+  }
+
+  .customer-product-desktop-btn-buy:hover {
+    background: var(--color-primary-active, #193B2C) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(22, 107, 74, 0.35) !important;
+  }
+
+  .customer-product-desktop-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .customer-product-desktop-banner--closed {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  .customer-product-desktop-banner--upcoming {
+    background: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #fef08a;
+  }
+
+  .customer-product-desktop-banner--order_closed {
+    background: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+  }
+
+  .customer-product-desktop-banner--sold_out {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+  }
+
+  .customer-product-desktop-banner--expired {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fee2e2;
+  }
+
+  /* KHỐI 2: Cửa hàng cung cấp (Full width card dưới Khối 1) */
+  .customer-product-merchant-section {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 22px 28px !important;
+    margin: 0 !important;
+  }
+
+  .customer-product-merchant-section .customer-store-section-header {
+    margin-bottom: 14px;
+  }
+
+  .customer-product-merchant-section .customer-store-section-title {
+    font-size: 15px;
+    font-weight: 750;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .customer-product-merchant-card {
+    border: 1px solid #f1f5f9;
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 16px 20px;
+  }
+
+  /* KHỐI 3: Mô tả & Đánh giá (Full width card dưới cùng) */
+  .customer-product-bottom-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 28px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 32px !important;
+  }
+
+  .customer-product-desc-section,
+  .customer-product-reviews-section {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  .customer-product-shopee-header {
+    background: #f8fafc !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 16px !important;
+    border: 1px solid #f1f5f9 !important;
+  }
+
+  .customer-product-shopee-header .customer-store-section-title {
+    font-size: 15px !important;
+    font-weight: 750 !important;
+    color: #334155 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  .customer-product-description {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #334155;
+  }
+
+  /* ẨN HOÀN TOÀN STICKY BOTTOM BAR TRÊN DESKTOP */
+  .customer-product-bottom-bar,
+  .customer-product-bottom-bar-mobile {
+    display: none !important;
   }
 }
 
-/* 7. Store View (MerchantDetailPage) Desktop Layout */
+/* 7. Store View (MerchantDetailPage) Desktop Block Cards Layout */
 @media (min-width: 768px) {
   .customer-store-view {
     padding-bottom: 60px;
     max-width: 1200px;
     margin: 0 auto;
+    padding: 18px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: calc(100dvh - 64px);
+    background: transparent;
+  }
+
+  /* Desktop Breadcrumb Navigation */
+  .customer-store-desktop-breadcrumb {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: #64748b;
+    padding: 2px 4px;
+  }
+
+  .customer-store-breadcrumb-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-primary, #166B4A);
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .customer-store-breadcrumb-back:hover {
+    opacity: 0.8;
+  }
+
+  .customer-store-breadcrumb-sep {
+    color: #cbd5e1;
+  }
+
+  .customer-store-breadcrumb-current {
+    color: #1e293b;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+  }
+
+  /* KHỐI 1: Store Header & Profile Card */
+  .customer-store-header-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .customer-store-hero {
     position: relative;
-    margin: 16px 0 0;
+    width: 100%;
+    height: 280px;
+    margin: 0;
     overflow: visible;
-    height: 320px;
   }
 
   .customer-store-hero-img {
@@ -5105,34 +5810,226 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     height: 100%;
     object-fit: cover;
     display: block;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .customer-store-hero-scrim {
-    border-radius: 24px;
+    border-radius: 0;
   }
 
-  .customer-store-bags-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+  .customer-store-hero-nav {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+  }
+
+  .customer-store-floating-logo {
+    right: 32px;
+    bottom: -32px;
+    width: 96px;
+    height: 96px;
+    border-radius: 16px;
+    border: 4px solid #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  }
+
+  .customer-store-floating-logo img {
+    border-radius: 12px;
+  }
+
+  .customer-store-info-section {
+    background: transparent;
+    border: none;
+    padding: 32px 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .customer-store-title {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.3;
+    color: #1e293b;
+    padding-right: 120px;
+    margin: 0;
+  }
+
+  .customer-store-address-row {
+    font-size: 14px;
+    gap: 8px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .customer-store-meta-row {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #334155;
+    margin-top: 2px;
+  }
+
+  /* KHỐI 2: Danh sách túi thực phẩm cứu trợ (Bags Card) */
+  .customer-store-bags-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 32px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid var(--color-border-subtle) !important;
+  }
+
+  .customer-store-bags-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .customer-store-bags-header .customer-store-section-title {
+    font-size: 16px;
+    font-weight: 750;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .customer-store-bag-row {
+    padding: 18px 12px;
+    border-radius: 12px;
+    transition: background 0.18s ease;
+  }
+
+  .customer-store-bag-row:hover {
+    background: #f8fafc;
+  }
+
+  .customer-store-bag-thumb-box {
+    width: 96px;
+    height: 96px;
+    flex: 0 0 96px;
+    border-radius: 14px;
+  }
+
+  .customer-store-bag-name {
+    font-size: 16px;
+  }
+
+  .customer-store-bag-price {
+    font-size: 20px;
+  }
+
+  /* KHỐI 3: Giới thiệu cửa hàng (About Card) */
+  .customer-store-about-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 32px !important;
+    margin: 0 !important;
+  }
+
+  .customer-store-about-card .customer-store-section-header {
+    margin-bottom: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .customer-store-about-card .customer-store-section-title {
+    font-size: 16px;
+    font-weight: 750;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .customer-store-about-body p {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  /* KHỐI 4: Đánh giá (Reviews Card) */
+  .customer-store-reviews-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 32px !important;
+    margin: 0 !important;
+  }
+
+  .customer-store-reviews-card .customer-store-section-header {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .customer-store-reviews-card .customer-store-section-title {
+    font-size: 16px;
+    font-weight: 750;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .customer-store-ratings-card {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 14px;
+    padding: 18px 24px;
   }
 }
 
 /* 8. Search & Map Page Desktop Layout */
 @media (min-width: 768px) {
+  .customer-app-shell:has(.customer-location-page-fullscreen),
+  .customer-app-shell:has(.customer-yindii-search-container) {
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
   .customer-main-content:has(.customer-yindii-search-container),
   .customer-main-content:has(.customer-location-page-fullscreen) {
     padding-inline: 0 !important;
-    min-height: 100vh;
+    height: calc(100vh - 64px) !important;
+    height: calc(100dvh - 64px) !important;
+    min-height: calc(100vh - 64px) !important;
+    max-height: calc(100dvh - 64px) !important;
+    overflow: hidden !important;
   }
 
   .customer-yindii-search-container,
   .customer-location-page-fullscreen {
     width: min(100%, 1200px);
+    height: calc(100vh - 64px) !important;
+    height: calc(100dvh - 64px) !important;
+    min-height: calc(100vh - 64px) !important;
+    max-height: calc(100dvh - 64px) !important;
     margin: 0 auto;
+    overflow: hidden;
+  }
+
+  .customer-location-bottom-card {
+    width: min(calc(100% - 48px), 640px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: 24px;
+    padding: 16px 20px;
+    border-radius: 20px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+  }
+
+  .customer-location-gps-fab {
+    bottom: 200px;
+    right: 24px;
   }
 
   .customer-yindii-list-container {
@@ -5151,9 +6048,10 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 /* 9. Profile Page Desktop Layout */
 @media (min-width: 768px) {
   .customer-profile-screen {
-    width: min(100%, 1000px);
+    width: min(100%, 860px);
     margin: 0 auto;
     gap: 28px;
+    padding-top: 20px;
   }
 
   .customer-profile-card {
@@ -5185,31 +6083,53 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   }
 }
 
-/* 10. Checkout & Payment Desktop Layout */
+/* 10. Checkout & Payment Desktop Layout (Fixed 2-Column Split) */
 @media (min-width: 860px) {
   .customer-checkout-screen {
-    width: min(100%, 1000px);
+    width: min(100%, 1100px);
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 20px;
+  }
+
+  .customer-checkout-content {
     display: grid;
     grid-template-columns: 1fr 380px;
-    gap: 28px;
+    gap: 32px;
     align-items: start;
   }
 
-  .customer-checkout-screen > .customer-screen-header {
-    grid-column: 1 / -1;
+  .customer-checkout-form-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
   }
 
-  .customer-checkout-screen .gsf-order-summary {
+  .customer-checkout-summary-col {
     position: sticky;
-    top: 90px;
+    top: 88px;
   }
 
   .customer-payment-screen {
     width: min(100%, 800px);
     margin: 0 auto;
+    padding-top: 20px;
   }
 }
+
+/* 11. Order Detail Page Desktop Layout */
+@media (min-width: 768px) {
+  .customer-order-detail-screen {
+    width: min(100%, 860px);
+    margin: 0 auto;
+    gap: 20px;
+    padding-top: 20px;
+  }
+}
+
 
 
 
