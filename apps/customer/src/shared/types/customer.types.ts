@@ -5,6 +5,7 @@ export type FoodCategory =
   | 'bakery'
   | 'seafood'
   | 'beverage'
+  | 'raw_food'
   | 'other';
 
 export type OrderStatus =
@@ -218,7 +219,7 @@ export interface CheckoutDraft {
 export type AppRoute =
   | { name: 'tabs'; tab: CustomerTab }
   | { name: 'search' }
-  | { name: 'bags' }
+  | { name: 'bags'; categoryId?: FoodCategory }
   | { name: 'bag'; id: string }
   | { name: 'merchant'; id: string }
   | { name: 'merchant_reviews'; id: string }

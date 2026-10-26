@@ -324,38 +324,49 @@ img { display: block; max-width: 100%; }
 .customer-section-heading h2 { margin: 0; font-size: clamp(23px, 6.2vw, 28px); font-weight: 850; line-height: 1.2; letter-spacing: -0.025em; color: var(--color-text-primary); }
 .customer-section-heading p { margin: 1px 0 0; color: var(--color-text-muted); font-size: 12px; }
 .customer-section-heading > button { flex: 0 0 auto; padding: 6px 4px; border: 0; background: none; color: var(--color-primary); font-size: 14px; font-weight: 800; cursor: pointer; }
-.customer-horizontal-list { display: flex; gap: 12px; margin: 0 -16px; padding: 0 16px 7px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
 
-.customer-bag-card { position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 236px; overflow: hidden; border-radius: 18px; background: #022c1b; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 18px rgba(0, 40, 20, 0.08); cursor: pointer; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease; user-select: none; }
+/* Khung bọc danh sách sản phẩm theo hàng ngang */
+.customer-category-row-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.customer-category-nav-btn {
+  display: none !important;
+}
+
+.customer-horizontal-list { display: flex; gap: 10px; margin: 0 -16px; padding: 0 16px 7px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+
+.customer-bag-card { position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 185px; overflow: hidden; border-radius: 14px; background: #022c1b; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 18px rgba(0, 40, 20, 0.08); cursor: pointer; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease; user-select: none; }
 .customer-bag-card:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0, 40, 20, 0.16); }
 .customer-bag-card:active { transform: scale(0.985); }
-.customer-bag-card.is-compact { min-width: 220px; width: 220px; flex: 0 0 220px; scroll-snap-align: start; }
+.customer-bag-card.is-compact { min-width: 172px; width: 172px; flex: 0 0 172px; scroll-snap-align: start; height: 185px; }
 .customer-bag-media { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: hidden; }
 .customer-bag-photo { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
 .customer-bag-card:hover .customer-bag-photo { transform: scale(1.06); }
-.customer-bag-top-badges { position: absolute; z-index: 3; top: 9px; left: 9px; right: 9px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
-.customer-discount-tag { padding: 3.5px 8px; border-radius: 8px; background: #ef4444; color: #ffffff; font-size: 13px; font-weight: 850; letter-spacing: -0.2px; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); }
-.customer-distance-tag, .customer-status-tag { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 7px; background: rgba(0, 0, 0, 0.52); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; font-size: 10px; font-weight: 700; }
-.customer-bag-overlay { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 3px; padding: 26px 10px 10px 10px; background: linear-gradient(to top, rgba(0, 14, 8, 0.92) 0%, rgba(0, 20, 12, 0.75) 45%, rgba(0, 20, 12, 0.35) 75%, rgba(0, 20, 12, 0.08) 90%, transparent 100%); color: #ffffff; }
+.customer-bag-top-badges { position: absolute; z-index: 3; top: 7px; left: 7px; right: 7px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
+.customer-discount-tag { padding: 2.5px 6px; border-radius: 6px; background: #ef4444; color: #ffffff; font-size: 11px; font-weight: 850; letter-spacing: -0.2px; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4); }
+.customer-distance-tag, .customer-status-tag { display: inline-flex; align-items: center; gap: 2.5px; padding: 2.5px 5px; border-radius: 6px; background: rgba(0, 0, 0, 0.52); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; font-size: 9.5px; font-weight: 700; }
+.customer-bag-overlay { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 2px; padding: 18px 8px 8px 8px; background: linear-gradient(to top, rgba(0, 14, 8, 0.94) 0%, rgba(0, 20, 12, 0.78) 45%, rgba(0, 20, 12, 0.35) 75%, rgba(0, 20, 12, 0.08) 90%, transparent 100%); color: #ffffff; }
 .customer-bag-info { display: flex; flex-direction: column; gap: 2px; }
-.customer-bag-merchant { font-size: 10px; font-weight: 750; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
-.customer-bag-title { margin: 0; font-size: 13px; font-weight: 800; color: #ffffff; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.95); }
-.customer-bag-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 2px; font-size: 10px; color: rgba(255, 255, 255, 0.9); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
-.customer-bag-time-group { display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.customer-bag-time { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; white-space: nowrap; }
+.customer-bag-merchant { font-size: 9.5px; font-weight: 750; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+.customer-bag-title { margin: 0; font-size: 12px; font-weight: 800; color: #ffffff; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.95); }
+.customer-bag-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 1px; font-size: 9px; color: rgba(255, 255, 255, 0.9); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
+.customer-bag-time-group { display: flex; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.customer-bag-time { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; white-space: nowrap; }
 .customer-bag-distance { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; white-space: nowrap; color: rgba(255, 255, 255, 0.9); }
-.customer-bag-stock { color: #fef08a; font-weight: 750; font-size: 9.5px; background: rgba(0, 0, 0, 0.5); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.2); white-space: nowrap; text-shadow: none; flex-shrink: 0; }
-.customer-bag-bottom-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: 3px; padding-top: 5px; border-top: 1px solid rgba(255, 255, 255, 0.16); }
+.customer-bag-stock { color: #fef08a; font-weight: 750; font-size: 8.5px; background: rgba(0, 0, 0, 0.5); padding: 1px 4px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.2); white-space: nowrap; text-shadow: none; flex-shrink: 0; }
+.customer-bag-bottom-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; margin-top: 2px; padding-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.16); }
 .customer-price-stack { display: flex; flex-direction: column; gap: 1px; }
 .customer-bag-bottom-row .customer-price-stack { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.customer-bag-bottom-row .customer-price-stack del { color: rgba(255, 255, 255, 0.7); font-size: 10px; line-height: 1.1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
-.customer-bag-bottom-row .customer-price-stack strong { color: #34d399; font-size: 14.5px; font-weight: 850; line-height: 1.15; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.95); }
-.customer-bag-add-btn { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px; padding: 0; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 9px; background: linear-gradient(135deg, #1E8A5E 0%, #6DBF8B 100%); color: #ffffff; cursor: pointer; box-shadow: 0 2px 7px rgba(0, 0, 0, 0.25); transition: transform 0.18s ease, background 0.18s ease; }
+.customer-bag-bottom-row .customer-price-stack del { color: rgba(255, 255, 255, 0.7); font-size: 9.5px; line-height: 1.1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.customer-bag-bottom-row .customer-price-stack strong { color: #34d399; font-size: 14px; font-weight: 850; line-height: 1.15; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.95); }
+.customer-bag-add-btn { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; padding: 0; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; background: linear-gradient(135deg, #1E8A5E 0%, #6DBF8B 100%); color: #ffffff; cursor: pointer; box-shadow: 0 2px 7px rgba(0, 0, 0, 0.25); transition: transform 0.18s ease, background 0.18s ease; }
 .customer-bag-add-btn:hover { transform: scale(1.08); background: linear-gradient(135deg, #166B4A 0%, #1E8A5E 100%); }
 .customer-bag-add-btn:active { transform: scale(0.92); }
 .customer-bag-add-btn.is-added { background: linear-gradient(135deg, #166B4A 0%, #6DBF8B 100%); transform: scale(1.1); box-shadow: 0 0 12px rgba(34, 197, 94, 0.7); }
 .customer-bag-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.customer-bag-grid .customer-bag-card { height: 225px; }
+.customer-bag-grid .customer-bag-card { height: 185px; }
 
 .customer-brand-track { display: flex; gap: 10px; margin: 0 -16px; padding: 0 16px 5px; overflow-x: auto; scrollbar-width: none; }
 .customer-brand-track button { display: flex; min-width: 112px; align-items: center; flex-direction: column; gap: 6px; padding: 14px 10px; border: 1px solid var(--color-border-subtle); border-radius: 17px; background: #fff; cursor: pointer; }
@@ -5396,7 +5407,7 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   }
 
   .customer-location-card {
-    width: min(100%, 520px);
+    width: min(100%, 760px);
     margin: 0 auto;
     border-radius: 16px;
     padding: 13px 18px;
@@ -5447,10 +5458,10 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   }
 
   .customer-home-top-unified-block .customer-location-card {
-    width: min(100%, 540px);
+    width: min(100%, 760px);
     margin: 0 auto;
     border-radius: 14px;
-    padding: 12px 16px;
+    padding: 12px 18px;
     box-shadow: 0 2px 8px rgba(0, 40, 20, 0.04);
   }
 
@@ -5495,6 +5506,116 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     letter-spacing: -0.01em !important;
   }
 
+  /* Danh sách túi hàng 1 hàng ngang (Carousel) trên Desktop */
+  .customer-category-row-wrapper .customer-horizontal-list,
+  .customer-horizontal-list,
+  .customer-category-bag-list {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    scroll-behavior: smooth !important;
+    gap: 14px !important;
+    margin: 0 !important;
+    padding: 4px 2px 10px !important;
+  }
+
+  .customer-horizontal-list::-webkit-scrollbar,
+  .customer-category-bag-list::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Thu nhỏ kích thước túi hàng trên bản web nhỏ gọn, vừa vặn theo tỉ lệ chuẩn 220/236 */
+  .customer-horizontal-list .customer-bag-card.is-compact,
+  .customer-category-bag-list .customer-bag-card.is-compact {
+    min-width: 172px !important;
+    width: 172px !important;
+    max-width: 172px !important;
+    flex: 0 0 172px !important;
+    height: 185px !important;
+    border-radius: 14px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-bag-overlay,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-bag-overlay {
+    padding: 16px 8px 8px 8px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-bag-title,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-bag-title {
+    font-size: 12px !important;
+    font-weight: 750 !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-bag-merchant,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-bag-merchant {
+    font-size: 9.5px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-discount-tag,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-discount-tag {
+    padding: 2.5px 6px !important;
+    font-size: 11px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-distance-tag,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-distance-tag {
+    padding: 2.5px 5px !important;
+    font-size: 9.5px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-bag-bottom-row strong,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-bag-bottom-row strong {
+    font-size: 14px !important;
+  }
+
+  /* 2 nút điều hướng trượt danh sách sản phẩm Shopee Web */
+  .customer-category-nav-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+    color: #1e293b;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .customer-category-nav-btn:hover:not(:disabled) {
+    background: #ffffff;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.24);
+    color: var(--color-primary);
+  }
+
+  .customer-category-nav-btn:active:not(:disabled) {
+    transform: translateY(-50%) scale(0.95);
+  }
+
+  .customer-category-nav-btn.is-prev {
+    left: -14px;
+  }
+
+  .customer-category-nav-btn.is-next {
+    right: -14px;
+  }
+
+  .customer-category-nav-btn.is-disabled,
+  .customer-category-nav-btn:disabled {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(-50%) scale(0.85);
+  }
+
   /* Khối 3: Thương hiệu nổi bật - marquee vừa vặn trong khối */
   .customer-home-brands-section .customer-brand-marquee-viewport {
     width: 100% !important;
@@ -5521,23 +5642,6 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     padding: 16px 12px;
   }
 
-  /* Túi bất ngờ dạng Lưới sản phẩm Shopee trên máy tính */
-  .customer-horizontal-list {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 20px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-  }
-
-  .customer-horizontal-list .customer-bag-card.is-compact {
-    min-width: 0 !important;
-    width: 100% !important;
-    flex: 1 1 auto !important;
-    height: 250px !important;
-  }
-
   .customer-merchant-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5551,14 +5655,6 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 }
 
 @media (min-width: 1024px) {
-  .customer-horizontal-list {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  }
-
-  .customer-horizontal-list .customer-bag-card.is-compact {
-    height: 260px !important;
-  }
-
   .customer-merchant-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

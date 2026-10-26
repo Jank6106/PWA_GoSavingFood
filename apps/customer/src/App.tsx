@@ -923,7 +923,7 @@ function CustomerApp() {
 
   const renderScreen = () => {
     if (route.name === 'tabs') {
-      if (route.tab === 'home') return <HomePage {...catalog} location={location} onSearch={() => push({ name: 'search' })} onLocation={() => push({ name: 'location' })} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })} onAdd={addToCart} onViewAll={() => push({ name: 'bags' })} />;
+      if (route.tab === 'home') return <HomePage {...catalog} location={location} onSearch={() => push({ name: 'search' })} onLocation={() => push({ name: 'location' })} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })} onAdd={addToCart} onViewAll={(categoryId) => push({ name: 'bags', categoryId })} />;
       if (route.tab === 'cart') return <CartPage items={cart.items} isAuthenticated={auth.isAuthenticated} {...cart.summary} onLogin={auth.showAuthModal} onExplore={home} onCheckout={startCheckout} onUpdate={cart.updateQuantity} onRemove={cart.removeItem} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} />;
       if (route.tab === 'orders') return <OrdersPage orders={orders} isAuthenticated={auth.isAuthenticated} onLogin={auth.showAuthModal} onOpenOrder={(order) => push({ name: 'order', id: order.id })} />;
       return (
@@ -970,7 +970,23 @@ function CustomerApp() {
       );
 
 
-    if (route.name === 'bags') return <BagsPage bags={catalog.bags} categories={catalog.categories} onBack={back} onOpen={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
+    if (route.name === 'bags') {
+      const selectedCatId = route.categoryId;
+      const filteredBags = selectedCatId && selectedCatId !== 'all'
+        ? catalog.bags.filter((b) => b.category === selectedCatId)
+        : catalog.bags;
+      const targetCategory = catalog.categories.find((c) => c.id === selectedCatId);
+      return (
+        <BagsPage
+          title={targetCategory ? `Túi thực phẩm: ${targetCategory.label}` : 'Gợi ý cho bạn'}
+          bags={filteredBags}
+          categories={catalog.categories}
+          onBack={back}
+          onOpen={(bag) => push({ name: 'bag', id: bag.id })}
+          onAdd={addToCart}
+        />
+      );
+    }
     if (route.name === 'bag')
       return (
         <BagDetailPage

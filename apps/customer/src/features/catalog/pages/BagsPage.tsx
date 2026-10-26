@@ -5,6 +5,7 @@ import { isBagVisibleOnMarket } from '../../../shared/utils/bagTiming';
 import type { Category, SurpriseBag } from '../../../shared/types/customer.types';
 
 interface BagsPageProps {
+  title?: string;
   bags: SurpriseBag[];
   categories?: Category[];
   onBack: () => void;
@@ -12,7 +13,7 @@ interface BagsPageProps {
   onAdd: (bag: SurpriseBag) => void;
 }
 
-export function BagsPage({ bags, onBack, onOpen }: BagsPageProps) {
+export function BagsPage({ title, bags, onBack, onOpen }: BagsPageProps) {
   const visibleBags = bags.filter(isBagVisibleOnMarket);
 
   return (
@@ -26,7 +27,7 @@ export function BagsPage({ bags, onBack, onOpen }: BagsPageProps) {
         >
           <ChevronLeft size={28} strokeWidth={2.6} />
         </button>
-        <h1 className="customer-recommended-title">Gợi ý cho bạn</h1>
+        <h1 className="customer-recommended-title">{title || 'Gợi ý cho bạn'}</h1>
         <div className="customer-recommended-spacer" />
       </header>
 

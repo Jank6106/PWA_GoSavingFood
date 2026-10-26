@@ -56,9 +56,10 @@ export const HOME_CATEGORIES: Category[] = [
   { id: 'all', label: 'Tất cả', icon: 'all' },
   { id: 'bakery', label: 'Bánh ngọt', icon: 'bakery' },
   { id: 'meat', label: 'Món nóng', icon: 'meat' },
-  { id: 'vegetarian', label: 'Ăn xanh', icon: 'vegetarian' },
+  { id: 'vegetarian', label: 'Món Chay', icon: 'vegetarian' },
   { id: 'beverage', label: 'Đồ uống', icon: 'beverage' },
-  { id: 'other', label: 'Túi bí mật', icon: 'other' },
+  { id: 'raw_food', label: 'Rau củ', icon: 'raw_food' },
+  { id: 'other', label: 'Combo bất ngờ', icon: 'other' },
 ];
 
 const formatRelativeTime = (iso?: string | null) => {
@@ -191,7 +192,9 @@ const normalizeCategory = (cat?: string | null): Exclude<FoodCategory, 'all'> =>
   if (c === 'bakery' || c.includes('bánh')) return 'bakery';
   if (c === 'meat' || c.includes('mặn') || c.includes('thịt')) return 'meat';
   if (c === 'beverage' || c.includes('uống') || c.includes('nước') || c.includes('cà phê')) return 'beverage';
-  if (c === 'vegetarian' || c === 'raw_food' || c.includes('chay') || c.includes('rau') || c.includes('quả') || c.includes('salad')) return 'vegetarian';
+  if (c === 'raw_food' || c.includes('rau') || c.includes('củ') || c.includes('trái cây') || c.includes('nông sản')) return 'raw_food';
+  if (c === 'vegetarian' || c.includes('chay') || c.includes('healthy')) return 'vegetarian';
+  if (c === 'seafood' || c.includes('hải sản') || c.includes('cá') || c.includes('tôm')) return 'seafood';
   return 'other';
 };
 
@@ -519,7 +522,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     description: 'Set nấm đùi gà, nấm kim châm, nấm bào ngư hữu cơ kèm nước cốt lẩu hầm táo đỏ và củ quả.',
     originalPrice: 120000,
     discountPrice: 49000,
-    category: 'vegetarian',
+    category: 'raw_food',
     imageUrl: 'https://images.unsplash.com/photo-1547496502-affa22d38842?w=600',
     quantity: 3,
     maxQuantity: 1,
@@ -913,7 +916,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     description: 'Nem rong biển giòn tan cuộn khoai môn bùi bùi cùng bát salad sốt chanh leo thanh mát bổ dưỡng.',
     originalPrice: 115000,
     discountPrice: 45000,
-    category: 'vegetarian',
+    category: 'raw_food',
     imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600',
     quantity: 4,
     maxQuantity: 2,
