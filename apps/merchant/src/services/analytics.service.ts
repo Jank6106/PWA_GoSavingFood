@@ -1,4 +1,12 @@
-import type { AnalyticsMetrics, ReviewItem, RevenueChartPoint } from '../types';
+import type {
+  AnalyticsMetrics,
+  AnalyticsTimeframe,
+  OrderStatusSlice,
+  PaymentChannelStat,
+  PeriodKpiData,
+  ReviewItem,
+  RevenueChartPoint,
+} from '../types';
 import { supabase } from './supabase';
 
 const DAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
@@ -286,6 +294,294 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
 
   metricsInFlight.set(storeId, fetchPromise);
   return fetchPromise;
+}
+
+export function getPeriodRange(
+  timeframe: AnalyticsTimeframe,
+  customRange?: { start: string; end: string }
+): { start: Date; end: Date; label: string; mode: 'hourly' | 'daily' | 'monthly' } {
+  const now = new Date();
+
+  if (timeframe === 'today') {
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    return { start, end, label: 'hôm nay', mode: 'hourly' };
+  }
+
+  if (timeframe === 'yesterday') {
+    const y = new Date(now);
+    y.setDate(y.getDate() - 1);
+    const start = new Date(y.getFullYear(), y.getMonth(), y.getDate(), 0, 0, 0);
+    const end = new Date(y.getFullYear(), y.getMonth(), y.getDate(), 23, 59, 59, 999);
+    return { start, end, label: 'hôm qua', mode: 'hourly' };
+  }
+
+  if (timeframe === 'this_week' || timeframe === '7d') {
+    const days = timeframe === '7d' ? 7 : now.getDay() === 0 ? 7 : now.getDay();
+    const start = new Date(now);
+    start.setDate(now.getDate() - (days - 1));
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return { start, end, label: timeframe === '7d' ? '7 ngày qua' : 'tuần này', mode: 'daily' };
+  }
+
+  if (timeframe === 'this_month' || timeframe === '30d') {
+    if (timeframe === '30d') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - 29);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      return { start, end, label: '30 ngày qua', mode: 'daily' };
+    }
+    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { start, end, label: 'tháng này', mode: 'daily' };
+  }
+
+  if (timeframe === 'last_month') {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    return { start, end, label: 'tháng trước', mode: 'daily' };
+  }
+
+  if (timeframe === 'this_year' || timeframe === '1y') {
+    const start = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+    const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    return { start, end, label: timeframe === '1y' ? '1 năm qua' : 'năm này', mode: 'monthly' };
+  }
+
+  if (timeframe === 'last_year') {
+    const start = new Date(now.getFullYear() - 1, 0, 1, 0, 0, 0);
+    const end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+    return { start, end, label: 'năm trước', mode: 'monthly' };
+  }
+
+  if (timeframe === '24h') {
+    const start = new Date(Date.now() - 24 * 3600 * 1000);
+    const end = new Date();
+    return { start, end, label: '24 giờ qua', mode: 'hourly' };
+  }
+
+  if (timeframe === 'custom' && customRange?.start && customRange?.end) {
+    const start = new Date(customRange.start);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(customRange.end);
+    end.setHours(23, 59, 59, 999);
+    return { start, end, label: 'tùy chỉnh', mode: 'daily' };
+  }
+
+  const start = new Date(2024, 0, 1);
+  const end = new Date();
+  return { start, end, label: 'tất cả', mode: 'monthly' };
+}
+
+export async function fetchPeriodAnalytics(
+  storeId: string,
+  timeframe: AnalyticsTimeframe,
+  customRange?: { start: string; end: string }
+): Promise<PeriodKpiData & { chartData: RevenueChartPoint[] }> {
+  const { start, end, label, mode } = getPeriodRange(timeframe, customRange);
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id, status, final_amount, created_at, payment_method')
+    .eq('store_id', storeId)
+    .gte('created_at', start.toISOString())
+    .lte('created_at', end.toISOString());
+
+  if (error) {
+    console.warn('Lỗi lấy thống kê theo kỳ:', error.message);
+  }
+
+  const allOrders = data || [];
+  const revenueOrders = allOrders.filter((o: any) => isRevenueStatus(o.status));
+  const totalRevenue = revenueOrders.reduce(
+    (sum: number, o: any) => sum + Number(o.final_amount || 0),
+    0
+  );
+  const completedOrders = revenueOrders.length;
+  const totalOrders = allOrders.length;
+
+  // 1. Kênh thanh toán
+  const channelMap = new Map<string, { amount: number; count: number }>();
+  for (const o of revenueOrders) {
+    const pm = (o.payment_method || '').toLowerCase();
+    let ch = 'Kênh: GoSavingFood';
+    if (pm.includes('vietqr') || pm.includes('payos') || pm.includes('bank')) {
+      ch = 'VietQR (PayOS)';
+    } else if (pm.includes('cash') || pm.includes('cod') || pm.includes('quầy')) {
+      ch = 'Tiền mặt tại quán';
+    }
+    const curr = channelMap.get(ch) || { amount: 0, count: 0 };
+    curr.amount += Number(o.final_amount || 0);
+    curr.count += 1;
+    channelMap.set(ch, curr);
+  }
+  if (channelMap.size === 0) {
+    channelMap.set('Kênh: GoSavingFood', { amount: 0, count: 0 });
+  }
+
+  const paymentChannels: PaymentChannelStat[] = Array.from(channelMap.entries()).map(
+    ([name, stat]) => ({
+      name,
+      amount: stat.amount,
+      orderCount: stat.count,
+      percentage: totalRevenue > 0 ? Math.round((stat.amount / totalRevenue) * 100) : 100,
+    })
+  );
+
+  // 2. Thống kê trạng thái đơn (Donut Slices)
+  let paidCount = 0;
+  let cancelledCount = 0;
+  let pendingCount = 0;
+
+  for (const o of allOrders) {
+    if (isRevenueStatus(o.status)) {
+      paidCount++;
+    } else if (o.status === 'cancelled') {
+      cancelledCount++;
+    } else {
+      pendingCount++;
+    }
+  }
+
+  const denom = totalOrders > 0 ? totalOrders : 1;
+  const statusBreakdown: OrderStatusSlice[] = [
+    {
+      key: 'completed',
+      label: 'Đã thanh toán',
+      count: paidCount,
+      percentage: Number(((paidCount / denom) * 100).toFixed(1)),
+      color: '#166B4A',
+    },
+    {
+      key: 'cancelled',
+      label: 'Hủy',
+      count: cancelledCount,
+      percentage: Number(((cancelledCount / denom) * 100).toFixed(1)),
+      color: '#059669',
+    },
+    {
+      key: 'pending',
+      label: 'Chờ thanh toán',
+      count: pendingCount,
+      percentage: Number(((pendingCount / denom) * 100).toFixed(1)),
+      color: '#a7f3d0',
+    },
+  ];
+
+  // 3. Biểu đồ cột (Bar Chart Points)
+  let chartData: RevenueChartPoint[] = [];
+
+  if (mode === 'hourly') {
+    const hours = [6, 8, 10, 12, 14, 16, 18, 20, 22];
+    chartData = hours.map((h, idx) => {
+      const nextH = hours[idx + 1] ?? 24;
+      const matching = revenueOrders.filter((o: any) => {
+        const orderH = new Date(o.created_at).getHours();
+        return orderH >= h && orderH < nextH;
+      });
+      const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
+      return {
+        label: `${String(h).padStart(2, '0')}:00`,
+        date: `${String(h).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00`,
+        value: val,
+        orderCount: matching.length,
+      };
+    });
+  } else if (mode === 'daily') {
+    const oneDayMs = 24 * 3600 * 1000;
+    const diffDays = Math.max(
+      1,
+      Math.min(31, Math.round((end.getTime() - start.getTime()) / oneDayMs) + 1)
+    );
+
+    chartData = Array.from({ length: diffDays }, (_, i) => {
+      const d = new Date(start.getTime() + i * oneDayMs);
+      const dateStr = d.toDateString();
+      const matching = revenueOrders.filter(
+        (o: any) => new Date(o.created_at).toDateString() === dateStr
+      );
+      const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
+
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const label = `Th${mm}-${dd}`;
+
+      return {
+        label,
+        date: `${DAY_LABELS[d.getDay()]}, ${dd}/${mm}`,
+        value: val,
+        orderCount: matching.length,
+      };
+    });
+  } else {
+    const year = start.getFullYear();
+    chartData = Array.from({ length: 12 }, (_, m) => {
+      const matching = revenueOrders.filter((o: any) => {
+        const od = new Date(o.created_at);
+        return od.getFullYear() === year && od.getMonth() === m;
+      });
+      const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
+      return {
+        label: `Thg ${m + 1}`,
+        date: `Tháng ${m + 1}/${year}`,
+        value: val,
+        orderCount: matching.length,
+      };
+    });
+  }
+
+  // Khung giờ nhận hàng cao điểm theo kỳ lọc
+  const hourCounts = { morning: 0, noon: 0, afternoon: 0, evening: 0 };
+  for (const o of revenueOrders) {
+    if (!o.created_at) continue;
+    const h = new Date(o.created_at).getHours();
+    if (h >= 6 && h < 11) hourCounts.morning++;
+    else if (h >= 11 && h < 14) hourCounts.noon++;
+    else if (h >= 14 && h < 18) hourCounts.afternoon++;
+    else hourCounts.evening++;
+  }
+  const totalHourCount = revenueOrders.length;
+  const peakHours = [
+    {
+      slot: 'Giờ tan tầm & Tối',
+      timeRange: '18:00 - 22:00',
+      orderCount: hourCounts.evening,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 60,
+    },
+    {
+      slot: 'Buổi chiều',
+      timeRange: '14:00 - 18:00',
+      orderCount: hourCounts.afternoon,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 25,
+    },
+    {
+      slot: 'Bữa trưa',
+      timeRange: '11:00 - 14:00',
+      orderCount: hourCounts.noon,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 15,
+    },
+    {
+      slot: 'Buổi sáng',
+      timeRange: '06:00 - 11:00',
+      orderCount: hourCounts.morning,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.morning / totalHourCount) * 100) : 0,
+    },
+  ];
+
+  return {
+    periodLabel: label,
+    totalRevenue,
+    completedOrders,
+    totalOrders,
+    paymentChannels,
+    peakHours,
+    statusBreakdown,
+    chartData,
+  };
 }
 
 export async function fetchRevenueChart(

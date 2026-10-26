@@ -2,12 +2,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   exportAnalyticsReport,
   fetchAnalyticsMetrics,
+  fetchPeriodAnalytics,
   fetchRecentReviews,
-  fetchRevenueChart,
   getCachedAnalytics,
   setCachedAnalytics,
 } from '../services/analytics.service';
-import type { AnalyticsMetrics, ReviewItem, RevenueChartPoint } from '../types';
+import type {
+  AnalyticsMetrics,
+  AnalyticsTimeframe,
+  PeriodKpiData,
+  ReviewItem,
+  RevenueChartPoint,
+} from '../types';
 import { useToast } from './useToast';
 
 export function useAnalytics(storeId: string) {
@@ -15,9 +21,12 @@ export function useAnalytics(storeId: string) {
   const [cachedData] = useState(() => getCachedAnalytics(storeId));
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(() => cachedData?.metrics ?? null);
   const [chartData, setChartData] = useState<RevenueChartPoint[]>(() => cachedData?.chartData ?? []);
-  const [timeframe, setTimeframe] = useState<'week' | 'month'>('week');
+  const [timeframe, setTimeframe] = useState<AnalyticsTimeframe>('this_month');
+  const [customRange, setCustomRange] = useState<{ start: string; end: string } | undefined>(undefined);
+  const [periodKpi, setPeriodKpi] = useState<PeriodKpiData | null>(null);
   const [reviews, setReviews] = useState<ReviewItem[]>(() => cachedData?.reviews ?? []);
   const [loading, setLoading] = useState(() => !cachedData);
+  const [chartLoading, setChartLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const { toastMessage, showToast } = useToast();
@@ -32,20 +41,53 @@ export function useAnalytics(storeId: string) {
     }
   }, [storeId]);
 
+  const loadPeriodData = useCallback(
+    async (tf: AnalyticsTimeframe, range?: { start: string; end: string }) => {
+      setChartLoading(true);
+      try {
+        const res = await fetchPeriodAnalytics(storeId, tf, range);
+        setPeriodKpi({
+          periodLabel: res.periodLabel,
+          totalRevenue: res.totalRevenue,
+          completedOrders: res.completedOrders,
+          totalOrders: res.totalOrders,
+          paymentChannels: res.paymentChannels,
+          peakHours: res.peakHours,
+          statusBreakdown: res.statusBreakdown,
+        });
+        setChartData(res.chartData);
+      } catch {
+        showToast('Lỗi cập nhật biểu đồ theo kỳ.');
+      } finally {
+        setChartLoading(false);
+      }
+    },
+    [storeId, showToast]
+  );
+
   const loadData = useCallback(async () => {
     setError(null);
     try {
-      const [nextMetrics, nextChart, nextReviews] = await Promise.all([
+      const [nextMetrics, nextPeriod, nextReviews] = await Promise.all([
         fetchAnalyticsMetrics(storeId),
-        fetchRevenueChart(storeId, timeframe),
+        fetchPeriodAnalytics(storeId, timeframe, customRange),
         fetchRecentReviews(storeId),
       ]);
       setMetrics(nextMetrics);
-      setChartData(nextChart);
+      setPeriodKpi({
+        periodLabel: nextPeriod.periodLabel,
+        totalRevenue: nextPeriod.totalRevenue,
+        completedOrders: nextPeriod.completedOrders,
+        totalOrders: nextPeriod.totalOrders,
+        paymentChannels: nextPeriod.paymentChannels,
+        peakHours: nextPeriod.peakHours,
+        statusBreakdown: nextPeriod.statusBreakdown,
+      });
+      setChartData(nextPeriod.chartData);
       setReviews(nextReviews);
       setCachedAnalytics(storeId, {
         metrics: nextMetrics,
-        chartData: nextChart,
+        chartData: nextPeriod.chartData,
         reviews: nextReviews,
       });
     } catch {
@@ -53,7 +95,7 @@ export function useAnalytics(storeId: string) {
     } finally {
       setLoading(false);
     }
-  }, [storeId, timeframe]);
+  }, [storeId, timeframe, customRange]);
 
   const isFetchedRef = useRef(false);
 
@@ -74,21 +116,15 @@ export function useAnalytics(storeId: string) {
     }
   };
 
-  const changeTimeframe = async (nextTimeframe: 'week' | 'month') => {
+  const changeTimeframe = async (
+    nextTimeframe: AnalyticsTimeframe,
+    nextCustomRange?: { start: string; end: string }
+  ) => {
     setTimeframe(nextTimeframe);
-    try {
-      const nextChart = await fetchRevenueChart(storeId, nextTimeframe);
-      setChartData(nextChart);
-      if (metrics) {
-        setCachedAnalytics(storeId, {
-          metrics,
-          chartData: nextChart,
-          reviews,
-        });
-      }
-    } catch {
-      showToast('Lỗi cập nhật biểu đồ.');
+    if (nextCustomRange) {
+      setCustomRange(nextCustomRange);
     }
+    await loadPeriodData(nextTimeframe, nextCustomRange);
   };
 
   const refreshData = async () => {
@@ -99,10 +135,13 @@ export function useAnalytics(storeId: string) {
 
   return {
     metrics,
+    periodKpi,
     chartData,
     timeframe,
+    customRange,
     reviews,
     loading,
+    chartLoading,
     error,
     exporting,
     toastMessage,
