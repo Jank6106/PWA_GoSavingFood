@@ -1,6 +1,7 @@
 import { ShieldCheck, Trash2 } from 'lucide-react';
 import { Button, EmptyState } from '@gosavingfood/ui';
 import { AuthRequiredState, OrderSummary, PageHeading, QuantityStepper } from '../../../shared/components';
+import { optimizeImageUrl } from '../../../services/customer.service';
 import type { CartItem, SurpriseBag } from '../../../shared/types/customer.types';
 
 interface CartPageProps {
@@ -42,7 +43,7 @@ export function CartPage(props: CartPageProps) {
             className="customer-cart-item"
             onClick={(e) => handleItemClick(e, item.bag)}
           >
-            <img src={item.bag.imageUrl} alt="" />
+            <img src={optimizeImageUrl(item.bag.imageUrl, 160, 75)} alt="" />
             <div><small>{item.bag.merchantName}</small><h2>{item.bag.name}</h2><strong>{item.bag.discountPrice.toLocaleString('vi-VN')}đ</strong><span>{item.bag.pickupStart}–{item.bag.pickupEnd}</span></div>
             <button type="button" className="customer-remove-button" onClick={() => props.onRemove(item.bag.id)}><Trash2 size={17} /></button>
             <QuantityStepper value={item.quantity} max={Math.min(item.bag.quantity, item.bag.maxQuantity)} onChange={(quantity) => props.onUpdate(item.bag.id, quantity)} />

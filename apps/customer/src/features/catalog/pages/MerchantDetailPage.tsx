@@ -281,7 +281,7 @@ export function MerchantDetailPage({
                   onClick={() => onOpenBag(bag)}
                 >
                   <div className="customer-store-bag-thumb-box">
-                    <img src={bag.imageUrl} alt={bag.name} loading="lazy" />
+                    <img src={optimizeImageUrl(bag.imageUrl, 240, 75)} alt={bag.name} loading="lazy" />
                   </div>
 
                   <div className="customer-store-bag-info">

@@ -77,10 +77,26 @@ const formatRelativeTime = (iso?: string | null) => {
 
 export const optimizeImageUrl = (url?: string | null, width = 480, quality = 75): string => {
   if (!url) return '';
+  // SVG vector format is already lossless and super lightweight, bypass compression
+  if (url.startsWith('data:image/svg+xml') || url.endsWith('.svg')) return url;
+
+  // Unsplash CDN auto-format to WebP/AVIF with dimensions and quality compression
   if (url.includes('images.unsplash.com')) {
     const base = url.split('?')[0];
     return `${base}?auto=format&fit=crop&w=${width}&q=${quality}`;
   }
+
+  // Cloudinary CDN optimization
+  if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+    return url.replace('/upload/', `/upload/f_auto,q_${quality},w_${width},c_limit/`);
+  }
+
+  // Google User Content (avatars/photos)
+  if (url.includes('googleusercontent.com')) {
+    const base = url.split('=')[0];
+    return `${base}=w${width}-c`;
+  }
+
   return url;
 };
 
@@ -1449,6 +1465,7 @@ export const customerService = {
           body: n.body || '',
           time: formatRelativeTime(n.created_at),
           read: Boolean(n.is_read),
+          imageUrl: n.image_url || n.data?.imageUrl || n.data?.image_url || null,
           data: n.data || null,
         }));
       }

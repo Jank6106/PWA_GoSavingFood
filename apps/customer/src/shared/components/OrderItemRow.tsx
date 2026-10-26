@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react';
+import { optimizeImageUrl } from '../../services/customer.service';
 
 interface OrderItemRowProps {
   imageUrl?: string;
@@ -8,13 +9,13 @@ interface OrderItemRowProps {
   onClick?: () => void;
 }
 
-const DEFAULT_BAG_IMAGE = 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80';
+const DEFAULT_BAG_IMAGE = 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=160&q=75';
 
 export function OrderItemRow({ imageUrl, name, quantity, unitPrice, onClick }: OrderItemRowProps) {
   const content = (
     <>
       <img
-        src={imageUrl || DEFAULT_BAG_IMAGE}
+        src={optimizeImageUrl(imageUrl, 160, 75) || DEFAULT_BAG_IMAGE}
         alt={name}
         loading="lazy"
         onError={(e) => {

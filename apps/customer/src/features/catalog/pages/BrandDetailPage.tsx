@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Clock, MapPin, Share2, Store } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
+import { optimizeImageUrl } from '../../../services/customer.service';
 import type { Brand, Merchant } from '../../../shared/types/customer.types';
 
 interface BrandDetailPageProps {
@@ -32,10 +33,11 @@ export function BrandDetailPage({ brand, stores, onBack, onOpenMerchant }: Brand
     );
 
   const hasLogoImage = isMediaUrl(brand.logo);
-  const bannerImage =
+  const rawBanner =
     (brand as { banner?: string }).banner ||
     stores[0]?.banner ||
     'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=900';
+  const bannerImage = optimizeImageUrl(rawBanner, 800, 80);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -95,7 +97,7 @@ export function BrandDetailPage({ brand, stores, onBack, onOpenMerchant }: Brand
         {/* Floating Brand Logo Badge */}
         <div className="customer-brand-floating-logo">
           {hasLogoImage ? (
-            <img src={brand.logo} alt={brand.name} />
+            <img src={optimizeImageUrl(brand.logo, 200, 80)} alt={brand.name} />
           ) : (
             <Store size={32} />
           )}

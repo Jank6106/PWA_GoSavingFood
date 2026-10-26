@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Coffee, Croissant, Leaf, UtensilsCrossed } from 'lucide-react';
+import { optimizeImageUrl } from '../../../services/customer.service';
 import type { Brand } from '../../../shared/types/customer.types';
 
 interface BrandMarqueeProps {
   brands: Brand[];
   onOpenBrand: (brand: Brand) => void;
-  speed?: number; // Tốc độ trượt (px/giây, ví dụ: 25 là chậm, 45 là vừa, 70 là nhanh)
+  speed?: number; // Tốc độ trượt (px/giây, ví dụ: 25 là chậm, 50 là vừa, 70 là nhanh)
 }
 
 const getBrandIcon = (brand: Brand) => {
@@ -16,12 +17,9 @@ const getBrandIcon = (brand: Brand) => {
   return UtensilsCrossed;
 };
 
-export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueeProps) {
+export function BrandMarquee({ brands, onOpenBrand, speed = 50 }: BrandMarqueeProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const offsetRef = useRef(0);
-  const isInteracting = useRef(false);
-  const isHovered = useRef(false);
-  const resumeTimer = useRef<number | null>(null);
 
   // Drag tracking
   const isDragging = useRef(false);
@@ -32,7 +30,7 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
   // Repeat brands just enough to fill standard viewports cleanly
   const displayBrands = useMemo(() => {
     if (!brands || brands.length === 0) return [];
-    const repeatCount = Math.max(2, Math.ceil(10 / brands.length));
+    const repeatCount = Math.max(2, Math.ceil(12 / brands.length));
     const baseSet: Brand[] = [];
     for (let i = 0; i < repeatCount; i++) {
       baseSet.push(...brands);
@@ -46,16 +44,18 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
 
     let animationFrameId: number;
     let lastTime = performance.now();
-    // Tốc độ trượt lấy từ prop speed
     const SPEED = speed;
 
     const tick = (now: number) => {
-      const delta = (now - lastTime) / 1000;
+      const rawDelta = (now - lastTime) / 1000;
+      // Cap delta to prevent huge jumps when switching tabs
+      const delta = Math.min(rawDelta, 0.1);
       lastTime = now;
 
       const halfWidth = track.scrollWidth / 2;
 
-      if (!isInteracting.current && !isHovered.current && halfWidth > 0) {
+      // Không dừng lại khi hover chuột — trượt mượt mà liên tục
+      if (!isDragging.current && halfWidth > 0) {
         offsetRef.current -= SPEED * delta;
 
         if (offsetRef.current <= -halfWidth) {
@@ -74,32 +74,12 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      if (resumeTimer.current) {
-        window.clearTimeout(resumeTimer.current);
-      }
     };
-  }, [displayBrands]);
-
-  const pauseMotion = () => {
-    isInteracting.current = true;
-    if (resumeTimer.current) {
-      window.clearTimeout(resumeTimer.current);
-    }
-  };
-
-  const scheduleResume = () => {
-    if (resumeTimer.current) {
-      window.clearTimeout(resumeTimer.current);
-    }
-    resumeTimer.current = window.setTimeout(() => {
-      isInteracting.current = false;
-    }, 1200);
-  };
+  }, [displayBrands, speed]);
 
   // Touch handlers for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!trackRef.current) return;
-    pauseMotion();
     isDragging.current = true;
     setHasDragged(false);
     startX.current = e.touches[0].clientX;
@@ -111,7 +91,7 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
     const currentX = e.touches[0].clientX;
     const diff = currentX - startX.current;
 
-    if (Math.abs(diff) > 4) {
+    if (Math.abs(diff) > 6) {
       setHasDragged(true);
     }
 
@@ -129,14 +109,12 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
 
   const handleTouchEnd = () => {
     isDragging.current = false;
-    scheduleResume();
     window.setTimeout(() => setHasDragged(false), 80);
   };
 
   // Mouse handlers for desktop dragging
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!trackRef.current) return;
-    pauseMotion();
     isDragging.current = true;
     setHasDragged(false);
     startX.current = e.clientX;
@@ -148,7 +126,7 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
     e.preventDefault();
     const diff = e.clientX - startX.current;
 
-    if (Math.abs(diff) > 4) {
+    if (Math.abs(diff) > 6) {
       setHasDragged(true);
     }
 
@@ -166,7 +144,6 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
 
   const handleMouseUp = () => {
     isDragging.current = false;
-    scheduleResume();
     window.setTimeout(() => setHasDragged(false), 80);
   };
 
@@ -181,14 +158,9 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseEnter={() => {
-        isHovered.current = true;
-      }}
       onMouseLeave={() => {
-        isHovered.current = false;
         if (isDragging.current) {
           isDragging.current = false;
-          scheduleResume();
           window.setTimeout(() => setHasDragged(false), 80);
         }
       }}
@@ -217,7 +189,7 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
             >
               {isImageLogo ? (
                 <img
-                  src={brand.logo}
+                  src={optimizeImageUrl(brand.logo, 100, 75)}
                   alt={brand.name}
                   className="customer-brand-badge-img"
                   width={44}

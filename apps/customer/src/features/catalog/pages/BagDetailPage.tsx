@@ -10,7 +10,7 @@ import {
 import { Button, Dialog, EmptyState } from '@gosavingfood/ui';
 import { QuantityStepper } from '../../../shared/components';
 import { calculateDistanceKm } from '../../../services/mapbox.service';
-import { customerService } from '../../../services/customer.service';
+import { customerService, optimizeImageUrl } from '../../../services/customer.service';
 import { getBagTimingInfo } from '../../../shared/utils/bagTiming';
 import type { CustomerReview, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
@@ -188,8 +188,9 @@ export function BagDetailPage({
       ? Math.round(((bag.originalPrice - bag.discountPrice) / bag.originalPrice) * 100)
       : 0;
 
-  const coverUrl = bag.imageUrl || merchant?.banner || merchant?.logo || DEFAULT_COVER;
-  const merchantLogo = merchant?.logo || merchant?.banner || coverUrl;
+  const rawCover = bag.imageUrl || merchant?.banner || merchant?.logo || DEFAULT_COVER;
+  const coverUrl = optimizeImageUrl(rawCover, 800, 80);
+  const merchantLogo = optimizeImageUrl(merchant?.logo || merchant?.banner || coverUrl, 200, 80);
   const totalReviews = merchant?.totalRatings || 175;
   const ratingValue = (bag.rating || merchant?.rating || 4.8).toFixed(1);
 

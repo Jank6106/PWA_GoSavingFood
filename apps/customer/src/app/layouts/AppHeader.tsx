@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Bell, Compass, MapPin, ReceiptText, ShoppingBag, UserRound } from 'lucide-react';
 import logoSvg from '../../assets/logo.svg';
 import logoPng from '../../assets/logo.png';
-import type { CustomerTab } from '../../shared/types/customer.types';
+import { optimizeImageUrl } from '../../services/customer.service';
+import type { CustomerTab, NotificationItem } from '../../shared/types/customer.types';
 
 interface AppHeaderProps {
   location?: string;
@@ -11,9 +12,11 @@ interface AppHeaderProps {
   cartCount?: number;
   ordersBadgeCount?: number;
   showOnMobile?: boolean;
+  notifications?: NotificationItem[];
   onTabChange?: (tab: CustomerTab) => void;
   onLocationClick?: () => void;
   onNotificationClick: () => void;
+  onSelectNotification?: (item: NotificationItem) => void;
 }
 
 export function AppHeader({
@@ -23,11 +26,15 @@ export function AppHeader({
   cartCount = 0,
   ordersBadgeCount = 0,
   showOnMobile = true,
+  notifications = [],
   onTabChange,
   onLocationClick,
   onNotificationClick,
+  onSelectNotification,
 }: AppHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,6 +45,17 @@ export function AppHeader({
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isNotificationOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setIsNotificationOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isNotificationOpen]);
 
   return (
     <header className={`customer-header ${isScrolled ? 'is-solid' : 'is-transparent'} ${!showOnMobile ? 'hide-on-mobile' : ''}`}>
@@ -125,17 +143,93 @@ export function AppHeader({
             )}
           </button>
 
-          <button
-            type="button"
-            className="customer-desktop-nav-link"
-            onClick={onNotificationClick}
-          >
-            <Bell size={18} />
-            <span>Thông báo</span>
-            {unreadCount > 0 && (
-              <span className="customer-desktop-badge">{unreadCount}</span>
+          <div className="customer-desktop-nav-notif-wrapper" ref={popoverRef}>
+            <button
+              type="button"
+              className={`customer-desktop-nav-link ${isNotificationOpen ? 'is-active' : ''}`}
+              onClick={() => setIsNotificationOpen((prev) => !prev)}
+              aria-expanded={isNotificationOpen}
+              aria-haspopup="dialog"
+            >
+              <Bell size={18} />
+              <span>Thông báo</span>
+              {unreadCount > 0 && (
+                <span className="customer-desktop-badge">{unreadCount}</span>
+              )}
+            </button>
+
+            {isNotificationOpen && (
+              <div className="customer-notification-popover" role="dialog" aria-label="Thông báo">
+                <div className="customer-notification-popover-arrow" />
+                <div className="customer-notification-popover-header">
+                  <span>Thông Báo Mới Nhận</span>
+                </div>
+
+                <div className="customer-notification-popover-list">
+                  {notifications && notifications.length > 0 ? (
+                    notifications.slice(0, 5).map((item) => {
+                      const hasOrder = Boolean(item.data?.orderId || item.data?.order_id);
+                      const hasBag = Boolean(item.data?.bagId || item.data?.bag_id);
+                      const hasMerchant = Boolean(item.data?.merchantId || item.data?.merchant_id);
+                      const hasTarget = hasOrder || hasBag || hasMerchant;
+
+                      return (
+                        <div
+                          key={item.id}
+                          className={`customer-notification-popover-item ${item.read ? 'is-read' : 'is-unread'} ${hasTarget ? 'is-clickable' : ''}`}
+                          onClick={() => {
+                            if (hasTarget) {
+                              onSelectNotification?.(item);
+                              setIsNotificationOpen(false);
+                            }
+                          }}
+                        >
+                          <div className={`customer-notification-popover-thumb ${item.imageUrl ? 'is-product' : 'is-logo'}`}>
+                            <img
+                              src={optimizeImageUrl(item.imageUrl, 100, 75) || logoSvg}
+                              alt=""
+                              className="customer-notification-thumb-img"
+                              onError={(e) => {
+                                if (e.currentTarget.src !== logoPng) {
+                                  e.currentTarget.src = logoPng;
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="customer-notification-popover-content">
+                            <strong className="customer-notification-popover-title">
+                              {item.title}
+                            </strong>
+                            <p className="customer-notification-popover-desc">
+                              {item.body}
+                            </p>
+                            <small className="customer-notification-popover-time">
+                              {item.time}
+                            </small>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="customer-notification-popover-empty">
+                      <span>Chưa có thông báo nào</span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="customer-notification-popover-footer"
+                  onClick={() => {
+                    setIsNotificationOpen(false);
+                    onNotificationClick();
+                  }}
+                >
+                  Xem tất cả
+                </button>
+              </div>
             )}
-          </button>
+          </div>
 
           <button
             type="button"

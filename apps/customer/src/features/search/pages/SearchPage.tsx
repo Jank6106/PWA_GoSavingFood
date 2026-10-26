@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
 import { MAPBOX_TOKEN, calculateDistanceKm, mapboxService } from '../../../services/mapbox.service';
+import { optimizeImageUrl } from '../../../services/customer.service';
 import type { Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const formatPrice = (price: number) => {
@@ -385,9 +386,11 @@ export function SearchPage({
           selectedMerchantId === store.id ? 'is-active' : ''
         }`;
 
-        const logoUrl =
-          store.logo ||
-          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200';
+        const logoUrl = optimizeImageUrl(
+          store.logo || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5',
+          100,
+          75
+        );
 
         el.innerHTML = `
           <img src="${logoUrl}" alt="${store.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />

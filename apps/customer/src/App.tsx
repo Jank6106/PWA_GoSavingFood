@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { AppLayout } from './app/layouts/AppLayout';
 import { AuthProvider } from './contexts/AuthContext';
@@ -11,7 +11,7 @@ import { ProfilePage } from './features/profile/pages/ProfilePage';
 import { useCart } from './hooks/useCart';
 import { useAuth } from './hooks/useAuth';
 import { useCustomerCatalog } from './hooks/useCustomerCatalog';
-import { customerService } from './services/customer.service';
+import { customerService, optimizeImageUrl } from './services/customer.service';
 
 // Lazy-load các trang nặng hoặc chứa mapbox-gl để giảm 70% dung lượng bundle ban đầu
 const SearchPage = lazy(() => import('./features/search/pages/SearchPage').then((m) => ({ default: m.SearchPage })));
@@ -713,6 +713,66 @@ function CustomerApp() {
     savePendingAuth(null);
   }, [auth.isAuthenticated, auth.user?.id, pendingAuthTarget, catalog.bags, catalog.isLoading, directBag]);
 
+  const enrichedNotifications = useMemo(() => {
+    return notifications.map((item) => {
+      let resolvedImage = item.imageUrl || item.data?.imageUrl || item.data?.image_url || null;
+
+      if (!resolvedImage) {
+        const orderId = item.data?.orderId || item.data?.order_id;
+        if (orderId) {
+          const order = orders.find((o) => o.id === orderId);
+          resolvedImage = order?.items[0]?.imageUrl || null;
+          if (!resolvedImage && order?.items[0]?.bagId) {
+            resolvedImage = catalog.bags.find((b) => b.id === order.items[0].bagId)?.imageUrl || null;
+          }
+        }
+      }
+
+      if (!resolvedImage) {
+        const bagId = item.data?.bagId || item.data?.bag_id;
+        if (bagId) {
+          resolvedImage = catalog.bags.find((b) => b.id === bagId)?.imageUrl || null;
+        }
+      }
+
+      if (!resolvedImage) {
+        const merchantId = item.data?.merchantId || item.data?.merchant_id;
+        if (merchantId) {
+          resolvedImage = catalog.merchants.find((m) => m.id === merchantId)?.logo || null;
+        }
+      }
+
+      if (resolvedImage) {
+        resolvedImage = optimizeImageUrl(resolvedImage, 120, 75);
+      }
+
+      if (resolvedImage !== item.imageUrl) {
+        return { ...item, imageUrl: resolvedImage };
+      }
+      return item;
+    });
+  }, [notifications, orders, catalog.bags, catalog.merchants]);
+
+  const handleSelectNotification = (item: NotificationItem) => {
+    if (!item.read) {
+      void customerService.markNotificationRead(item.id);
+      setNotifications((current) =>
+        current.map((n) => (n.id === item.id ? { ...n, read: true } : n))
+      );
+    }
+    const orderId = item.data?.orderId || item.data?.order_id;
+    const bagId = item.data?.bagId || item.data?.bag_id;
+    const merchantId = item.data?.merchantId || item.data?.merchant_id;
+
+    if (orderId) {
+      push({ name: 'order', id: orderId });
+    } else if (bagId) {
+      push({ name: 'bag', id: bagId });
+    } else if (merchantId) {
+      push({ name: 'merchant', id: merchantId });
+    }
+  };
+
   const handleCheckoutContinue = async (draft: CheckoutDraft, buyNowItem?: CartItem) => {
     const orderItems = buyNowItem ? [buyNowItem] : cart.items;
     if (!orderItems.length || isSubmitting) return;
@@ -1145,12 +1205,13 @@ function CustomerApp() {
     if (route.name === 'notifications')
       return (
         <NotificationsPage
-          notifications={notifications}
+          notifications={enrichedNotifications}
           onBack={back}
           onReadAll={() => {
             void customerService.markAllNotificationsRead();
             setNotifications((current) => current.map((item) => ({ ...item, read: true })));
           }}
+          onSelectNotification={handleSelectNotification}
         />
       );
     if (route.name === 'location')
@@ -1177,11 +1238,13 @@ function CustomerApp() {
         ordersBadgeCount={ordersBadgeCount}
         location={location}
         unreadCount={notifications.filter((item) => !item.read).length}
+        notifications={enrichedNotifications}
         showHeader={isTabs && route.tab === 'home'}
         showBottomNav={isTabs}
         onTabChange={openTab}
         onLocationClick={() => push({ name: 'location' })}
         onNotificationClick={() => push({ name: 'notifications' })}
+        onSelectNotification={handleSelectNotification}
       >
         <Suspense fallback={<ScreenLoadingFallback />}>
           {renderScreen()}

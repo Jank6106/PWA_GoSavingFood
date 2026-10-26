@@ -167,6 +167,7 @@ export interface NotificationItem {
   body: string;
   time: string;
   read: boolean;
+  imageUrl?: string | null;
   data?: {
     orderId?: string;
     status?: string;
