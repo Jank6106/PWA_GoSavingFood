@@ -1,5 +1,6 @@
 export * from './AuthRequiredState';
 export * from './BagCard';
+export * from './CancelOrderModal';
 export * from './FormSection';
 export * from './InfoRow';
 export * from './MerchantCard';

@@ -1002,6 +1002,24 @@ function CustomerApp() {
           total={totalAmount}
           isSubmitting={isSubmitting}
           onBack={back}
+          onCancel={(cancelledOrderId, reason) => {
+            const targetId = cancelledOrderId || qOrderId;
+            if (targetId) {
+              setOrders((prev) =>
+                prev.map((o) =>
+                  o.id.toLowerCase() === targetId.toLowerCase()
+                    ? {
+                        ...o,
+                        status: 'cancelled',
+                        cancelledAt: new Date().toISOString(),
+                        cancelReason: reason || 'Người dùng hủy thanh toán tại bước quét mã QR',
+                      }
+                    : o
+                )
+              );
+            }
+            back();
+          }}
           onConfirm={() => {
             const confirmedOrder = matchedOrder || route.order;
             if (confirmedOrder) {
