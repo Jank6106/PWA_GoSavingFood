@@ -166,6 +166,8 @@ const mapCreateOrderError = (error: { message?: string; details?: string } | nul
   if (raw.includes('VOUCHER_INACTIVE')) return 'Mã giảm giá không còn hiệu lực.';
   if (raw.includes('orders_customer_id_fkey'))
     return 'Thông tin tài khoản chưa được đồng bộ. Vui lòng tải lại trang và thử lại.';
+  if (raw.includes('users_phone_key') || raw.includes('23505'))
+    return 'Số điện thoại này đã được liên kết với một tài khoản khác. Vui lòng kiểm tra lại.';
   return 'Không thể tạo đơn hàng. Vui lòng kiểm tra lại rồi thử lại.';
 };
 
@@ -2163,7 +2165,14 @@ export const customerService = {
         };
         if (customerInfo.name?.trim()) updates.name = customerInfo.name.trim();
         if (customerInfo.phone?.trim()) updates.phone = customerInfo.phone.trim();
-        await supabase.from('users').update(updates).eq('id', user.id);
+        const { error: updateErr } = await supabase.from('users').update(updates).eq('id', user.id);
+        if (updateErr) {
+          if (updateErr.code === '23505' || updateErr.message?.includes('users_phone_key')) {
+            if (updates.name) {
+              await supabase.from('users').update({ name: updates.name, updated_at: updates.updated_at }).eq('id', user.id);
+            }
+          }
+        }
       } catch (err) {
         console.warn('Cập nhật thông tin khách hàng vào bảng users lỗi:', err);
       }
