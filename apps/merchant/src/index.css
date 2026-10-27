@@ -215,6 +215,278 @@ h1, h2, h3, p { margin: 0; }
 .merchant-product-meta span { display: flex; align-items: center; gap: 5px; }
 .merchant-product-meta s { color: var(--text-muted); }
 .merchant-product-meta strong { color: var(--primary); font-size: 14px; }
+
+/* Bags Management Grid & Card (Shopee vertical card style) */
+.merchant-bag-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px;
+  width: 100%;
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .merchant-bag-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px;
+  }
+}
+
+.merchant-bag-card {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.merchant-bag-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.merchant-bag-card--off-shelf {
+  opacity: 0.88;
+  background: #fafaf9;
+}
+
+.merchant-bag-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.merchant-bag-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.merchant-bag-card-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  padding: 10px 10px 12px;
+  gap: 8px;
+}
+
+.merchant-bag-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.merchant-bag-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.merchant-bag-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5px 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: #fde047;
+  color: #854d0e;
+}
+
+.merchant-bag-status-pill--active {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+.merchant-bag-status-pill--upcoming {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.merchant-bag-status-pill--sold_out {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.merchant-bag-status-pill--expired {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.merchant-bag-status-pill--closed {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.merchant-bag-status-pill--hidden {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.merchant-bag-card-info-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.merchant-bag-card-pricing-time {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.merchant-bag-original-price {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.merchant-bag-sale-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.merchant-bag-time-range {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.merchant-bag-card-qty-wrap {
+  flex-shrink: 0;
+}
+
+.merchant-bag-qty-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #38bdf8;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(56, 189, 248, 0.25);
+}
+
+.merchant-bag-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.merchant-bag-btn-toggle {
+  width: 100%;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 7px;
+  background: #00ba51;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+  padding: 0 4px;
+}
+
+.merchant-bag-btn-toggle:hover {
+  filter: brightness(0.92);
+}
+
+.merchant-bag-btn-toggle.is-on-shelf {
+  background: #00ba51;
+}
+
+.merchant-bag-expired-bar {
+  width: 100%;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.merchant-bag-card-action-subrow {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 5px;
+}
+
+.merchant-bag-btn-delete {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background-color 0.15s ease, filter 0.15s ease;
+  padding: 0 2px;
+}
+
+.merchant-bag-btn-delete:hover {
+  background: #dc2626;
+}
+
+.merchant-bag-btn-edit {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #000000;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 11.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  padding: 0 4px;
+}
+
+.merchant-bag-btn-edit:hover {
+  background: #f8fafc;
+}
 .merchant-product-main > footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 5px; border-top: 1px solid #edf4ef; }
 .merchant-quantity { display: flex; align-items: center; gap: 8px; }
 .merchant-quantity button, .merchant-inventory-quantity button { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid var(--border); border-radius: 9px; background: var(--primary-soft); cursor: pointer; }
@@ -2534,6 +2806,7 @@ h1, h2, h3, p { margin: 0; }
   /* Centered Empty State inside Content Block or Grid */
   .merchant-content-block > .merchant-state,
   .merchant-order-grid > .merchant-state,
+  .merchant-bag-grid > .merchant-state,
   .merchant-list > .merchant-state {
     grid-column: 1 / -1 !important;
     width: 100% !important;
@@ -2546,36 +2819,36 @@ h1, h2, h3, p { margin: 0; }
     text-align: center !important;
   }
 
-  /* Bags Management Grid */
-  .merchant-list {
+  /* Bags Management Grid - 1 hàng 5 túi trên laptop */
+  .merchant-bag-grid {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)) !important;
-    gap: 18px !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 16px !important;
     width: 100%;
   }
 
-  .merchant-product-card {
-    display: grid;
-    grid-template-columns: 130px 1fr;
-    background: #ffffff;
-    border: 1px solid #E5E7EB;
-    border-radius: 14px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-    overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  .merchant-bag-card-content {
+    padding: 12px 12px 14px;
+    gap: 9px;
   }
 
-  .merchant-product-card:hover {
-    transform: translateY(-2px);
-    border-color: #cbd5e1;
-    box-shadow: 0 8px 24px rgba(22, 107, 74, 0.08);
+  .merchant-bag-card-title {
+    font-size: 14.5px;
   }
 
-  .merchant-product-card > img {
-    width: 100%;
-    height: 100%;
-    min-height: 170px;
-    object-fit: cover;
+  .merchant-bag-sale-price {
+    font-size: 15px;
+  }
+
+  .merchant-bag-btn-toggle {
+    min-height: 34px;
+    font-size: 12.5px;
+  }
+
+  .merchant-bag-btn-delete,
+  .merchant-bag-btn-edit {
+    min-height: 32px;
+    font-size: 12px;
   }
 
   /* Orders Management Grid */

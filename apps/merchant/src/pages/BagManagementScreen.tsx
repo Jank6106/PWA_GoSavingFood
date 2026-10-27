@@ -40,7 +40,7 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
         {state.loading && !state.allBags.length ? (
           <SkeletonList count={3} height={120} />
         ) : state.bags.length ? (
-          <div className="merchant-list">
+          <div className="merchant-bag-grid">
             {state.bags.map((bag) => (
               <BagCard
                 key={bag.id}

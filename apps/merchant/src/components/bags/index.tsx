@@ -1,4 +1,4 @@
-import { ChevronDown, Clock3, Eye, EyeOff, ImagePlus, Package, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
+import { ChevronDown, ImagePlus, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react';
 import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES } from '../../mocks';
 import { compressImageFile, optimizeImageUrl } from '../../services/utils';
@@ -91,7 +91,7 @@ export function BagCard({
   const category = getBagCategory(bag);
   const isOnShelf = category === 'on_shelf';
 
-  let statusLabel = 'Đang mở bán';
+  let statusLabel = 'Đang bán';
   let badgeVariant = 'active';
 
   if (category === 'expired') {
@@ -108,7 +108,7 @@ export function BagCard({
       const nowMinutes = getVnTimeMinutes();
       const endM = parseTimeToMinutes(bag.pickupTimeEnd);
       if (nowMinutes > endM) {
-        statusLabel = 'Hết giờ hôm nay';
+        statusLabel = 'Hết giờ';
         badgeVariant = 'closed';
       } else {
         statusLabel = 'Trong kho';
@@ -127,126 +127,108 @@ export function BagCard({
         statusLabel = `Sắp mở (${bag.pickupTimeStart})`;
         badgeVariant = 'upcoming';
       } else {
-        statusLabel = 'Đang mở bán';
+        statusLabel = 'Đang bán';
         badgeVariant = 'active';
       }
     } else {
-      statusLabel = 'Đang mở bán';
+      statusLabel = 'Đang bán';
       badgeVariant = 'active';
     }
   }
 
+  const timeDisplay = `${bag.pickupTimeStart} - ${bag.pickupTimeEnd}`;
+
   return (
-    <article className={`merchant-card merchant-product-card ${!isOnShelf ? 'merchant-product-card--off-shelf' : ''}`}>
-      <img src={optimizeImageUrl(bag.imageUrl, 400, 75)} alt={bag.name} loading="lazy" />
-      <div className="merchant-product-main">
-        <div className="merchant-card-title-row">
-          <div>
-            <span className="merchant-eyebrow">{bag.category}</span>
-            <h3>{bag.name}</h3>
-          </div>
-          <span className={`merchant-badge merchant-badge--${badgeVariant}`}>
+    <article className={`merchant-bag-card ${!isOnShelf ? 'merchant-bag-card--off-shelf' : ''}`}>
+      <div className="merchant-bag-card-media">
+        <img src={optimizeImageUrl(bag.imageUrl, 400, 75)} alt={bag.name} loading="lazy" />
+      </div>
+      <div className="merchant-bag-card-content">
+        {/* Hàng 1: Tên món + Status pill */}
+        <div className="merchant-bag-card-header">
+          <h3 className="merchant-bag-card-title" title={bag.name}>
+            {bag.name}
+          </h3>
+          <span className={`merchant-bag-status-pill merchant-bag-status-pill--${badgeVariant}`}>
             {statusLabel}
           </span>
         </div>
-        <p className="merchant-clamp">{bag.description}</p>
-        <div className="merchant-product-meta">
-          <span>
-            <Tag size={14} />
-            <s>{bag.originalPrice.toLocaleString('vi-VN')}đ</s>
-            <strong>{bag.salePrice.toLocaleString('vi-VN')}đ</strong>
-          </span>
-          <span>
-            <Clock3 size={14} />{' '}
-            {bag.bagType === 'shelf_life'
-              ? `HSD: ${bag.expiryDate ? bag.expiryDate.split('-').reverse().slice(0, 2).join('/') : 'Nhiều ngày'} (${bag.pickupTimeStart}–${bag.pickupTimeEnd})`
-              : `${bag.repeatMode === 'recurring' ? 'Hàng ngày' : 'Hôm nay'}: ${bag.pickupTimeStart}–${bag.pickupTimeEnd}`}
-          </span>
-        </div>
-        <footer>
-          <div
-            className="merchant-quantity"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '10px',
-              background: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#ecfdf5' : '#fef2f2',
-              border: `1px solid ${(bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#a7f3d0' : '#fecaca'}`,
-            }}
-          >
-            <Package
-              size={15}
-              style={{
-                color: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#059669' : '#dc2626',
-              }}
-            />
-            <strong
-              style={{
-                fontSize: '15px',
-                color: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#065f46' : '#b91c1c',
-              }}
-            >
-              {bag.availableQuantity ?? bag.quantity ?? 0}
-            </strong>
-            <small
-              style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                color: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#047857' : '#dc2626',
-              }}
-            >
-              túi còn lại
-            </small>
+
+        {/* Hàng 2: Giá & Giờ (bên trái) + Số lượng (bên phải) */}
+        <div className="merchant-bag-card-info-row">
+          <div className="merchant-bag-card-pricing-time">
+            <span className="merchant-bag-original-price">
+              <s>{bag.originalPrice.toLocaleString('vi-VN')}đ</s>
+            </span>
+            <span className="merchant-bag-sale-price">
+              {bag.salePrice.toLocaleString('vi-VN')}đ
+            </span>
+            <span className="merchant-bag-time-range" title={timeDisplay}>
+              {timeDisplay}
+            </span>
           </div>
-          <div className="merchant-card-actions">
-            {category !== 'expired' && (
-              <Button
-                size="small"
-                variant={isOnShelf ? 'secondary' : 'primary'}
-                onClick={() => {
-                  if (!isOnShelf) {
-                    const qty = bag.availableQuantity ?? bag.quantity ?? 0;
-                    if (qty <= 0) {
+          <div className="merchant-bag-card-qty-wrap">
+            <span className="merchant-bag-qty-pill">
+              Số lượng: {bag.availableQuantity ?? bag.quantity ?? 0}
+            </span>
+          </div>
+        </div>
+
+        {/* Cụm nút hành động */}
+        <div className="merchant-bag-card-actions">
+          {category !== 'expired' ? (
+            <button
+              type="button"
+              className={`merchant-bag-btn-toggle ${isOnShelf ? 'is-on-shelf' : ''}`}
+              onClick={() => {
+                if (!isOnShelf) {
+                  const qty = bag.availableQuantity ?? bag.quantity ?? 0;
+                  if (qty <= 0) {
+                    onEdit(bag);
+                    return;
+                  }
+                  if (bag.bagType !== 'shelf_life') {
+                    const nowMinutes = getVnTimeMinutes();
+                    const endM = parseTimeToMinutes(bag.pickupTimeEnd);
+                    if (nowMinutes > endM) {
                       onEdit(bag);
                       return;
                     }
-                    if (bag.bagType !== 'shelf_life') {
-                      const nowMinutes = getVnTimeMinutes();
-                      const endM = parseTimeToMinutes(bag.pickupTimeEnd);
-                      if (nowMinutes > endM) {
-                        onEdit(bag);
-                        return;
-                      }
-                    }
                   }
-                  onToggleStatus(bag.id);
-                }}
-              >
-                {isOnShelf ? <EyeOff size={16} /> : <Eye size={16} />}
-                {isOnShelf
-                  ? 'Gỡ khỏi kệ'
-                  : (bag.availableQuantity ?? bag.quantity ?? 0) <= 0
-                  ? 'Nạp thêm túi'
-                  : bag.bagType !== 'shelf_life' && getVnTimeMinutes() > parseTimeToMinutes(bag.pickupTimeEnd)
-                  ? 'Chỉnh giờ mở'
-                  : 'Đưa lên kệ'}
-              </Button>
-            )}
-            <Button size="small" variant="outline" onClick={() => onEdit(bag)}>
-              <Pencil size={15} /> Sửa
-            </Button>
-            <Button
-              size="small"
-              variant="danger"
-              onClick={() => onDelete(bag)}
-              title="Xóa hoàn toàn túi này"
+                }
+                onToggleStatus(bag.id);
+              }}
             >
-              <Trash2 size={15} /> Xóa túi
-            </Button>
+              {isOnShelf
+                ? 'Gỡ khỏi kệ'
+                : (bag.availableQuantity ?? bag.quantity ?? 0) <= 0
+                ? 'Nạp thêm túi'
+                : bag.bagType !== 'shelf_life' && getVnTimeMinutes() > parseTimeToMinutes(bag.pickupTimeEnd)
+                ? 'Chỉnh giờ mở'
+                : 'Đưa lên kệ'}
+            </button>
+          ) : (
+            <div className="merchant-bag-expired-bar">Đã hết hạn</div>
+          )}
+
+          <div className="merchant-bag-card-action-subrow">
+            <button
+              type="button"
+              className="merchant-bag-btn-delete"
+              onClick={() => onDelete(bag)}
+              title="Xóa túi hàng này"
+            >
+              Xóa túi
+            </button>
+            <button
+              type="button"
+              className="merchant-bag-btn-edit"
+              onClick={() => onEdit(bag)}
+            >
+              Chỉnh sửa
+            </button>
           </div>
-        </footer>
+        </div>
       </div>
     </article>
   );
