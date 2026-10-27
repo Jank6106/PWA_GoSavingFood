@@ -118,10 +118,10 @@ h1, h2, h3, p { margin: 0; }
 .merchant-form-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .merchant-field { display: flex; align-items: stretch; flex-direction: column; gap: 6px; color: var(--primary); text-align: left; }
 .merchant-field > span { font-size: 13px; font-weight: 700; }
-.merchant-field-control { display: flex; min-height: 48px; align-items: center; gap: 9px; padding: 0 12px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--primary-soft); color: var(--primary); transition: border .15s ease, box-shadow .15s ease; }
-.merchant-field-control:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(22, 107, 74, .1); }
-.merchant-field-control input, .merchant-field-control textarea, .merchant-field-control select { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--primary); font-size: 15px; font-weight: 600; }
-.merchant-field-control input::placeholder, .merchant-field-control textarea::placeholder { color: var(--placeholder); font-weight: 500; }
+.merchant-field-control { display: flex; min-height: 48px; align-items: center; gap: 9px; padding: 0 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #ffffff; color: #193B2C; transition: border-color .15s ease, box-shadow .15s ease; }
+.merchant-field-control:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(22, 107, 74, .12); }
+.merchant-field-control input, .merchant-field-control textarea, .merchant-field-control select { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #193B2C; font-size: 15px; font-weight: 600; }
+.merchant-field-control input::placeholder, .merchant-field-control textarea::placeholder { color: #94a3b8; font-weight: 500; }
 .merchant-field-control input::-ms-reveal,
 .merchant-field-control input::-ms-clear {
   display: none !important;
@@ -1706,12 +1706,13 @@ h1, h2, h3, p { margin: 0; }
 .merchant-store-status span { color: #D8ED9B; font-weight: 600; }.merchant-store-status b { font-weight: 800; }.merchant-store-status.is-closed i { background: #f59e0b; }
 .merchant-field-control input:disabled, .merchant-field-control textarea:disabled { color: var(--text-secondary); cursor: not-allowed; }.merchant-field:has(input:disabled) .merchant-field-control, .merchant-field:has(textarea:disabled) .merchant-field-control { border-color: #E5E7EB; background: #F8FAFC; }
 .merchant-form-actions--between > div { display: flex; gap: 8px; }.merchant-time-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.merchant-time-range-control { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; padding: 4px 6px; box-sizing: border-box; }
-.merchant-time-picker-group { display: inline-flex; align-items: center; gap: 2px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 9px; padding: 2px 6px; transition: border-color .15s ease, box-shadow .15s ease; }
-.merchant-time-picker-group:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0, 86, 57, 0.15); }
+.merchant-time-range-control { display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; min-height: 48px; padding: 0 16px; box-sizing: border-box; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; transition: border-color .15s ease, box-shadow .15s ease; }
+.merchant-time-range-control:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(22, 107, 74, .12); }
+.merchant-time-picker-group { display: inline-flex; align-items: center; gap: 3px; background: transparent; border: none; border-radius: 0; padding: 0; box-shadow: none; }
+.merchant-time-picker-group:focus-within { border: none; box-shadow: none; }
 .merchant-time-unit { position: relative; display: inline-flex; align-items: center; gap: 1px; }
-.merchant-time-num-input { width: 22px; padding: 2px 0; text-align: center; border: 0 !important; outline: 0 !important; background: transparent !important; color: var(--primary) !important; font-size: 14.5px !important; font-weight: 750 !important; font-family: inherit; }
-.merchant-time-dropdown-toggle { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 22px; padding: 0; border: 0; background: transparent; cursor: pointer; color: #64748b; transition: color .15s ease; }
+.merchant-time-num-input { width: 24px; padding: 2px 0; text-align: center; border: 0 !important; outline: 0 !important; background: transparent !important; color: #193B2C !important; font-size: 15px !important; font-weight: 750 !important; font-family: inherit; }
+.merchant-time-dropdown-toggle { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 24px; padding: 0; border: 0; background: transparent; cursor: pointer; color: #64748b; transition: color .15s ease; }
 .merchant-time-dropdown-toggle:hover { color: var(--primary); }
 .merchant-time-select-icon { transition: transform .15s ease, color .15s ease; pointer-events: none; }
 .merchant-time-select-icon.is-open { transform: rotate(180deg); color: var(--primary); }
@@ -1720,13 +1721,21 @@ h1, h2, h3, p { margin: 0; }
 .merchant-time-dropdown-item { width: 100%; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #334155; font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color .12s ease, color .12s ease; user-select: none; }
 .merchant-time-dropdown-item:hover { background: var(--primary-soft, #f0fdf4); color: var(--primary, #005639); }
 .merchant-time-dropdown-item.is-selected { background: var(--primary, #005639); color: #ffffff; font-weight: 750; }
-.merchant-time-colon { font-size: 14px; font-weight: 800; color: var(--primary); line-height: 1; padding: 0 1px; user-select: none; }
-.merchant-time-dash { font-size: 15px; font-weight: 800; color: var(--text-secondary); user-select: none; padding: 0 2px; }
+.merchant-time-colon { font-size: 15px; font-weight: 800; color: #193B2C; line-height: 1; padding: 0 2px; user-select: none; }
+.merchant-time-dash { font-size: 16px; font-weight: 700; color: #94a3b8; user-select: none; padding: 0 6px; }
 .merchant-time-select-group { display: flex; align-items: center; gap: 6px; }
 .merchant-time-select-group .merchant-field-control { flex: 1; min-width: 0; }
 .merchant-time-separator { font-weight: 700; color: var(--text-secondary); user-select: none; }
-.merchant-pricing-field { display: flex; flex-direction: column; gap: 6px; }.merchant-pricing-field > span { font-size: 13px; font-weight: 700; }.merchant-pricing-mode { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--primary-soft); }.merchant-pricing-mode button { min-height: 28px; flex: 1; border: 0; border-radius: 7px; background: transparent; cursor: pointer; color: var(--text-secondary); font-size: 10px; font-weight: 700; }.merchant-pricing-mode button.is-active { background: #fff; color: var(--primary); box-shadow: 0 1px 5px rgba(0,86,57,.12); }
-.merchant-upload-box { display: flex; min-height: 108px; align-items: center; justify-content: center; flex-direction: column; gap: 5px; border: 1.5px dashed #94cbae; border-radius: 14px; background: var(--primary-soft); color: var(--primary); cursor: pointer; text-align: center; }
+.merchant-segmented-control { display: flex; min-height: 48px; align-items: center; gap: 4px; padding: 4px; border-radius: 12px; background: #f8fafc; border: 1.5px solid #cbd5e1; box-sizing: border-box; }
+.merchant-segmented-control button { flex: 1; height: 100%; min-height: 38px; border: 0; border-radius: 9px; background: transparent; color: #64748b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s ease; display: flex; align-items: center; justify-content: center; user-select: none; }
+.merchant-segmented-control button:hover:not(.is-active) { color: #1e293b; background: rgba(0, 0, 0, 0.04); }
+.merchant-segmented-control button.is-active { background: #ffffff; color: var(--primary); font-weight: 800; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04); }
+.merchant-pricing-mode-inline { display: inline-flex; gap: 2px; padding: 2px; border-radius: 8px; background: #f1f5f9; border: 1px solid #e2e8f0; }
+.merchant-pricing-mode-inline button { min-height: 20px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: #64748b; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .15s ease; }
+.merchant-pricing-mode-inline button.is-active { background: #ffffff; color: var(--primary); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+.merchant-pricing-field { display: flex; flex-direction: column; gap: 6px; }.merchant-pricing-field > span { font-size: 13px; font-weight: 700; }.merchant-pricing-mode { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: #f1f5f9; border: 1px solid #e2e8f0; }.merchant-pricing-mode button { min-height: 28px; flex: 1; border: 0; border-radius: 7px; background: transparent; cursor: pointer; color: #64748b; font-size: 11px; font-weight: 700; transition: all .15s ease; }.merchant-pricing-mode button.is-active { background: #fff; color: var(--primary); box-shadow: 0 1px 5px rgba(0,86,57,.12); }
+.merchant-upload-box { display: flex; min-height: 108px; align-items: center; justify-content: center; flex-direction: column; gap: 5px; border: 1.5px dashed #cbd5e1; border-radius: 14px; background: #ffffff; color: var(--primary); cursor: pointer; text-align: center; transition: border-color .15s ease, background-color .15s ease; }
+.merchant-upload-box:hover { border-color: var(--primary); background: #f8fafc; }
 .merchant-upload-box.has-error { border-color: var(--danger); background: var(--danger-soft); }
 .merchant-upload-box span { font-size: 13px; font-weight: 800; }.merchant-upload-box small { color: var(--text-secondary); font-size: 11px; }.merchant-upload-box input { display: none; }.merchant-upload-preview { display: flex; flex-wrap: wrap; gap: 9px; }.merchant-upload-preview > div { position: relative; width: 82px; height: 64px; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; }.merchant-upload-preview img { width: 100%; height: 100%; object-fit: cover; }.merchant-upload-preview button { position: absolute; top: 3px; right: 3px; display: grid; width: 21px; height: 21px; place-items: center; border: 0; border-radius: 50%; background: rgba(0,61,39,.8); color: #fff; cursor: pointer; }.merchant-upload-preview span { position: absolute; right: 0; bottom: 0; left: 0; padding: 3px; background: rgba(0,61,39,.8); color: #fff; font-size: 9px; font-weight: 700; text-align: center; }
 .merchant-filter-chips--wrap { flex-wrap: wrap; overflow: visible; }.merchant-detail-list dd { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
