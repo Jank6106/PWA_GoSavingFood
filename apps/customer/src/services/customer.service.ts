@@ -728,10 +728,10 @@ export const HANOI_STORES: Merchant[] = [
   {
     "id": "afbde72f-ac50-4f1e-873f-9bed4e118f04",
     "brandId": "afbde72f-ac50-4f1e-873f-9bed4e118f04",
-    "name": "McDonald's - Nguyễn Trãi Q1",
-    "description": "Bữa ăn nhanh thịnh soạn chuẩn quốc tế với Burger Big Mac huyền thoại và gà rán giòn cay.",
-    "phone": "028 3838 6666",
-    "address": "12 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM",
+    "name": "McDonald's - Hồ Gươm",
+    "description": "Bữa ăn nhanh thịnh soạn chuẩn quốc tế với Burger Big Mac huyền thoại và gà rán giòn cay ngắm trọn Hồ Gươm.",
+    "phone": "024 3938 1234",
+    "address": "2 Hàng Bài, Tràng Tiền, Hoàn Kiếm, Hà Nội",
     "logo": "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=300&q=80",
     "banner": "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
@@ -740,16 +740,16 @@ export const HANOI_STORES: Merchant[] = [
     "status": "active",
     "isOpen": true,
     "openingHours": "07:00 - 23:00",
-    "latitude": 10.7712,
-    "longitude": 106.6923
+    "latitude": 21.0258,
+    "longitude": 105.8528
   },
   {
     "id": "5b051934-45e2-4cbe-92b7-7e78c4b51710",
     "brandId": "5b051934-45e2-4cbe-92b7-7e78c4b51710",
-    "name": "KFC Vietnam - Bến Nghé Q1",
-    "description": "Gà rán hương vị công thức 11 loại thảo mộc bí truyền, burger zinger giòn cay và bánh trứng nướng.",
+    "name": "KFC Vietnam - Bà Triệu",
+    "description": "Gà rán công thức 11 loại thảo mộc bí truyền, burger zinger giòn cay và bánh trứng nướng nức tiếng phố Bà Triệu.",
     "phone": "1900 6886",
-    "address": "45 Lê Lợi, Phường Bến Nghé, Quận 1, TP.HCM",
+    "address": "292 Bà Triệu, Lê Đại Hành, Hai Bà Trưng, Hà Nội",
     "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/5b051934-45e2-4cbe-92b7-7e78c4b51710/logo_1793102739004.webp",
     "banner": "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.7,
@@ -758,16 +758,16 @@ export const HANOI_STORES: Merchant[] = [
     "status": "active",
     "isOpen": true,
     "openingHours": "09:00 - 22:00",
-    "latitude": 10.7745,
-    "longitude": 106.7011
+    "latitude": 21.0105,
+    "longitude": 105.8495
   },
   {
     "id": "799e644e-2f82-4a85-ba12-b194cf4cc547",
     "brandId": "799e644e-2f82-4a85-ba12-b194cf4cc547",
-    "name": "Lotteria - Nguyễn Huệ Q1",
-    "description": "Món gà rán giòn rụm sốt đậu Hàn Quốc, burger phô mai mozzarella kéo sợi và khoai lắc phô mai.",
+    "name": "Lotteria - Tràng Tiền",
+    "description": "Món gà rán giòn rụm sốt đậu Hàn Quốc, burger phô mai mozzarella kéo sợi và khoai lắc phô mai ngay trung tâm Tràng Tiền.",
     "phone": "1900 6778",
-    "address": "128 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM",
+    "address": "1 Tràng Tiền, Phan Chu Trinh, Hoàn Kiếm, Hà Nội",
     "logo": "https://www.lotteria.vn/media/logo/default/logo.png",
     "banner": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
@@ -776,8 +776,8 @@ export const HANOI_STORES: Merchant[] = [
     "status": "active",
     "isOpen": true,
     "openingHours": "08:00 - 22:00",
-    "latitude": 10.7738,
-    "longitude": 106.7042
+    "latitude": 21.0245,
+    "longitude": 105.8572
   },
   {
     "id": "2840d89d-5fdd-4e7b-a467-20ed26a9e4da",
@@ -816,7 +816,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.673Z"
+    "createdAt": "2026-10-27T13:00:08.167Z"
   },
   {
     "id": "c67f81fa-4b47-4483-baef-142c7b4f8be1",
@@ -834,7 +834,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0001-4000-8000-000000000001",
@@ -852,7 +852,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "8d61a0da-732e-426c-966f-a45e3f57f607",
@@ -870,7 +870,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0020-4000-8000-000000000020",
@@ -888,7 +888,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0002-4000-8000-000000000002",
@@ -906,7 +906,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "5f93f54c-f73a-4737-9d61-2de5396029aa",
@@ -924,7 +924,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0003-4000-8000-000000000003",
@@ -942,7 +942,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0004-4000-8000-000000000004",
@@ -960,7 +960,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0005-4000-8000-000000000005",
@@ -978,7 +978,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0006-4000-8000-000000000006",
@@ -996,7 +996,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0007-4000-8000-000000000007",
@@ -1014,7 +1014,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0008-4000-8000-000000000008",
@@ -1032,7 +1032,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:45",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0009-4000-8000-000000000009",
@@ -1050,7 +1050,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0010-4000-8000-000000000010",
@@ -1068,7 +1068,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0011-4000-8000-000000000011",
@@ -1086,7 +1086,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0012-4000-8000-000000000012",
@@ -1104,7 +1104,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0013-4000-8000-000000000013",
@@ -1122,7 +1122,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0014-4000-8000-000000000014",
@@ -1140,7 +1140,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "a51a723e-e333-4374-9245-d0b0dfc7d0eb",
@@ -1158,7 +1158,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "5ae47709-4ceb-4aa9-b77e-284ef5a7c0e6",
@@ -1176,7 +1176,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "59d0f42d-c280-4b54-bd23-0b4a8b669fe8",
@@ -1194,7 +1194,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "15776100-8c1c-410a-8b6a-1b7602670f70",
@@ -1212,7 +1212,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "9ff75bc9-8339-4cb6-9fe2-1907bc2bd4f3",
@@ -1230,7 +1230,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0015-4000-8000-000000000015",
@@ -1248,7 +1248,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0016-4000-8000-000000000016",
@@ -1266,7 +1266,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "23:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0017-4000-8000-000000000017",
@@ -1284,7 +1284,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "23:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0018-4000-8000-000000000018",
@@ -1302,7 +1302,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "bac70001-0019-4000-8000-000000000019",
@@ -1320,7 +1320,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "5a650b75-b805-4fff-a91c-8800623ab25e",
@@ -1338,7 +1338,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "931b7eb7-5d18-449a-87f6-1747e9bcfbc5",
@@ -1356,7 +1356,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "b673df8e-2657-4d5c-bc32-3839100fc7f4",
@@ -1374,7 +1374,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "2c6f95b8-37f6-4ad2-bfaf-b2550cb8035c",
@@ -1392,7 +1392,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "ffdae2e8-2df4-4547-88b2-20be1ca1ec79",
@@ -1410,7 +1410,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "7a110000-0000-0000-0000-000000000003",
@@ -1428,7 +1428,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "7a110000-0000-0000-0000-000000000004",
@@ -1446,12 +1446,12 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "c101a5bd-472a-4135-a948-ad8c50b8e121",
     "merchantId": "afbde72f-ac50-4f1e-873f-9bed4e118f04",
-    "merchantName": "McDonald's - Nguyễn Trãi Q1",
+    "merchantName": "McDonald's - Hồ Gươm",
     "name": "Túi Gà Rán Giòn Rụm & Bánh Táo Nướng McDonald's",
     "description": "Gà rán da giòn rụm bên ngoài mọng nước bên trong kèm bánh táo nướng vỏ quế thơm lừng và tương chua ngọt đặc trưng McDonald’s.",
     "originalPrice": 120000,
@@ -1464,12 +1464,12 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "e59e4220-3882-4f02-95e3-21d51abe796d",
     "merchantId": "afbde72f-ac50-4f1e-873f-9bed4e118f04",
-    "merchantName": "McDonald's - Nguyễn Trãi Q1",
+    "merchantName": "McDonald's - Hồ Gươm",
     "name": "Túi Burger Bò Nướng Phô Mai & Khoai Tây Chiên McDonald's",
     "description": "Burger bò nướng lửa thơm khói quyện cùng phô mai cheddar béo ngậy và phần khoai tây chiên vàng giòn rụm chuẩn phong cách Mỹ.",
     "originalPrice": 130000,
@@ -1482,12 +1482,12 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "d5bd05a9-7324-4493-a6e6-489e30f6d573",
     "merchantId": "5b051934-45e2-4cbe-92b7-7e78c4b51710",
-    "merchantName": "KFC Vietnam - Bến Nghé Q1",
+    "merchantName": "KFC Vietnam - Bà Triệu",
     "name": "Túi Gà Giòn Cay Đặc Biệt & Khoai Tây Lắc Phô Mai KFC",
     "description": "Gà rán KFC công thức 11 loại thảo mộc huyền thoại giòn cay bốc khói cùng phần khoai tây chiên lắc bột phô mai thơm ngậy lôi cuốn.",
     "originalPrice": 125000,
@@ -1500,12 +1500,12 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "5f637281-5d7e-478f-8b58-330ed5eb2326",
     "merchantId": "5b051934-45e2-4cbe-92b7-7e78c4b51710",
-    "merchantName": "KFC Vietnam - Bến Nghé Q1",
+    "merchantName": "KFC Vietnam - Bà Triệu",
     "name": "Túi Bánh Trứng Egg Tart Nướng & Burger Zinger KFC",
     "description": "Bánh trứng Egg Tart nướng thơm lừng lớp vỏ ngàn lớp giòn tan nhân kem trứng béo ngậy kèm burger phi-lê gà cay Zinger nức tiếng.",
     "originalPrice": 115000,
@@ -1518,12 +1518,12 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "03aa4b45-1c0a-4b5b-9419-8ca44123b842",
     "merchantId": "799e644e-2f82-4a85-ba12-b194cf4cc547",
-    "merchantName": "Lotteria - Nguyễn Huệ Q1",
+    "merchantName": "Lotteria - Tràng Tiền",
     "name": "Túi Gà Rán Giòn Cay & Khoai Tây Chiên Lotteria",
     "description": "Gà rán truyền thống vỏ giòn rụm thịt mềm ngọt mọng nước kèm khoai tây chiên giòn tan và tương cà chua ngọt đậm đà chuẩn vị Lotteria.",
     "originalPrice": 120000,
@@ -1536,12 +1536,12 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "16eaa1e9-b4ca-46c9-a779-aca11b6bd567",
     "merchantId": "799e644e-2f82-4a85-ba12-b194cf4cc547",
-    "merchantName": "Lotteria - Nguyễn Huệ Q1",
+    "merchantName": "Lotteria - Tràng Tiền",
     "name": "Túi Burger Tôm Hải Sản & Phô Mai Que Lotteria",
     "description": "Burger tôm tươi ngọt thịt phủ xốt Tartar béo nhẹ cùng phô mai que Mozzarella chiên vàng kéo sợi hấp dẫn bất tận.",
     "originalPrice": 110000,
@@ -1554,7 +1554,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   },
   {
     "id": "2fd22156-be49-4567-8cd1-e89a168e541b",
@@ -1572,7 +1572,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T12:45:15.674Z"
+    "createdAt": "2026-10-27T13:00:08.168Z"
   }
 ];
 

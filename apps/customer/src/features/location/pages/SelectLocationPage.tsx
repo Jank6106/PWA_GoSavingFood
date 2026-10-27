@@ -7,8 +7,8 @@ import { customerService } from '../../../services/customer.service';
 import { MAPBOX_TOKEN, mapboxService } from '../../../services/mapbox.service';
 import type { LocationSuggestion } from '../../../shared/types/customer.types';
 
-// Tọa độ trung tâm mặc định: TP. Hồ Chí Minh [lng, lat]
-const DEFAULT_COORDS: [number, number] = [106.7032, 10.7798];
+// Tọa độ trung tâm mặc định: Hà Nội [lng, lat]
+const DEFAULT_COORDS: [number, number] = [105.8542, 21.0285];
 
 interface SelectLocationPageProps {
   currentLocation: string;
@@ -25,7 +25,7 @@ export function SelectLocationPage({
 }: SelectLocationPageProps) {
   const [query, setQuery] = useState('');
   const [locations, setLocations] = useState<LocationSuggestion[]>([]);
-  const [selected, setSelected] = useState(currentLocation || 'TP. Hồ Chí Minh');
+  const [selected, setSelected] = useState(currentLocation || 'Hà Nội');
   const [selectedCoords, setSelectedCoords] = useState<[number, number]>(() => {
     if (initialCoords && typeof initialCoords.lng === 'number' && typeof initialCoords.lat === 'number') {
       return [initialCoords.lng, initialCoords.lat];
