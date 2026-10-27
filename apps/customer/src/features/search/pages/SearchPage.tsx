@@ -54,7 +54,7 @@ const filterOptions = [
   { id: 'pickup_now', label: 'Nhận ngay' },
 ];
 
-const DEFAULT_CENTER: [number, number] = [106.7032, 10.7798];
+const DEFAULT_CENTER: [number, number] = [105.8542, 21.0285];
 
 /**
  * Chuẩn hóa tiếng Việt để tìm kiếm thông minh:

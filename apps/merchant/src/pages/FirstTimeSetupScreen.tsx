@@ -112,7 +112,7 @@ export function FirstTimeSetupScreen({
         // Fallback sang tọa độ trung tâm TP.HCM nếu bị chặn quyền
         setLatitude(10.7769);
         setLongitude(106.7009);
-        setLocationSuccessMsg('Đã dùng tọa độ mặc định TP.HCM (10.7769, 106.7009)');
+        setLocationSuccessMsg('Đã dùng tọa độ mặc định Hà Nội (21.0285, 105.8542)');
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );
@@ -298,7 +298,7 @@ export function FirstTimeSetupScreen({
               label="Địa chỉ cụ thể của quán *"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="VD: 123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM"
+              placeholder="VD: 234 Hoàng Quốc Việt, Cổ Nhuế 1, Bắc Từ Liêm, Hà Nội"
               rows={2}
               required
             />

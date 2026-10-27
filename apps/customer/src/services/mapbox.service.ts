@@ -80,7 +80,7 @@ export const mapboxService = {
     const trimmed = query.trim();
     if (!trimmed) return [];
 
-    const effectiveProximity = proximity || [106.7032, 10.7798];
+    const effectiveProximity = proximity || [105.8542, 21.0285];
     const proximityParam = `&proximity=${effectiveProximity[0]},${effectiveProximity[1]}`;
 
     // CHIẾN LƯỢC 1: Mapbox Search Box API v1 (Độ chính xác cao nhất cho POI, quán ăn, tòa nhà, địa chỉ VN)

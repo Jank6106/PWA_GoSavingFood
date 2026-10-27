@@ -153,14 +153,19 @@ function parseRouteFromUrl(): AppRoute | null {
 }
 
 
-const DEFAULT_COORDS = { lat: 10.7798, lng: 106.7032 };
-const DEFAULT_LOCATION = 'Quận 1, TP.HCM';
+const DEFAULT_COORDS = { lat: 21.0285, lng: 105.8542 };
+const DEFAULT_LOCATION = 'Hà Nội';
 
 function CustomerApp() {
   const [coords, setCoords] = useState<{ lat: number; lng: number }>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_COORDS_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_COORDS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed?.lat === 'number' && parsed.lat < 15) return DEFAULT_COORDS;
+        return parsed;
+      }
+      return DEFAULT_COORDS;
     } catch {
       return DEFAULT_COORDS;
     }
@@ -169,6 +174,7 @@ function CustomerApp() {
   const [location, setLocation] = useState<string>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_LOCATION_KEY);
+      if (saved && (saved.includes('TP.HCM') || saved.includes('Hồ Chí Minh') || saved.includes('Quận 1'))) return DEFAULT_LOCATION;
       return saved || DEFAULT_LOCATION;
     } catch {
       return DEFAULT_LOCATION;
