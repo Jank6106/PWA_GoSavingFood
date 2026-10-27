@@ -32,10 +32,11 @@ export function NotificationsPage({
             className="customer-read-all-btn"
             onClick={onReadAll}
             disabled={!hasUnread}
-            aria-label="Đánh dấu Đã đọc tất cả"
+            aria-label="Đánh dấu đã đọc tất cả"
+            title="Đánh dấu đã đọc tất cả"
           >
-            <CheckCheck size={16} />
-            <span>Đánh dấu Đã đọc tất cả</span>
+            <CheckCheck size={20} className="customer-read-all-icon" />
+            <span className="customer-read-all-text">Đánh dấu Đã đọc tất cả</span>
           </button>
         }
       />
