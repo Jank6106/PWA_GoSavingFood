@@ -192,7 +192,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Thương hiệu bánh ngọt và bánh mì tươi phong cách Pháp - Hàn Quốc cao cấp.",
     "phone": "024 3755 8899",
     "address": "234 Hoàng Quốc Việt, Cổ Nhuế 1, Bắc Từ Liêm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/tous-les-jours.jpg",
     "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
     "rating": 5,
     "totalRatings": 18,
@@ -210,7 +210,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Bánh mì nướng tươi, pastry bơ Pháp thượng hạng và cà phê chuẩn vị.",
     "phone": "024 3837 8222",
     "address": "Tầng 1 Keangnam Landmark 72, Phạm Hùng, Mễ Trì, Nam Từ Liêm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/tous-les-jours.jpg",
     "banner": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 24,
@@ -228,7 +228,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Bánh tươi mỗi ngày, bánh mì gối dinh dưỡng, donut và bánh su kem béo ngậy.",
     "phone": "024 3856 9900",
     "address": "43 Phạm Văn Đồng, Mai Dịch, Cầu Giấy, Hà Nội",
-    "logo": "https://theme.hstatic.net/200000411281/1001307649/14/logo.png?v=941",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/fresh-garden.png",
     "banner": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 15,
@@ -246,7 +246,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Tiệm bánh tươi phong cách hiện đại với các dòng bánh nướng thơm lừng trong ngày.",
     "phone": "024 3556 8866",
     "address": "112 Nguyễn Thị Thập, Trung Hòa Nhân Chính, Cầu Giấy, Hà Nội",
-    "logo": "https://theme.hstatic.net/200000411281/1001307649/14/logo.png?v=941",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/fresh-garden.png",
     "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 12,
@@ -264,7 +264,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Thương hiệu cà phê Việt Nam danh tiếng, đậm đà hương vị cùng bánh ngọt thơm béo.",
     "phone": "024 3768 8999",
     "address": "241 Xuân Thủy, Dịch Vọng Hậu, Cầu Giấy, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/highlands-coffee.webp",
     "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.7,
     "totalRatings": 32,
@@ -282,7 +282,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Không gian thưởng thức cà phê phin truyền thống và freeze trà xanh đặc trưng.",
     "phone": "024 3724 6688",
     "address": "54A Nguyễn Chí Thanh, Láng Thượng, Đống Đa, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/highlands-coffee.webp",
     "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 28,
@@ -300,7 +300,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Bánh mì phong cách Singapore sáng tạo nổi tiếng với bánh mì chà bông độc quyền.",
     "phone": "024 3974 4118",
     "address": "Tầng 4 Vincom Center, 191 Bà Triệu, Lê Đại Hành, Hai Bà Trưng, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/breadtalk.webp",
     "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 40,
@@ -318,7 +318,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Chuỗi bakery cao cấp chuẩn Âu với bánh ngọt tinh xảo và croissant thơm bơ.",
     "phone": "024 3936 9966",
     "address": "Tầng 1 Tràng Tiền Plaza, 24 Hai Bà Trưng, Tràng Tiền, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/paris-baguette.webp",
     "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 52,
@@ -336,7 +336,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Tiệm bánh thủ công danh tiếng Hà Nội với bánh su kem béo ngậy và bánh sinh nhật tươi.",
     "phone": "0909 199 599",
     "address": "8 Quang Trung, Quang Trung, Hà Đông, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/sapo-bakery.png",
     "banner": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.7,
     "totalRatings": 19,
@@ -354,7 +354,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Thương hiệu bánh ngọt lâu năm với nguyên liệu bơ sữa cao cấp nhập khẩu từ New Zealand.",
     "phone": "024 3833 8686",
     "address": "98 Cầu Giấy, Quan Hoa, Cầu Giấy, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/anh-hoa-bakery.webp",
     "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 31,
@@ -372,7 +372,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Trà và cà phê truyền thống Bảo Lộc cùng các dòng bánh ngọt nhẹ nhàng thơm hương trà.",
     "phone": "024 3232 1555",
     "address": "Tầng B1 Lotte Center, 54 Liễu Giai, Cống Vị, Ba Đình, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/phuc-long.webp",
     "banner": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 44,
@@ -390,7 +390,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Chuỗi cà phê phong cách Sài Gòn sang trọng với đồ uống tươi mát và bánh nướng giòn.",
     "phone": "028 7300 1005",
     "address": "60 Lý Thường Kiệt, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/katinat.png",
     "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 56,
@@ -408,7 +408,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Ngôi nhà cà phê với trà đào cam sả trứ danh và các loại bánh mì ngọt nướng tươi.",
     "phone": "028 7303 9079",
     "address": "159 Thái Hà, Trung Liệt, Đống Đa, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/the-coffee-house.webp",
     "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 38,
@@ -426,7 +426,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Cà phê cốt dừa thơm béo và hoài niệm thời bao cấp giữa lòng phố cổ Hà Nội.",
     "phone": "024 3928 8208",
     "address": "27 Nhà Thờ, Hàng Trống, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/cong-ca-phe.png",
     "banner": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 48,
@@ -444,7 +444,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Thương hiệu cà phê biểu tượng toàn cầu với hạt Arabica tuyển chọn và bánh nướng hảo hạng.",
     "phone": "024 3938 1234",
     "address": "6 Nhà Thờ, Hàng Trống, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/starbucks.webp",
     "banner": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 65,
@@ -462,7 +462,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Đặc sản trà Ô Long thủ công đậm vị và các thức uống signature từ vùng đất Bảo Lộc.",
     "phone": "1900 3013",
     "address": "24 Hàng Cót, Hàng Mã, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/phe-la.png",
     "banner": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 50,
@@ -480,7 +480,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Cà phê và thức uống phô mai béo ngậy cùng không gian thiết kế industrial độc đáo.",
     "phone": "028 3514 6868",
     "address": "50 Lê Duẩn, Khâm Thiên, Đống Đa, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/cheese-coffee.webp",
     "banner": "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 27,
@@ -498,7 +498,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Trà sữa trân châu hoàng gia từ nông sản Việt Nam thơm béo và đậm vị trà tự nhiên.",
     "phone": "1900 636936",
     "address": "136 Hồ Tùng Mậu, Mai Dịch, Cầu Giấy, Hà Nội",
-    "logo": "https://tocotocotea.com/wp-content/themes/tocotocotea/assets/images/logo.png",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/tocotoco.png",
     "banner": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.6,
     "totalRatings": 21,
@@ -516,7 +516,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Kem úp ngược Blizzard trứ danh cùng các loại bánh kem lạnh thượng hạng chuẩn Mỹ.",
     "phone": "024 3724 7799",
     "address": "112 Chùa Láng, Láng Thượng, Đống Đa, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/dairy-queen.webp",
     "banner": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.7,
     "totalRatings": 20,
@@ -534,7 +534,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Thương hiệu 31 vị kem nổi tiếng thế giới với nguyên liệu kem sữa tươi thượng hạng.",
     "phone": "024 3718 6886",
     "address": "18 Đặng Thai Mai, Quảng An, Tây Hồ, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/baskin-robbins.webp",
     "banner": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 26,
@@ -552,7 +552,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Siêu thị tiện lợi hàng đầu, rau củ quả VietGAP và thực phẩm tươi sạch trong ngày.",
     "phone": "024 7106 6866",
     "address": "Tòa 27A2 Green Stars, 234 Phạm Văn Đồng, Cổ Nhuế 1, Bắc Từ Liêm, Hà Nội",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/9/9a/WinMart_logo.png",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/winmart.png",
     "banner": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.7,
     "totalRatings": 16,
@@ -570,7 +570,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Chuỗi bán lẻ thực phẩm thiết yếu, nông sản sạch chuẩn VietGAP và đồ uống mát lạnh.",
     "phone": "024 7106 8899",
     "address": "Tòa T6 Vinhomes Times City, 458 Minh Khai, Vĩnh Tuy, Hai Bà Trưng, Hà Nội",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/9/9a/WinMart_logo.png",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/winmart.png",
     "banner": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 22,
@@ -588,7 +588,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Cửa hàng tiện lợi phong cách Hàn Quốc với cơm nắm Onigiri, sandwich và đồ ăn nhẹ.",
     "phone": "028 7302 2525",
     "address": "36 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/gs25.webp",
     "banner": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 35,
@@ -606,7 +606,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Cửa hàng tiện lợi 24/7 với bánh mì nướng, xúc xích nóng và thực phẩm đóng gói tiện dụng.",
     "phone": "024 3556 2288",
     "address": "17T4 Hoàng Đạo Thúy, Trung Hòa Nhân Chính, Cầu Giấy, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/circle-k.webp",
     "banner": "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.7,
     "totalRatings": 29,
@@ -624,7 +624,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Chuỗi tiện ích quốc tế phục vụ bữa ăn nhanh tiện lợi, đồ uống giải khát mát lạnh.",
     "phone": "028 7300 7111",
     "address": "Tầng 1 Keangnam Landmark 72, Phạm Hùng, Nam Từ Liêm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/7-eleven.webp",
     "banner": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 33,
@@ -642,7 +642,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Đại siêu thị thực phẩm nhập khẩu cao cấp, phô mai châu Âu, bánh ngọt và trái cây tươi.",
     "phone": "024 3718 6688",
     "address": "Tòa nhà Syrena, 51 Xuân Diệu, Quảng An, Tây Hồ, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/annam-gourmet.png",
     "banner": "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 42,
@@ -660,7 +660,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Cơm niêu cháy giòn 2 mặt thơm nức mũi, sốt bò tiêu đen và gà sốt nấm chuẩn vị Singapore.",
     "phone": "0971 615 775",
     "address": "86 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội",
-    "logo": "https://kombo.vn/wp-content/themes/kombo/assets/img/logo-mobile.png",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/kombo.png",
     "banner": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.7,
     "totalRatings": 25,
@@ -678,7 +678,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Cơm thố nóng giòn đặc trưng, hạt cơm dẻo quyện cùng thịt xá xíu, bò nướng và canh rong biển.",
     "phone": "0966 883 234",
     "address": "96 Trần Cung, Cổ Nhuế 1, Bắc Từ Liêm, Hà Nội",
-    "logo": "https://comthobachkhoa.com.vn/wp-content/uploads/2026/03/logo-com-tho-bach-khoa-1024x313.png",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/com-tho-bach-khoa.png",
     "banner": "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 30,
@@ -696,7 +696,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Ẩm thực chay cao cấp nghệ thuật, không gian thanh tịnh với món chay tinh tế chuẩn 5 sao.",
     "phone": "024 6253 8999",
     "address": "67 Lý Thường Kiệt, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội",
-    "logo": "https://vilai.vn/mediacenter/media/images/725/logo/logo-1514167401.png",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/vi-lai.png",
     "banner": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 45,
@@ -714,7 +714,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Cơm chay thanh tịnh, thực phẩm dinh dưỡng từ nấm và rau củ hữu cơ tươi ngon.",
     "phone": "0988 234 112",
     "address": "128 Cổ Nhuế, Cổ Nhuế 2, Bắc Từ Liêm, Hà Nội",
-    "logo": "https://vilai.vn/mediacenter/media/images/725/logo/logo-1514167401.png",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/bep-chay-an-lac.png",
     "banner": "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 28,
@@ -732,7 +732,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Bữa ăn nhanh thịnh soạn chuẩn quốc tế với Burger Big Mac huyền thoại và gà rán giòn cay ngắm trọn Hồ Gươm.",
     "phone": "024 3938 1234",
     "address": "2 Hàng Bài, Tràng Tiền, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/mcdonalds.webp",
     "banner": "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 55,
@@ -750,7 +750,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Gà rán công thức 11 loại thảo mộc bí truyền, burger zinger giòn cay và bánh trứng nướng nức tiếng phố Bà Triệu.",
     "phone": "1900 6886",
     "address": "292 Bà Triệu, Lê Đại Hành, Hai Bà Trưng, Hà Nội",
-    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/5b051934-45e2-4cbe-92b7-7e78c4b51710/logo_1793102739004.webp",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/kfc-vietnam.webp",
     "banner": "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.7,
     "totalRatings": 48,
@@ -768,7 +768,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Món gà rán giòn rụm sốt đậu Hàn Quốc, burger phô mai mozzarella kéo sợi và khoai lắc phô mai ngay trung tâm Tràng Tiền.",
     "phone": "1900 6778",
     "address": "1 Tràng Tiền, Phan Chu Trinh, Hoàn Kiếm, Hà Nội",
-    "logo": "https://www.lotteria.vn/media/logo/default/logo.png",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/lotteria.png",
     "banner": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 62,
@@ -786,7 +786,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Pizza nhào bột tươi bằng tay theo chuẩn Mỹ, phô mai Mozzarella 100% hảo hạng và bánh mì bơ tỏi.",
     "phone": "1900 6099",
     "address": "54 Liễu Giai, Cống Vị, Ba Đình, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/dominos-pizza.webp",
     "banner": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 37,
@@ -804,7 +804,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Thương hiệu socola thủ công lừng danh thế giới kết hợp các loại bánh ngọt pastry Pháp xa hoa.",
     "phone": "024 3717 3964",
     "address": "91 Bà Triệu, Hàng Bài, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/maison-marou.png",
     "banner": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=1200&q=80",
     "rating": 5,
     "totalRatings": 68,
@@ -822,7 +822,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Bistro & tiệm bánh Pháp truyền thống trứ danh Tây Hồ với bánh mì sourdough, croissant và éclair tinh tế.",
     "phone": "024 3933 2345",
     "address": "24 Xuân Diệu, Quảng An, Tây Hồ, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/saint-honore.png",
     "banner": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 58,
@@ -840,7 +840,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Tiệm bánh và ẩm thực Pháp thượng lưu 5 sao giữa lòng thủ đô, macaron quý tộc và bánh brioche bơ Pháp.",
     "phone": "024 3826 6919",
     "address": "15 Ngô Quyền, Tràng Tiền, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/metropole-lepicerie.png",
     "banner": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=1200&q=80",
     "rating": 5,
     "totalRatings": 92,
@@ -858,7 +858,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Tiệm bánh thủ công phong cách Hàn Quốc nổi tiếng với bánh kem tươi trái cây, bánh mì gối và pastry bơ hảo hạng.",
     "phone": "024 3200 8833",
     "address": "10 Vũ Phạm Hàm, Trung Hòa, Cầu Giấy, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/artisan-bakery.png",
     "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 41,
@@ -876,7 +876,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Không gian tráng miệng và trà bánh thanh lịch với bánh crepe ngàn lớp mille-crêpes và trà trái cây tao nhã.",
     "phone": "024 2244 5599",
     "address": "276 Thái Hà, Chợ Dừa, Đống Đa, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/cest-si-bon.png",
     "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 54,
@@ -894,7 +894,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Quán cà phê sân vườn phong cách resort Tây Hồ với thức uống cold brew hảo hạng và bánh tart dâu tây tươi.",
     "phone": "0908 889 911",
     "address": "8 Quảng Khánh, Quảng An, Tây Hồ, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/oromia-coffee.png",
     "banner": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 63,
@@ -912,7 +912,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Tiệm bánh và brunch thời thượng phong cách Âu với cronut bơ nướng giòn và bánh croissant lập phương nổi tiếng.",
     "phone": "024 3999 7788",
     "address": "38 Lý Thường Kiệt, Hàng Bài, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/soko-cake.webp",
     "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 47,
@@ -930,7 +930,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Không gian cà phê quý tộc sang trọng phong cách hoàng gia, tinh hoa cà phê thủ công và bánh ngọt chuẩn Ý.",
     "phone": "024 3928 8866",
     "address": "13 Nhà Thờ, Hàng Trống, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/runam.png",
     "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
     "rating": 5,
     "totalRatings": 76,
@@ -948,7 +948,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Thương hiệu cà phê đặc sản Đà Lạt trứ danh với hạt Arabica nguyên chất rang mộc và bánh quy bơ thơm bùi.",
     "phone": "024 3633 1188",
     "address": "1B Ngô Thì Nhậm, Hàng Bài, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/la-viet.png",
     "banner": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 52,
@@ -966,7 +966,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Quán cà phê ngôi nhà trên cây độc đáo, không gian xanh thư thái phục vụ cà phê pha máy và bánh cà rốt nướng.",
     "phone": "024 3747 6622",
     "address": "21B Điện Biên Phủ, Điện Biên, Ba Đình, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/the-rustics.jpg",
     "banner": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 39,
@@ -984,7 +984,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Chi nhánh cao cấp tại trung tâm thương mại Vincom Metropolis với bánh danish trái cây và croissant phô mai tươi.",
     "phone": "024 3201 1888",
     "address": "Tầng 1 Vincom Metropolis, 29 Liễu Giai, Ngọc Khánh, Ba Đình, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/tous-les-jours.jpg",
     "banner": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 44,
@@ -1002,7 +1002,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Quán cà phê vỉa hè phong cách Paris cổ điển tại khách sạn Metropole với cà phê espresso và bánh madeleine.",
     "phone": "024 3826 6919",
     "address": "15 Ngô Quyền, Tràng Tiền, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/la-terrasse.png",
     "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
     "rating": 5,
     "totalRatings": 85,
@@ -1020,7 +1020,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Thương hiệu bánh ngọt danh tiếng với bánh mì bơ tỏi phô mai thơm ngậy và pudding sữa hoàng gia.",
     "phone": "024 3556 6688",
     "address": "Tòa 17T5 Hoàng Đạo Thúy, Trung Hòa, Cầu Giấy, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/paris-baguette.webp",
     "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 38,
@@ -1038,7 +1038,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Tiệm bánh mì dinh dưỡng hữu cơ với bánh mì gối nguyên cám, bánh ngọt ít đường và thức uống healthy.",
     "phone": "024 3722 8999",
     "address": "198 Đội Cấn, Đội Cấn, Ba Đình, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/bready-banh-mi.png",
     "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.7,
     "totalRatings": 27,
@@ -1056,7 +1056,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Quán cà phê rang mộc nổi tiếng khu phố cổ với hương vị espresso nồng nàn và bánh cuộn quế cinnamon thơm lừng.",
     "phone": "0982 998 833",
     "address": "5 Chân Cầm, Hàng Trống, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/blackbird-coffee.jpg",
     "banner": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 62,
@@ -1074,7 +1074,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Không gian sách và cà phê tĩnh lặng giữa lòng Hà Nội, chuyên cà phê pha thủ công pour-over và bánh chuối nướng.",
     "phone": "0978 665 522",
     "address": "5 Nguyễn Quang Bích, Cửa Đông, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/tranquil-books.jpg",
     "banner": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 58,
@@ -1092,7 +1092,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Xưởng rang cà phê phong cách châu Âu ấn tượng với món cà phê trứng béo ngậy và bánh waffle nướng mật ong.",
     "phone": "024 6686 8090",
     "address": "37 Quang Trung, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/all-day-coffee.jpg",
     "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 70,
@@ -1110,7 +1110,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Sảnh tiệc trà chiều 5 sao trên tầng 62 khách sạn InterContinental với bánh scone nho khô và pastry thượng phẩm.",
     "phone": "024 3698 8888",
     "address": "Tầng 62 InterContinental Landmark72, Phạm Hùng, Mễ Trì, Nam Từ Liêm, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/the-hive-lounge.png",
     "banner": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=1200&q=80",
     "rating": 5,
     "totalRatings": 80,
@@ -1128,7 +1128,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Xưởng cà phê đặc sản cao cấp khu biệt thự Tây Hồ với hạt cà phê micro-lot tuyển chọn và bánh canelé nướng giòn.",
     "phone": "0936 112 288",
     "address": "52 Tô Ngọc Vân, Quảng An, Tây Hồ, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/an-cafe.png",
     "banner": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.8,
     "totalRatings": 45,
@@ -1146,7 +1146,7 @@ export const HANOI_STORES: Merchant[] = [
     "description": "Boutique tráng miệng phong cách Bắc Âu lãng mạn với bánh tiramisu rượu thơm và trà thảo mộc organic thanh mát.",
     "phone": "024 3734 9911",
     "address": "10 Khúc Hạo, Điện Biên, Ba Đình, Hà Nội",
-    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "logo": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/store-logos/brands/jouri-dessert.png",
     "banner": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
     "rating": 4.9,
     "totalRatings": 51,
@@ -1176,7 +1176,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.912Z"
   },
   {
     "id": "c67f81fa-4b47-4483-baef-142c7b4f8be1",
@@ -1194,7 +1194,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.915Z"
   },
   {
     "id": "bac70001-0001-4000-8000-000000000001",
@@ -1212,7 +1212,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.915Z"
   },
   {
     "id": "8d61a0da-732e-426c-966f-a45e3f57f607",
@@ -1230,7 +1230,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.915Z"
   },
   {
     "id": "bac70001-0020-4000-8000-000000000020",
@@ -1248,7 +1248,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.915Z"
   },
   {
     "id": "bac70001-0002-4000-8000-000000000002",
@@ -1266,7 +1266,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.915Z"
   },
   {
     "id": "5f93f54c-f73a-4737-9d61-2de5396029aa",
@@ -1284,7 +1284,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.915Z"
   },
   {
     "id": "bac70001-0003-4000-8000-000000000003",
@@ -1302,7 +1302,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.915Z"
   },
   {
     "id": "bac70001-0004-4000-8000-000000000004",
@@ -1320,7 +1320,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0005-4000-8000-000000000005",
@@ -1338,7 +1338,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0006-4000-8000-000000000006",
@@ -1356,7 +1356,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0007-4000-8000-000000000007",
@@ -1374,7 +1374,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0008-4000-8000-000000000008",
@@ -1392,7 +1392,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:45",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0009-4000-8000-000000000009",
@@ -1410,7 +1410,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0010-4000-8000-000000000010",
@@ -1428,7 +1428,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0011-4000-8000-000000000011",
@@ -1446,7 +1446,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0012-4000-8000-000000000012",
@@ -1464,7 +1464,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0013-4000-8000-000000000013",
@@ -1482,7 +1482,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0014-4000-8000-000000000014",
@@ -1500,7 +1500,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "a51a723e-e333-4374-9245-d0b0dfc7d0eb",
@@ -1518,7 +1518,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "5ae47709-4ceb-4aa9-b77e-284ef5a7c0e6",
@@ -1536,7 +1536,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "59d0f42d-c280-4b54-bd23-0b4a8b669fe8",
@@ -1554,7 +1554,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "15776100-8c1c-410a-8b6a-1b7602670f70",
@@ -1572,7 +1572,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "9ff75bc9-8339-4cb6-9fe2-1907bc2bd4f3",
@@ -1590,7 +1590,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0015-4000-8000-000000000015",
@@ -1608,7 +1608,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0016-4000-8000-000000000016",
@@ -1626,7 +1626,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "23:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0017-4000-8000-000000000017",
@@ -1644,7 +1644,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "23:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0018-4000-8000-000000000018",
@@ -1662,7 +1662,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0019-4000-8000-000000000019",
@@ -1680,7 +1680,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "5a650b75-b805-4fff-a91c-8800623ab25e",
@@ -1698,7 +1698,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "931b7eb7-5d18-449a-87f6-1747e9bcfbc5",
@@ -1716,7 +1716,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "b673df8e-2657-4d5c-bc32-3839100fc7f4",
@@ -1734,7 +1734,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "2c6f95b8-37f6-4ad2-bfaf-b2550cb8035c",
@@ -1752,7 +1752,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "ffdae2e8-2df4-4547-88b2-20be1ca1ec79",
@@ -1770,7 +1770,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "7a110000-0000-0000-0000-000000000003",
@@ -1788,7 +1788,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "7a110000-0000-0000-0000-000000000004",
@@ -1806,7 +1806,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "c101a5bd-472a-4135-a948-ad8c50b8e121",
@@ -1824,7 +1824,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "e59e4220-3882-4f02-95e3-21d51abe796d",
@@ -1842,7 +1842,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "d5bd05a9-7324-4493-a6e6-489e30f6d573",
@@ -1860,7 +1860,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "5f637281-5d7e-478f-8b58-330ed5eb2326",
@@ -1878,7 +1878,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "03aa4b45-1c0a-4b5b-9419-8ca44123b842",
@@ -1896,7 +1896,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "16eaa1e9-b4ca-46c9-a779-aca11b6bd567",
@@ -1914,7 +1914,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "2fd22156-be49-4567-8cd1-e89a168e541b",
@@ -1932,7 +1932,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0021-4000-8000-000000000021",
@@ -1950,7 +1950,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0022-4000-8000-000000000022",
@@ -1968,7 +1968,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0023-4000-8000-000000000023",
@@ -1986,7 +1986,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0024-4000-8000-000000000024",
@@ -2004,7 +2004,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0025-4000-8000-000000000025",
@@ -2022,7 +2022,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0026-4000-8000-000000000026",
@@ -2040,7 +2040,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0027-4000-8000-000000000027",
@@ -2058,7 +2058,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0028-4000-8000-000000000028",
@@ -2076,7 +2076,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0029-4000-8000-000000000029",
@@ -2094,7 +2094,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0030-4000-8000-000000000030",
@@ -2112,7 +2112,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0031-4000-8000-000000000031",
@@ -2130,7 +2130,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:45",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0032-4000-8000-000000000032",
@@ -2148,7 +2148,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0033-4000-8000-000000000033",
@@ -2166,7 +2166,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0034-4000-8000-000000000034",
@@ -2184,7 +2184,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0035-4000-8000-000000000035",
@@ -2202,7 +2202,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0036-4000-8000-000000000036",
@@ -2220,7 +2220,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0037-4000-8000-000000000037",
@@ -2238,7 +2238,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0038-4000-8000-000000000038",
@@ -2256,7 +2256,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0039-4000-8000-000000000039",
@@ -2274,7 +2274,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   },
   {
     "id": "bac70001-0040-4000-8000-000000000040",
@@ -2292,7 +2292,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:16:42.746Z"
+    "createdAt": "2026-10-27T13:51:23.916Z"
   }
 ];
 
