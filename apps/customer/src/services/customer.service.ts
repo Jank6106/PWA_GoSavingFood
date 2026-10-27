@@ -796,6 +796,366 @@ export const HANOI_STORES: Merchant[] = [
     "openingHours": "10:00 - 22:00",
     "latitude": 21.0325,
     "longitude": 105.813
+  },
+  {
+    "id": "b1ead7a1-0021-4000-8000-000000000021",
+    "brandId": "b1ead7a1-0021-4000-8000-000000000021",
+    "name": "Maison Marou Chocolatier - Bà Triệu",
+    "description": "Thương hiệu socola thủ công lừng danh thế giới kết hợp các loại bánh ngọt pastry Pháp xa hoa.",
+    "phone": "024 3717 3964",
+    "address": "91 Bà Triệu, Hàng Bài, Hoàn Kiếm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=1200&q=80",
+    "rating": 5,
+    "totalRatings": 68,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "08:30 - 22:00",
+    "latitude": 21.0185,
+    "longitude": 105.8505
+  },
+  {
+    "id": "b1ead7a1-0022-4000-8000-000000000022",
+    "brandId": "b1ead7a1-0022-4000-8000-000000000022",
+    "name": "Saint Honoré Bakery - Xuân Diệu",
+    "description": "Bistro & tiệm bánh Pháp truyền thống trứ danh Tây Hồ với bánh mì sourdough, croissant và éclair tinh tế.",
+    "phone": "024 3933 2345",
+    "address": "24 Xuân Diệu, Quảng An, Tây Hồ, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "totalRatings": 58,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:00 - 22:00",
+    "latitude": 21.0602,
+    "longitude": 105.8278
+  },
+  {
+    "id": "b1ead7a1-0023-4000-8000-000000000023",
+    "brandId": "b1ead7a1-0023-4000-8000-000000000023",
+    "name": "L’Épicerie du Metropole - Sofitel Legend Metropole",
+    "description": "Tiệm bánh và ẩm thực Pháp thượng lưu 5 sao giữa lòng thủ đô, macaron quý tộc và bánh brioche bơ Pháp.",
+    "phone": "024 3826 6919",
+    "address": "15 Ngô Quyền, Tràng Tiền, Hoàn Kiếm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=1200&q=80",
+    "rating": 5,
+    "totalRatings": 92,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:30 - 21:30",
+    "latitude": 21.0252,
+    "longitude": 105.8562
+  },
+  {
+    "id": "b1ead7a1-0024-4000-8000-000000000024",
+    "brandId": "b1ead7a1-0024-4000-8000-000000000024",
+    "name": "Artisan Bakery & Cafe - Vũ Phạm Hàm",
+    "description": "Tiệm bánh thủ công phong cách Hàn Quốc nổi tiếng với bánh kem tươi trái cây, bánh mì gối và pastry bơ hảo hạng.",
+    "phone": "024 3200 8833",
+    "address": "10 Vũ Phạm Hàm, Trung Hòa, Cầu Giấy, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.8,
+    "totalRatings": 41,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:00 - 22:00",
+    "latitude": 21.0135,
+    "longitude": 105.7995
+  },
+  {
+    "id": "b1ead7a1-0025-4000-8000-000000000025",
+    "brandId": "b1ead7a1-0025-4000-8000-000000000025",
+    "name": "C’est Si Bon Cafe & Dessert - Thái Hà",
+    "description": "Không gian tráng miệng và trà bánh thanh lịch với bánh crepe ngàn lớp mille-crêpes và trà trái cây tao nhã.",
+    "phone": "024 2244 5599",
+    "address": "276 Thái Hà, Chợ Dừa, Đống Đa, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "totalRatings": 54,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "08:30 - 22:30",
+    "latitude": 21.0125,
+    "longitude": 105.8188
+  },
+  {
+    "id": "b1ead7a1-0026-4000-8000-000000000026",
+    "brandId": "b1ead7a1-0026-4000-8000-000000000026",
+    "name": "Oromia Coffee & Lounge - Tây Hồ",
+    "description": "Quán cà phê sân vườn phong cách resort Tây Hồ với thức uống cold brew hảo hạng và bánh tart dâu tây tươi.",
+    "phone": "0908 889 911",
+    "address": "8 Quảng Khánh, Quảng An, Tây Hồ, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "totalRatings": 63,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:30 - 23:00",
+    "latitude": 21.0628,
+    "longitude": 105.8262
+  },
+  {
+    "id": "b1ead7a1-0027-4000-8000-000000000027",
+    "brandId": "b1ead7a1-0027-4000-8000-000000000027",
+    "name": "Soko Cake Bake & Brunch - Lý Thường Kiệt",
+    "description": "Tiệm bánh và brunch thời thượng phong cách Âu với cronut bơ nướng giòn và bánh croissant lập phương nổi tiếng.",
+    "phone": "024 3999 7788",
+    "address": "38 Lý Thường Kiệt, Hàng Bài, Hoàn Kiếm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "totalRatings": 47,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "08:00 - 22:00",
+    "latitude": 21.0238,
+    "longitude": 105.8522
+  },
+  {
+    "id": "b1ead7a1-0028-4000-8000-000000000028",
+    "brandId": "b1ead7a1-0028-4000-8000-000000000028",
+    "name": "RuNam d'Or Cafe - Nhà Thờ",
+    "description": "Không gian cà phê quý tộc sang trọng phong cách hoàng gia, tinh hoa cà phê thủ công và bánh ngọt chuẩn Ý.",
+    "phone": "024 3928 8866",
+    "address": "13 Nhà Thờ, Hàng Trống, Hoàn Kiếm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    "rating": 5,
+    "totalRatings": 76,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:00 - 23:00",
+    "latitude": 21.029,
+    "longitude": 105.8493
+  },
+  {
+    "id": "b1ead7a1-0029-4000-8000-000000000029",
+    "brandId": "b1ead7a1-0029-4000-8000-000000000029",
+    "name": "Là Việt Coffee - Ngô Thì Nhậm",
+    "description": "Thương hiệu cà phê đặc sản Đà Lạt trứ danh với hạt Arabica nguyên chất rang mộc và bánh quy bơ thơm bùi.",
+    "phone": "024 3633 1188",
+    "address": "1B Ngô Thì Nhậm, Hàng Bài, Hoàn Kiếm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.8,
+    "totalRatings": 52,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:30 - 22:00",
+    "latitude": 21.0192,
+    "longitude": 105.8535
+  },
+  {
+    "id": "b1ead7a1-0030-4000-8000-000000000030",
+    "brandId": "b1ead7a1-0030-4000-8000-000000000030",
+    "name": "The Rustics Coffeeshop - Điện Biên Phủ",
+    "description": "Quán cà phê ngôi nhà trên cây độc đáo, không gian xanh thư thái phục vụ cà phê pha máy và bánh cà rốt nướng.",
+    "phone": "024 3747 6622",
+    "address": "21B Điện Biên Phủ, Điện Biên, Ba Đình, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.8,
+    "totalRatings": 39,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "08:00 - 22:30",
+    "latitude": 21.0318,
+    "longitude": 105.8398
+  },
+  {
+    "id": "b1ead7a1-0031-4000-8000-000000000031",
+    "brandId": "b1ead7a1-0031-4000-8000-000000000031",
+    "name": "Tous Les Jours - Vincom Metropolis Liễu Giai",
+    "description": "Chi nhánh cao cấp tại trung tâm thương mại Vincom Metropolis với bánh danish trái cây và croissant phô mai tươi.",
+    "phone": "024 3201 1888",
+    "address": "Tầng 1 Vincom Metropolis, 29 Liễu Giai, Ngọc Khánh, Ba Đình, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "totalRatings": 44,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:30 - 22:00",
+    "latitude": 21.0315,
+    "longitude": 105.8142
+  },
+  {
+    "id": "b1ead7a1-0032-4000-8000-000000000032",
+    "brandId": "b1ead7a1-0032-4000-8000-000000000032",
+    "name": "La Terrasse - Metropole Hanoi",
+    "description": "Quán cà phê vỉa hè phong cách Paris cổ điển tại khách sạn Metropole với cà phê espresso và bánh madeleine.",
+    "phone": "024 3826 6919",
+    "address": "15 Ngô Quyền, Tràng Tiền, Hoàn Kiếm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    "rating": 5,
+    "totalRatings": 85,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:00 - 23:00",
+    "latitude": 21.0255,
+    "longitude": 105.856
+  },
+  {
+    "id": "b1ead7a1-0033-4000-8000-000000000033",
+    "brandId": "b1ead7a1-0033-4000-8000-000000000033",
+    "name": "Paris Baguette - Hoàng Đạo Thúy",
+    "description": "Thương hiệu bánh ngọt danh tiếng với bánh mì bơ tỏi phô mai thơm ngậy và pudding sữa hoàng gia.",
+    "phone": "024 3556 6688",
+    "address": "Tòa 17T5 Hoàng Đạo Thúy, Trung Hòa, Cầu Giấy, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.8,
+    "totalRatings": 38,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:00 - 22:00",
+    "latitude": 21.0075,
+    "longitude": 105.803
+  },
+  {
+    "id": "b1ead7a1-0034-4000-8000-000000000034",
+    "brandId": "b1ead7a1-0034-4000-8000-000000000034",
+    "name": "Bready Bánh Mì Tươi - Đội Cấn",
+    "description": "Tiệm bánh mì dinh dưỡng hữu cơ với bánh mì gối nguyên cám, bánh ngọt ít đường và thức uống healthy.",
+    "phone": "024 3722 8999",
+    "address": "198 Đội Cấn, Đội Cấn, Ba Đình, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.7,
+    "totalRatings": 27,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "06:30 - 21:30",
+    "latitude": 21.036,
+    "longitude": 105.8205
+  },
+  {
+    "id": "b1ead7a1-0035-4000-8000-000000000035",
+    "brandId": "b1ead7a1-0035-4000-8000-000000000035",
+    "name": "Blackbird Coffee - Chân Cầm",
+    "description": "Quán cà phê rang mộc nổi tiếng khu phố cổ với hương vị espresso nồng nàn và bánh cuộn quế cinnamon thơm lừng.",
+    "phone": "0982 998 833",
+    "address": "5 Chân Cầm, Hàng Trống, Hoàn Kiếm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "totalRatings": 62,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:30 - 22:30",
+    "latitude": 21.0305,
+    "longitude": 105.8488
+  },
+  {
+    "id": "b1ead7a1-0036-4000-8000-000000000036",
+    "brandId": "b1ead7a1-0036-4000-8000-000000000036",
+    "name": "Tranquil Books & Coffee - Nguyễn Quang Bích",
+    "description": "Không gian sách và cà phê tĩnh lặng giữa lòng Hà Nội, chuyên cà phê pha thủ công pour-over và bánh chuối nướng.",
+    "phone": "0978 665 522",
+    "address": "5 Nguyễn Quang Bích, Cửa Đông, Hoàn Kiếm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "totalRatings": 58,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "08:00 - 22:30",
+    "latitude": 21.0328,
+    "longitude": 105.8455
+  },
+  {
+    "id": "b1ead7a1-0037-4000-8000-000000000037",
+    "brandId": "b1ead7a1-0037-4000-8000-000000000037",
+    "name": "All Day Coffee - Quang Trung",
+    "description": "Xưởng rang cà phê phong cách châu Âu ấn tượng với món cà phê trứng béo ngậy và bánh waffle nướng mật ong.",
+    "phone": "024 6686 8090",
+    "address": "37 Quang Trung, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "totalRatings": 70,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:00 - 23:00",
+    "latitude": 21.0215,
+    "longitude": 105.8508
+  },
+  {
+    "id": "b1ead7a1-0038-4000-8000-000000000038",
+    "brandId": "b1ead7a1-0038-4000-8000-000000000038",
+    "name": "The Hive Lounge - InterContinental Landmark72",
+    "description": "Sảnh tiệc trà chiều 5 sao trên tầng 62 khách sạn InterContinental với bánh scone nho khô và pastry thượng phẩm.",
+    "phone": "024 3698 8888",
+    "address": "Tầng 62 InterContinental Landmark72, Phạm Hùng, Mễ Trì, Nam Từ Liêm, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=1200&q=80",
+    "rating": 5,
+    "totalRatings": 80,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "09:00 - 22:30",
+    "latitude": 21.0173,
+    "longitude": 105.7838
+  },
+  {
+    "id": "b1ead7a1-0039-4000-8000-000000000039",
+    "brandId": "b1ead7a1-0039-4000-8000-000000000039",
+    "name": "An Café Specialty Coffee - Tô Ngọc Vân",
+    "description": "Xưởng cà phê đặc sản cao cấp khu biệt thự Tây Hồ với hạt cà phê micro-lot tuyển chọn và bánh canelé nướng giòn.",
+    "phone": "0936 112 288",
+    "address": "52 Tô Ngọc Vân, Quảng An, Tây Hồ, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.8,
+    "totalRatings": 45,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "07:30 - 21:30",
+    "latitude": 21.0645,
+    "longitude": 105.8255
+  },
+  {
+    "id": "b1ead7a1-0040-4000-8000-000000000040",
+    "brandId": "b1ead7a1-0040-4000-8000-000000000040",
+    "name": "Jouri Dessert & Tea - Khúc Hạo",
+    "description": "Boutique tráng miệng phong cách Bắc Âu lãng mạn với bánh tiramisu rượu thơm và trà thảo mộc organic thanh mát.",
+    "phone": "024 3734 9911",
+    "address": "10 Khúc Hạo, Điện Biên, Ba Đình, Hà Nội",
+    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "banner": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "totalRatings": 51,
+    "distance": 500,
+    "status": "active",
+    "isOpen": true,
+    "openingHours": "08:30 - 22:30",
+    "latitude": 21.0325,
+    "longitude": 105.8368
   }
 ];
 
@@ -816,7 +1176,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.167Z"
+    "createdAt": "2026-10-27T13:10:16.733Z"
   },
   {
     "id": "c67f81fa-4b47-4483-baef-142c7b4f8be1",
@@ -834,7 +1194,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0001-4000-8000-000000000001",
@@ -852,7 +1212,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "8d61a0da-732e-426c-966f-a45e3f57f607",
@@ -870,7 +1230,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0020-4000-8000-000000000020",
@@ -888,7 +1248,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0002-4000-8000-000000000002",
@@ -906,7 +1266,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "5f93f54c-f73a-4737-9d61-2de5396029aa",
@@ -924,7 +1284,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0003-4000-8000-000000000003",
@@ -942,7 +1302,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0004-4000-8000-000000000004",
@@ -960,7 +1320,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0005-4000-8000-000000000005",
@@ -978,7 +1338,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0006-4000-8000-000000000006",
@@ -996,7 +1356,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0007-4000-8000-000000000007",
@@ -1014,7 +1374,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0008-4000-8000-000000000008",
@@ -1032,7 +1392,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:45",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0009-4000-8000-000000000009",
@@ -1050,7 +1410,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0010-4000-8000-000000000010",
@@ -1068,7 +1428,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0011-4000-8000-000000000011",
@@ -1086,7 +1446,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0012-4000-8000-000000000012",
@@ -1104,7 +1464,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0013-4000-8000-000000000013",
@@ -1122,7 +1482,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0014-4000-8000-000000000014",
@@ -1140,7 +1500,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "a51a723e-e333-4374-9245-d0b0dfc7d0eb",
@@ -1158,7 +1518,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "5ae47709-4ceb-4aa9-b77e-284ef5a7c0e6",
@@ -1176,7 +1536,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "59d0f42d-c280-4b54-bd23-0b4a8b669fe8",
@@ -1194,7 +1554,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "15776100-8c1c-410a-8b6a-1b7602670f70",
@@ -1212,7 +1572,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "9ff75bc9-8339-4cb6-9fe2-1907bc2bd4f3",
@@ -1230,7 +1590,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0015-4000-8000-000000000015",
@@ -1248,7 +1608,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0016-4000-8000-000000000016",
@@ -1266,7 +1626,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "23:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0017-4000-8000-000000000017",
@@ -1284,7 +1644,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "23:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0018-4000-8000-000000000018",
@@ -1302,7 +1662,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "bac70001-0019-4000-8000-000000000019",
@@ -1320,7 +1680,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "5a650b75-b805-4fff-a91c-8800623ab25e",
@@ -1338,7 +1698,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "931b7eb7-5d18-449a-87f6-1747e9bcfbc5",
@@ -1356,7 +1716,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "b673df8e-2657-4d5c-bc32-3839100fc7f4",
@@ -1374,7 +1734,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "2c6f95b8-37f6-4ad2-bfaf-b2550cb8035c",
@@ -1392,7 +1752,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "ffdae2e8-2df4-4547-88b2-20be1ca1ec79",
@@ -1410,7 +1770,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "7a110000-0000-0000-0000-000000000003",
@@ -1428,7 +1788,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "7a110000-0000-0000-0000-000000000004",
@@ -1446,7 +1806,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "c101a5bd-472a-4135-a948-ad8c50b8e121",
@@ -1464,7 +1824,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "e59e4220-3882-4f02-95e3-21d51abe796d",
@@ -1482,7 +1842,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "d5bd05a9-7324-4493-a6e6-489e30f6d573",
@@ -1500,7 +1860,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "5f637281-5d7e-478f-8b58-330ed5eb2326",
@@ -1518,7 +1878,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "03aa4b45-1c0a-4b5b-9419-8ca44123b842",
@@ -1536,7 +1896,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "16eaa1e9-b4ca-46c9-a779-aca11b6bd567",
@@ -1554,7 +1914,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
   },
   {
     "id": "2fd22156-be49-4567-8cd1-e89a168e541b",
@@ -1572,7 +1932,367 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:00:08.168Z"
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0021-4000-8000-000000000021",
+    "merchantId": "b1ead7a1-0021-4000-8000-000000000021",
+    "merchantName": "Maison Marou Chocolatier - Bà Triệu",
+    "name": "Túi Chocolate Mousse Thượng Hạng & Bánh Brownie Marou",
+    "description": "Bánh mousse socola thủ công từ hạt cacao Việt Nam danh tiếng phối cùng brownie đậm vị đắng ngọt quyến rũ bất tận.",
+    "originalPrice": 180000,
+    "discountPrice": 65000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "09:00",
+    "pickupEnd": "21:30",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0022-4000-8000-000000000022",
+    "merchantId": "b1ead7a1-0022-4000-8000-000000000022",
+    "merchantName": "Saint Honoré Bakery - Xuân Diệu",
+    "name": "Túi Bánh Sourdough Lên Men Tự Nhiên & Éclair Pháp",
+    "description": "Bánh mì men tự nhiên vỏ giòn ruột mềm dẻo chuẩn ẩm thực Pháp kết hợp bánh su dài éclair nhân kem béo mịn thơm lừng.",
+    "originalPrice": 160000,
+    "discountPrice": 58000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:00",
+    "pickupEnd": "21:30",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0023-4000-8000-000000000023",
+    "merchantId": "b1ead7a1-0023-4000-8000-000000000023",
+    "merchantName": "L’Épicerie du Metropole - Sofitel Legend Metropole",
+    "name": "Túi Macaron Quý Tộc & Bánh Brioche Bơ Pháp Metropole",
+    "description": "Tuyển chọn macaron hảo hạng từ bếp bánh khách sạn 5 sao huyền thoại Metropole hòa quyện vị bơ thơm ngát từ bánh brioche hoàng gia.",
+    "originalPrice": 250000,
+    "discountPrice": 89000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:30",
+    "pickupEnd": "21:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0024-4000-8000-000000000024",
+    "merchantId": "b1ead7a1-0024-4000-8000-000000000024",
+    "merchantName": "Artisan Bakery & Cafe - Vũ Phạm Hàm",
+    "name": "Túi Bánh Kem Tươi Trái Cây & Bánh Mì Đậu Đỏ Artisan",
+    "description": "Lớp kem tươi thanh mát ngọt dịu phủ trái cây tươi trong ngày và bánh mì đậu đỏ ngọt bùi nướng tươi truyền thống Hàn Quốc.",
+    "originalPrice": 135000,
+    "discountPrice": 49000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "07:30",
+    "pickupEnd": "21:30",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0025-4000-8000-000000000025",
+    "merchantId": "b1ead7a1-0025-4000-8000-000000000025",
+    "merchantName": "C’est Si Bon Cafe & Dessert - Thái Hà",
+    "name": "Túi Bánh Crepe Ngàn Lớp Mille & Trà Đào Hồng C’est Si Bon",
+    "description": "Từng lớp bánh crepe mỏng như lụa xen kẽ kem vani hảo hạng đi cùng thức uống trà đào ngọt dịu tao nhã.",
+    "originalPrice": 150000,
+    "discountPrice": 55000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "09:00",
+    "pickupEnd": "22:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0026-4000-8000-000000000026",
+    "merchantId": "b1ead7a1-0026-4000-8000-000000000026",
+    "merchantName": "Oromia Coffee & Lounge - Tây Hồ",
+    "name": "Túi Bánh Tart Dâu Tây Tươi & Cà Phê Cold Brew Oromia",
+    "description": "Đế bánh tart giòn rụm ngập tràn dâu tây Đà Lạt tươi mọng bên ly cà phê ủ lạnh thanh lọc sảng khoái.",
+    "originalPrice": 145000,
+    "discountPrice": 52000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:30",
+    "pickupEnd": "22:30",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0027-4000-8000-000000000027",
+    "merchantId": "b1ead7a1-0027-4000-8000-000000000027",
+    "merchantName": "Soko Cake Bake & Brunch - Lý Thường Kiệt",
+    "name": "Túi Bánh Cronut Phô Mai Chảy & Cube Croissant Soko",
+    "description": "Cặp đôi bánh nướng sáng tạo gây sốt với lớp vỏ ngàn lớp giòn tan và nhân kem phô mai béo ngậy tan chảy khó cưỡng.",
+    "originalPrice": 165000,
+    "discountPrice": 59000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:30",
+    "pickupEnd": "21:30",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0028-4000-8000-000000000028",
+    "merchantId": "b1ead7a1-0028-4000-8000-000000000028",
+    "merchantName": "RuNam d'Or Cafe - Nhà Thờ",
+    "name": "Túi Cà Phê Di Sản Thượng Hạng & Bánh Pastry RuNam",
+    "description": "Cà phê rang xay chuẩn vị hoàng gia mang đậm hương thơm thảo mộc kèm bánh pastry bơ giòn nướng tươi quý phái.",
+    "originalPrice": 190000,
+    "discountPrice": 69000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:00",
+    "pickupEnd": "22:30",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0029-4000-8000-000000000029",
+    "merchantId": "b1ead7a1-0029-4000-8000-000000000029",
+    "merchantName": "Là Việt Coffee - Ngô Thì Nhậm",
+    "name": "Túi Cà Phê Arabica Cầu Đất & Cookies Bơ Giòn Là Việt",
+    "description": "Hạt cà phê Arabica Cầu Đất hái chín 100% pha phin nồng nàn kèm bánh quy bơ hạt điều nướng giòn rụm.",
+    "originalPrice": 115000,
+    "discountPrice": 42000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:00",
+    "pickupEnd": "21:30",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0030-4000-8000-000000000030",
+    "merchantId": "b1ead7a1-0030-4000-8000-000000000030",
+    "merchantName": "The Rustics Coffeeshop - Điện Biên Phủ",
+    "name": "Túi Bánh Cà Rốt Hạnh Nhân & Cà Phê Kem Béo The Rustics",
+    "description": "Lát bánh cà rốt nướng đẫm quế và hạt óc chó phủ kem phô mai béo nhẹ bên ly cà phê kem mộc thư thái.",
+    "originalPrice": 125000,
+    "discountPrice": 46000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:30",
+    "pickupEnd": "22:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0031-4000-8000-000000000031",
+    "merchantId": "b1ead7a1-0031-4000-8000-000000000031",
+    "merchantName": "Tous Les Jours - Vincom Metropolis Liễu Giai",
+    "name": "Túi Bánh Danish Mâm Xôi & Croissant Phô Mai Tươi Tous Les Jours",
+    "description": "Bánh danish giòn xốp phủ mứt mâm xôi chua ngọt và bánh sừng bò kẹp phô mai nướng thơm ngậy trong ngày.",
+    "originalPrice": 140000,
+    "discountPrice": 50000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:00",
+    "pickupEnd": "21:45",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0032-4000-8000-000000000032",
+    "merchantId": "b1ead7a1-0032-4000-8000-000000000032",
+    "merchantName": "La Terrasse - Metropole Hanoi",
+    "name": "Túi Trà Chiều Hoàng Gia & Bánh Madeleine Bơ Pháp Metropole",
+    "description": "Bánh con sò madeleine bơ tươi nướng mềm ngát hương cam chanh kèm gói trà đen thượng hạng của khách sạn di sản Metropole.",
+    "originalPrice": 240000,
+    "discountPrice": 85000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:00",
+    "pickupEnd": "22:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0033-4000-8000-000000000033",
+    "merchantId": "b1ead7a1-0033-4000-8000-000000000033",
+    "merchantName": "Paris Baguette - Hoàng Đạo Thúy",
+    "name": "Túi Bánh Mì Bơ Tỏi Phô Mai & Royal Pudding Paris Baguette",
+    "description": "Bánh mì nướng sốt bơ tỏi phô mai kem béo ngậy cùng lọ bánh pudding sữa tươi hoàng gia tan ngay trong miệng.",
+    "originalPrice": 155000,
+    "discountPrice": 56000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "07:30",
+    "pickupEnd": "21:30",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0034-4000-8000-000000000034",
+    "merchantId": "b1ead7a1-0034-4000-8000-000000000034",
+    "merchantName": "Bready Bánh Mì Tươi - Đội Cấn",
+    "name": "Túi Bánh Mì Nướng Ngũ Cốc Nguyên Cám & Nước Ép Thanh Nhiệt",
+    "description": "Bánh mì ngũ cốc hạt dinh dưỡng bổ sung chất xơ kèm chai nước ép hoa quả nguyên chất tươi mát cho cơ thể tràn đầy năng lượng.",
+    "originalPrice": 95000,
+    "discountPrice": 35000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "07:00",
+    "pickupEnd": "21:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0035-4000-8000-000000000035",
+    "merchantId": "b1ead7a1-0035-4000-8000-000000000035",
+    "merchantName": "Blackbird Coffee - Chân Cầm",
+    "name": "Túi Cà Phê Espresso Mộc & Bánh Cuộn Quế Cinnamon Blackbird",
+    "description": "Vị cà phê hạt rang mộc nồng nàn quyện cùng hương quế thơm lừng từ chiếc bánh cinnamon roll nướng nóng hổi phố cổ.",
+    "originalPrice": 120000,
+    "discountPrice": 45000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:00",
+    "pickupEnd": "22:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0036-4000-8000-000000000036",
+    "merchantId": "b1ead7a1-0036-4000-8000-000000000036",
+    "merchantName": "Tranquil Books & Coffee - Nguyễn Quang Bích",
+    "name": "Túi Cà Phê Pour-Over Thủ Công & Bánh Chuối Nướng Mộc Tranquil",
+    "description": "Cà phê pha chậm chiết xuất tầng hương hoa quả tinh tế đi cùng bánh chuối nướng mật ong mộc mạc thơm ấm lòng.",
+    "originalPrice": 110000,
+    "discountPrice": 39000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:30",
+    "pickupEnd": "22:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0037-4000-8000-000000000037",
+    "merchantId": "b1ead7a1-0037-4000-8000-000000000037",
+    "merchantName": "All Day Coffee - Quang Trung",
+    "name": "Túi Cà Phê Trứng Béo Ngậy & Bánh Waffle Mật Ong All Day",
+    "description": "Cà phê trứng kem mịn màng đậm đà hương vị truyền thống Hà Nội hòa quyện bánh quế waffle nướng vàng ươm mật ong rừng.",
+    "originalPrice": 130000,
+    "discountPrice": 48000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "07:30",
+    "pickupEnd": "22:30",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0038-4000-8000-000000000038",
+    "merchantId": "b1ead7a1-0038-4000-8000-000000000038",
+    "merchantName": "The Hive Lounge - InterContinental Landmark72",
+    "name": "Túi Bánh Scone Nho Khô & Bánh Ngọt Trà Chiều 5 Sao The Hive",
+    "description": "Set bánh scone nướng bơ truyền thống ăn kèm kem đông clotted cream và bánh ngọt tinh xảo chuẩn tiệc trà InterContinental.",
+    "originalPrice": 260000,
+    "discountPrice": 95000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "09:30",
+    "pickupEnd": "22:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0039-4000-8000-000000000039",
+    "merchantId": "b1ead7a1-0039-4000-8000-000000000039",
+    "merchantName": "An Café Specialty Coffee - Tô Ngọc Vân",
+    "name": "Túi Cà Phê Hạt Đặc Sản Micro-Lot & Bánh Canelé Nướng An Café",
+    "description": "Cà phê đặc sản rang tươi theo mẻ nhỏ thơm ngát hương hoa nhài phối cùng bánh canelé vỏ giòn caramel ruột mềm ẩm chuẩn Pháp.",
+    "originalPrice": 140000,
+    "discountPrice": 52000,
+    "category": "beverage",
+    "imageUrl": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "08:00",
+    "pickupEnd": "21:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
+  },
+  {
+    "id": "bac70001-0040-4000-8000-000000000040",
+    "merchantId": "b1ead7a1-0040-4000-8000-000000000040",
+    "merchantName": "Jouri Dessert & Tea - Khúc Hạo",
+    "name": "Túi Bánh Tiramisu Rượu Thơm & Trà Hoa Cúc Mật Ong Jouri",
+    "description": "Tiramisu truyền thống ngập tràn kem phô mai Mascarpone thoảng hương rượu Marsala cùng tách trà hoa cúc mật ong thư giãn tuyệt đối.",
+    "originalPrice": 135000,
+    "discountPrice": 49000,
+    "category": "bakery",
+    "imageUrl": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "maxQuantity": 3,
+    "pickupStart": "09:00",
+    "pickupEnd": "22:00",
+    "isAvailable": true,
+    "rating": 4.9,
+    "createdAt": "2026-10-27T13:10:16.734Z"
   }
 ];
 

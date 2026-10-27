@@ -559,6 +559,378 @@ export const ALL_STORES = [
     rating: 4.8,
     total_ratings: 37,
   },
+  {
+    "id": "b1ead7a1-0021-4000-8000-000000000021",
+    "name": "Maison Marou Chocolatier - Bà Triệu",
+    "description": "Thương hiệu socola thủ công lừng danh thế giới kết hợp các loại bánh ngọt pastry Pháp xa hoa.",
+    "phone": "024 3717 3964",
+    "address": "91 Bà Triệu, Hàng Bài, Hoàn Kiếm, Hà Nội",
+    "latitude": 21.0185,
+    "longitude": 105.8505,
+    "logo_url": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery",
+      "beverage"
+    ],
+    "open_time": "08:30:00",
+    "close_time": "22:00:00",
+    "rating": 5,
+    "total_ratings": 68
+  },
+  {
+    "id": "b1ead7a1-0022-4000-8000-000000000022",
+    "name": "Saint Honoré Bakery - Xuân Diệu",
+    "description": "Bistro & tiệm bánh Pháp truyền thống trứ danh Tây Hồ với bánh mì sourdough, croissant và éclair tinh tế.",
+    "phone": "024 3933 2345",
+    "address": "24 Xuân Diệu, Quảng An, Tây Hồ, Hà Nội",
+    "latitude": 21.0602,
+    "longitude": 105.8278,
+    "logo_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery"
+    ],
+    "open_time": "07:00:00",
+    "close_time": "22:00:00",
+    "rating": 4.9,
+    "total_ratings": 58
+  },
+  {
+    "id": "b1ead7a1-0023-4000-8000-000000000023",
+    "name": "L’Épicerie du Metropole - Sofitel Legend Metropole",
+    "description": "Tiệm bánh và ẩm thực Pháp thượng lưu 5 sao giữa lòng thủ đô, macaron quý tộc và bánh brioche bơ Pháp.",
+    "phone": "024 3826 6919",
+    "address": "15 Ngô Quyền, Tràng Tiền, Hoàn Kiếm, Hà Nội",
+    "latitude": 21.0252,
+    "longitude": 105.8562,
+    "logo_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery"
+    ],
+    "open_time": "07:30:00",
+    "close_time": "21:30:00",
+    "rating": 5,
+    "total_ratings": 92
+  },
+  {
+    "id": "b1ead7a1-0024-4000-8000-000000000024",
+    "name": "Artisan Bakery & Cafe - Vũ Phạm Hàm",
+    "description": "Tiệm bánh thủ công phong cách Hàn Quốc nổi tiếng với bánh kem tươi trái cây, bánh mì gối và pastry bơ hảo hạng.",
+    "phone": "024 3200 8833",
+    "address": "10 Vũ Phạm Hàm, Trung Hòa, Cầu Giấy, Hà Nội",
+    "latitude": 21.0135,
+    "longitude": 105.7995,
+    "logo_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery"
+    ],
+    "open_time": "07:00:00",
+    "close_time": "22:00:00",
+    "rating": 4.8,
+    "total_ratings": 41
+  },
+  {
+    "id": "b1ead7a1-0025-4000-8000-000000000025",
+    "name": "C’est Si Bon Cafe & Dessert - Thái Hà",
+    "description": "Không gian tráng miệng và trà bánh thanh lịch với bánh crepe ngàn lớp mille-crêpes và trà trái cây tao nhã.",
+    "phone": "024 2244 5599",
+    "address": "276 Thái Hà, Chợ Dừa, Đống Đa, Hà Nội",
+    "latitude": 21.0125,
+    "longitude": 105.8188,
+    "logo_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery",
+      "beverage"
+    ],
+    "open_time": "08:30:00",
+    "close_time": "22:30:00",
+    "rating": 4.9,
+    "total_ratings": 54
+  },
+  {
+    "id": "b1ead7a1-0026-4000-8000-000000000026",
+    "name": "Oromia Coffee & Lounge - Tây Hồ",
+    "description": "Quán cà phê sân vườn phong cách resort Tây Hồ với thức uống cold brew hảo hạng và bánh tart dâu tây tươi.",
+    "phone": "0908 889 911",
+    "address": "8 Quảng Khánh, Quảng An, Tây Hồ, Hà Nội",
+    "latitude": 21.0628,
+    "longitude": 105.8262,
+    "logo_url": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage",
+      "bakery"
+    ],
+    "open_time": "07:30:00",
+    "close_time": "23:00:00",
+    "rating": 4.9,
+    "total_ratings": 63
+  },
+  {
+    "id": "b1ead7a1-0027-4000-8000-000000000027",
+    "name": "Soko Cake Bake & Brunch - Lý Thường Kiệt",
+    "description": "Tiệm bánh và brunch thời thượng phong cách Âu với cronut bơ nướng giòn và bánh croissant lập phương nổi tiếng.",
+    "phone": "024 3999 7788",
+    "address": "38 Lý Thường Kiệt, Hàng Bài, Hoàn Kiếm, Hà Nội",
+    "latitude": 21.0238,
+    "longitude": 105.8522,
+    "logo_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery",
+      "beverage"
+    ],
+    "open_time": "08:00:00",
+    "close_time": "22:00:00",
+    "rating": 4.9,
+    "total_ratings": 47
+  },
+  {
+    "id": "b1ead7a1-0028-4000-8000-000000000028",
+    "name": "RuNam d'Or Cafe - Nhà Thờ",
+    "description": "Không gian cà phê quý tộc sang trọng phong cách hoàng gia, tinh hoa cà phê thủ công và bánh ngọt chuẩn Ý.",
+    "phone": "024 3928 8866",
+    "address": "13 Nhà Thờ, Hàng Trống, Hoàn Kiếm, Hà Nội",
+    "latitude": 21.029,
+    "longitude": 105.8493,
+    "logo_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage",
+      "bakery"
+    ],
+    "open_time": "07:00:00",
+    "close_time": "23:00:00",
+    "rating": 5,
+    "total_ratings": 76
+  },
+  {
+    "id": "b1ead7a1-0029-4000-8000-000000000029",
+    "name": "Là Việt Coffee - Ngô Thì Nhậm",
+    "description": "Thương hiệu cà phê đặc sản Đà Lạt trứ danh với hạt Arabica nguyên chất rang mộc và bánh quy bơ thơm bùi.",
+    "phone": "024 3633 1188",
+    "address": "1B Ngô Thì Nhậm, Hàng Bài, Hoàn Kiếm, Hà Nội",
+    "latitude": 21.0192,
+    "longitude": 105.8535,
+    "logo_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage"
+    ],
+    "open_time": "07:30:00",
+    "close_time": "22:00:00",
+    "rating": 4.8,
+    "total_ratings": 52
+  },
+  {
+    "id": "b1ead7a1-0030-4000-8000-000000000030",
+    "name": "The Rustics Coffeeshop - Điện Biên Phủ",
+    "description": "Quán cà phê ngôi nhà trên cây độc đáo, không gian xanh thư thái phục vụ cà phê pha máy và bánh cà rốt nướng.",
+    "phone": "024 3747 6622",
+    "address": "21B Điện Biên Phủ, Điện Biên, Ba Đình, Hà Nội",
+    "latitude": 21.0318,
+    "longitude": 105.8398,
+    "logo_url": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage",
+      "bakery"
+    ],
+    "open_time": "08:00:00",
+    "close_time": "22:30:00",
+    "rating": 4.8,
+    "total_ratings": 39
+  },
+  {
+    "id": "b1ead7a1-0031-4000-8000-000000000031",
+    "name": "Tous Les Jours - Vincom Metropolis Liễu Giai",
+    "description": "Chi nhánh cao cấp tại trung tâm thương mại Vincom Metropolis với bánh danish trái cây và croissant phô mai tươi.",
+    "phone": "024 3201 1888",
+    "address": "Tầng 1 Vincom Metropolis, 29 Liễu Giai, Ngọc Khánh, Ba Đình, Hà Nội",
+    "latitude": 21.0315,
+    "longitude": 105.8142,
+    "logo_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery"
+    ],
+    "open_time": "07:30:00",
+    "close_time": "22:00:00",
+    "rating": 4.9,
+    "total_ratings": 44
+  },
+  {
+    "id": "b1ead7a1-0032-4000-8000-000000000032",
+    "name": "La Terrasse - Metropole Hanoi",
+    "description": "Quán cà phê vỉa hè phong cách Paris cổ điển tại khách sạn Metropole với cà phê espresso và bánh madeleine.",
+    "phone": "024 3826 6919",
+    "address": "15 Ngô Quyền, Tràng Tiền, Hoàn Kiếm, Hà Nội",
+    "latitude": 21.0255,
+    "longitude": 105.856,
+    "logo_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage",
+      "bakery"
+    ],
+    "open_time": "07:00:00",
+    "close_time": "23:00:00",
+    "rating": 5,
+    "total_ratings": 85
+  },
+  {
+    "id": "b1ead7a1-0033-4000-8000-000000000033",
+    "name": "Paris Baguette - Hoàng Đạo Thúy",
+    "description": "Thương hiệu bánh ngọt danh tiếng với bánh mì bơ tỏi phô mai thơm ngậy và pudding sữa hoàng gia.",
+    "phone": "024 3556 6688",
+    "address": "Tòa 17T5 Hoàng Đạo Thúy, Trung Hòa, Cầu Giấy, Hà Nội",
+    "latitude": 21.0075,
+    "longitude": 105.803,
+    "logo_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery"
+    ],
+    "open_time": "07:00:00",
+    "close_time": "22:00:00",
+    "rating": 4.8,
+    "total_ratings": 38
+  },
+  {
+    "id": "b1ead7a1-0034-4000-8000-000000000034",
+    "name": "Bready Bánh Mì Tươi - Đội Cấn",
+    "description": "Tiệm bánh mì dinh dưỡng hữu cơ với bánh mì gối nguyên cám, bánh ngọt ít đường và thức uống healthy.",
+    "phone": "024 3722 8999",
+    "address": "198 Đội Cấn, Đội Cấn, Ba Đình, Hà Nội",
+    "latitude": 21.036,
+    "longitude": 105.8205,
+    "logo_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery"
+    ],
+    "open_time": "06:30:00",
+    "close_time": "21:30:00",
+    "rating": 4.7,
+    "total_ratings": 27
+  },
+  {
+    "id": "b1ead7a1-0035-4000-8000-000000000035",
+    "name": "Blackbird Coffee - Chân Cầm",
+    "description": "Quán cà phê rang mộc nổi tiếng khu phố cổ với hương vị espresso nồng nàn và bánh cuộn quế cinnamon thơm lừng.",
+    "phone": "0982 998 833",
+    "address": "5 Chân Cầm, Hàng Trống, Hoàn Kiếm, Hà Nội",
+    "latitude": 21.0305,
+    "longitude": 105.8488,
+    "logo_url": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage",
+      "bakery"
+    ],
+    "open_time": "07:30:00",
+    "close_time": "22:30:00",
+    "rating": 4.9,
+    "total_ratings": 62
+  },
+  {
+    "id": "b1ead7a1-0036-4000-8000-000000000036",
+    "name": "Tranquil Books & Coffee - Nguyễn Quang Bích",
+    "description": "Không gian sách và cà phê tĩnh lặng giữa lòng Hà Nội, chuyên cà phê pha thủ công pour-over và bánh chuối nướng.",
+    "phone": "0978 665 522",
+    "address": "5 Nguyễn Quang Bích, Cửa Đông, Hoàn Kiếm, Hà Nội",
+    "latitude": 21.0328,
+    "longitude": 105.8455,
+    "logo_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage",
+      "bakery"
+    ],
+    "open_time": "08:00:00",
+    "close_time": "22:30:00",
+    "rating": 4.9,
+    "total_ratings": 58
+  },
+  {
+    "id": "b1ead7a1-0037-4000-8000-000000000037",
+    "name": "All Day Coffee - Quang Trung",
+    "description": "Xưởng rang cà phê phong cách châu Âu ấn tượng với món cà phê trứng béo ngậy và bánh waffle nướng mật ong.",
+    "phone": "024 6686 8090",
+    "address": "37 Quang Trung, Trần Hưng Đạo, Hoàn Kiếm, Hà Nội",
+    "latitude": 21.0215,
+    "longitude": 105.8508,
+    "logo_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage",
+      "bakery"
+    ],
+    "open_time": "07:00:00",
+    "close_time": "23:00:00",
+    "rating": 4.9,
+    "total_ratings": 70
+  },
+  {
+    "id": "b1ead7a1-0038-4000-8000-000000000038",
+    "name": "The Hive Lounge - InterContinental Landmark72",
+    "description": "Sảnh tiệc trà chiều 5 sao trên tầng 62 khách sạn InterContinental với bánh scone nho khô và pastry thượng phẩm.",
+    "phone": "024 3698 8888",
+    "address": "Tầng 62 InterContinental Landmark72, Phạm Hùng, Mễ Trì, Nam Từ Liêm, Hà Nội",
+    "latitude": 21.0173,
+    "longitude": 105.7838,
+    "logo_url": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage",
+      "bakery"
+    ],
+    "open_time": "09:00:00",
+    "close_time": "22:30:00",
+    "rating": 5,
+    "total_ratings": 80
+  },
+  {
+    "id": "b1ead7a1-0039-4000-8000-000000000039",
+    "name": "An Café Specialty Coffee - Tô Ngọc Vân",
+    "description": "Xưởng cà phê đặc sản cao cấp khu biệt thự Tây Hồ với hạt cà phê micro-lot tuyển chọn và bánh canelé nướng giòn.",
+    "phone": "0936 112 288",
+    "address": "52 Tô Ngọc Vân, Quảng An, Tây Hồ, Hà Nội",
+    "latitude": 21.0645,
+    "longitude": 105.8255,
+    "logo_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "beverage"
+    ],
+    "open_time": "07:30:00",
+    "close_time": "21:30:00",
+    "rating": 4.8,
+    "total_ratings": 45
+  },
+  {
+    "id": "b1ead7a1-0040-4000-8000-000000000040",
+    "name": "Jouri Dessert & Tea - Khúc Hạo",
+    "description": "Boutique tráng miệng phong cách Bắc Âu lãng mạn với bánh tiramisu rượu thơm và trà thảo mộc organic thanh mát.",
+    "phone": "024 3734 9911",
+    "address": "10 Khúc Hạo, Điện Biên, Ba Đình, Hà Nội",
+    "latitude": 21.0325,
+    "longitude": 105.8368,
+    "logo_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80",
+    "banner_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+    "food_categories": [
+      "bakery",
+      "beverage"
+    ],
+    "open_time": "08:30:00",
+    "close_time": "22:30:00",
+    "rating": 4.9,
+    "total_ratings": 51
+  }
 ];
 
 // All Bags Definition (Yindii-Style)
@@ -1161,6 +1533,266 @@ export const ALL_BAGS = [
     pickup_start: '10:30:00',
     pickup_end: '21:30:00',
   },
+  {
+    "id": "bac70001-0021-4000-8000-000000000021",
+    "store_id": "b1ead7a1-0021-4000-8000-000000000021",
+    "name": "Túi Chocolate Mousse Thượng Hạng & Bánh Brownie Marou",
+    "description": "Bánh mousse socola thủ công từ hạt cacao Việt Nam danh tiếng phối cùng brownie đậm vị đắng ngọt quyến rũ bất tận.",
+    "original_price": 180000,
+    "discount_price": 65000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "09:00:00",
+    "pickup_end": "21:30:00"
+  },
+  {
+    "id": "bac70001-0022-4000-8000-000000000022",
+    "store_id": "b1ead7a1-0022-4000-8000-000000000022",
+    "name": "Túi Bánh Sourdough Lên Men Tự Nhiên & Éclair Pháp",
+    "description": "Bánh mì men tự nhiên vỏ giòn ruột mềm dẻo chuẩn ẩm thực Pháp kết hợp bánh su dài éclair nhân kem béo mịn thơm lừng.",
+    "original_price": 160000,
+    "discount_price": 58000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:00:00",
+    "pickup_end": "21:30:00"
+  },
+  {
+    "id": "bac70001-0023-4000-8000-000000000023",
+    "store_id": "b1ead7a1-0023-4000-8000-000000000023",
+    "name": "Túi Macaron Quý Tộc & Bánh Brioche Bơ Pháp Metropole",
+    "description": "Tuyển chọn macaron hảo hạng từ bếp bánh khách sạn 5 sao huyền thoại Metropole hòa quyện vị bơ thơm ngát từ bánh brioche hoàng gia.",
+    "original_price": 250000,
+    "discount_price": 89000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:30:00",
+    "pickup_end": "21:00:00"
+  },
+  {
+    "id": "bac70001-0024-4000-8000-000000000024",
+    "store_id": "b1ead7a1-0024-4000-8000-000000000024",
+    "name": "Túi Bánh Kem Tươi Trái Cây & Bánh Mì Đậu Đỏ Artisan",
+    "description": "Lớp kem tươi thanh mát ngọt dịu phủ trái cây tươi trong ngày và bánh mì đậu đỏ ngọt bùi nướng tươi truyền thống Hàn Quốc.",
+    "original_price": 135000,
+    "discount_price": 49000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "07:30:00",
+    "pickup_end": "21:30:00"
+  },
+  {
+    "id": "bac70001-0025-4000-8000-000000000025",
+    "store_id": "b1ead7a1-0025-4000-8000-000000000025",
+    "name": "Túi Bánh Crepe Ngàn Lớp Mille & Trà Đào Hồng C’est Si Bon",
+    "description": "Từng lớp bánh crepe mỏng như lụa xen kẽ kem vani hảo hạng đi cùng thức uống trà đào ngọt dịu tao nhã.",
+    "original_price": 150000,
+    "discount_price": 55000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "09:00:00",
+    "pickup_end": "22:00:00"
+  },
+  {
+    "id": "bac70001-0026-4000-8000-000000000026",
+    "store_id": "b1ead7a1-0026-4000-8000-000000000026",
+    "name": "Túi Bánh Tart Dâu Tây Tươi & Cà Phê Cold Brew Oromia",
+    "description": "Đế bánh tart giòn rụm ngập tràn dâu tây Đà Lạt tươi mọng bên ly cà phê ủ lạnh thanh lọc sảng khoái.",
+    "original_price": 145000,
+    "discount_price": 52000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:30:00",
+    "pickup_end": "22:30:00"
+  },
+  {
+    "id": "bac70001-0027-4000-8000-000000000027",
+    "store_id": "b1ead7a1-0027-4000-8000-000000000027",
+    "name": "Túi Bánh Cronut Phô Mai Chảy & Cube Croissant Soko",
+    "description": "Cặp đôi bánh nướng sáng tạo gây sốt với lớp vỏ ngàn lớp giòn tan và nhân kem phô mai béo ngậy tan chảy khó cưỡng.",
+    "original_price": 165000,
+    "discount_price": 59000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:30:00",
+    "pickup_end": "21:30:00"
+  },
+  {
+    "id": "bac70001-0028-4000-8000-000000000028",
+    "store_id": "b1ead7a1-0028-4000-8000-000000000028",
+    "name": "Túi Cà Phê Di Sản Thượng Hạng & Bánh Pastry RuNam",
+    "description": "Cà phê rang xay chuẩn vị hoàng gia mang đậm hương thơm thảo mộc kèm bánh pastry bơ giòn nướng tươi quý phái.",
+    "original_price": 190000,
+    "discount_price": 69000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:00:00",
+    "pickup_end": "22:30:00"
+  },
+  {
+    "id": "bac70001-0029-4000-8000-000000000029",
+    "store_id": "b1ead7a1-0029-4000-8000-000000000029",
+    "name": "Túi Cà Phê Arabica Cầu Đất & Cookies Bơ Giòn Là Việt",
+    "description": "Hạt cà phê Arabica Cầu Đất hái chín 100% pha phin nồng nàn kèm bánh quy bơ hạt điều nướng giòn rụm.",
+    "original_price": 115000,
+    "discount_price": 42000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:00:00",
+    "pickup_end": "21:30:00"
+  },
+  {
+    "id": "bac70001-0030-4000-8000-000000000030",
+    "store_id": "b1ead7a1-0030-4000-8000-000000000030",
+    "name": "Túi Bánh Cà Rốt Hạnh Nhân & Cà Phê Kem Béo The Rustics",
+    "description": "Lát bánh cà rốt nướng đẫm quế và hạt óc chó phủ kem phô mai béo nhẹ bên ly cà phê kem mộc thư thái.",
+    "original_price": 125000,
+    "discount_price": 46000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:30:00",
+    "pickup_end": "22:00:00"
+  },
+  {
+    "id": "bac70001-0031-4000-8000-000000000031",
+    "store_id": "b1ead7a1-0031-4000-8000-000000000031",
+    "name": "Túi Bánh Danish Mâm Xôi & Croissant Phô Mai Tươi Tous Les Jours",
+    "description": "Bánh danish giòn xốp phủ mứt mâm xôi chua ngọt và bánh sừng bò kẹp phô mai nướng thơm ngậy trong ngày.",
+    "original_price": 140000,
+    "discount_price": 50000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:00:00",
+    "pickup_end": "21:45:00"
+  },
+  {
+    "id": "bac70001-0032-4000-8000-000000000032",
+    "store_id": "b1ead7a1-0032-4000-8000-000000000032",
+    "name": "Túi Trà Chiều Hoàng Gia & Bánh Madeleine Bơ Pháp Metropole",
+    "description": "Bánh con sò madeleine bơ tươi nướng mềm ngát hương cam chanh kèm gói trà đen thượng hạng của khách sạn di sản Metropole.",
+    "original_price": 240000,
+    "discount_price": 85000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:00:00",
+    "pickup_end": "22:00:00"
+  },
+  {
+    "id": "bac70001-0033-4000-8000-000000000033",
+    "store_id": "b1ead7a1-0033-4000-8000-000000000033",
+    "name": "Túi Bánh Mì Bơ Tỏi Phô Mai & Royal Pudding Paris Baguette",
+    "description": "Bánh mì nướng sốt bơ tỏi phô mai kem béo ngậy cùng lọ bánh pudding sữa tươi hoàng gia tan ngay trong miệng.",
+    "original_price": 155000,
+    "discount_price": 56000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "07:30:00",
+    "pickup_end": "21:30:00"
+  },
+  {
+    "id": "bac70001-0034-4000-8000-000000000034",
+    "store_id": "b1ead7a1-0034-4000-8000-000000000034",
+    "name": "Túi Bánh Mì Nướng Ngũ Cốc Nguyên Cám & Nước Ép Thanh Nhiệt",
+    "description": "Bánh mì ngũ cốc hạt dinh dưỡng bổ sung chất xơ kèm chai nước ép hoa quả nguyên chất tươi mát cho cơ thể tràn đầy năng lượng.",
+    "original_price": 95000,
+    "discount_price": 35000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "07:00:00",
+    "pickup_end": "21:00:00"
+  },
+  {
+    "id": "bac70001-0035-4000-8000-000000000035",
+    "store_id": "b1ead7a1-0035-4000-8000-000000000035",
+    "name": "Túi Cà Phê Espresso Mộc & Bánh Cuộn Quế Cinnamon Blackbird",
+    "description": "Vị cà phê hạt rang mộc nồng nàn quyện cùng hương quế thơm lừng từ chiếc bánh cinnamon roll nướng nóng hổi phố cổ.",
+    "original_price": 120000,
+    "discount_price": 45000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:00:00",
+    "pickup_end": "22:00:00"
+  },
+  {
+    "id": "bac70001-0036-4000-8000-000000000036",
+    "store_id": "b1ead7a1-0036-4000-8000-000000000036",
+    "name": "Túi Cà Phê Pour-Over Thủ Công & Bánh Chuối Nướng Mộc Tranquil",
+    "description": "Cà phê pha chậm chiết xuất tầng hương hoa quả tinh tế đi cùng bánh chuối nướng mật ong mộc mạc thơm ấm lòng.",
+    "original_price": 110000,
+    "discount_price": 39000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:30:00",
+    "pickup_end": "22:00:00"
+  },
+  {
+    "id": "bac70001-0037-4000-8000-000000000037",
+    "store_id": "b1ead7a1-0037-4000-8000-000000000037",
+    "name": "Túi Cà Phê Trứng Béo Ngậy & Bánh Waffle Mật Ong All Day",
+    "description": "Cà phê trứng kem mịn màng đậm đà hương vị truyền thống Hà Nội hòa quyện bánh quế waffle nướng vàng ươm mật ong rừng.",
+    "original_price": 130000,
+    "discount_price": 48000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "07:30:00",
+    "pickup_end": "22:30:00"
+  },
+  {
+    "id": "bac70001-0038-4000-8000-000000000038",
+    "store_id": "b1ead7a1-0038-4000-8000-000000000038",
+    "name": "Túi Bánh Scone Nho Khô & Bánh Ngọt Trà Chiều 5 Sao The Hive",
+    "description": "Set bánh scone nướng bơ truyền thống ăn kèm kem đông clotted cream và bánh ngọt tinh xảo chuẩn tiệc trà InterContinental.",
+    "original_price": 260000,
+    "discount_price": 95000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "09:30:00",
+    "pickup_end": "22:00:00"
+  },
+  {
+    "id": "bac70001-0039-4000-8000-000000000039",
+    "store_id": "b1ead7a1-0039-4000-8000-000000000039",
+    "name": "Túi Cà Phê Hạt Đặc Sản Micro-Lot & Bánh Canelé Nướng An Café",
+    "description": "Cà phê đặc sản rang tươi theo mẻ nhỏ thơm ngát hương hoa nhài phối cùng bánh canelé vỏ giòn caramel ruột mềm ẩm chuẩn Pháp.",
+    "original_price": 140000,
+    "discount_price": 52000,
+    "category": "beverage",
+    "image_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "08:00:00",
+    "pickup_end": "21:00:00"
+  },
+  {
+    "id": "bac70001-0040-4000-8000-000000000040",
+    "store_id": "b1ead7a1-0040-4000-8000-000000000040",
+    "name": "Túi Bánh Tiramisu Rượu Thơm & Trà Hoa Cúc Mật Ong Jouri",
+    "description": "Tiramisu truyền thống ngập tràn kem phô mai Mascarpone thoảng hương rượu Marsala cùng tách trà hoa cúc mật ong thư giãn tuyệt đối.",
+    "original_price": 135000,
+    "discount_price": 49000,
+    "category": "bakery",
+    "image_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+    "quantity": 5,
+    "pickup_start": "09:00:00",
+    "pickup_end": "22:00:00"
+  }
 ];
 
 async function seed() {
