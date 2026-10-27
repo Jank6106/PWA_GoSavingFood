@@ -36,19 +36,21 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
         expiredCount={state.expiredCount}
         onOpenCreateModal={() => state.setIsCreateModalOpen(true)}
       />
-      <div className="merchant-list">
+      <div className="merchant-content-block">
         {state.loading && !state.allBags.length ? (
           <SkeletonList count={3} height={120} />
         ) : state.bags.length ? (
-          state.bags.map((bag) => (
-            <BagCard
-              key={bag.id}
-              bag={bag}
-              onToggleStatus={(id) => void state.toggleStatus(id)}
-              onEdit={openEdit}
-              onDelete={(item) => setBagToDelete(item)}
-            />
-          ))
+          <div className="merchant-list">
+            {state.bags.map((bag) => (
+              <BagCard
+                key={bag.id}
+                bag={bag}
+                onToggleStatus={(id) => void state.toggleStatus(id)}
+                onEdit={openEdit}
+                onDelete={(item) => setBagToDelete(item)}
+              />
+            ))}
+          </div>
         ) : (
           <EmptyState
             icon={<PackageOpen size={28} />}

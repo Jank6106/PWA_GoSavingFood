@@ -285,6 +285,13 @@ export default function App() {
         onToggleStatus={() => void store.toggleStatus()}
         onNotificationPress={() => notifications.setIsOpen(true)}
         onProfilePress={() => navigateTo('settings')}
+        activeRoute={route}
+        onNavigate={navigateTo}
+        orderBadge={notifications.unreadCount}
+        onOpenQR={() => {
+          navigateTo('orders');
+          setIsGlobalQRScannerOpen(true);
+        }}
       />
       <main className={`merchant-main merchant-main--${route}`}>
         <Suspense fallback={<ScreenLoadingSkeleton />}>

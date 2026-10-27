@@ -116,21 +116,23 @@ export function OrderManagementScreen({
         onStatusFilterChange={state.setStatusFilter}
         onSearchQueryChange={state.setSearchQuery}
       />
-      <div className="merchant-order-grid">
+      <div className="merchant-content-block">
         {state.loading && !state.orders.length ? (
           <SkeletonList count={3} height={140} />
         ) : state.orders.length ? (
-          state.orders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              {...actions}
-              onOpenDetails={(item) => {
-                state.setSelectedOrder(item);
-                state.setIsDetailModalOpen(true);
-              }}
-            />
-          ))
+          <div className="merchant-order-grid">
+            {state.orders.map((order) => (
+              <OrderCard
+                key={order.id}
+                order={order}
+                {...actions}
+                onOpenDetails={(item) => {
+                  state.setSelectedOrder(item);
+                  state.setIsDetailModalOpen(true);
+                }}
+              />
+            ))}
+          </div>
         ) : (
           <EmptyState
             icon={<FileSearch size={28} />}
