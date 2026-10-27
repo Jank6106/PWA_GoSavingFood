@@ -57,4 +57,48 @@ describe('Google Engineering Standard: Bag Timing Business Logic', () => {
     expect(res.phase).toBe('available');
     expect(res.canOrder).toBe(true);
   });
+
+  it('merchant getBagCategory should keep bag on_shelf when quantity is 0', async () => {
+    const { getBagCategory } = await import('../apps/merchant/src/utils/bagTiming');
+    const bag = {
+      id: 'test-mer-1',
+      name: 'Túi hết hàng',
+      quantity: 0,
+      availableQuantity: 0,
+      status: 'active' as const,
+      bagType: 'shelf_life' as const,
+      expiryDate: '2099-12-31',
+      pickupTimeStart: '08:00',
+      pickupTimeEnd: '22:00',
+      category: 'Bánh mỳ',
+      originalPrice: 50000,
+      salePrice: 25000,
+      imageUrl: 'test.jpg',
+      createdAt: '2026-01-01',
+    };
+    const category = getBagCategory(bag as any);
+    expect(category).toBe('on_shelf');
+  });
+
+  it('merchant getBagCategory should return in_storage when status is hidden', async () => {
+    const { getBagCategory } = await import('../apps/merchant/src/utils/bagTiming');
+    const bag = {
+      id: 'test-mer-2',
+      name: 'Túi gỡ kệ',
+      quantity: 5,
+      availableQuantity: 5,
+      status: 'hidden' as const,
+      bagType: 'shelf_life' as const,
+      expiryDate: '2099-12-31',
+      pickupTimeStart: '08:00',
+      pickupTimeEnd: '22:00',
+      category: 'Bánh mỳ',
+      originalPrice: 50000,
+      salePrice: 25000,
+      imageUrl: 'test.jpg',
+      createdAt: '2026-01-01',
+    };
+    const category = getBagCategory(bag as any);
+    expect(category).toBe('in_storage');
+  });
 });

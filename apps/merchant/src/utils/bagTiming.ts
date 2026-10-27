@@ -46,12 +46,10 @@ export function getBagCategory(bag: BagItem): BagTabCategory {
     }
   }
 
-  const qty = bag.availableQuantity ?? bag.quantity ?? 0;
-
   // 2. Mục "Trong kho":
-  // - Chủ quán chủ động gỡ kệ (status === 'hidden')
-  // - Hoặc đã hết hàng (qty <= 0)
-  if (bag.status === 'hidden' || qty <= 0) {
+  // - Chỉ khi chủ quán chủ động gỡ kệ (status === 'hidden')
+  // - Khi hết hàng (qty <= 0), túi vẫn ở trên kệ để báo "Hết hàng", không tự động vào kho
+  if (bag.status === 'hidden') {
     return 'in_storage';
   }
 

@@ -120,7 +120,11 @@ export function BagCard({
     }
   } else {
     // Trên kệ hàng (on_shelf)
-    if (bag.bagType !== 'shelf_life') {
+    const qty = bag.availableQuantity ?? bag.quantity ?? 0;
+    if (qty <= 0) {
+      statusLabel = 'Hết hàng';
+      badgeVariant = 'sold_out';
+    } else if (bag.bagType !== 'shelf_life') {
       const nowMinutes = getVnTimeMinutes();
       const startM = parseTimeToMinutes(bag.pickupTimeStart);
       if (nowMinutes < startM) {
@@ -168,7 +172,10 @@ export function BagCard({
             </span>
           </div>
           <div className="merchant-bag-card-qty-wrap">
-            <span className="merchant-bag-qty-pill">
+            <span
+              className="merchant-bag-qty-pill"
+              style={(bag.availableQuantity ?? bag.quantity ?? 0) <= 0 ? { background: '#ef4444', boxShadow: 'none' } : undefined}
+            >
               Số lượng: {bag.availableQuantity ?? bag.quantity ?? 0}
             </span>
           </div>
@@ -181,12 +188,12 @@ export function BagCard({
               type="button"
               className={`merchant-bag-btn-toggle ${isOnShelf ? 'is-on-shelf' : ''}`}
               onClick={() => {
+                const qty = bag.availableQuantity ?? bag.quantity ?? 0;
+                if (qty <= 0) {
+                  onEdit(bag);
+                  return;
+                }
                 if (!isOnShelf) {
-                  const qty = bag.availableQuantity ?? bag.quantity ?? 0;
-                  if (qty <= 0) {
-                    onEdit(bag);
-                    return;
-                  }
                   if (bag.bagType !== 'shelf_life') {
                     const nowMinutes = getVnTimeMinutes();
                     const endM = parseTimeToMinutes(bag.pickupTimeEnd);
@@ -200,7 +207,9 @@ export function BagCard({
               }}
             >
               {isOnShelf
-                ? 'Gỡ khỏi kệ'
+                ? (bag.availableQuantity ?? bag.quantity ?? 0) <= 0
+                  ? 'Nạp thêm túi'
+                  : 'Gỡ khỏi kệ'
                 : (bag.availableQuantity ?? bag.quantity ?? 0) <= 0
                 ? 'Nạp thêm túi'
                 : bag.bagType !== 'shelf_life' && getVnTimeMinutes() > parseTimeToMinutes(bag.pickupTimeEnd)
