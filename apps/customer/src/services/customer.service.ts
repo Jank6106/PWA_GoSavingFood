@@ -1164,8 +1164,8 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "id": "82d37623-53ef-4e5e-bcb9-6793cb435aff",
     "merchantId": "fcc75682-534e-495c-91a7-982622d02cf7",
     "merchantName": "Tous Les Jours - Hoàng Quốc Việt",
-    "name": "Túi Bánh Mì Nướng Tươi & Pastry Pháp",
-    "description": "Thưởng thức bánh baguette nướng thơm lừng, croissant bơ vàng ruộm và các loại pastry tươi hảo hạng được nhào nặn công phu từ bột mì cao cấp trong ngày.",
+    "name": "Túi Bánh Mì & Pastry Nướng Tươi",
+    "description": "Mỗi ngày là một bất ngờ thú vị! Túi bao gồm ngẫu nhiên 3–4 món bánh tươi trong ngày từ Tous Les Jours (như bánh mì baguette, croissant bơ Pháp, pastry nướng hoặc bánh phô mai mềm tùy mẻ bánh trong ngày).",
     "originalPrice": 120000,
     "discountPrice": 45000,
     "category": "bakery",
@@ -1176,14 +1176,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.733Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "c67f81fa-4b47-4483-baef-142c7b4f8be1",
     "merchantId": "fcc75682-534e-495c-91a7-982622d02cf7",
     "merchantName": "Tous Les Jours - Hoàng Quốc Việt",
-    "name": "Túi Bánh Ngọt Pháp & Croissant Bơ Thượng Hạng",
-    "description": "Bánh croissant ngập tràn bơ Pháp thơm lừng kết hợp cùng bánh kem su mềm mại, đem đến trải nghiệm ẩm thực Pháp tinh tế và ngọt ngào.",
+    "name": "Túi Bánh Ngọt & Croissant Thượng Hạng",
+    "description": "Trải nghiệm bánh ngọt phong vị Pháp tinh tế! Túi ngẫu nhiên gồm các loại bánh kem su, pain au chocolat, croissant ngàn lớp hoặc bánh tart béo thơm nướng mới mỗi ngày.",
     "originalPrice": 150000,
     "discountPrice": 55000,
     "category": "bakery",
@@ -1194,14 +1194,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0001-4000-8000-000000000001",
     "merchantId": "fcc75682-534e-495c-91a7-982622d02cf8",
     "merchantName": "Tous Les Jours - Keangnam Landmark 72",
-    "name": "Túi Bánh Mì Gối Mềm & Bánh Su Kem Tous Les Jours",
-    "description": "Bánh mì gối sữa tươi dẻo mềm giàu dưỡng chất kèm bánh su kem vani mát lạnh, chuẩn bị tinh tươm cho bữa phụ gia đình đầy năng lượng.",
+    "name": "Túi Bánh Mì Dinh Dưỡng & Bánh Mềm",
+    "description": "Túi bánh tươi dinh dưỡng bất ngờ từ Tous Les Jours (có thể gồm bánh mì gối sữa, bánh su kem, bánh mì xúc xích hoặc bánh nướng ngũ cốc trong ngày) chuẩn chất lượng Pháp - Hàn.",
     "originalPrice": 130000,
     "discountPrice": 48000,
     "category": "bakery",
@@ -1212,14 +1212,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "8d61a0da-732e-426c-966f-a45e3f57f607",
     "merchantId": "5779597d-222b-4e30-9501-f1c44c383330",
     "merchantName": "Fresh Garden Bakery - Phạm Văn Đồng",
-    "name": "Túi Bánh Mì Gối Sandwich & Donut Phô Mai Tươi",
-    "description": "Bánh mì sandwich mềm mịn, donut chocolate phủ cốm và bánh phô mai nướng thơm ngậy, món quà ngọt ngào khởi đầu ngày mới.",
+    "name": "Túi Bánh Mì & Bánh Ngọt Trong Ngày",
+    "description": "Túi bất ngờ từ Fresh Garden Bakery gồm ngẫu nhiên các loại bánh mì sandwich tươi, donut chocolate, bánh su kem hoặc bánh phô mai nướng thơm ngậy.",
     "originalPrice": 95000,
     "discountPrice": 35000,
     "category": "bakery",
@@ -1230,14 +1230,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0020-4000-8000-000000000020",
     "merchantId": "5779597d-222b-4e30-9501-f1c44c383330",
     "merchantName": "Fresh Garden Bakery - Phạm Văn Đồng",
-    "name": "Túi Bánh Mousse Trái Cây & Bánh Nướng Dinh Dưỡng",
-    "description": "Sự kết hợp tươi mát giữa bánh mousse chanh leo mềm mịn và bánh nướng ngũ cốc dinh dưỡng giàu năng lượng trong ngày.",
+    "name": "Túi Bánh Tráng Miệng & Bánh Nướng",
+    "description": "Tuyển chọn ngẫu nhiên các món bánh ngọt tráng miệng trong ngày từ Fresh Garden (như mousse hoa quả, bánh bông lan kem tươi hoặc bánh quy dinh dưỡng).",
     "originalPrice": 110000,
     "discountPrice": 40000,
     "category": "bakery",
@@ -1248,14 +1248,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0002-4000-8000-000000000002",
     "merchantId": "5779597d-222b-4e30-9501-f1c44c383331",
     "merchantName": "Fresh Garden Bakery - Nguyễn Thị Thập",
-    "name": "Túi Bánh Ngọt Tươi Mềm & Cookies Bơ Pháp",
-    "description": "Tuyển tập bánh ngọt tươi trong ngày và bánh quy bơ thơm bùi, hoàn hảo để thưởng thức cùng tách trà chiều nhẹ nhàng.",
+    "name": "Túi Bánh Tươi & Bánh Quy Bơ Pháp",
+    "description": "Mỗi phần là một kết hợp ngẫu nhiên các món bánh mì mềm thơm bơ, cookies giòn rụm hoặc bánh ngọt tráng miệng nhẹ nhàng thưởng thức cùng trà chiều.",
     "originalPrice": 100000,
     "discountPrice": 38000,
     "category": "bakery",
@@ -1266,14 +1266,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "5f93f54c-f73a-4737-9d61-2de5396029aa",
     "merchantId": "4bd5a486-8ee2-49cf-8bd6-6eacf946db56",
     "merchantName": "Highlands Coffee - IPH Xuân Thủy",
-    "name": "Túi Bánh Mousse Trái Cây & Phin Sữa Tươi Highlands",
-    "description": "Thưởng thức bánh mousse thanh mát chua ngọt cân bằng bên ly phin sữa đậm đà di sản, mang trọn nguồn cảm hứng hứng khởi.",
+    "name": "Túi Cà Phê & Bánh Ngọt Highlands",
+    "description": "Túi bất ngờ gồm thức uống pha chế đặc trưng (như phin sữa đá, trà sen vàng hoặc freeze đá xay) kèm 1 phần bánh ngọt tươi ngon trong ngày từ Highlands Coffee.",
     "originalPrice": 85000,
     "discountPrice": 35000,
     "category": "beverage",
@@ -1284,14 +1284,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0003-4000-8000-000000000003",
     "merchantId": "4bd5a486-8ee2-49cf-8bd6-6eacf946db57",
     "merchantName": "Highlands Coffee - Vincom Nguyễn Chí Thanh",
-    "name": "Túi Bánh Phô Mai Cà Phê & Freeze Trà Xanh Highlands",
-    "description": "Bộ đôi hoàn hảo giữa bánh phô mai mềm mịn hòa quyện hương cà phê và thức uống đá xay thanh mát từ trà xanh thượng hạng.",
+    "name": "Túi Bánh Tráng Miệng & Thức Uống Highlands",
+    "description": "Thưởng thức bất ngờ thú vị với các món bánh phô mai cà phê, bánh chuối nướng hoặc mousse trái cây kèm đồ uống mát lạnh từ Highlands.",
     "originalPrice": 90000,
     "discountPrice": 38000,
     "category": "beverage",
@@ -1302,14 +1302,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0004-4000-8000-000000000004",
     "merchantId": "b1ead7a1-0001-4000-8000-000000000001",
     "merchantName": "BreadTalk - Vincom Bà Triệu",
-    "name": "Túi Bánh Mì Chà Bông Phô Mai Cay & Danish Trái Cây",
-    "description": "Bánh mì chà bông Flosss huyền thoại số 1 Singapore kết hợp cùng bánh Danish hoa quả ngọt dịu giòn xốp.",
+    "name": "Túi Bánh Mì & Pastry BreadTalk",
+    "description": "Túi bánh bất ngờ từ BreadTalk Singapore gồm ngẫu nhiên 3–4 món bánh nướng đặc trưng (như bánh mì chà bông flosss, danish trái cây, bánh phô mai tươi hoặc donut ngọt).",
     "originalPrice": 125000,
     "discountPrice": 45000,
     "category": "bakery",
@@ -1320,14 +1320,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0005-4000-8000-000000000005",
     "merchantId": "b1ead7a1-0002-4000-8000-000000000002",
     "merchantName": "Paris Baguette - Tràng Tiền Plaza",
-    "name": "Túi Bánh Mì Nướng Kiểu Âu & Bánh Ngọt Kem Bơ Paris",
-    "description": "Thưởng thức phong vị Paris đích thực với bánh mì vỏ giòn ruột mềm và bánh pastry bơ hảo hạng tan ngay nơi đầu lưỡi.",
+    "name": "Túi Bánh Mì Chuẩn Âu & Pastry Paris",
+    "description": "Túi bánh cao cấp ngẫu nhiên từ Paris Baguette (có thể bao gồm bánh mì baguette nướng vỏ giòn, croissant bơ thơm, bánh kem phô mai hoặc pastry hoa quả).",
     "originalPrice": 160000,
     "discountPrice": 59000,
     "category": "bakery",
@@ -1338,14 +1338,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0006-4000-8000-000000000006",
     "merchantId": "b1ead7a1-0003-4000-8000-000000000003",
     "merchantName": "Sapo Bakery - Quang Trung Hà Đông",
-    "name": "Túi Bánh Su Kem Vani & Bánh Mì Bơ Tỏi Sapo",
-    "description": "Bánh su kem mềm ngập nhân vani béo ngậy kèm bánh mì bơ tỏi nướng thơm lừng, món quà ẩm thực ngọt ngào ấm áp.",
+    "name": "Túi Bánh Thủ Công & Su Kem Sapo",
+    "description": "Túi bất ngờ từ Sapo Bakery gồm ngẫu nhiên các loại bánh su kem béo ngậy, bánh mì bơ tỏi nướng hoặc bánh bông lan trứng muối tươi ngon trong ngày.",
     "originalPrice": 90000,
     "discountPrice": 32000,
     "category": "bakery",
@@ -1356,14 +1356,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0007-4000-8000-000000000007",
     "merchantId": "b1ead7a1-0004-4000-8000-000000000004",
     "merchantName": "Anh Hòa Bakery - Cầu Giấy",
-    "name": "Túi Bánh Mì Ngũ Cốc Dinh Dưỡng & Mousse Chanh Leo",
-    "description": "Bánh mì ngũ cốc nguyên cám tốt cho sức khỏe đi kèm lát bánh mousse hoa quả tươi dịu nhẹ, dinh dưỡng lành mạnh cho mọi lứa tuổi.",
+    "name": "Túi Bánh Mì & Bánh Ngọt Pháp Anh Hòa",
+    "description": "Túi ngẫu nhiên gồm các dòng bánh nướng bơ sữa New Zealand hảo hạng từ Anh Hòa Bakery (như bánh mì ngũ cốc, mousse chanh leo, tart hoa quả hoặc bánh kem mềm).",
     "originalPrice": 115000,
     "discountPrice": 42000,
     "category": "bakery",
@@ -1374,14 +1374,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0008-4000-8000-000000000008",
     "merchantId": "b1ead7a1-0005-4000-8000-000000000005",
     "merchantName": "Phúc Long Coffee & Tea - Lotte Center Liễu Giai",
-    "name": "Túi Trà Ô Long Sữa Đặc Sản & Bánh Nướng Phúc Long",
-    "description": "Trà Ô Long sữa trứ danh với vị chát nhẹ ngọt hậu đậm đà hòa quyện cùng bánh nướng tươi ngon ấm nóng.",
+    "name": "Túi Trà Đặc Sản & Bánh Ngọt Phúc Long",
+    "description": "Túi trải nghiệm bất ngờ từ Phúc Long gồm thức uống trà Ô Long hoặc trà trái cây đậm vị kèm bánh ngọt nướng thơm béo trong ngày.",
     "originalPrice": 105000,
     "discountPrice": 42000,
     "category": "beverage",
@@ -1392,14 +1392,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:45",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0009-4000-8000-000000000009",
     "merchantId": "b1ead7a1-0006-4000-8000-000000000006",
     "merchantName": "Katinat Saigon Kafe - Lý Thường Kiệt",
-    "name": "Túi Trà Oolong Tứ Quý & Bánh Sừng Bò Nướng Katinat",
-    "description": "Trà sữa Oolong thơm lừng hương hoa cỏ cao nguyên đi kèm bánh sừng bò nướng bơ xốp giòn chuẩn vị boutique.",
+    "name": "Túi Thức Uống & Bánh Sừng Bò Katinat",
+    "description": "Túi bất ngờ gồm món trà Oolong đặc trưng hoặc cà phê signature kèm bánh sừng bò nướng bơ xốp giòn từ chuỗi Katinat sang trọng.",
     "originalPrice": 110000,
     "discountPrice": 45000,
     "category": "beverage",
@@ -1410,14 +1410,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0010-4000-8000-000000000010",
     "merchantId": "b1ead7a1-0007-4000-8000-000000000007",
     "merchantName": "The Coffee House - Thái Hà",
-    "name": "Túi Cà Phê Espresso Đậm Vị & Bánh Tươi The Coffee House",
-    "description": "Cà phê rang mộc chuẩn gu Việt kèm bánh ngọt nướng thơm béo, trọn vẹn những phút giây thư thái và kết nối ấm cúng.",
+    "name": "Túi Cà Phê & Bánh Tươi The Coffee House",
+    "description": "Túi bất ngờ kết hợp giữa cà phê rang mộc hoặc trà đào cam sả trứ danh cùng các loại bánh mì ngọt nướng tươi trong ngày từ The Coffee House.",
     "originalPrice": 95000,
     "discountPrice": 38000,
     "category": "beverage",
@@ -1428,14 +1428,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0011-4000-8000-000000000011",
     "merchantId": "b1ead7a1-0008-4000-8000-000000000008",
     "merchantName": "Cộng Cà Phê - Nhà Thờ",
-    "name": "Túi Cà Phê Cốt Dừa Thơm Béo & Croissant Nướng Mộc",
-    "description": "Cà phê cốt dừa đá xay trứ danh béo ngọt sánh mịn kết hợp bánh croissant nướng mộc mạc thơm lừng góc phố.",
+    "name": "Túi Cà Phê Cốt Dừa & Bánh Nướng Cộng",
+    "description": "Túi trải nghiệm hoài niệm gồm thức uống signature của Cộng (như cà phê cốt dừa, bạc xỉu) kèm bánh croissant nướng mộc mạc thơm lừng.",
     "originalPrice": 90000,
     "discountPrice": 35000,
     "category": "beverage",
@@ -1446,14 +1446,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0012-4000-8000-000000000012",
     "merchantId": "b1ead7a1-0009-4000-8000-000000000009",
     "merchantName": "Starbucks Coffee - Nhà Thờ Lớn",
-    "name": "Túi Bánh Nướng Thượng Hạng & Cà Phê Cold Brew Starbucks",
-    "description": "Cà phê ủ lạnh thanh mát hương hoa quả kèm bánh nướng bơ muffin hoặc cookie nướng chuẩn chất lượng Starbucks quốc tế.",
+    "name": "Túi Cà Phê & Bánh Nướng Thượng Hạng Starbucks",
+    "description": "Túi trải nghiệm chuẩn quốc tế gồm cà phê ủ lạnh hoặc pha máy thơm ngát kèm phần bánh nướng bơ muffin, cookie hoặc pastry tươi từ Starbucks.",
     "originalPrice": 165000,
     "discountPrice": 65000,
     "category": "beverage",
@@ -1464,14 +1464,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0013-4000-8000-000000000013",
     "merchantId": "b1ead7a1-0010-4000-8000-000000000010",
     "merchantName": "Phê La - Hàng Cót",
-    "name": "Túi Trà Ô Long Đặc Sản Đà Lạt & Bánh Mì Mềm Phê La",
-    "description": "Trà Ô Long thủ công rang khói đậm hậu ngọt ngào đi cùng bánh mì mềm mịn thơm bơ nướng ấm áp trong ngày.",
+    "name": "Túi Trà Ô Long Đặc Sản & Bánh Nướng Phê La",
+    "description": "Túi bất ngờ từ Phê La gồm thức uống trà Ô Long thủ công đậm vị từ Bảo Lộc kèm bánh mì nướng mềm thơm bơ trong ngày.",
     "originalPrice": 110000,
     "discountPrice": 45000,
     "category": "beverage",
@@ -1482,14 +1482,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0014-4000-8000-000000000014",
     "merchantId": "b1ead7a1-0011-4000-8000-000000000011",
     "merchantName": "Cheese Coffee - Lê Duẩn",
-    "name": "Túi Trà Phô Mai Kem Béo & Bánh Pastry Giòn Rụm",
-    "description": "Lớp foam phô mai mặn béo ngậy trên nền trà thơm ngát kết hợp cùng bánh nướng bơ giòn rụm cuốn hút bất tận.",
+    "name": "Túi Trà Phô Mai & Bánh Pastry Cheese Coffee",
+    "description": "Túi bất ngờ gồm thức uống phô mai béo ngậy signature kèm bánh nướng bơ giòn rụm từ chuỗi Cheese Coffee mang phong cách industrial.",
     "originalPrice": 115000,
     "discountPrice": 45000,
     "category": "beverage",
@@ -1500,14 +1500,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "a51a723e-e333-4374-9245-d0b0dfc7d0eb",
     "merchantId": "2f207531-63ee-4650-b3ef-71282d3e91c3",
     "merchantName": "Trà Sữa TocoToco - Hồ Tùng Mậu",
-    "name": "Túi Trà Sữa Trân Châu Hoàng Gia & Trà Trái Cây TocoToco",
-    "description": "Trà sữa thơm ngậy cùng trân châu sắn dẻo dai từ nông sản sạch Việt Nam và trà hoa quả nhiệt đới tươi mát thanh lọc.",
+    "name": "Túi Trà Sữa & Thức Uống TocoToco",
+    "description": "Túi giải khát bất ngờ gồm 2 ly trà sữa trân châu hoặc trà trái cây nhiệt đới tươi mát thanh lọc chế biến từ nông sản Việt Nam sạch.",
     "originalPrice": 80000,
     "discountPrice": 29000,
     "category": "beverage",
@@ -1518,14 +1518,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "5ae47709-4ceb-4aa9-b77e-284ef5a7c0e6",
     "merchantId": "ac5987b4-c50f-4e33-ae1b-42c7a78c74cc",
     "merchantName": "Dairy Queen - Chùa Láng",
-    "name": "Túi Kem Úp Ngược Blizzard & Bánh Kem Lạnh Dairy Queen",
-    "description": "Kem úp ngược Blizzard trứ danh với topping Oreo giòn rụm và bánh kem lạnh béo mịn ngọt lịm khó quên.",
+    "name": "Túi Kem Úp Ngược & Bánh Lạnh Dairy Queen",
+    "description": "Túi tráng miệng bất ngờ từ Dairy Queen với kem úp ngược Blizzard trứ danh hoặc bánh kem lạnh thượng hạng chuẩn phong cách Mỹ.",
     "originalPrice": 110000,
     "discountPrice": 42000,
     "category": "beverage",
@@ -1536,14 +1536,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "59d0f42d-c280-4b54-bd23-0b4a8b669fe8",
     "merchantId": "6c2a82a7-0ecd-43f3-bf7d-a74bc7e4a0d5",
     "merchantName": "Baskin-Robbins - Tây Hồ",
-    "name": "Túi Kem Thượng Hạng Baskin-Robbins & Waffle Giòn",
-    "description": "Tuyển chọn các vị kem sữa cao cấp trứ danh thế giới kèm bánh quế nướng giòn tan béo thơm, ngọt lành sảng khoái.",
+    "name": "Túi Kem Thượng Hạng & Bánh Quế Baskin-Robbins",
+    "description": "Túi kem cao cấp ngẫu nhiên từ 31 vị kem sữa tươi nổi tiếng thế giới của Baskin-Robbins kèm bánh quế nướng giòn tan béo thơm.",
     "originalPrice": 140000,
     "discountPrice": 49000,
     "category": "beverage",
@@ -1554,14 +1554,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "15776100-8c1c-410a-8b6a-1b7602670f70",
     "merchantId": "2257c133-3c76-4646-8ae9-13f9d34115a3",
     "merchantName": "WinMart+ - Green Stars Phạm Văn Đồng",
-    "name": "Túi Nông Sản Hữu Cơ & Nấm Tươi VietGAP",
-    "description": "Nông sản sạch tuyển chọn gồm rau xanh an toàn, nấm tươi và củ quả tươi ngon đạt tiêu chuẩn chất lượng VietGAP trong ngày.",
+    "name": "Túi Nông Sản Sạch & Rau Củ VietGAP",
+    "description": "Túi nông sản bất ngờ từ WinMart+ gồm ngẫu nhiên các loại rau xanh an toàn, nấm tươi và củ quả sạch đạt tiêu chuẩn VietGAP trong ngày.",
     "originalPrice": 100000,
     "discountPrice": 35000,
     "category": "vegetarian",
@@ -1572,14 +1572,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "9ff75bc9-8339-4cb6-9fe2-1907bc2bd4f3",
     "merchantId": "2257c133-3c76-4646-8ae9-13f9d34115a3",
     "merchantName": "WinMart+ - Green Stars Phạm Văn Đồng",
-    "name": "Túi Bách Hóa Tiêu Chuẩn & Nhu Yếu Phẩm Gia Đình",
-    "description": "Thực phẩm tiện lợi, sữa tươi tiệt trùng và các nhu yếu phẩm dinh dưỡng chất lượng cho bữa ăn gia đình tiện lợi.",
+    "name": "Túi Bách Hóa & Nhu Yếu Phẩm Gia Đình",
+    "description": "Túi bách hóa tiện lợi gồm ngẫu nhiên các thực phẩm thiết yếu, sữa tươi tiệt trùng, bánh ngọt hoặc đồ uống đóng chai tiện dụng cho gia đình.",
     "originalPrice": 120000,
     "discountPrice": 45000,
     "category": "other",
@@ -1590,14 +1590,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0015-4000-8000-000000000015",
     "merchantId": "b1ead7a1-0012-4000-8000-000000000012",
     "merchantName": "WinMart+ - Times City Minh Khai",
-    "name": "Túi Rau Xanh Hữu Cơ An Toàn & Trái Cây Tươi Mùa Mới",
-    "description": "Trái cây ngọt mát và rau xanh tươi non chuẩn VietGAP, bảo đảm nguồn dinh dưỡng xanh và vitamin tinh khiết cho cả nhà.",
+    "name": "Túi Rau Củ Tươi & Trái Cây VietGAP",
+    "description": "Túi thực phẩm xanh bảo vệ sức khỏe từ WinMart+ gồm rau hữu cơ tươi non và trái cây theo mùa an toàn đạt chuẩn kiểm định.",
     "originalPrice": 110000,
     "discountPrice": 39000,
     "category": "vegetarian",
@@ -1608,14 +1608,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0016-4000-8000-000000000016",
     "merchantId": "b1ead7a1-0013-4000-8000-000000000013",
     "merchantName": "GS25 - Duy Tân",
-    "name": "Túi Cơm Nắm Tam Giác Onigiri & Sandwich Tiện Lợi GS25",
-    "description": "Cơm nắm tam giác rong biển nhân cá ngừ sốt mayo, sandwich tươi ngon và xúc xích nướng tiện lợi chuẩn vị Hàn.",
+    "name": "Túi Bữa Ăn Nhanh & Món Tiện Lợi GS25",
+    "description": "Túi đồ ăn tiện lợi phong cách Hàn Quốc gồm ngẫu nhiên cơm nắm tam giác onigiri, sandwich tươi, xúc xích hoặc đồ uống đóng hộp từ GS25.",
     "originalPrice": 85000,
     "discountPrice": 32000,
     "category": "other",
@@ -1626,14 +1626,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "23:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0017-4000-8000-000000000017",
     "merchantId": "b1ead7a1-0014-4000-8000-000000000014",
     "merchantName": "Circle K - Hoàng Đạo Thúy",
-    "name": "Túi Bữa Sáng Năng Lượng & Thức Uống Đóng Chai Circle K",
-    "description": "Bánh bao nóng hổi hoặc xúc xích nướng vàng ruộm kèm nước ép trái cây giải khát, bữa phụ tiếp sức năng động tức thì.",
+    "name": "Túi Bữa Ăn Tiện Lợi 24/7 Circle K",
+    "description": "Túi thực phẩm tiện dụng gồm ngẫu nhiên bánh bao nóng, xúc xích nướng, bánh mì ngọt hoặc nước ép đóng chai giải khát nhanh chóng.",
     "originalPrice": 75000,
     "discountPrice": 28000,
     "category": "other",
@@ -1644,14 +1644,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "23:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0018-4000-8000-000000000018",
     "merchantId": "b1ead7a1-0015-4000-8000-000000000015",
     "merchantName": "7-Eleven - Landmark 72 Phạm Hùng",
-    "name": "Túi Món Ngon Nóng Hổi & Bánh Ngọt Tiện Lợi 7-Eleven",
-    "description": "Cơm hộp Bento nóng sốt đậm đà cùng bánh mì mềm ngọt ngào mang thương hiệu tiện ích toàn cầu 7-Eleven.",
+    "name": "Túi Món Ngon Bento & Tiện Lợi 7-Eleven",
+    "description": "Túi đồ ăn nhanh tiện lợi quốc tế gồm ngẫu nhiên suất cơm Bento nóng hổi, bánh mì sandwich hoặc thức uống giải khát mát lạnh từ 7-Eleven.",
     "originalPrice": 80000,
     "discountPrice": 30000,
     "category": "other",
@@ -1662,14 +1662,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0019-4000-8000-000000000019",
     "merchantId": "b1ead7a1-0016-4000-8000-000000000016",
     "merchantName": "Annam Gourmet Market - Syrena Tây Hồ",
-    "name": "Túi Phô Mai Nhập Khẩu & Trái Cây Hữu Cơ Cao Cấp",
-    "description": "Trải nghiệm ẩm thực phong vị châu Âu cao cấp với phô mai Brie hảo hạng, nho tươi hữu cơ và bánh quy mặn giòn giã.",
+    "name": "Túi Thực Phẩm Nhập Khẩu & Phô Mai Châu Âu",
+    "description": "Túi ẩm thực ngoại nhập cao cấp gồm ngẫu nhiên phô mai châu Âu hảo hạng, trái cây tươi nhập khẩu, bánh quy bơ hoặc mứt trái cây organic.",
     "originalPrice": 250000,
     "discountPrice": 89000,
     "category": "vegetarian",
@@ -1680,14 +1680,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "5a650b75-b805-4fff-a91c-8800623ab25e",
     "merchantId": "bd45d1dc-e7ae-4ad9-b2b1-6a84da2ee6e7",
     "merchantName": "Cơm Niêu Singapore KOMBO - Duy Tân",
-    "name": "Túi Cơm Niêu Singapore Bò Nướng Sốt Tiêu Đen",
-    "description": "Lớp cháy giòn tan vàng rộm hai mặt hòa quyện cùng thịt bò mềm mọng sốt tiêu đen đậm đà và canh rau xanh thanh mát.",
+    "name": "Túi Cơm Niêu Nóng Giòn Chuẩn Vị",
+    "description": "Suất cơm niêu Singapore nóng hổi với lớp cháy giòn rụm hai mặt hòa quyện cùng phần thịt xốt đậm đà (bò xốt tiêu đen hoặc gà xốt nấm) và canh rau xanh.",
     "originalPrice": 110000,
     "discountPrice": 42000,
     "category": "meat",
@@ -1698,14 +1698,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "931b7eb7-5d18-449a-87f6-1747e9bcfbc5",
     "merchantId": "db669945-636b-4538-84be-568185e22b13",
     "merchantName": "Cơm Thố Bách Khoa - Trần Cung",
-    "name": "Túi Cơm Thố Xá Xíu Quảng Đông & Canh Rong Biển Nóng",
-    "description": "Cơm thố nóng giòn cháy đáy chuẩn vị, thịt xá xíu thơm lừng ngọt mềm đẫm sốt ăn kèm kim chi và canh rong biển thanh ngọt.",
+    "name": "Túi Cơm Thố Nóng Hổi Trong Ngày",
+    "description": "Suất cơm thố nóng giòn cháy đáy thơm phức trong ngày kèm phần thịt xá xíu hoặc bò nướng đậm vị, kim chi và canh rong biển thanh ngọt.",
     "originalPrice": 85000,
     "discountPrice": 32000,
     "category": "meat",
@@ -1716,14 +1716,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "b673df8e-2657-4d5c-bc32-3839100fc7f4",
     "merchantId": "6a3e9343-a8a7-4d11-828e-106fb4edbf7c",
     "merchantName": "Nhà Hàng Chay Vị Lai - Lý Thường Kiệt",
-    "name": "Túi Mỹ Vị Chay Vị Lai: Súp Nấm Rừng & Cơm Lá Sen",
-    "description": "Tuyệt tác ẩm thực thực dưỡng với súp nấm rừng thanh mát bổ dưỡng và cơm bọc lá sen thơm dịu tao nhã, cân bằng thân tâm.",
+    "name": "Túi Ẩm Thực Chay Tinh Tế Vị Lai",
+    "description": "Túi mỹ vị thực dưỡng thanh tịnh từ Vị Lai gồm súp nấm rừng bổ dưỡng, cơm bọc lá sen hoặc các món chay nghệ thuật chế biến trong ngày.",
     "originalPrice": 150000,
     "discountPrice": 55000,
     "category": "vegetarian",
@@ -1734,14 +1734,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "2c6f95b8-37f6-4ad2-bfaf-b2550cb8035c",
     "merchantId": "b509682b-350a-4f10-8bbc-a76f6537c248",
     "merchantName": "Bếp Chay An Lạc - Cổ Nhuế",
-    "name": "Túi Cơm Chay Thực Dưỡng Hạt Sen & Nấm Kho Tiêu",
-    "description": "Cơm gạo lứt dẻo thơm kết hợp nấm đùi gà kho tiêu đậm đà, đậu hũ sốt cà chua và canh rau củ thanh ngọt thanh lọc cơ thể.",
+    "name": "Túi Cơm Chay Thực Dưỡng An Lạc",
+    "description": "Suất cơm chay dinh dưỡng thanh lành gồm cơm gạo lứt dẻo thơm, nấm kho tiêu đậm vị, đậu hũ sốt và canh rau củ thanh ngọt trong ngày.",
     "originalPrice": 75000,
     "discountPrice": 28000,
     "category": "vegetarian",
@@ -1752,14 +1752,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "ffdae2e8-2df4-4547-88b2-20be1ca1ec79",
     "merchantId": "b509682b-350a-4f10-8bbc-a76f6537c248",
     "merchantName": "Bếp Chay An Lạc - Cổ Nhuế",
-    "name": "Túi Bún Nem Nấm Chay Giòn Rụm & Giò Lụa Chay",
-    "description": "Nem nấm chay giòn rụm rán vàng ươm chấm nước mắm chay chua ngọt vừa miệng, ăn kèm bún tươi và rau thơm thanh mát.",
+    "name": "Túi Món Chay Tươi Ngon An Lạc",
+    "description": "Túi ẩm thực chay bất ngờ gồm bún nem nấm chay giòn rụm hoặc các món gỏi chay tươi mát bổ dưỡng trong ngày.",
     "originalPrice": 75000,
     "discountPrice": 28000,
     "category": "vegetarian",
@@ -1770,14 +1770,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "7a110000-0000-0000-0000-000000000003",
     "merchantId": "b509682b-350a-4f10-8bbc-a76f6537c248",
     "merchantName": "Bếp Chay An Lạc - Cổ Nhuế",
-    "name": "Túi Lẩu Nấm Dưỡng Sinh & Đậu Hũ Non Thanh Tịnh",
-    "description": "Nước dùng nấm hầm ngọt tự nhiên từ thảo mộc, nấm tươi thập cẩm cùng đậu hũ non mềm mượt cho bữa ăn chay trọn vẹn yêu thương.",
+    "name": "Túi Lẩu Nấm & Thực Dưỡng Thanh Tịnh",
+    "description": "Phần lẩu chay thảo mộc ngọt thanh tự nhiên gồm nước dùng nấm, nấm tươi thập cẩm và đậu hũ non mềm mượt cho bữa ăn trọn vẹn yêu thương.",
     "originalPrice": 120000,
     "discountPrice": 45000,
     "category": "vegetarian",
@@ -1788,14 +1788,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "7a110000-0000-0000-0000-000000000004",
     "merchantId": "b509682b-350a-4f10-8bbc-a76f6537c248",
     "merchantName": "Bếp Chay An Lạc - Cổ Nhuế",
-    "name": "Túi Chè Tuyết Yến Dưỡng Nhan & Nước Sâm Hạt Chia",
-    "description": "Món tráng miệng thanh mát với tuyết yến, táo đỏ, hạt sen ninh mềm và nước sâm thanh nhiệt tự nhiên giải tỏa âu lo.",
+    "name": "Túi Nước Dưỡng Nhan & Chè Thanh Nhiệt",
+    "description": "Túi tráng miệng thanh mát gồm chè tuyết yến dưỡng nhan, hạt sen ninh mềm hoặc nước sâm thanh nhiệt tự nhiên giải tỏa âu lo.",
     "originalPrice": 60000,
     "discountPrice": 22000,
     "category": "beverage",
@@ -1806,14 +1806,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "20:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "c101a5bd-472a-4135-a948-ad8c50b8e121",
     "merchantId": "afbde72f-ac50-4f1e-873f-9bed4e118f04",
     "merchantName": "McDonald's - Hồ Gươm",
-    "name": "Túi Gà Rán Giòn Rụm & Bánh Táo Nướng McDonald's",
-    "description": "Gà rán da giòn rụm bên ngoài mọng nước bên trong kèm bánh táo nướng vỏ quế thơm lừng và tương chua ngọt đặc trưng McDonald’s.",
+    "name": "Túi Bữa Ăn Nhanh & Gà Giòn McDonald's",
+    "description": "Túi đồ ăn nóng sốt ngẫu nhiên chuẩn vị McDonald's gồm gà rán giòn rụm hoặc burger kèm bánh táo nướng hoặc khoai tây chiên giòn tan.",
     "originalPrice": 120000,
     "discountPrice": 45000,
     "category": "other",
@@ -1824,14 +1824,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "e59e4220-3882-4f02-95e3-21d51abe796d",
     "merchantId": "afbde72f-ac50-4f1e-873f-9bed4e118f04",
     "merchantName": "McDonald's - Hồ Gươm",
-    "name": "Túi Burger Bò Nướng Phô Mai & Khoai Tây Chiên McDonald's",
-    "description": "Burger bò nướng lửa thơm khói quyện cùng phô mai cheddar béo ngậy và phần khoai tây chiên vàng giòn rụm chuẩn phong cách Mỹ.",
+    "name": "Túi Burger & Khoai Chiên McDonald's",
+    "description": "Bữa ăn thịnh soạn ngẫu nhiên gồm burger bò nướng lửa thơm khói hoặc burger phi-lê cá kèm khoai tây chiên vàng giòn chuẩn phong cách Mỹ.",
     "originalPrice": 130000,
     "discountPrice": 49000,
     "category": "other",
@@ -1842,14 +1842,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "d5bd05a9-7324-4493-a6e6-489e30f6d573",
     "merchantId": "5b051934-45e2-4cbe-92b7-7e78c4b51710",
     "merchantName": "KFC Vietnam - Bà Triệu",
-    "name": "Túi Gà Giòn Cay Đặc Biệt & Khoai Tây Lắc Phô Mai KFC",
-    "description": "Gà rán KFC công thức 11 loại thảo mộc huyền thoại giòn cay bốc khói cùng phần khoai tây chiên lắc bột phô mai thơm ngậy lôi cuốn.",
+    "name": "Túi Bữa Ăn Nhanh & Gà Giòn KFC",
+    "description": "Túi bất ngờ từ KFC gồm gà rán công thức 11 loại thảo mộc huyền thoại hoặc gà giòn cay kèm khoai tây lắc phô mai thơm ngậy.",
     "originalPrice": 125000,
     "discountPrice": 46000,
     "category": "other",
@@ -1860,14 +1860,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "5f637281-5d7e-478f-8b58-330ed5eb2326",
     "merchantId": "5b051934-45e2-4cbe-92b7-7e78c4b51710",
     "merchantName": "KFC Vietnam - Bà Triệu",
-    "name": "Túi Bánh Trứng Egg Tart Nướng & Burger Zinger KFC",
-    "description": "Bánh trứng Egg Tart nướng thơm lừng lớp vỏ ngàn lớp giòn tan nhân kem trứng béo ngậy kèm burger phi-lê gà cay Zinger nức tiếng.",
+    "name": "Túi Bánh Trứng & Burger Zinger KFC",
+    "description": "Túi món ngon ngẫu nhiên gồm bánh trứng nướng egg tart thơm ngậy ngàn lớp hoặc burger phi-lê gà giòn cay Zinger nức tiếng.",
     "originalPrice": 115000,
     "discountPrice": 42000,
     "category": "other",
@@ -1878,14 +1878,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "03aa4b45-1c0a-4b5b-9419-8ca44123b842",
     "merchantId": "799e644e-2f82-4a85-ba12-b194cf4cc547",
     "merchantName": "Lotteria - Tràng Tiền",
-    "name": "Túi Gà Rán Giòn Cay & Khoai Tây Chiên Lotteria",
-    "description": "Gà rán truyền thống vỏ giòn rụm thịt mềm ngọt mọng nước kèm khoai tây chiên giòn tan và tương cà chua ngọt đậm đà chuẩn vị Lotteria.",
+    "name": "Túi Bữa Ăn Nhanh & Gà Giòn Lotteria",
+    "description": "Túi bất ngờ từ Lotteria gồm gà rán sốt đậu hoặc gà rán truyền thống da giòn rụm kèm khoai tây chiên giòn đậm đà chuẩn vị.",
     "originalPrice": 120000,
     "discountPrice": 45000,
     "category": "other",
@@ -1896,14 +1896,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "16eaa1e9-b4ca-46c9-a779-aca11b6bd567",
     "merchantId": "799e644e-2f82-4a85-ba12-b194cf4cc547",
     "merchantName": "Lotteria - Tràng Tiền",
-    "name": "Túi Burger Tôm Hải Sản & Phô Mai Que Lotteria",
-    "description": "Burger tôm tươi ngọt thịt phủ xốt Tartar béo nhẹ cùng phô mai que Mozzarella chiên vàng kéo sợi hấp dẫn bất tận.",
+    "name": "Túi Burger & Món Ăn Nhẹ Lotteria",
+    "description": "Túi món ngon tiện lợi ngẫu nhiên gồm burger tôm hoặc burger bò phô mai kèm phô mai que Mozzarella chiên giòn kéo sợi.",
     "originalPrice": 110000,
     "discountPrice": 40000,
     "category": "other",
@@ -1914,14 +1914,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "2fd22156-be49-4567-8cd1-e89a168e541b",
     "merchantId": "2840d89d-5fdd-4e7b-a467-20ed26a9e4da",
     "merchantName": "Domino's Pizza - Liễu Giai",
-    "name": "Túi Pizza Hải Sản Xốt Mayonnaise & Bánh Mì Bơ Tỏi Domino's",
-    "description": "Pizza hải sản tươi với sốt mayonnaise ngậy thơm phủ lớp phô mai Mozzarella dẻo thơm đi kèm bánh mì bơ tỏi nướng giòn rụm.",
+    "name": "Túi Pizza & Món Nóng Domino's",
+    "description": "Túi bánh pizza nóng sốt ngẫu nhiên từ bột nhào tươi thủ công Domino's kèm bánh mì bơ tỏi nướng giòn hoặc gà nướng xốt béo ngậy.",
     "originalPrice": 160000,
     "discountPrice": 59000,
     "category": "bakery",
@@ -1932,14 +1932,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0021-4000-8000-000000000021",
     "merchantId": "b1ead7a1-0021-4000-8000-000000000021",
     "merchantName": "Maison Marou Chocolatier - Bà Triệu",
-    "name": "Túi Chocolate Mousse Thượng Hạng & Bánh Brownie Marou",
-    "description": "Bánh mousse socola thủ công từ hạt cacao Việt Nam danh tiếng phối cùng brownie đậm vị đắng ngọt quyến rũ bất tận.",
+    "name": "Túi Bánh Ngọt & Socola Thủ Công Marou",
+    "description": "Túi bất ngờ thượng lưu từ Maison Marou gồm các loại bánh ngọt ngẫu nhiên như mousse socola, brownie đậm vị, tart cacao hoặc pastry nướng trong ngày.",
     "originalPrice": 180000,
     "discountPrice": 65000,
     "category": "bakery",
@@ -1950,14 +1950,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0022-4000-8000-000000000022",
     "merchantId": "b1ead7a1-0022-4000-8000-000000000022",
     "merchantName": "Saint Honoré Bakery - Xuân Diệu",
-    "name": "Túi Bánh Sourdough Lên Men Tự Nhiên & Éclair Pháp",
-    "description": "Bánh mì men tự nhiên vỏ giòn ruột mềm dẻo chuẩn ẩm thực Pháp kết hợp bánh su dài éclair nhân kem béo mịn thơm lừng.",
+    "name": "Túi Bánh Mì Men Tự Nhiên & Pastry Pháp",
+    "description": "Túi bất ngờ phong vị Pháp từ Saint Honoré gồm ngẫu nhiên bánh mì men sourdough, croissant bơ vàng ruộm, bánh su dài éclair hoặc bánh brioche mềm.",
     "originalPrice": 160000,
     "discountPrice": 58000,
     "category": "bakery",
@@ -1968,14 +1968,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0023-4000-8000-000000000023",
     "merchantId": "b1ead7a1-0023-4000-8000-000000000023",
     "merchantName": "L’Épicerie du Metropole - Sofitel Legend Metropole",
-    "name": "Túi Macaron Quý Tộc & Bánh Brioche Bơ Pháp Metropole",
-    "description": "Tuyển chọn macaron hảo hạng từ bếp bánh khách sạn 5 sao huyền thoại Metropole hòa quyện vị bơ thơm ngát từ bánh brioche hoàng gia.",
+    "name": "Túi Bánh Ngọt Quý Tộc Metropole",
+    "description": "Túi tráng miệng 5 sao di sản từ Metropole gồm ngẫu nhiên các món macaron danh giá, bánh brioche bơ Pháp thượng phẩm hoặc bánh pastry tinh xảo trong ngày.",
     "originalPrice": 250000,
     "discountPrice": 89000,
     "category": "bakery",
@@ -1986,14 +1986,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0024-4000-8000-000000000024",
     "merchantId": "b1ead7a1-0024-4000-8000-000000000024",
     "merchantName": "Artisan Bakery & Cafe - Vũ Phạm Hàm",
-    "name": "Túi Bánh Kem Tươi Trái Cây & Bánh Mì Đậu Đỏ Artisan",
-    "description": "Lớp kem tươi thanh mát ngọt dịu phủ trái cây tươi trong ngày và bánh mì đậu đỏ ngọt bùi nướng tươi truyền thống Hàn Quốc.",
+    "name": "Túi Bánh Kem & Bánh Mì Thủ Công Artisan",
+    "description": "Túi bánh tươi phong cách Hàn Quốc gồm ngẫu nhiên bánh kem tươi hoa quả, bánh mì đậu đỏ ngọt bùi hoặc bánh gối mềm dinh dưỡng nướng trong ngày.",
     "originalPrice": 135000,
     "discountPrice": 49000,
     "category": "bakery",
@@ -2004,14 +2004,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0025-4000-8000-000000000025",
     "merchantId": "b1ead7a1-0025-4000-8000-000000000025",
     "merchantName": "C’est Si Bon Cafe & Dessert - Thái Hà",
-    "name": "Túi Bánh Crepe Ngàn Lớp Mille & Trà Đào Hồng C’est Si Bon",
-    "description": "Từng lớp bánh crepe mỏng như lụa xen kẽ kem vani hảo hạng đi cùng thức uống trà đào ngọt dịu tao nhã.",
+    "name": "Túi Bánh Crepe Ngàn Lớp & Tráng Miệng C’est Si Bon",
+    "description": "Túi tráng miệng thanh lịch từ C’est Si Bon gồm ngẫu nhiên lát bánh crepe ngàn lớp mille-crêpes kem vani hoặc bánh tart ngọt kèm thức uống thanh mát.",
     "originalPrice": 150000,
     "discountPrice": 55000,
     "category": "bakery",
@@ -2022,14 +2022,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0026-4000-8000-000000000026",
     "merchantId": "b1ead7a1-0026-4000-8000-000000000026",
     "merchantName": "Oromia Coffee & Lounge - Tây Hồ",
-    "name": "Túi Bánh Tart Dâu Tây Tươi & Cà Phê Cold Brew Oromia",
-    "description": "Đế bánh tart giòn rụm ngập tràn dâu tây Đà Lạt tươi mọng bên ly cà phê ủ lạnh thanh lọc sảng khoái.",
+    "name": "Túi Cà Phê Cold Brew & Bánh Tart Oromia",
+    "description": "Túi trải nghiệm bất ngờ bên hồ Tây từ Oromia gồm bánh tart trái cây tươi theo mùa hoặc bánh ngọt kem tươi kèm phần cà phê ủ lạnh thanh lọc.",
     "originalPrice": 145000,
     "discountPrice": 52000,
     "category": "beverage",
@@ -2040,14 +2040,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0027-4000-8000-000000000027",
     "merchantId": "b1ead7a1-0027-4000-8000-000000000027",
     "merchantName": "Soko Cake Bake & Brunch - Lý Thường Kiệt",
-    "name": "Túi Bánh Cronut Phô Mai Chảy & Cube Croissant Soko",
-    "description": "Cặp đôi bánh nướng sáng tạo gây sốt với lớp vỏ ngàn lớp giòn tan và nhân kem phô mai béo ngậy tan chảy khó cưỡng.",
+    "name": "Túi Bánh Nướng Sáng Tạo Soko",
+    "description": "Túi bánh thời thượng ngẫu nhiên gồm các siêu phẩm nướng từ Soko như bánh cronut kem bơ, cube croissant ngàn lớp hoặc bánh pastry nướng giòn rụm.",
     "originalPrice": 165000,
     "discountPrice": 59000,
     "category": "bakery",
@@ -2058,14 +2058,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0028-4000-8000-000000000028",
     "merchantId": "b1ead7a1-0028-4000-8000-000000000028",
     "merchantName": "RuNam d'Or Cafe - Nhà Thờ",
-    "name": "Túi Cà Phê Di Sản Thượng Hạng & Bánh Pastry RuNam",
-    "description": "Cà phê rang xay chuẩn vị hoàng gia mang đậm hương thơm thảo mộc kèm bánh pastry bơ giòn nướng tươi quý phái.",
+    "name": "Túi Cà Phê Di Sản & Bánh Pastry RuNam",
+    "description": "Túi trải nghiệm quý tộc từ RuNam gồm cà phê pha phin di sản hảo hạng kèm phần bánh pastry nướng bơ tươi phong cách hoàng gia Ý.",
     "originalPrice": 190000,
     "discountPrice": 69000,
     "category": "beverage",
@@ -2076,14 +2076,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0029-4000-8000-000000000029",
     "merchantId": "b1ead7a1-0029-4000-8000-000000000029",
     "merchantName": "Là Việt Coffee - Ngô Thì Nhậm",
-    "name": "Túi Cà Phê Arabica Cầu Đất & Cookies Bơ Giòn Là Việt",
-    "description": "Hạt cà phê Arabica Cầu Đất hái chín 100% pha phin nồng nàn kèm bánh quy bơ hạt điều nướng giòn rụm.",
+    "name": "Túi Cà Phê Đặc Sản & Bánh Nướng Là Việt",
+    "description": "Túi cà phê đặc sản từ Đà Lạt gồm thức uống Arabica nguyên chất thơm nồng nàn kèm bánh quy bơ hạt điều hoặc bánh ngọt nướng mộc mạc.",
     "originalPrice": 115000,
     "discountPrice": 42000,
     "category": "beverage",
@@ -2094,14 +2094,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0030-4000-8000-000000000030",
     "merchantId": "b1ead7a1-0030-4000-8000-000000000030",
     "merchantName": "The Rustics Coffeeshop - Điện Biên Phủ",
-    "name": "Túi Bánh Cà Rốt Hạnh Nhân & Cà Phê Kem Béo The Rustics",
-    "description": "Lát bánh cà rốt nướng đẫm quế và hạt óc chó phủ kem phô mai béo nhẹ bên ly cà phê kem mộc thư thái.",
+    "name": "Túi Cà Phê & Bánh Nướng The Rustics",
+    "description": "Túi bất ngờ từ quán cà phê tổ chim gồm cà phê pha máy kem béo thơm ngát kèm lát bánh cà rốt nướng đẫm quế hoặc bánh ngọt ấm áp.",
     "originalPrice": 125000,
     "discountPrice": 46000,
     "category": "beverage",
@@ -2112,14 +2112,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0031-4000-8000-000000000031",
     "merchantId": "b1ead7a1-0031-4000-8000-000000000031",
     "merchantName": "Tous Les Jours - Vincom Metropolis Liễu Giai",
-    "name": "Túi Bánh Danish Mâm Xôi & Croissant Phô Mai Tươi Tous Les Jours",
-    "description": "Bánh danish giòn xốp phủ mứt mâm xôi chua ngọt và bánh sừng bò kẹp phô mai nướng thơm ngậy trong ngày.",
+    "name": "Túi Bánh Danish & Bánh Mì Cao Cấp Tous Les Jours",
+    "description": "Túi bánh nướng cao cấp từ chi nhánh Metropolis gồm ngẫu nhiên bánh danish mứt trái cây, bánh sừng bò phô mai hoặc bánh mì gối nướng tươi trong ngày.",
     "originalPrice": 140000,
     "discountPrice": 50000,
     "category": "bakery",
@@ -2130,14 +2130,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:45",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0032-4000-8000-000000000032",
     "merchantId": "b1ead7a1-0032-4000-8000-000000000032",
     "merchantName": "La Terrasse - Metropole Hanoi",
-    "name": "Túi Trà Chiều Hoàng Gia & Bánh Madeleine Bơ Pháp Metropole",
-    "description": "Bánh con sò madeleine bơ tươi nướng mềm ngát hương cam chanh kèm gói trà đen thượng hạng của khách sạn di sản Metropole.",
+    "name": "Túi Trà Chiều Hoàng Gia & Bánh Madeleine Metropole",
+    "description": "Túi phong vị Paris cổ điển từ Metropole gồm trà chiều hảo hạng kèm các mẩu bánh madeleine bơ tươi hoặc bánh quy Pháp nướng mới.",
     "originalPrice": 240000,
     "discountPrice": 85000,
     "category": "beverage",
@@ -2148,14 +2148,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0033-4000-8000-000000000033",
     "merchantId": "b1ead7a1-0033-4000-8000-000000000033",
     "merchantName": "Paris Baguette - Hoàng Đạo Thúy",
-    "name": "Túi Bánh Mì Bơ Tỏi Phô Mai & Royal Pudding Paris Baguette",
-    "description": "Bánh mì nướng sốt bơ tỏi phô mai kem béo ngậy cùng lọ bánh pudding sữa tươi hoàng gia tan ngay trong miệng.",
+    "name": "Túi Bánh Mì Bơ Tỏi & Tráng Miệng Paris Baguette",
+    "description": "Túi bánh tươi bất ngờ từ Paris Baguette gồm bánh mì nướng bơ tỏi phô mai thơm ngậy hoặc pudding sữa hoàng gia béo ngậy tan nơi đầu lưỡi.",
     "originalPrice": 155000,
     "discountPrice": 56000,
     "category": "bakery",
@@ -2166,14 +2166,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0034-4000-8000-000000000034",
     "merchantId": "b1ead7a1-0034-4000-8000-000000000034",
     "merchantName": "Bready Bánh Mì Tươi - Đội Cấn",
-    "name": "Túi Bánh Mì Nướng Ngũ Cốc Nguyên Cám & Nước Ép Thanh Nhiệt",
-    "description": "Bánh mì ngũ cốc hạt dinh dưỡng bổ sung chất xơ kèm chai nước ép hoa quả nguyên chất tươi mát cho cơ thể tràn đầy năng lượng.",
+    "name": "Túi Bánh Mì Dinh Dưỡng & Nước Ép Healthy",
+    "description": "Túi ẩm thực sạch từ Bready gồm bánh mì ngũ cốc nguyên cám giàu chất xơ kèm chai nước ép trái cây tươi mát lành tốt cho sức khỏe.",
     "originalPrice": 95000,
     "discountPrice": 35000,
     "category": "bakery",
@@ -2184,14 +2184,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0035-4000-8000-000000000035",
     "merchantId": "b1ead7a1-0035-4000-8000-000000000035",
     "merchantName": "Blackbird Coffee - Chân Cầm",
-    "name": "Túi Cà Phê Espresso Mộc & Bánh Cuộn Quế Cinnamon Blackbird",
-    "description": "Vị cà phê hạt rang mộc nồng nàn quyện cùng hương quế thơm lừng từ chiếc bánh cinnamon roll nướng nóng hổi phố cổ.",
+    "name": "Túi Cà Phê Espresso & Bánh Nướng Blackbird",
+    "description": "Túi cà phê phố cổ đậm đà gồm ly espresso rang mộc nồng nàn kèm bánh cuộn quế cinnamon roll nướng nóng thơm nức mũi.",
     "originalPrice": 120000,
     "discountPrice": 45000,
     "category": "beverage",
@@ -2202,14 +2202,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0036-4000-8000-000000000036",
     "merchantId": "b1ead7a1-0036-4000-8000-000000000036",
     "merchantName": "Tranquil Books & Coffee - Nguyễn Quang Bích",
-    "name": "Túi Cà Phê Pour-Over Thủ Công & Bánh Chuối Nướng Mộc Tranquil",
-    "description": "Cà phê pha chậm chiết xuất tầng hương hoa quả tinh tế đi cùng bánh chuối nướng mật ong mộc mạc thơm ấm lòng.",
+    "name": "Túi Cà Phê Pha Thủ Công & Bánh Nướng Mộc Tranquil",
+    "description": "Túi thư thái từ Tranquil gồm cà phê pour-over thủ công hương hoa quả thanh khiết kèm lát bánh chuối nướng mật ong thơm dịu.",
     "originalPrice": 110000,
     "discountPrice": 39000,
     "category": "beverage",
@@ -2220,14 +2220,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0037-4000-8000-000000000037",
     "merchantId": "b1ead7a1-0037-4000-8000-000000000037",
     "merchantName": "All Day Coffee - Quang Trung",
-    "name": "Túi Cà Phê Trứng Béo Ngậy & Bánh Waffle Mật Ong All Day",
-    "description": "Cà phê trứng kem mịn màng đậm đà hương vị truyền thống Hà Nội hòa quyện bánh quế waffle nướng vàng ươm mật ong rừng.",
+    "name": "Túi Cà Phê Trứng & Bánh Waffle All Day",
+    "description": "Túi bất ngờ chuẩn gu Hà Nội từ All Day Coffee gồm cà phê trứng kem béo ngậy kèm bánh quế waffle nướng vàng ươm mật ong rừng.",
     "originalPrice": 130000,
     "discountPrice": 48000,
     "category": "beverage",
@@ -2238,14 +2238,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:30",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0038-4000-8000-000000000038",
     "merchantId": "b1ead7a1-0038-4000-8000-000000000038",
     "merchantName": "The Hive Lounge - InterContinental Landmark72",
-    "name": "Túi Bánh Scone Nho Khô & Bánh Ngọt Trà Chiều 5 Sao The Hive",
-    "description": "Set bánh scone nướng bơ truyền thống ăn kèm kem đông clotted cream và bánh ngọt tinh xảo chuẩn tiệc trà InterContinental.",
+    "name": "Túi Trà Chiều 5 Sao & Bánh Scone The Hive",
+    "description": "Trải nghiệm tiệc trà trên mây từ tầng 62 InterContinental gồm bánh scone nướng bơ truyền thống kèm kem đông clotted cream và bánh ngọt 5 sao.",
     "originalPrice": 260000,
     "discountPrice": 95000,
     "category": "beverage",
@@ -2256,14 +2256,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0039-4000-8000-000000000039",
     "merchantId": "b1ead7a1-0039-4000-8000-000000000039",
     "merchantName": "An Café Specialty Coffee - Tô Ngọc Vân",
-    "name": "Túi Cà Phê Hạt Đặc Sản Micro-Lot & Bánh Canelé Nướng An Café",
-    "description": "Cà phê đặc sản rang tươi theo mẻ nhỏ thơm ngát hương hoa nhài phối cùng bánh canelé vỏ giòn caramel ruột mềm ẩm chuẩn Pháp.",
+    "name": "Túi Cà Phê Đặc Sản & Bánh Canelé An Café",
+    "description": "Túi bất ngờ từ An Café gồm cà phê hạt đặc sản micro-lot rang tươi thơm hương hoa kèm bánh canelé nướng giòn caramel chuẩn Pháp.",
     "originalPrice": 140000,
     "discountPrice": 52000,
     "category": "beverage",
@@ -2274,14 +2274,14 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "21:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   },
   {
     "id": "bac70001-0040-4000-8000-000000000040",
     "merchantId": "b1ead7a1-0040-4000-8000-000000000040",
     "merchantName": "Jouri Dessert & Tea - Khúc Hạo",
-    "name": "Túi Bánh Tiramisu Rượu Thơm & Trà Hoa Cúc Mật Ong Jouri",
-    "description": "Tiramisu truyền thống ngập tràn kem phô mai Mascarpone thoảng hương rượu Marsala cùng tách trà hoa cúc mật ong thư giãn tuyệt đối.",
+    "name": "Túi Tráng Miệng Tiramisu & Trà Hoa Jouri",
+    "description": "Túi tráng miệng lãng mạn Bắc Âu từ Jouri gồm bánh tiramisu ngập tràn kem phô mai Mascarpone thoảng hương rượu kèm trà hoa cúc mật ong thư giãn.",
     "originalPrice": 135000,
     "discountPrice": 49000,
     "category": "bakery",
@@ -2292,7 +2292,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "pickupEnd": "22:00",
     "isAvailable": true,
     "rating": 4.9,
-    "createdAt": "2026-10-27T13:10:16.734Z"
+    "createdAt": "2026-10-27T13:16:42.746Z"
   }
 ];
 
