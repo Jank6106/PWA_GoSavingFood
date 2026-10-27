@@ -305,10 +305,10 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     }
   }, 20000);
 
-  it('12. Đăng nhập tài khoản Đối tác merchant@gosavingfood.app sở hữu danh sách cửa hàng thực tế', async () => {
+  it('12. Đăng nhập tài khoản Đối tác merchant@gosavingfood.vn sở hữu danh sách cửa hàng thực tế', async () => {
     const merchClient = createClient(SUPABASE_URL, ANON_KEY);
     const { data: merchData, error: merchErr } = await merchClient.auth.signInWithPassword({
-      email: 'merchant@gosavingfood.app',
+      email: 'merchant@gosavingfood.vn',
       password: 'Password123!'
     });
 
