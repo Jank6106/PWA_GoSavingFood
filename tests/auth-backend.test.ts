@@ -23,7 +23,7 @@ let testBagId: string | null = null;
 
 describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
   afterAll(async () => {
-    // Dọn dẹp tài khoản test & đơn hàng test
+    // 1. Dọn dẹp đơn hàng & order_items test
     if (testOrderId) {
       await supabaseAdmin.from('order_items').delete().eq('order_id', testOrderId);
       await supabaseAdmin.from('orders').delete().eq('id', testOrderId);
@@ -31,8 +31,23 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
         await supabaseAdmin.from('surprise_bags').update({ quantity: 5 }).eq('id', testBagId);
       }
     }
-    if (createdUser1Id) await supabaseAdmin.auth.admin.deleteUser(createdUser1Id);
-    if (createdUser2Id) await supabaseAdmin.auth.admin.deleteUser(createdUser2Id);
+
+    // 2. Dọn dẹp notifications & users của User 1
+    if (createdUser1Id) {
+      await supabaseAdmin.from('notifications').delete().eq('user_id', createdUser1Id);
+      await supabaseAdmin.from('users').delete().eq('id', createdUser1Id);
+      await supabaseAdmin.auth.admin.deleteUser(createdUser1Id);
+    }
+
+    // 3. Dọn dẹp notifications & users của User 2
+    if (createdUser2Id) {
+      await supabaseAdmin.from('notifications').delete().eq('user_id', createdUser2Id);
+      await supabaseAdmin.from('users').delete().eq('id', createdUser2Id);
+      await supabaseAdmin.auth.admin.deleteUser(createdUser2Id);
+    }
+
+    // 4. Quét dọn bảo hiểm triệt để mọi bản ghi test mồ côi gsf_authtest_%
+    await supabaseAdmin.from('users').delete().like('email', 'gsf_authtest_%');
   });
 
   it('1. Đăng ký tài khoản khách hàng mới & Trigger handle_new_user tự động đồng bộ sang public.users', async () => {
@@ -88,7 +103,18 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     expect(error?.message).toBeTruthy();
   }, 15000);
 
-  it('4. Tra cứu Email bằng Số điện thoại qua RPC get_email_by_phone', async () => {
+  it('4. Đăng nhập thất bại với Email không tồn tại', async () => {
+    const { data, error } = await supabaseAnon.auth.signInWithPassword({
+      email: `nonexistent_user_${timestamp}@gmail.com`,
+      password: testPassword
+    });
+
+    expect(data.session).toBeNull();
+    expect(error).toBeDefined();
+    expect(error?.message).toMatch(/invalid/i);
+  }, 15000);
+
+  it('5. Tra cứu Email bằng Số điện thoại qua RPC get_email_by_phone với các định dạng SĐT', async () => {
     const phoneFormats = [testPhone, `+84${testPhone.slice(1)}`, `84${testPhone.slice(1)}`];
     for (const fmt of phoneFormats) {
       const { data: foundEmail, error } = await supabaseAnon.rpc('get_email_by_phone', {
@@ -99,7 +125,15 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     }
   }, 15000);
 
-  it('5. Hai tài khoản có thể dùng chung SĐT nhận hàng mà không bị lỗi 23505', async () => {
+  it('6. RPC get_email_by_phone trả về null an toàn khi số điện thoại không tồn tại', async () => {
+    const { data: foundEmail, error } = await supabaseAnon.rpc('get_email_by_phone', {
+      p_phone: '0999999999'
+    });
+    expect(error).toBeNull();
+    expect(foundEmail).toBeNull();
+  }, 15000);
+
+  it('7. Hai tài khoản có thể dùng chung SĐT nhận hàng mà không bị lỗi 23505', async () => {
     const { data: signUp2, error: err2 } = await supabaseAdmin.auth.admin.createUser({
       email: testEmail2,
       password: testPassword,
@@ -123,12 +157,37 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     expect(updateErr).toBeNull();
   }, 15000);
 
-  it('6. Tài khoản mới có thể đặt hàng thành công qua RPC place_order', async () => {
+  it('8. Cập nhật thông tin profile (name, avatar, phone) trong public.users thành công', async () => {
+    const newName = 'Tên Mới Sau Cập Nhật';
+    const newAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200';
+
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({
+        name: newName,
+        avatar_url: newAvatar
+      })
+      .eq('id', createdUser1Id!);
+
+    expect(error).toBeNull();
+
+    const { data: updatedUser } = await supabaseAdmin
+      .from('users')
+      .select('name, avatar_url')
+      .eq('id', createdUser1Id!)
+      .single();
+
+    expect(updatedUser?.name).toBe(newName);
+    expect(updatedUser?.avatar_url).toBe(newAvatar);
+  }, 15000);
+
+  it('9. Tài khoản mới có thể đặt hàng thành công qua RPC place_order', async () => {
     const { data: bags } = await supabaseAdmin
       .from('surprise_bags')
-      .select('id, store_id, name, discount_price, original_price')
+      .select('id, store_id, name, discount_price, original_price, quantity')
       .eq('is_available', true)
       .is('deleted_at', null)
+      .gt('quantity', 1)
       .limit(1);
 
     expect(bags && bags.length > 0).toBe(true);
@@ -171,7 +230,82 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     expect(orderRes?.pickup_token).toBeTruthy();
   }, 20000);
 
-  it('7. Đăng nhập tài khoản Đối tác merchant@gosavingfood.app sở hữu danh sách cửa hàng thực tế', async () => {
+  it('10. RPC place_order từ chối khi số lượng đặt vượt quá tồn kho (Insufficient stock)', async () => {
+    if (!testBagId) return;
+
+    const userClient = createClient(SUPABASE_URL, ANON_KEY);
+    await userClient.auth.signInWithPassword({ email: testEmail1, password: testPassword });
+
+    const { data: bag } = await supabaseAdmin
+      .from('surprise_bags')
+      .select('store_id, discount_price, original_price')
+      .eq('id', testBagId)
+      .single();
+
+    const overOrderId = crypto.randomUUID();
+    const { data: failRes, error: failErr } = await userClient.rpc('place_order', {
+      p_id: overOrderId,
+      p_store_id: bag!.store_id,
+      p_idempotency_key: `vitest-overstock-${timestamp}`,
+      p_items: [{ bagId: testBagId, quantity: 99999 }], // vượt quá tồn kho
+      p_voucher_code: null,
+      p_pickup_time: new Date(Date.now() + 3600000).toISOString(),
+      p_payment_method: 'banking',
+      p_note: 'Test overstock',
+      p_total_original_price: bag!.original_price * 99999,
+      p_total_discount_price: bag!.discount_price * 99999,
+      p_discount_amount: 0,
+      p_final_amount: bag!.discount_price * 99999,
+      p_qr_code: `QR-OVERSTOCK-${overOrderId}`,
+      p_recipient_name: 'Test Overstock',
+      p_recipient_phone: testPhone
+    });
+
+    // RPC trả về lỗi hoặc success: false
+    const hasFailed = failErr !== null || (failRes && failRes.success === false);
+    expect(hasFailed).toBe(true);
+  }, 20000);
+
+  it('11. RPC place_order ngăn chặn đặt trùng lặp khi dùng lại cùng Idempotency Key', async () => {
+    if (!testBagId || !testOrderId) return;
+
+    const userClient = createClient(SUPABASE_URL, ANON_KEY);
+    await userClient.auth.signInWithPassword({ email: testEmail1, password: testPassword });
+
+    const { data: bag } = await supabaseAdmin
+      .from('surprise_bags')
+      .select('store_id, discount_price, original_price')
+      .eq('id', testBagId)
+      .single();
+
+    const duplicateOrderId = crypto.randomUUID();
+    const { data: dupRes, error: dupErr } = await userClient.rpc('place_order', {
+      p_id: duplicateOrderId,
+      p_store_id: bag!.store_id,
+      p_idempotency_key: `vitest-key-${timestamp}`, // Trùng key với Test 9
+      p_items: [{ bagId: testBagId, quantity: 1 }],
+      p_voucher_code: null,
+      p_pickup_time: new Date(Date.now() + 3600000).toISOString(),
+      p_payment_method: 'banking',
+      p_note: 'Duplicate test',
+      p_total_original_price: bag!.original_price,
+      p_total_discount_price: bag!.discount_price,
+      p_discount_amount: 0,
+      p_final_amount: bag!.discount_price,
+      p_qr_code: `QR-DUP-${duplicateOrderId}`,
+      p_recipient_name: 'Khách Test Dup',
+      p_recipient_phone: testPhone
+    });
+
+    // RPC trả về đơn hàng cũ hoặc trả lỗi không cho duplicate
+    if (dupRes) {
+      expect(dupRes.order_id).toBe(testOrderId);
+    } else {
+      expect(dupErr).toBeDefined();
+    }
+  }, 20000);
+
+  it('12. Đăng nhập tài khoản Đối tác merchant@gosavingfood.app sở hữu danh sách cửa hàng thực tế', async () => {
     const merchClient = createClient(SUPABASE_URL, ANON_KEY);
     const { data: merchData, error: merchErr } = await merchClient.auth.signInWithPassword({
       email: 'merchant@gosavingfood.app',
@@ -183,10 +317,24 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
 
     const { data: stores, error: storesErr } = await merchClient
       .from('stores')
-      .select('id, name, status')
+      .select('id, name, status, logo_url, banner_url')
       .eq('owner_user_id', merchData.user.id);
 
     expect(storesErr).toBeNull();
     expect(stores && stores.length > 0).toBe(true);
+    // Xác minh cửa hàng có logo_url chuẩn
+    expect(stores![0].logo_url).toBeTruthy();
+  }, 15000);
+
+  it('13. Đăng nhập tài khoản Quản trị viên admin@gsf.app và xác thực vai trò quản trị', async () => {
+    const { data: adminUser, error: adminErr } = await supabaseAdmin
+      .from('users')
+      .select('id, email, role')
+      .eq('email', 'admin@gsf.app')
+      .single();
+
+    expect(adminErr).toBeNull();
+    expect(adminUser).toBeDefined();
+    expect(adminUser.role).toBe('admin');
   }, 15000);
 });

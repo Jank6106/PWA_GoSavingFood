@@ -28,6 +28,7 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
   const startX = useRef(0);
   const startOffset = useRef(0);
   const [hasDragged, setHasDragged] = useState(false);
+  const [failedLogos, setFailedLogos] = useState<Set<string>>(() => new Set());
 
   // Repeat brands just enough to fill standard viewports cleanly
   const displayBrands = useMemo(() => {
@@ -198,6 +199,7 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
           const BrandIcon = getBrandIcon(brand);
           const isImageLogo = Boolean(
             brand.logo &&
+              !failedLogos.has(brand.id) &&
               (brand.logo.startsWith('http') ||
                 brand.logo.startsWith('data:') ||
                 brand.logo.startsWith('blob:'))
@@ -220,17 +222,15 @@ export function BrandMarquee({ brands, onOpenBrand, speed = 60 }: BrandMarqueePr
                   src={brand.logo}
                   alt={brand.name}
                   className="customer-brand-badge-img"
-                  width={44}
-                  height={44}
                   loading="lazy"
                   draggable={false}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
+                  onError={() => {
+                    setFailedLogos((prev) => new Set(prev).add(brand.id));
                   }}
                 />
               ) : (
                 <span className="customer-brand-badge-fallback">
-                  <BrandIcon size={24} strokeWidth={1.8} />
+                  <BrandIcon size={22} strokeWidth={2} />
                 </span>
               )}
             </button>
