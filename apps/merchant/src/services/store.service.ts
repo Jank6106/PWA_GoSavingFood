@@ -1,4 +1,5 @@
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../types';
+import { deleteStorageObjectByUrl } from './bag.service';
 import { fetchCompletedBagQuantity } from './order.service';
 import { supabase } from './supabase';
 import { base64ToBlob } from './utils';
@@ -243,6 +244,7 @@ async function uploadStoreImageToStorage(
       .from(bucket)
       .upload(fileName, blob, {
         contentType: blob.type,
+        cacheControl: '31536000, immutable',
         upsert: true,
       });
 
@@ -269,6 +271,7 @@ export async function updateStoreImages(
   storeId: string,
   input: StoreImageUpdate
 ): Promise<StoreProfile | null> {
+  const currentStore = await fetchStoreProfile(storeId);
   const updatePayload: Record<string, any> = {};
 
   if (input.coverImage) {
@@ -278,6 +281,9 @@ export async function updateStoreImages(
       'store-assets',
       'banner'
     );
+    if (currentStore?.coverImage && currentStore.coverImage !== updatePayload.banner_url) {
+      void deleteStorageObjectByUrl('store-assets', currentStore.coverImage);
+    }
   }
   if (input.avatar) {
     updatePayload.logo_url = await uploadStoreImageToStorage(
@@ -286,6 +292,9 @@ export async function updateStoreImages(
       'store-logos',
       'logo'
     );
+    if (currentStore?.avatar && currentStore.avatar !== updatePayload.logo_url) {
+      void deleteStorageObjectByUrl('store-logos', currentStore.avatar);
+    }
   }
 
   if (Object.keys(updatePayload).length > 0) {

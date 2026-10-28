@@ -49,7 +49,9 @@ export interface BagItem {
   createdAt: string;
 }
 
-export type BagInput = Omit<BagItem, 'id' | 'storeId' | 'availableQuantity' | 'status' | 'createdAt'>;
+export type BagInput = Omit<BagItem, 'id' | 'storeId' | 'availableQuantity' | 'status' | 'createdAt'> & {
+  imageBlob?: Blob | File;
+};
 
 export type OrderStatus = 'pending' | 'processing' | 'confirmed' | 'completed' | 'cancelled';
 export type OrderStatusFilter = OrderStatus | 'all';

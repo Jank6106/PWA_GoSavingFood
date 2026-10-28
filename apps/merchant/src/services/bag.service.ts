@@ -32,53 +32,83 @@ export function getBagCategoryFallbackImage(category = 'bakery'): string {
   return DEFAULT_BAG_IMAGE;
 }
 
+export async function deleteStorageObjectByUrl(bucket: string, fullUrl?: string | null): Promise<void> {
+  if (!fullUrl) return;
+  try {
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    if (!fullUrl.includes(marker)) return;
+    const path = fullUrl.split(marker)[1];
+    if (path) {
+      await supabase.storage.from(bucket).remove([path]);
+    }
+  } catch (err) {
+    console.warn(`Lỗi khi dọn dẹp ảnh cũ trong bucket ${bucket}:`, err);
+  }
+}
+
 export async function uploadBagImageToStorage(
   folderId: string,
-  imageStr: string,
+  imageInput?: Blob | File | string,
   category = 'bakery'
 ): Promise<string> {
-  if (!imageStr) {
+  if (!imageInput) {
     return getBagCategoryFallbackImage(category);
   }
 
-  // Nếu đã là link HTTPS/CDN, lưu trực tiếp URL sạch
-  if (imageStr.startsWith('http://') || imageStr.startsWith('https://')) {
-    return imageStr;
+  // 1. Nếu đã là link HTTPS/CDN, lưu trực tiếp URL sạch
+  if (typeof imageInput === 'string' && (imageInput.startsWith('http://') || imageInput.startsWith('https://'))) {
+    return imageInput;
   }
 
-  // Nếu là dữ liệu Base64: đẩy lên Supabase Storage bucket 'bag-images'
-  if (imageStr.startsWith('data:')) {
+  let blob: Blob | null = null;
+  let ext = 'webp';
+
+  // 2. Nếu là Blob hoặc File nhị phân trực tiếp (tối ưu nhất, zero memory overhead)
+  if (imageInput instanceof Blob) {
+    blob = imageInput;
+    ext = blob.type.includes('png') ? 'png' : blob.type.includes('jpeg') || blob.type.includes('jpg') ? 'jpg' : 'webp';
+  } else if (typeof imageInput === 'string' && imageInput.startsWith('data:')) {
+    // Tương thích ngược: Base64 data URL
     try {
-      const blob = base64ToBlob(imageStr);
-      const ext = blob.type.includes('webp') ? 'webp' : blob.type.includes('png') ? 'png' : 'jpg';
+      blob = base64ToBlob(imageInput);
+      ext = blob.type.includes('png') ? 'png' : blob.type.includes('jpeg') || blob.type.includes('jpg') ? 'jpg' : 'webp';
+    } catch {
+      blob = null;
+    }
+  }
+
+  if (blob) {
+    try {
       const fileName = `${folderId}/bag_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
 
+      // Upload ưu tiên vào bucket bag-photos với Cache-Control 1 năm bất biến
       const { error: uploadError } = await supabase.storage
         .from('bag-photos')
         .upload(fileName, blob, {
-          contentType: blob.type,
+          contentType: blob.type || 'image/webp',
+          cacheControl: '31536000, immutable',
           upsert: true,
         });
 
       if (!uploadError) {
         const { data } = supabase.storage.from('bag-photos').getPublicUrl(fileName);
-        if (data?.publicUrl) {
-          return data.publicUrl;
-        }
-      } else {
-        // Fallback sang bag-images nếu có
-        const { error: fallbackError } = await supabase.storage
-          .from('bag-images')
-          .upload(fileName, blob, {
-            contentType: blob.type,
-            upsert: true,
-          });
-        if (!fallbackError) {
-          const { data } = supabase.storage.from('bag-images').getPublicUrl(fileName);
-          if (data?.publicUrl) return data.publicUrl;
-        }
-        console.warn('Upload ảnh túi lên Supabase Storage bucket thất bại:', uploadError.message);
+        if (data?.publicUrl) return data.publicUrl;
       }
+
+      // Fallback nếu bucket bag-photos gặp sự cố
+      const { error: fallbackError } = await supabase.storage
+        .from('bag-images')
+        .upload(fileName, blob, {
+          contentType: blob.type || 'image/webp',
+          cacheControl: '31536000, immutable',
+          upsert: true,
+        });
+
+      if (!fallbackError) {
+        const { data } = supabase.storage.from('bag-images').getPublicUrl(fileName);
+        if (data?.publicUrl) return data.publicUrl;
+      }
+      console.warn('Upload ảnh túi lên Supabase Storage bucket thất bại:', uploadError?.message);
     } catch (err) {
       console.warn('Lỗi khi nén/upload ảnh túi lên storage:', err);
     }
@@ -394,7 +424,7 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     return exp.toISOString();
   })();
 
-  const rawImage = input.imageUrl || input.imageUrls?.[0] || '';
+  const rawImage = input.imageBlob || input.imageUrl || input.imageUrls?.[0] || '';
   const finalImageUrl = await uploadBagImageToStorage(targetStoreId, rawImage, input.category);
 
   const { data, error } = await supabase
@@ -452,8 +482,15 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
 
 export async function updateBagItem(bagId: string, input: BagInput): Promise<BagItem> {
   invalidateBagInFlight();
-  const rawImage = input.imageUrl || input.imageUrls?.[0] || '';
+  const currentBag = await fetchBagRow(bagId);
+  const rawImage = input.imageBlob || input.imageUrl || input.imageUrls?.[0] || '';
   const finalImageUrl = await uploadBagImageToStorage(bagId, rawImage, input.category);
+
+  // Nếu người bán upload ảnh mới thay thế ảnh cũ trong storage, dọn dẹp ảnh cũ ngầm để tiết kiệm storage
+  if (currentBag?.imageUrl && currentBag.imageUrl !== finalImageUrl) {
+    void deleteStorageObjectByUrl('bag-photos', currentBag.imageUrl);
+    void deleteStorageObjectByUrl('bag-images', currentBag.imageUrl);
+  }
 
   const { error } = await supabase
     .from('surprise_bags')
