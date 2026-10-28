@@ -1,9 +1,10 @@
 -- 0037_storage_buckets_and_bag_images.sql
 -- Chuyển toàn bộ lưu trữ ảnh sang Supabase Storage, database chỉ lưu public URL
 
--- 1. Tạo và cấu hình các Storage Buckets công khai (bag-images, store-logos, store-assets, avatars)
+-- 1. Tạo và cấu hình các Storage Buckets công khai (bag-photos, bag-images, store-logos, store-assets, avatars)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES
+  ('bag-photos', 'bag-photos', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']),
   ('bag-images', 'bag-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']),
   ('store-logos', 'store-logos', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']),
   ('store-assets', 'store-assets', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']),
@@ -18,25 +19,25 @@ ON CONFLICT (id) DO UPDATE SET
 DROP POLICY IF EXISTS "Public can view images in storage" ON storage.objects;
 CREATE POLICY "Public can view images in storage"
 ON storage.objects FOR SELECT
-USING (bucket_id IN ('bag-images', 'store-logos', 'store-assets', 'avatars'));
+USING (bucket_id IN ('bag-photos', 'bag-images', 'store-logos', 'store-assets', 'avatars'));
 
 -- Cho phép người dùng tải ảnh lên các buckets này
 DROP POLICY IF EXISTS "Allow upload images to storage" ON storage.objects;
 CREATE POLICY "Allow upload images to storage"
 ON storage.objects FOR INSERT
-WITH CHECK (bucket_id IN ('bag-images', 'store-logos', 'store-assets', 'avatars'));
+WITH CHECK (bucket_id IN ('bag-photos', 'bag-images', 'store-logos', 'store-assets', 'avatars'));
 
 -- Cho phép cập nhật ảnh
 DROP POLICY IF EXISTS "Allow update images in storage" ON storage.objects;
 CREATE POLICY "Allow update images in storage"
 ON storage.objects FOR UPDATE
-USING (bucket_id IN ('bag-images', 'store-logos', 'store-assets', 'avatars'));
+USING (bucket_id IN ('bag-photos', 'bag-images', 'store-logos', 'store-assets', 'avatars'));
 
 -- Cho phép xóa ảnh
 DROP POLICY IF EXISTS "Allow delete images in storage" ON storage.objects;
 CREATE POLICY "Allow delete images in storage"
 ON storage.objects FOR DELETE
-USING (bucket_id IN ('bag-images', 'store-logos', 'store-assets', 'avatars'));
+USING (bucket_id IN ('bag-photos', 'bag-images', 'store-logos', 'store-assets', 'avatars'));
 
 -- 3. Dọn dẹp dữ liệu Base64 trong Database (chỉ giữ URL CDN/Storage sạch sẽ)
 -- Làm sạch bảng surprise_bags:

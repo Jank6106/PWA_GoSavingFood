@@ -54,19 +54,30 @@ export async function uploadBagImageToStorage(
       const fileName = `${folderId}/bag_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('bag-images')
+        .from('bag-photos')
         .upload(fileName, blob, {
           contentType: blob.type,
           upsert: true,
         });
 
       if (!uploadError) {
-        const { data } = supabase.storage.from('bag-images').getPublicUrl(fileName);
+        const { data } = supabase.storage.from('bag-photos').getPublicUrl(fileName);
         if (data?.publicUrl) {
           return data.publicUrl;
         }
       } else {
-        console.warn('Upload ảnh túi lên Supabase Storage bucket bag-images thất bại:', uploadError.message);
+        // Fallback sang bag-images nếu có
+        const { error: fallbackError } = await supabase.storage
+          .from('bag-images')
+          .upload(fileName, blob, {
+            contentType: blob.type,
+            upsert: true,
+          });
+        if (!fallbackError) {
+          const { data } = supabase.storage.from('bag-images').getPublicUrl(fileName);
+          if (data?.publicUrl) return data.publicUrl;
+        }
+        console.warn('Upload ảnh túi lên Supabase Storage bucket thất bại:', uploadError.message);
       }
     } catch (err) {
       console.warn('Lỗi khi nén/upload ảnh túi lên storage:', err);
