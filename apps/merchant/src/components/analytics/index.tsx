@@ -405,21 +405,37 @@ export function OrderStatusDonutChart({
 }
 
 // ============================================================================
-// 5. BIỂU ĐỒ CỘT DOANH THU (CHUYÊN BIỆT: THEO GIỜ, THEO NGÀY 7 NGÀY, THEO TUẦN & THÁNG)
+// 5. BIỂU ĐỒ CỘT DOANH THU (CHUYỂN ĐỔI: THEO GIỜ, THEO NGÀY 7 NGÀY, THEO TUẦN, THEO THÁNG)
 // ============================================================================
-export function SingleBarChartPlot({
-  title,
-  subtitle,
-  points,
+export function RevenueBarChartCard({
+  data,
+  periodLabel,
+  allCharts,
 }: {
-  title: string;
-  subtitle: string;
-  points: RevenueChartPoint[];
+  data: RevenueChartPoint[];
+  periodLabel: string;
+  allCharts?: MultiPeriodCharts | null;
 }) {
+  const [selectedTab, setSelectedTab] = useState<'daily' | 'hourly' | 'weekly' | 'monthly'>('daily');
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
+  const hourlyPoints = allCharts?.hourly || [];
+  const dailyPoints = allCharts?.daily || [];
+  const weeklyPoints = allCharts?.weekly || data;
+  const monthlyPoints = allCharts?.monthly || [];
+
+  const tabOptions = [
+    { key: 'hourly' as const, label: 'Theo giờ', subtitle: 'Khung giờ đặt & nhận túi hôm nay', points: hourlyPoints },
+    { key: 'daily' as const, label: 'Theo ngày (7 ngày)', subtitle: 'Doanh thu 7 ngày gần nhất', points: dailyPoints },
+    { key: 'weekly' as const, label: 'Theo tuần', subtitle: 'Doanh thu các tuần trong tháng này', points: weeklyPoints },
+    { key: 'monthly' as const, label: 'Theo tháng', subtitle: 'Doanh thu 12 tháng trong năm', points: monthlyPoints },
+  ];
+
+  const currentTabDef = tabOptions.find((t) => t.key === selectedTab) || tabOptions[1];
+  const activePoints = currentTabDef.points.length > 0 ? currentTabDef.points : data;
+
   const safePoints = useMemo(() => {
-    if (!points || points.length === 0) {
+    if (!activePoints || activePoints.length === 0) {
       return Array.from({ length: 7 }, (_, i) => ({
         label: "T" + (i + 1),
         value: 0,
@@ -427,8 +443,8 @@ export function SingleBarChartPlot({
         orderCount: 0,
       }));
     }
-    return points;
-  }, [points]);
+    return activePoints;
+  }, [activePoints]);
 
   const maxValue = useMemo(() => {
     const maxVal = Math.max(...safePoints.map((p) => p.value), 0);
@@ -448,22 +464,42 @@ export function SingleBarChartPlot({
   const activePoint = activeIdx !== null && safePoints[activeIdx] ? safePoints[activeIdx] : null;
 
   return (
-    <div className="single-barchart-wrapper">
-      <header className="single-barchart-header">
-        <div className="single-barchart-title-group">
-          <h4>{title}</h4>
-          <small>{subtitle}</small>
+    <section className="merchant-card merchant-barchart-card">
+      <header className="merchant-barchart-header">
+        <div>
+          <h3>Doanh thu theo thời gian</h3>
+          <small>{currentTabDef.subtitle} ({periodLabel})</small>
         </div>
-        {activePoint && (
-          <div className="merchant-barchart-tooltip-pill">
-            <span className="tooltip-dot" />
-            <span className="tooltip-label">{activePoint.date || activePoint.label}:</span>
-            <strong className="tooltip-amount">{activePoint.value.toLocaleString('vi-VN')} VND</strong>
-            {activePoint.orderCount !== undefined && activePoint.orderCount > 0 && (
-              <small className="tooltip-orders">({activePoint.orderCount} đơn)</small>
-            )}
+
+        <div className="merchant-barchart-controls">
+          {activePoint && (
+            <div className="merchant-barchart-tooltip-pill">
+              <span className="tooltip-dot" />
+              <span className="tooltip-label">{activePoint.date || activePoint.label}:</span>
+              <strong className="tooltip-amount">{activePoint.value.toLocaleString('vi-VN')} VND</strong>
+              {activePoint.orderCount !== undefined && activePoint.orderCount > 0 && (
+                <small className="tooltip-orders">({activePoint.orderCount} đơn)</small>
+              )}
+            </div>
+          )}
+
+          {/* Dải Tab chuyển đổi trực tiếp */}
+          <div className="merchant-chart-tabs" role="tablist">
+            {tabOptions.map((tab) => (
+              <button
+                type="button"
+                key={tab.key}
+                className={"merchant-chart-tab-btn" + (selectedTab === tab.key ? " is-active" : "")}
+                onClick={() => {
+                  setSelectedTab(tab.key);
+                  setActiveIdx(null);
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
       </header>
 
       <div className="merchant-barchart-container">
@@ -543,106 +579,6 @@ export function SingleBarChartPlot({
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-export function RevenueBarChartCard({
-  data,
-  periodLabel,
-  allCharts,
-}: {
-  data: RevenueChartPoint[];
-  periodLabel: string;
-  allCharts?: MultiPeriodCharts | null;
-}) {
-  const [selectedTab, setSelectedTab] = useState<'daily' | 'hourly' | 'weekly' | 'monthly'>('daily');
-  const [showAllThree, setShowAllThree] = useState<boolean>(false);
-
-  const hourlyPoints = allCharts?.hourly || [];
-  const dailyPoints = allCharts?.daily || [];
-  const weeklyPoints = allCharts?.weekly || data;
-  const monthlyPoints = allCharts?.monthly || [];
-
-  const tabOptions = [
-    { key: 'hourly' as const, label: 'Theo giờ', subtitle: 'Khung giờ đặt & nhận túi hôm nay', points: hourlyPoints },
-    { key: 'daily' as const, label: 'Theo ngày (7 ngày)', subtitle: 'Doanh thu 7 ngày gần nhất', points: dailyPoints },
-    { key: 'weekly' as const, label: 'Theo tuần', subtitle: 'Doanh thu các tuần trong tháng này', points: weeklyPoints },
-    { key: 'monthly' as const, label: 'Theo tháng', subtitle: 'Doanh thu 12 tháng trong năm', points: monthlyPoints },
-  ];
-
-  const currentTabDef = tabOptions.find((t) => t.key === selectedTab) || tabOptions[1];
-
-  return (
-    <section className="merchant-card merchant-barchart-card">
-      <header className="merchant-barchart-header">
-        <div>
-          <h3>Doanh thu theo thời gian</h3>
-          <small>
-            {showAllThree
-              ? 'Đang hiển thị đồng thời 3 biểu đồ theo ' + periodLabel
-              : currentTabDef.subtitle + ' (' + periodLabel + ')'}
-          </small>
-        </div>
-
-        <div className="merchant-barchart-controls">
-          {/* Nút bấm chuyển chế độ xem: 3 biểu đồ đồng thời hoặc xem từng tab */}
-          <button
-            type="button"
-            className="merchant-chart-mode-toggle"
-            onClick={() => setShowAllThree(!showAllThree)}
-          >
-            {showAllThree ? 'Thu gọn về 1 biểu đồ' : 'Xem cả 3 biểu đồ'}
-          </button>
-
-          {/* Dải Tab chuyển đổi trực tiếp */}
-          {!showAllThree && (
-            <div className="merchant-chart-tabs" role="tablist">
-              {tabOptions.map((tab) => (
-                <button
-                  type="button"
-                  key={tab.key}
-                  className={"merchant-chart-tab-btn" + (selectedTab === tab.key ? " is-active" : "")}
-                  onClick={() => setSelectedTab(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </header>
-
-      {showAllThree ? (
-        <div className="merchant-multi-charts-grid">
-          {/* Biểu đồ 1: Theo giờ */}
-          <SingleBarChartPlot
-            title="1. Biểu đồ theo giờ"
-            subtitle="Khung giờ hôm nay"
-            points={hourlyPoints}
-          />
-
-          {/* Biểu đồ 2: Theo ngày (7 ngày) */}
-          <SingleBarChartPlot
-            title="2. Biểu đồ theo ngày (7 ngày gần nhất)"
-            subtitle="7 ngày qua"
-            points={dailyPoints}
-          />
-
-          {/* Biểu đồ 3: Theo tuần (Tháng này) */}
-          <SingleBarChartPlot
-            title="3. Biểu đồ theo tuần & tháng"
-            subtitle="Các tuần trong tháng này"
-            points={weeklyPoints}
-          />
-        </div>
-      ) : (
-        <SingleBarChartPlot
-          title={currentTabDef.label}
-          subtitle={currentTabDef.subtitle}
-          points={currentTabDef.points.length > 0 ? currentTabDef.points : data}
-        />
-      )}
     </section>
   );
 }
