@@ -39,9 +39,34 @@ body::-webkit-scrollbar {
   background: transparent !important;
 }
 
-html { background: #FFFFFF; }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: #FFFFFF; color: var(--color-text-primary); font-family: var(--font-family-base); -webkit-font-smoothing: antialiased; }
-button, input, select, textarea { font: inherit; }
+html {
+  background: #FFFFFF;
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #FFFFFF;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  -webkit-font-smoothing: antialiased;
+  touch-action: pan-x pan-y;
+}
+button, input, select, textarea {
+  font: inherit;
+  touch-action: manipulation;
+}
+
+/* Ngăn chặn iOS Safari tự động phóng to viewport khi người dùng chạm vào ô nhập liệu */
+@media (max-width: 1023px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
 input::-ms-reveal,
 input::-ms-clear {
   display: none !important;

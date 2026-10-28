@@ -10,6 +10,43 @@ if (typeof window !== 'undefined' && 'storage' in navigator && (navigator.storag
   (navigator.storage as any).persist().catch(() => {});
 }
 
+// Khóa cử chỉ phóng to (pinch-to-zoom) trên mobile để đảm bảo trải nghiệm chuẩn App PWA, giữ nguyên thao tác cuộn/vuốt
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  const isZoomAllowed = (target: EventTarget | null): boolean => {
+    return Boolean((target as HTMLElement | null)?.closest?.('.mapboxgl-map, [data-allow-zoom="true"]'));
+  };
+
+  document.addEventListener(
+    'gesturestart',
+    (e) => {
+      if (!isZoomAllowed(e.target)) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+
+  document.addEventListener(
+    'gesturechange',
+    (e) => {
+      if (!isZoomAllowed(e.target)) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+
+  document.addEventListener(
+    'touchmove',
+    (e) => {
+      if (e.touches && e.touches.length > 1 && !isZoomAllowed(e.target)) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+}
+
 // Đăng ký Service Worker cho PWA (chỉ kích hoạt ở production)
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
