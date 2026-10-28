@@ -163,7 +163,7 @@ h1, h2, h3, p { margin: 0; }
 @keyframes merchant-spin { to { transform: rotate(360deg); } }
 
 /* Header and tabs */
-.merchant-app-header { position: sticky; z-index: 40; top: 0; padding: 10px 16px; background: var(--primary-dark); color: #fff; box-shadow: 0 4px 18px rgba(25, 59, 44, .18); }
+.merchant-app-header { position: sticky; z-index: 40; top: 0; padding: max(10px, calc(env(safe-area-inset-top, 0px) + 8px)) 16px 10px; background: var(--primary-dark); color: #fff; box-shadow: 0 4px 18px rgba(25, 59, 44, .18); }
 .merchant-app-header-inner { display: flex; width: min(100%, 1200px); min-height: 50px; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto; }
 .merchant-header-mobile { display: flex; }
 .merchant-header-desktop { display: none !important; }
