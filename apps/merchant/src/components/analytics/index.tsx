@@ -739,15 +739,25 @@ export function RecentReviewsList({ reviews }: { reviews: ReviewItem[] }) {
                     <strong>{review.customerName}</strong>
                     <small>{review.timeAgo}</small>
                   </div>
-                  <span>
-                    {Array.from({ length: 5 }, (_, index) => (
-                      <Star
-                        key={index}
-                        size={13}
-                        className={index < review.rating ? 'is-filled' : ''}
-                      />
-                    ))}
-                  </span>
+                  <div className="merchant-review-stars-wrap">
+                    <div className="merchant-review-stars">
+                      {Array.from({ length: 5 }, (_, index) => {
+                        const isFilled = index < review.rating;
+                        return (
+                          <Star
+                            key={index}
+                            size={14}
+                            fill={isFilled ? '#f59e0b' : '#f1f5f9'}
+                            color={isFilled ? '#f59e0b' : '#cbd5e1'}
+                            className={isFilled ? 'is-filled' : 'is-empty'}
+                          />
+                        );
+                      })}
+                    </div>
+                    <span className="merchant-review-rating-badge">
+                      {review.rating.toFixed(1)}
+                    </span>
+                  </div>
                 </header>
                 <p>{review.comment}</p>
               </div>

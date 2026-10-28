@@ -1748,9 +1748,37 @@ h1, h2, h3, p { margin: 0; }
   color: var(--text-muted);
   font-size: 10px;
 }
-.merchant-review-card header > span {
-  display: flex;
-  gap: 1px;
+.merchant-review-card header > span,
+.merchant-review-stars-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.merchant-review-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.merchant-review-stars svg.is-filled {
+  color: #f59e0b;
+  fill: #f59e0b;
+}
+
+.merchant-review-stars svg.is-empty {
+  color: #cbd5e1;
+  fill: #f1f5f9;
+}
+
+.merchant-review-rating-badge {
+  font-size: 11px;
+  font-weight: 750;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 1px 6px;
+  border-radius: 6px;
+  line-height: 1.3;
 }
 .merchant-review-card p {
   margin-top: 8px;
