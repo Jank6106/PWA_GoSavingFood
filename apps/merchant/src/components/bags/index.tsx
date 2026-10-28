@@ -1,4 +1,4 @@
-import { ChevronDown, Clock3, Eye, EyeOff, ImagePlus, Package, PackageOpen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
+import { ChevronDown, ImagePlus, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react';
 import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES } from '../../mocks';
 import { compressImageFile, optimizeImageUrl } from '../../services/utils';
@@ -91,7 +91,7 @@ export function BagCard({
   const category = getBagCategory(bag);
   const isOnShelf = category === 'on_shelf';
 
-  let statusLabel = 'Đang mở bán';
+  let statusLabel = 'Đang bán';
   let badgeVariant = 'active';
 
   if (category === 'expired') {
@@ -108,7 +108,7 @@ export function BagCard({
       const nowMinutes = getVnTimeMinutes();
       const endM = parseTimeToMinutes(bag.pickupTimeEnd);
       if (nowMinutes > endM) {
-        statusLabel = 'Hết giờ hôm nay';
+        statusLabel = 'Hết giờ';
         badgeVariant = 'closed';
       } else {
         statusLabel = 'Trong kho';
@@ -120,133 +120,124 @@ export function BagCard({
     }
   } else {
     // Trên kệ hàng (on_shelf)
-    if (bag.bagType !== 'shelf_life') {
+    const qty = bag.availableQuantity ?? bag.quantity ?? 0;
+    if (qty <= 0) {
+      statusLabel = 'Hết hàng';
+      badgeVariant = 'sold_out';
+    } else if (bag.bagType !== 'shelf_life') {
       const nowMinutes = getVnTimeMinutes();
       const startM = parseTimeToMinutes(bag.pickupTimeStart);
       if (nowMinutes < startM) {
         statusLabel = `Sắp mở (${bag.pickupTimeStart})`;
         badgeVariant = 'upcoming';
       } else {
-        statusLabel = 'Đang mở bán';
+        statusLabel = 'Đang bán';
         badgeVariant = 'active';
       }
     } else {
-      statusLabel = 'Đang mở bán';
+      statusLabel = 'Đang bán';
       badgeVariant = 'active';
     }
   }
 
+  const timeDisplay = `${bag.pickupTimeStart} - ${bag.pickupTimeEnd}`;
+
   return (
-    <article className={`merchant-card merchant-product-card ${!isOnShelf ? 'merchant-product-card--off-shelf' : ''}`}>
-      <img src={optimizeImageUrl(bag.imageUrl, 400, 75)} alt={bag.name} loading="lazy" />
-      <div className="merchant-product-main">
-        <div className="merchant-card-title-row">
-          <div>
-            <span className="merchant-eyebrow">{bag.category}</span>
-            <h3>{bag.name}</h3>
-          </div>
-          <span className={`merchant-badge merchant-badge--${badgeVariant}`}>
+    <article className={`merchant-bag-card ${!isOnShelf ? 'merchant-bag-card--off-shelf' : ''}`}>
+      <div className="merchant-bag-card-media">
+        <img src={optimizeImageUrl(bag.imageUrl, 400, 75)} alt={bag.name} loading="lazy" />
+      </div>
+      <div className="merchant-bag-card-content">
+        {/* Hàng 1: Tên món + Status pill */}
+        <div className="merchant-bag-card-header">
+          <h3 className="merchant-bag-card-title" title={bag.name}>
+            {bag.name}
+          </h3>
+          <span className={`merchant-bag-status-pill merchant-bag-status-pill--${badgeVariant}`}>
             {statusLabel}
           </span>
         </div>
-        <p className="merchant-clamp">{bag.description}</p>
-        <div className="merchant-product-meta">
-          <span>
-            <Tag size={14} />
-            <s>{bag.originalPrice.toLocaleString('vi-VN')}đ</s>
-            <strong>{bag.salePrice.toLocaleString('vi-VN')}đ</strong>
-          </span>
-          <span>
-            <Clock3 size={14} />{' '}
-            {bag.bagType === 'shelf_life'
-              ? `HSD: ${bag.expiryDate ? bag.expiryDate.split('-').reverse().slice(0, 2).join('/') : 'Nhiều ngày'} (${bag.pickupTimeStart}–${bag.pickupTimeEnd})`
-              : `${bag.repeatMode === 'recurring' ? 'Hàng ngày' : 'Hôm nay'}: ${bag.pickupTimeStart}–${bag.pickupTimeEnd}`}
-          </span>
-        </div>
-        <footer>
-          <div
-            className="merchant-quantity"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '10px',
-              background: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#ecfdf5' : '#fef2f2',
-              border: `1px solid ${(bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#a7f3d0' : '#fecaca'}`,
-            }}
-          >
-            <Package
-              size={15}
-              style={{
-                color: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#059669' : '#dc2626',
-              }}
-            />
-            <strong
-              style={{
-                fontSize: '15px',
-                color: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#065f46' : '#b91c1c',
-              }}
-            >
-              {bag.availableQuantity ?? bag.quantity ?? 0}
-            </strong>
-            <small
-              style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                color: (bag.availableQuantity ?? bag.quantity ?? 0) > 0 ? '#047857' : '#dc2626',
-              }}
-            >
-              túi còn lại
-            </small>
+
+        {/* Hàng 2: Giá & Giờ (bên trái) + Số lượng (bên phải) */}
+        <div className="merchant-bag-card-info-row">
+          <div className="merchant-bag-card-pricing-time">
+            <span className="merchant-bag-original-price">
+              <s>{bag.originalPrice.toLocaleString('vi-VN')}đ</s>
+            </span>
+            <span className="merchant-bag-sale-price">
+              {bag.salePrice.toLocaleString('vi-VN')}đ
+            </span>
+            <span className="merchant-bag-time-range" title={timeDisplay}>
+              {timeDisplay}
+            </span>
           </div>
-          <div className="merchant-card-actions">
-            {category !== 'expired' && (
-              <Button
-                size="small"
-                variant={isOnShelf ? 'secondary' : 'primary'}
-                onClick={() => {
-                  if (!isOnShelf) {
-                    const qty = bag.availableQuantity ?? bag.quantity ?? 0;
-                    if (qty <= 0) {
+          <div className="merchant-bag-card-qty-wrap">
+            <span
+              className="merchant-bag-qty-pill"
+              style={(bag.availableQuantity ?? bag.quantity ?? 0) <= 0 ? { background: '#ef4444', boxShadow: 'none' } : undefined}
+            >
+              Số lượng: {bag.availableQuantity ?? bag.quantity ?? 0}
+            </span>
+          </div>
+        </div>
+
+        {/* Cụm nút hành động */}
+        <div className="merchant-bag-card-actions">
+          {category !== 'expired' ? (
+            <button
+              type="button"
+              className={`merchant-bag-btn-toggle ${isOnShelf ? 'is-on-shelf' : ''}`}
+              onClick={() => {
+                const qty = bag.availableQuantity ?? bag.quantity ?? 0;
+                if (qty <= 0) {
+                  onEdit(bag);
+                  return;
+                }
+                if (!isOnShelf) {
+                  if (bag.bagType !== 'shelf_life') {
+                    const nowMinutes = getVnTimeMinutes();
+                    const endM = parseTimeToMinutes(bag.pickupTimeEnd);
+                    if (nowMinutes > endM) {
                       onEdit(bag);
                       return;
                     }
-                    if (bag.bagType !== 'shelf_life') {
-                      const nowMinutes = getVnTimeMinutes();
-                      const endM = parseTimeToMinutes(bag.pickupTimeEnd);
-                      if (nowMinutes > endM) {
-                        onEdit(bag);
-                        return;
-                      }
-                    }
                   }
-                  onToggleStatus(bag.id);
-                }}
-              >
-                {isOnShelf ? <EyeOff size={16} /> : <Eye size={16} />}
-                {isOnShelf
-                  ? 'Gỡ khỏi kệ'
-                  : (bag.availableQuantity ?? bag.quantity ?? 0) <= 0
-                  ? 'Nạp thêm túi'
-                  : bag.bagType !== 'shelf_life' && getVnTimeMinutes() > parseTimeToMinutes(bag.pickupTimeEnd)
-                  ? 'Chỉnh giờ mở'
-                  : 'Đưa lên kệ'}
-              </Button>
-            )}
-            <Button size="small" variant="outline" onClick={() => onEdit(bag)}>
-              <Pencil size={15} /> Sửa
-            </Button>
-            <Button
-              size="small"
-              variant="danger"
-              onClick={() => onDelete(bag)}
-              title="Xóa hoàn toàn túi này"
+                }
+                onToggleStatus(bag.id);
+              }}
             >
-              <Trash2 size={15} /> Xóa túi
-            </Button>
+              {isOnShelf
+                ? (bag.availableQuantity ?? bag.quantity ?? 0) <= 0
+                  ? 'Nạp thêm túi'
+                  : 'Gỡ khỏi kệ'
+                : (bag.availableQuantity ?? bag.quantity ?? 0) <= 0
+                ? 'Nạp thêm túi'
+                : bag.bagType !== 'shelf_life' && getVnTimeMinutes() > parseTimeToMinutes(bag.pickupTimeEnd)
+                ? 'Chỉnh giờ mở'
+                : 'Đưa lên kệ'}
+            </button>
+          ) : (
+            <div className="merchant-bag-expired-bar">Đã hết hạn</div>
+          )}
+
+          <div className="merchant-bag-card-action-subrow">
+            <button
+              type="button"
+              className="merchant-bag-btn-delete"
+              onClick={() => onDelete(bag)}
+              title="Xóa túi hàng này"
+            >
+              Xóa túi
+            </button>
+            <button
+              type="button"
+              className="merchant-bag-btn-edit"
+              onClick={() => onEdit(bag)}
+            >
+              Chỉnh sửa
+            </button>
           </div>
-        </footer>
+        </div>
       </div>
     </article>
   );
@@ -563,7 +554,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   };
 
   return (
-    <Modal open={open} title={bag ? 'Chỉnh sửa túi hàng' : 'Tạo túi hàng mới'} onClose={onClose} size="large">
+    <Modal open={open} title={bag ? 'Chỉnh sửa túi hàng' : 'Tạo túi hàng mới'} onClose={onClose}>
       <form className="merchant-form" onSubmit={submit}>
         {formError && (
           <div
@@ -581,39 +572,48 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
             ⚠️ {formError}
           </div>
         )}
-        <div className="merchant-form-grid">
-          <Field
-            label={
-              <>
-                Tên túi hàng <b style={{ color: 'var(--danger)' }}>*</b>
-              </>
-            }
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Ví dụ: Túi bánh tươi cuối ngày"
-            required
-          />
-          <SelectField
-            label={
-              <>
-                Danh mục <b style={{ color: 'var(--danger)' }}>*</b>
-              </>
-            }
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-          >
-            {PRESET_BAG_CATEGORIES.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </SelectField>
-        </div>
+        <Field
+          label={
+            <>
+              Tên túi hàng <b style={{ color: 'var(--danger)' }}>*</b>
+            </>
+          }
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Ví dụ: Túi bánh tươi cuối ngày"
+          required
+        />
+        <SelectField
+          label={
+            <>
+              Danh mục <b style={{ color: 'var(--danger)' }}>*</b>
+            </>
+          }
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+        >
+          {PRESET_BAG_CATEGORIES.map((item) => (
+            <option key={item}>{item}</option>
+          ))}
+        </SelectField>
 
-        {/* 1. Chọn loại mặt hàng */}
+        <TextAreaField
+          label={
+            <>
+              Mô tả chi tiết <b style={{ color: 'var(--danger)' }}>*</b>
+            </>
+          }
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Khách hàng có thể nhận được gì trong túi hàng này?"
+          required
+        />
+
         <div className="merchant-field">
           <span>
             Loại mặt hàng <b style={{ color: 'var(--danger)' }}>*</b>
           </span>
-          <div className="merchant-pricing-mode" style={{ marginTop: 6, display: 'flex', gap: 8 }}>
+          <div className="merchant-segmented-control">
             <button
               type="button"
               className={bagType === 'daily' ? 'is-active' : ''}
@@ -631,134 +631,109 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
           </div>
         </div>
 
-        {/* 2. Cấu hình thời gian theo loại mặt hàng */}
         {bagType === 'daily' ? (
-          <div className="merchant-form-grid" style={{ marginTop: 6 }}>
-            <div className="merchant-field">
-              <span>
-                Khung giờ nhận túi hôm nay <b style={{ color: 'var(--danger)' }}>*</b>
-              </span>
-              <div className="merchant-field-control merchant-time-range-control">
-                <MerchantTimePicker
-                  value={pickupTimeStart}
-                  onChange={setPickupTimeStart}
-                  ariaLabel="Giờ bắt đầu nhận"
-                />
-                <span className="merchant-time-dash">-</span>
-                <MerchantTimePicker
-                  value={pickupTimeEnd}
-                  onChange={setPickupTimeEnd}
-                  ariaLabel="Giờ kết thúc nhận"
-                />
-              </div>
-            </div>
-
-            <div className="merchant-field">
-              <span>Chế độ lặp</span>
-              <div className="merchant-pricing-mode" style={{ marginTop: 6, display: 'flex', gap: 8 }}>
-                <button
-                  type="button"
-                  className={repeatMode === 'today_only' ? 'is-active' : ''}
-                  onClick={() => setRepeatMode('today_only')}
-                >
-                  Chỉ hôm nay
-                </button>
-                <button
-                  type="button"
-                  className={repeatMode === 'recurring' ? 'is-active' : ''}
-                  onClick={() => setRepeatMode('recurring')}
-                >
-                  Mọi ngày
-                </button>
-              </div>
+          <div className="merchant-field">
+            <span>Chế độ lặp</span>
+            <div className="merchant-segmented-control">
+              <button
+                type="button"
+                className={repeatMode === 'today_only' ? 'is-active' : ''}
+                onClick={() => setRepeatMode('today_only')}
+              >
+                Chỉ hôm nay
+              </button>
+              <button
+                type="button"
+                className={repeatMode === 'recurring' ? 'is-active' : ''}
+                onClick={() => setRepeatMode('recurring')}
+              >
+                Mọi ngày
+              </button>
             </div>
           </div>
         ) : (
-          <div className="merchant-form-grid" style={{ marginTop: 6 }}>
-            <Field
-              label={
-                <>
-                  Hạn sử dụng <b style={{ color: 'var(--danger)' }}>*</b>
-                </>
-              }
-              type="date"
-              value={expiryDate}
-              min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
-              onChange={(event) => setExpiryDate(event.target.value)}
-              required
-            />
-            <div className="merchant-field">
-              <span>
-                Giờ nhận hàng <b style={{ color: 'var(--danger)' }}>*</b>
-              </span>
-              <div className="merchant-field-control merchant-time-range-control">
-                <MerchantTimePicker
-                  value={pickupTimeStart}
-                  onChange={setPickupTimeStart}
-                  ariaLabel="Giờ bắt đầu nhận"
-                />
-                <span className="merchant-time-dash">-</span>
-                <MerchantTimePicker
-                  value={pickupTimeEnd}
-                  onChange={setPickupTimeEnd}
-                  ariaLabel="Giờ kết thúc nhận"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-        <TextAreaField
-          label={
-            <>
-              Mô tả <b style={{ color: 'var(--danger)' }}>*</b>
-            </>
-          }
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          placeholder="Khách hàng có thể nhận được gì?"
-          required
-        />
-        <div className="merchant-form-grid merchant-form-grid--three">
           <Field
             label={
               <>
-                Giá gốc <b style={{ color: 'var(--danger)' }}>*</b>
+                Hạn sử dụng <b style={{ color: 'var(--danger)' }}>*</b>
               </>
             }
-            type="number"
-            min="1"
-            placeholder="Ví dụ: 120000"
-            value={originalPrice}
-            onChange={(event) => handleOriginalPriceChange(event.target.value)}
+            type="date"
+            value={expiryDate}
+            min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+            onChange={(event) => setExpiryDate(event.target.value)}
             required
           />
-          <div className="merchant-pricing-field">
+        )}
+
+        {/* Khung giờ nhận hàng - Chỉ 1 lớp viền ngoài */}
+        <div className="merchant-field">
+          <span>
+            {bagType === 'daily' ? 'Khung giờ nhận túi hôm nay' : 'Giờ nhận hàng'}{' '}
+            <b style={{ color: 'var(--danger)' }}>*</b>
+          </span>
+          <div className="merchant-field-control merchant-time-range-control">
+            <MerchantTimePicker
+              value={pickupTimeStart}
+              onChange={setPickupTimeStart}
+              ariaLabel="Giờ bắt đầu nhận"
+            />
+            <span className="merchant-time-dash">—</span>
+            <MerchantTimePicker
+              value={pickupTimeEnd}
+              onChange={setPickupTimeEnd}
+              ariaLabel="Giờ kết thúc nhận"
+            />
+          </div>
+        </div>
+
+        <div className="merchant-field">
+          <div style={{ display: 'flex', alignItems: 'center', height: 24 }}>
+            <span>
+              Giá gốc <b style={{ color: 'var(--danger)' }}>*</b>
+            </span>
+          </div>
+          <div className="merchant-field-control">
+            <input
+              type="number"
+              min="1"
+              placeholder="Ví dụ: 120000"
+              value={originalPrice}
+              onChange={(event) => handleOriginalPriceChange(event.target.value)}
+              required
+            />
+            <span className="merchant-field-suffix" style={{ fontSize: 13, fontWeight: 700, color: '#64748b' }}>
+              đ
+            </span>
+          </div>
+        </div>
+
+        <div className="merchant-field">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 24 }}>
             <span>
               Giá giải cứu <b style={{ color: 'var(--danger)' }}>*</b>
             </span>
-            <div className="merchant-pricing-mode">
+            <div className="merchant-pricing-mode-inline">
               <button
                 type="button"
                 className={pricingMode === 'amount' ? 'is-active' : ''}
                 onClick={() => setPricingMode('amount')}
+                title="Nhập số tiền VNĐ"
               >
-                Nhập giá
+                VNĐ
               </button>
               <button
                 type="button"
                 className={pricingMode === 'discount' ? 'is-active' : ''}
                 onClick={() => setPricingMode('discount')}
+                title="Nhập phần trăm %"
               >
-                Chiết khấu %
+                % Giảm
               </button>
             </div>
-            <Field
-              label={
-                <>
-                  {pricingMode === 'amount' ? 'Giá cụ thể' : 'Giảm giá'}{' '}
-                  <b style={{ color: 'var(--danger)' }}>*</b>
-                </>
-              }
+          </div>
+          <div className="merchant-field-control">
+            <input
               type="number"
               min="0"
               max={pricingMode === 'discount' ? '100' : undefined}
@@ -771,21 +746,59 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
               }
               required
             />
+            <span className="merchant-field-suffix" style={{ fontSize: 13, fontWeight: 700, color: '#64748b' }}>
+              {pricingMode === 'amount' ? 'đ' : '%'}
+            </span>
           </div>
-          <Field
-            label={
-              <>
-                Số lượng <b style={{ color: 'var(--danger)' }}>*</b>
-              </>
-            }
-            type="number"
-            min="1"
-            placeholder="Ví dụ: 5"
-            value={quantity}
-            onChange={(event) => setQuantity(event.target.value)}
-            required
-          />
         </div>
+
+        <div className="merchant-field">
+          <div style={{ display: 'flex', alignItems: 'center', height: 24 }}>
+            <span>
+              Số lượng <b style={{ color: 'var(--danger)' }}>*</b>
+            </span>
+          </div>
+          <div className="merchant-field-control">
+            <input
+              type="number"
+              min="1"
+              placeholder="Ví dụ: 5"
+              value={quantity}
+              onChange={(event) => setQuantity(event.target.value)}
+              required
+            />
+            <span className="merchant-field-suffix" style={{ fontSize: 13, fontWeight: 700, color: '#64748b' }}>
+              túi
+            </span>
+          </div>
+        </div>
+
+        {/* Hiển thị mức tiết kiệm trực quan nếu có giá hợp lệ */}
+        {Number(originalPrice) > 0 && Number(salePrice) > 0 && Number(originalPrice) > Number(salePrice) && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '7px 12px',
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              borderRadius: 10,
+              fontSize: 12.5,
+              color: 'var(--primary)',
+              fontWeight: 600,
+              marginTop: -6,
+            }}
+          >
+            <span>💡 Khách hàng tiết kiệm:</span>
+            <strong>{(Number(originalPrice) - Number(salePrice)).toLocaleString('vi-VN')} đ</strong>
+            <span style={{ color: '#16a34a', fontWeight: 700 }}>
+              (-{Math.round(((Number(originalPrice) - Number(salePrice)) / Number(originalPrice)) * 100)}%)
+            </span>
+          </div>
+        )}
+
+        {/* Nhóm 4: Hình ảnh túi hàng */}
         <div className="merchant-field">
           <span>
             Hình ảnh túi hàng <b style={{ color: 'var(--danger)' }}>*</b>

@@ -4,11 +4,12 @@ import {
   Clock3,
   Copy,
   Download,
+  Trash2,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { Button } from '@gosavingfood/ui';
-import { ScreenHeader } from '../../../shared/components';
+import { ScreenHeader, CancelOrderModal } from '../../../shared/components';
 import { supabase } from '../../../services/supabase';
 import { customerService } from '../../../services/customer.service';
 import type { CheckoutDraft, Order } from '../../../shared/types/customer.types';
@@ -21,6 +22,7 @@ interface PaymentPageProps {
   orderId?: string;
   orderCode?: string;
   onBack: () => void;
+  onCancel?: (orderId?: string, reason?: string) => void;
   onConfirm: () => void;
 }
 
@@ -30,7 +32,7 @@ const SESSION_PAYOS_CODE_KEY = 'gsf_payment_payos_order_code';
 const SESSION_ORDER_TOTAL_KEY = 'gsf_payment_order_total';
 const SESSION_EXPIRES_AT_KEY = 'gsf_payment_expires_at';
 
-export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfirm }: PaymentPageProps) {
+export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel, onConfirm }: PaymentPageProps) {
   // 1. Phục hồi state orderId, orderCode, total từ Props -> URL Query -> sessionStorage
   const [effectiveOrderId] = useState<string>(() => {
     if (order?.id) return order.id;
@@ -181,16 +183,87 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
     payosData?.qrCode ||
     `00020101021238590010A000000727012900069704180115${bankAccount}0208QRIBFTTA5303704540${effectiveTotal}5802VN62180814${transferContent}6304`;
 
+  const cleanupPaymentSession = useCallback(() => {
+    try {
+      sessionStorage.removeItem(SESSION_ORDER_ID_KEY);
+      sessionStorage.removeItem(SESSION_ORDER_CODE_KEY);
+      sessionStorage.removeItem(SESSION_PAYOS_CODE_KEY);
+      sessionStorage.removeItem(SESSION_ORDER_TOTAL_KEY);
+      sessionStorage.removeItem(SESSION_EXPIRES_AT_KEY);
+    } catch {}
+  }, []);
+
   // Hàm kích hoạt xác nhận thanh toán thành công (đảm bảo chỉ chạy đúng 1 lần)
   const handlePaymentSuccess = useCallback(() => {
     if (isPaidConfirmedRef.current) return;
     isPaidConfirmedRef.current = true;
     console.log('[PaymentPage] handlePaymentSuccess triggered -> redirecting to success screen');
+    cleanupPaymentSession();
     setToastMessage('Thanh toán thành công! Đang chuyển trang...');
     setTimeout(() => {
       onConfirm();
     }, 400);
-  }, [onConfirm]);
+  }, [onConfirm, cleanupPaymentSession]);
+
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancelPayment = useCallback(
+    async (reason: string) => {
+      const targetOrderId = effectiveOrderId || order?.id;
+      setIsCancelling(true);
+
+      try {
+        if (targetOrderId) {
+          // 1. Chuyển trạng thái đơn sang 'cancelled' trên Supabase
+          await customerService.cancelOrder(
+            targetOrderId,
+            reason || 'Người dùng hủy thanh toán tại bước quét mã QR'
+          );
+
+          // 2. Hủy link PayOS nếu có
+          let savedCode: number | null = null;
+          try {
+            const s = sessionStorage.getItem(SESSION_PAYOS_CODE_KEY);
+            if (s) savedCode = Number(s);
+          } catch {}
+
+          const numericCode =
+            payosData?.orderCode ||
+            (order?.paymentOrderCode ? Number(order.paymentOrderCode) : null) ||
+            savedCode;
+
+          void customerService.cancelPayOSPayment({
+            orderId: targetOrderId,
+            orderCode: numericCode || undefined,
+            cancellationReason: reason || 'Người dùng hủy thanh toán tại bước quét mã QR',
+          });
+        }
+
+        // 3. Xóa dữ liệu phiên thanh toán
+        cleanupPaymentSession();
+
+        // 4. Đóng modal & hiển thị thông báo
+        setIsCancelModalOpen(false);
+        setToastMessage('Đã hủy thanh toán đơn hàng');
+
+        // 5. Điều hướng trở về
+        setTimeout(() => {
+          if (onCancel) {
+            onCancel(targetOrderId, reason);
+          } else {
+            onBack();
+          }
+        }, 350);
+      } catch (err) {
+        console.error('[PaymentPage] Lỗi khi hủy thanh toán:', err);
+        setToastMessage('Không thể hủy thanh toán. Vui lòng thử lại!');
+      } finally {
+        setIsCancelling(false);
+      }
+    },
+    [effectiveOrderId, order?.id, order?.paymentOrderCode, payosData?.orderCode, cleanupPaymentSession, onCancel, onBack]
+  );
 
   // Hàm chủ động kiểm tra trạng thái thanh toán từ cả DB Supabase và PayOS API
   const checkCurrentOrderStatus = useCallback(async (isManual = false): Promise<boolean> => {
@@ -475,8 +548,8 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
-      setToastMessage(null), 3000;
-    });
+      setToastMessage(null);
+    }, 3000);
   };
 
   const handleCopy = (text: string, fieldName: string) => {
@@ -757,7 +830,47 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onConfir
             Hệ thống tự động xác nhận đơn ngay khi tiền vào tài khoản.
           </p>
         </div>
+
+        {/* Nút hủy thanh toán */}
+        <div style={{ marginTop: '18px', width: '100%' }}>
+          <button
+            type="button"
+            onClick={() => setIsCancelModalOpen(true)}
+            disabled={isCancelling}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              width: '100%',
+              padding: '11px 16px',
+              borderRadius: '12px',
+              border: '1px solid #fee2e2',
+              background: '#fff5f5',
+              color: '#dc2626',
+              fontSize: '13.5px',
+              fontWeight: 700,
+              cursor: isCancelling ? 'not-allowed' : 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Trash2 size={16} />
+            <span>{isCancelling ? 'Đang hủy đơn...' : 'Hủy thanh toán đơn hàng'}</span>
+          </button>
+        </div>
       </section>
+
+      {/* Modal xác nhận hủy dùng chung */}
+      <CancelOrderModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        orderCode={effectiveOrderCode}
+        finalAmount={effectiveTotal}
+        isPaid={false}
+        isSubmitting={isCancelling}
+        confirmLabel="Xác nhận hủy đơn"
+        onConfirm={handleCancelPayment}
+      />
 
       {/* Toast thông báo nhanh */}
       {toastMessage && (

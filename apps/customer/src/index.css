@@ -162,6 +162,33 @@ img { display: block; max-width: 100%; }
   padding: 8px 16px;
 }
 
+/* Mobile Header Default (Viewport < 768px) */
+.customer-header-desktop {
+  display: none !important;
+}
+.customer-header.hide-on-mobile {
+  display: none !important;
+}
+.customer-header-mobile {
+  display: flex !important;
+}
+
+/* Checkout Form Layout Default (Mobile) */
+.customer-checkout-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.customer-checkout-form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.customer-checkout-summary-col {
+  display: flex;
+  flex-direction: column;
+}
+
 @media (min-width: 768px) {
   .customer-header,
   .customer-header.is-transparent,
@@ -175,8 +202,8 @@ img { display: block; max-width: 100%; }
 
   .customer-header-inner {
     padding: 8px 24px;
-    height: 60px;
-    min-height: 60px;
+    height: 64px;
+    min-height: 64px;
   }
 }
 
@@ -297,38 +324,49 @@ img { display: block; max-width: 100%; }
 .customer-section-heading h2 { margin: 0; font-size: clamp(23px, 6.2vw, 28px); font-weight: 850; line-height: 1.2; letter-spacing: -0.025em; color: var(--color-text-primary); }
 .customer-section-heading p { margin: 1px 0 0; color: var(--color-text-muted); font-size: 12px; }
 .customer-section-heading > button { flex: 0 0 auto; padding: 6px 4px; border: 0; background: none; color: var(--color-primary); font-size: 14px; font-weight: 800; cursor: pointer; }
-.customer-horizontal-list { display: flex; gap: 12px; margin: 0 -16px; padding: 0 16px 7px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
 
-.customer-bag-card { position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 236px; overflow: hidden; border-radius: 18px; background: #022c1b; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 18px rgba(0, 40, 20, 0.08); cursor: pointer; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease; user-select: none; }
+/* Khung bọc danh sách sản phẩm theo hàng ngang */
+.customer-category-row-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.customer-category-nav-btn {
+  display: none !important;
+}
+
+.customer-horizontal-list { display: flex; gap: 10px; margin: 0 -16px; padding: 0 16px 7px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+
+.customer-bag-card { position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 185px; overflow: hidden; border-radius: 14px; background: #022c1b; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 18px rgba(0, 40, 20, 0.08); cursor: pointer; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease; user-select: none; }
 .customer-bag-card:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0, 40, 20, 0.16); }
 .customer-bag-card:active { transform: scale(0.985); }
-.customer-bag-card.is-compact { min-width: 220px; width: 220px; flex: 0 0 220px; scroll-snap-align: start; }
+.customer-bag-card.is-compact { min-width: 172px; width: 172px; flex: 0 0 172px; scroll-snap-align: start; height: 185px; }
 .customer-bag-media { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: hidden; }
 .customer-bag-photo { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
 .customer-bag-card:hover .customer-bag-photo { transform: scale(1.06); }
-.customer-bag-top-badges { position: absolute; z-index: 3; top: 9px; left: 9px; right: 9px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
-.customer-discount-tag { padding: 3.5px 8px; border-radius: 8px; background: #ef4444; color: #ffffff; font-size: 13px; font-weight: 850; letter-spacing: -0.2px; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); }
-.customer-distance-tag, .customer-status-tag { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 7px; background: rgba(0, 0, 0, 0.52); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; font-size: 10px; font-weight: 700; }
-.customer-bag-overlay { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 3px; padding: 26px 10px 10px 10px; background: linear-gradient(to top, rgba(0, 14, 8, 0.92) 0%, rgba(0, 20, 12, 0.75) 45%, rgba(0, 20, 12, 0.35) 75%, rgba(0, 20, 12, 0.08) 90%, transparent 100%); color: #ffffff; }
+.customer-bag-top-badges { position: absolute; z-index: 3; top: 7px; left: 7px; right: 7px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
+.customer-discount-tag { padding: 2.5px 6px; border-radius: 6px; background: #ef4444; color: #ffffff; font-size: 11px; font-weight: 850; letter-spacing: -0.2px; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4); }
+.customer-distance-tag, .customer-status-tag { display: inline-flex; align-items: center; gap: 2.5px; padding: 2.5px 5px; border-radius: 6px; background: rgba(0, 0, 0, 0.52); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; font-size: 9.5px; font-weight: 700; }
+.customer-bag-overlay { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 2px; padding: 18px 8px 8px 8px; background: linear-gradient(to top, rgba(0, 14, 8, 0.94) 0%, rgba(0, 20, 12, 0.78) 45%, rgba(0, 20, 12, 0.35) 75%, rgba(0, 20, 12, 0.08) 90%, transparent 100%); color: #ffffff; }
 .customer-bag-info { display: flex; flex-direction: column; gap: 2px; }
-.customer-bag-merchant { font-size: 10px; font-weight: 750; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
-.customer-bag-title { margin: 0; font-size: 13px; font-weight: 800; color: #ffffff; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.95); }
-.customer-bag-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 2px; font-size: 10px; color: rgba(255, 255, 255, 0.9); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
-.customer-bag-time-group { display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.customer-bag-time { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; white-space: nowrap; }
+.customer-bag-merchant { font-size: 9.5px; font-weight: 750; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+.customer-bag-title { margin: 0; font-size: 12px; font-weight: 800; color: #ffffff; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.95); }
+.customer-bag-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 1px; font-size: 9px; color: rgba(255, 255, 255, 0.9); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
+.customer-bag-time-group { display: flex; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.customer-bag-time { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; white-space: nowrap; }
 .customer-bag-distance { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; white-space: nowrap; color: rgba(255, 255, 255, 0.9); }
-.customer-bag-stock { color: #fef08a; font-weight: 750; font-size: 9.5px; background: rgba(0, 0, 0, 0.5); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.2); white-space: nowrap; text-shadow: none; flex-shrink: 0; }
-.customer-bag-bottom-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: 3px; padding-top: 5px; border-top: 1px solid rgba(255, 255, 255, 0.16); }
+.customer-bag-stock { color: #fef08a; font-weight: 750; font-size: 8.5px; background: rgba(0, 0, 0, 0.5); padding: 1px 4px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.2); white-space: nowrap; text-shadow: none; flex-shrink: 0; }
+.customer-bag-bottom-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; margin-top: 2px; padding-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.16); }
 .customer-price-stack { display: flex; flex-direction: column; gap: 1px; }
 .customer-bag-bottom-row .customer-price-stack { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.customer-bag-bottom-row .customer-price-stack del { color: rgba(255, 255, 255, 0.7); font-size: 10px; line-height: 1.1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
-.customer-bag-bottom-row .customer-price-stack strong { color: #34d399; font-size: 14.5px; font-weight: 850; line-height: 1.15; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.95); }
-.customer-bag-add-btn { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px; padding: 0; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 9px; background: linear-gradient(135deg, #1E8A5E 0%, #6DBF8B 100%); color: #ffffff; cursor: pointer; box-shadow: 0 2px 7px rgba(0, 0, 0, 0.25); transition: transform 0.18s ease, background 0.18s ease; }
+.customer-bag-bottom-row .customer-price-stack del { color: rgba(255, 255, 255, 0.7); font-size: 9.5px; line-height: 1.1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.customer-bag-bottom-row .customer-price-stack strong { color: #34d399; font-size: 14px; font-weight: 850; line-height: 1.15; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.95); }
+.customer-bag-add-btn { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; padding: 0; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; background: linear-gradient(135deg, #1E8A5E 0%, #6DBF8B 100%); color: #ffffff; cursor: pointer; box-shadow: 0 2px 7px rgba(0, 0, 0, 0.25); transition: transform 0.18s ease, background 0.18s ease; }
 .customer-bag-add-btn:hover { transform: scale(1.08); background: linear-gradient(135deg, #166B4A 0%, #1E8A5E 100%); }
 .customer-bag-add-btn:active { transform: scale(0.92); }
 .customer-bag-add-btn.is-added { background: linear-gradient(135deg, #166B4A 0%, #6DBF8B 100%); transform: scale(1.1); box-shadow: 0 0 12px rgba(34, 197, 94, 0.7); }
 .customer-bag-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.customer-bag-grid .customer-bag-card { height: 225px; }
+.customer-bag-grid .customer-bag-card { height: 185px; }
 
 .customer-brand-track { display: flex; gap: 10px; margin: 0 -16px; padding: 0 16px 5px; overflow-x: auto; scrollbar-width: none; }
 .customer-brand-track button { display: flex; min-width: 112px; align-items: center; flex-direction: column; gap: 6px; padding: 14px 10px; border: 1px solid var(--color-border-subtle); border-radius: 17px; background: #fff; cursor: pointer; }
@@ -996,6 +1034,21 @@ img { display: block; max-width: 100%; }
   min-height: 100vh;
   background: var(--color-bg-page);
   padding-bottom: 50px;
+}
+
+/* Store Base Layout Blocks (Mobile First) */
+.customer-store-desktop-breadcrumb {
+  display: none !important;
+}
+
+.customer-store-header-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.customer-store-bags-header {
+  display: none !important;
 }
 
 .customer-store-toast {
@@ -1704,18 +1757,177 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 .customer-pricing-row.is-total { margin-top: 2px; padding-top: 12px; border-top: 1px dashed var(--color-border-subtle); color: var(--color-text-primary); font-size: 15px; font-weight: 700; }
 .customer-pricing-row.is-total strong { font-size: 19px; font-weight: 800; color: var(--color-primary); }
 
-.customer-read-all-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border: 1px solid #d4e7db; border-radius: 20px; background: #ffffff; color: var(--color-primary); font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 61, 39, 0.05); transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; }
-.customer-read-all-btn:hover:not(:disabled) { background: var(--color-primary-soft); border-color: #a7d0b8; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0, 61, 39, 0.09); }
-.customer-read-all-btn:active:not(:disabled) { transform: scale(0.97); }
-.customer-read-all-btn:disabled { opacity: 0.45; cursor: not-allowed; background: #f7faf8; border-color: #e2ece5; color: #8ba194; box-shadow: none; }
-.customer-notification-list { display: flex; flex-direction: column; gap: 10px; }
-.customer-notification-list article { display: flex; flex-direction: column; padding: 14px 16px; border: 1px solid var(--color-border-subtle); border-radius: 16px; background: #fff; transition: all 0.2s ease; }
-.customer-notification-list article.is-unread { border-color: #a8cdb5; border-left: 4px solid var(--color-primary); background: #f3faf5; box-shadow: 0 2px 8px rgba(0, 108, 64, 0.04); }
-.customer-notification-content { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-.customer-notification-top-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.customer-notification-list strong { font-size: 14px; font-weight: 700; color: var(--color-text-primary); }
-.customer-notification-list p { margin: 0; color: var(--color-text-secondary); font-size: 13px; line-height: 19px; }
-.customer-notification-list small { color: var(--color-text-muted); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+/* Nút Đánh dấu Đã đọc tất cả: Mặc định trên Mobile là icon đơn sắc dấu tích tròn 40px không đè tiêu đề */
+.customer-read-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.customer-read-all-btn .customer-read-all-text {
+  display: none;
+}
+.customer-read-all-btn .customer-read-all-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-primary);
+}
+.customer-read-all-btn:hover:not(:disabled) {
+  background: var(--color-bg-muted);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.customer-read-all-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.customer-read-all-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+  box-shadow: none;
+}
+
+/* Đảm bảo tiêu đề Thông báo trên mobile có độ rộng tối đa và không bị che khuất */
+.customer-notifications-screen .customer-screen-header.has-action .customer-screen-header-title {
+  max-width: calc(100% - 96px);
+}
+
+/* Mobile Preservation: Đảm bảo trên màn hình điện thoại (<768px) các khối giữ nguyên 100% không ảnh hưởng */
+@media (max-width: 767px) {
+  .customer-home-top-unified-block,
+  .customer-home-categories-block {
+    display: contents !important;
+  }
+
+  .customer-home-block {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* Notification List & Card (Mobile-First) */
+.customer-notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.customer-notification-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 16px;
+  background: #ffffff;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  user-select: none;
+}
+
+.customer-notification-card.is-unread {
+  background: #fff8f0;
+  border-color: #fed7aa;
+  border-left: 4px solid #f97316;
+}
+
+.customer-notification-card.has-target {
+  cursor: pointer;
+}
+
+.customer-notification-card.has-target:active {
+  transform: scale(0.99);
+  background: #f8fafc;
+}
+
+.customer-notification-card.is-unread.has-target:active {
+  background: #ffedd5;
+}
+
+.customer-notification-thumb-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  margin-top: 2px;
+}
+
+.customer-notification-thumb-wrap.is-logo {
+  background: rgba(22, 107, 74, 0.06);
+}
+
+.customer-notification-thumb-wrap.is-product .customer-notification-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.customer-notification-thumb-wrap.is-logo .customer-notification-thumb-img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+}
+
+.customer-notification-content-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.customer-notification-item-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--color-text-primary, #193B2C);
+  line-height: 1.35;
+}
+
+.customer-notification-item-body {
+  margin: 0;
+  color: var(--color-text-secondary, #475569);
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.customer-notification-item-time {
+  color: var(--color-text-muted, #94a3b8);
+  font-size: 11.5px;
+  margin-top: 3px;
+}
+
+/* Trên điện thoại, nút xem chi tiết bị ẩn hoàn toàn để giữ giao diện nhỏ gọn */
+.customer-notification-action-col {
+  display: none !important;
+}
 /* ==========================================
    YINDII-STYLE SELECT LOCATION FULLSCREEN
    ========================================== */
@@ -4284,6 +4496,28 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   width: 100%;
 }
 
+/* Product Detail Base Layout Blocks (Mobile First) */
+.customer-product-desktop-breadcrumb {
+  display: none !important;
+}
+
+.customer-product-desktop-sub-actions {
+  display: none !important;
+}
+
+.customer-product-desktop-actions {
+  display: none !important;
+}
+
+.customer-product-top-card,
+.customer-product-gallery-col,
+.customer-product-summary-col,
+.customer-product-bottom-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 @keyframes customerProductFadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -4808,14 +5042,6 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   color: #b91c1c;
 }
 
-@media (min-width: 768px) {
-  .customer-product-bottom-bar {
-    border-radius: 20px 20px 0 0;
-    border-left: 1px solid var(--color-border-subtle);
-    border-right: 1px solid var(--color-border-subtle);
-  }
-}
-
 .customer-product-btn-cart,
 .customer-product-btn-buy {
   height: 48px !important;
@@ -4858,19 +5084,316 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 }
 
 /* ==========================================================================
-   DESKTOP & TABLET RESPONSIVE SCALING (MATCHING MERCHANT APP)
+   DESKTOP & TABLET RESPONSIVE SCALING (SHOPEE WEB INSPIRED LAYOUT)
    ========================================================================== */
 
-/* 1. Shell, Screens & Main Container */
+/* 1. Shell, Header, Navigation & Main Container */
 @media (min-width: 768px) {
   .customer-app-shell {
     background: var(--color-bg-page);
   }
 
+  /* Header Desktop Styles */
+  .customer-header-mobile {
+    display: none !important;
+  }
+
+  .customer-header.hide-on-mobile {
+    display: block !important;
+  }
+
+  .customer-header-desktop {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    width: min(100%, 1200px);
+    margin: 0 auto;
+    padding: 8px 20px;
+    height: 64px;
+    min-height: 64px;
+  }
+
+  .customer-desktop-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .customer-desktop-location-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    max-width: 260px;
+  }
+
+  .customer-desktop-location-chip:hover {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .customer-desktop-location-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .customer-desktop-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .customer-desktop-nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+
+  .customer-desktop-nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+  }
+
+  .customer-desktop-nav-link.is-active {
+    background: rgba(255, 255, 255, 0.24);
+    color: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+
+  .customer-desktop-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .customer-desktop-badge.is-cart {
+    background: #f59e0b;
+    color: #ffffff;
+  }
+
+  /* Desktop Notification Popover (Shopee-style dropdown) */
+  .customer-desktop-nav-notif-wrapper {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .customer-notification-popover {
+    position: absolute;
+    top: calc(100% + 14px);
+    right: -40px;
+    width: 390px;
+    max-width: 90vw;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: popoverFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes popoverFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .customer-notification-popover-arrow {
+    position: absolute;
+    top: -6px;
+    right: 68px;
+    width: 12px;
+    height: 12px;
+    background: #fafafa;
+    transform: rotate(45deg);
+    border-left: 1px solid rgba(0, 0, 0, 0.08);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    z-index: 1001;
+  }
+
+  .customer-notification-popover-header {
+    padding: 12px 16px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #64748b;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fafafa;
+  }
+
+  .customer-notification-popover-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 380px;
+    overflow-y: auto;
+  }
+
+  .customer-notification-popover-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f8fafc;
+    background: #ffffff;
+    transition: background 0.15s ease;
+  }
+
+  .customer-notification-popover-item.is-unread {
+    background: #fff8f0;
+  }
+
+  .customer-notification-popover-item.is-clickable {
+    cursor: pointer;
+  }
+
+  .customer-notification-popover-item:hover {
+    background: #f8fafc;
+  }
+
+  .customer-notification-popover-item.is-unread:hover {
+    background: #ffeedd;
+  }
+
+  .customer-notification-popover-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 1px solid #edf2f7;
+    margin-top: 2px;
+  }
+
+  .customer-notification-popover-thumb.is-logo {
+    background: rgba(22, 107, 74, 0.06);
+  }
+
+  .customer-notification-popover-thumb.is-product .customer-notification-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .customer-notification-popover-thumb.is-logo .customer-notification-thumb-img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .customer-notification-popover-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .customer-notification-popover-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .customer-notification-popover-desc {
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.45;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .customer-notification-popover-time {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  .customer-notification-popover-empty {
+    padding: 32px 16px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+  }
+
+  .customer-notification-popover-footer {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--color-primary, #166B4A);
+    background: #f8fafc;
+    border: none;
+    border-top: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .customer-notification-popover-footer:hover {
+    background: #eef5f1;
+    color: var(--color-primary-active, #193B2C);
+  }
+
+  /* Ẩn thanh BottomNav trên Desktop */
+  .customer-bottom-nav {
+    display: none !important;
+  }
+
   .customer-main-content {
     width: min(100%, 1200px);
     margin: 0 auto;
-    padding-inline: 16px;
+    padding-inline: 20px;
+  }
+
+  .customer-main-content.has-navigation {
+    padding-bottom: 36px !important;
   }
 
   .customer-toast-popup {
@@ -4880,11 +5403,18 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   }
 }
 
-/* 2. Home Page Desktop Layout */
+/* 2. Home Page Desktop Layout (Shopee Web Style Grid) */
 @media (min-width: 768px) {
+  .customer-app-shell:has(.customer-home-screen) {
+    background: #f6f8f7;
+  }
+
   .customer-home-screen {
+    width: min(100%, 1200px);
+    margin: 0 auto;
     padding-top: 24px;
-    gap: 32px;
+    padding-bottom: 48px;
+    gap: 24px;
   }
 
   .customer-banner-bleed {
@@ -4915,20 +5445,246 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     line-height: 22px !important;
   }
 
-  .customer-category-bar {
-    margin: 0;
-    padding: 6px 0 10px;
-    gap: 20px;
+  .customer-search-trigger {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    height: 50px;
+    border-radius: 16px;
+    font-size: 14.5px;
+    border: 1.5px solid var(--color-border-subtle);
+    box-shadow: 0 4px 16px rgba(0, 40, 20, 0.05);
+    background: #ffffff;
+    transition: all 0.2s ease;
+  }
+
+  .customer-search-trigger:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 6px 20px rgba(22, 107, 74, 0.12);
+  }
+
+  .customer-location-card {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    border-radius: 16px;
+    padding: 13px 18px;
+    box-shadow: 0 3px 14px rgba(0, 40, 20, 0.05);
+  }
+
+  /* Shopee Desktop Style Blocks */
+  /* Khối 1: Tổng hợp Banner + Tìm kiếm + Danh mục + Địa điểm trong 1 khối duy nhất */
+  .customer-home-top-unified-block {
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 28px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    margin: 0 !important;
+  }
+
+  .customer-home-top-unified-block .customer-banner-bleed {
+    margin: 0 !important;
+    width: 100% !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 16px rgba(0, 50, 30, 0.08) !important;
+  }
+
+  .customer-home-top-unified-block .customer-campaign-slider {
+    border-radius: 16px !important;
+  }
+
+  .customer-home-top-unified-block .customer-search-trigger {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 14px;
+    border: 1.5px solid var(--color-border-subtle);
+    box-shadow: 0 2px 8px rgba(0, 40, 20, 0.04);
+  }
+
+  .customer-home-top-unified-block .customer-category-bar {
+    margin: 0 !important;
+    padding: 4px 0 8px !important;
+    gap: 28px !important;
+    justify-content: center !important;
+    overflow-x: visible !important;
+  }
+
+  .customer-home-top-unified-block .customer-location-card {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    border-radius: 14px;
+    padding: 12px 18px;
+    box-shadow: 0 2px 8px rgba(0, 40, 20, 0.04);
+  }
+
+  .customer-home-block {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 28px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
   }
 
   .customer-category-circle {
     width: 62px;
     height: 62px;
     border-radius: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .customer-category-circle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   }
 
   .customer-category-pill {
     min-width: 72px;
+  }
+
+  /* Tiêu đề khối trên Desktop chuẩn Shopee */
+  .customer-home-block .customer-section-heading {
+    padding-bottom: 16px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    margin-bottom: 20px !important;
+  }
+
+  .customer-home-block .customer-section-heading h2 {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #1e293b !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  /* Danh sách túi hàng 1 hàng ngang (Carousel) trên Desktop */
+  .customer-category-row-wrapper .customer-horizontal-list,
+  .customer-horizontal-list,
+  .customer-category-bag-list {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    scroll-behavior: smooth !important;
+    gap: 14px !important;
+    margin: 0 !important;
+    padding: 4px 2px 10px !important;
+  }
+
+  .customer-horizontal-list::-webkit-scrollbar,
+  .customer-category-bag-list::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Thu nhỏ kích thước túi hàng trên bản web nhỏ gọn, vừa vặn theo tỉ lệ chuẩn 220/236 */
+  .customer-horizontal-list .customer-bag-card.is-compact,
+  .customer-category-bag-list .customer-bag-card.is-compact {
+    min-width: 172px !important;
+    width: 172px !important;
+    max-width: 172px !important;
+    flex: 0 0 172px !important;
+    height: 185px !important;
+    border-radius: 14px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-bag-overlay,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-bag-overlay {
+    padding: 16px 8px 8px 8px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-bag-title,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-bag-title {
+    font-size: 12px !important;
+    font-weight: 750 !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-bag-merchant,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-bag-merchant {
+    font-size: 9.5px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-discount-tag,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-discount-tag {
+    padding: 2.5px 6px !important;
+    font-size: 11px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-distance-tag,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-distance-tag {
+    padding: 2.5px 5px !important;
+    font-size: 9.5px !important;
+  }
+
+  .customer-horizontal-list .customer-bag-card.is-compact .customer-bag-bottom-row strong,
+  .customer-category-bag-list .customer-bag-card.is-compact .customer-bag-bottom-row strong {
+    font-size: 14px !important;
+  }
+
+  /* 2 nút điều hướng trượt danh sách sản phẩm Shopee Web */
+  .customer-category-nav-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+    color: #1e293b;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .customer-category-nav-btn:hover:not(:disabled) {
+    background: #ffffff;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.24);
+    color: var(--color-primary);
+  }
+
+  .customer-category-nav-btn:active:not(:disabled) {
+    transform: translateY(-50%) scale(0.95);
+  }
+
+  .customer-category-nav-btn.is-prev {
+    left: -14px;
+  }
+
+  .customer-category-nav-btn.is-next {
+    right: -14px;
+  }
+
+  .customer-category-nav-btn.is-disabled,
+  .customer-category-nav-btn:disabled {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(-50%) scale(0.85);
+  }
+
+  /* Khối 3: Thương hiệu nổi bật - marquee vừa vặn trong khối */
+  .customer-home-brands-section .customer-brand-marquee-viewport {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 6px 0 !important;
+    border-radius: 12px !important;
+  }
+
+  /* Khối 4: Cửa hàng gần bạn - nút xem thêm cách đều */
+  .customer-home-merchants-section .customer-merchant-load-more-wrap {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px dashed #f1f5f9;
   }
 
   .customer-brand-track {
@@ -4942,22 +5698,9 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     padding: 16px 12px;
   }
 
-  .customer-horizontal-list {
-    margin: 0;
-    padding: 6px 0 14px;
-    gap: 16px;
-  }
-
-  .customer-bag-card.is-compact {
-    min-width: 250px;
-    width: 250px;
-    flex: 0 0 250px;
-    height: 250px;
-  }
-
   .customer-merchant-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
   }
 
@@ -4992,7 +5735,7 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   .customer-recommended-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 18px;
+    gap: 20px;
     background-color: transparent;
     padding-bottom: 0;
   }
@@ -5011,9 +5754,11 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   }
 }
 
-/* 4. Cart Page Desktop 2-Column Split */
+/* 4. Cart Page Desktop 2-Column Split (Shopee Web Style) */
 @media (min-width: 860px) {
   .customer-cart-screen {
+    width: min(100%, 1100px);
+    margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 380px;
     gap: 32px;
@@ -5026,89 +5771,573 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     grid-column: 1 / -1;
   }
 
+  .customer-cart-item {
+    grid-template-columns: 100px 1fr;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+  }
+
+  .customer-cart-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 40, 20, 0.08);
+    border-color: rgba(22, 107, 74, 0.25);
+  }
+
   .customer-cart-screen .gsf-order-summary {
     position: sticky;
-    top: 90px;
+    top: 88px;
+    box-shadow: 0 8px 26px rgba(0, 40, 20, 0.08);
+    border-radius: 20px;
   }
 }
 
-/* 5. Orders Page Desktop Grid */
+/* 5. Orders Page Desktop Grid (Shopee Web Style) */
 @media (min-width: 768px) {
   .customer-orders-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .customer-order-card {
+    border-radius: 20px;
+    padding: 18px 20px;
+    transition: all 0.2s ease;
+    background: #ffffff;
+    box-shadow: 0 4px 18px rgba(0, 40, 20, 0.04);
+  }
+
+  .customer-order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(0, 40, 20, 0.1);
+    border-color: rgba(22, 107, 74, 0.3);
   }
 
   .customer-filter-tabs {
     gap: 10px;
-    padding: 4px 0 10px;
+    padding: 4px 0 16px;
+    margin: 0;
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 }
 
-/* 6. Product Detail (BagDetailPage) Desktop Layout */
-@media (min-width: 860px) {
+/* 6. Product Detail (BagDetailPage) Shopee-Style Desktop Web Layout */
+@media (min-width: 768px) {
   .customer-product-screen {
-    display: grid;
-    grid-template-columns: 460px 1fr;
-    gap: 36px;
-    align-items: start;
-    padding: 24px 20px 120px;
     max-width: 1200px;
     margin: 0 auto;
+    padding: 18px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: calc(100dvh - 64px);
+    background: transparent;
+  }
+
+  /* Breadcrumb Navigation */
+  .customer-product-desktop-breadcrumb {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: #64748b;
+    padding: 2px 4px;
+  }
+
+  .customer-product-breadcrumb-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-primary, #166B4A);
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .customer-product-breadcrumb-back:hover {
+    opacity: 0.8;
+  }
+
+  .customer-product-breadcrumb-sep {
+    color: #cbd5e1;
+  }
+
+  .customer-product-breadcrumb-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #64748b;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .customer-product-breadcrumb-link:hover {
+    color: var(--color-primary, #166B4A);
+  }
+
+  .customer-product-breadcrumb-current {
+    color: #1e293b;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 320px;
+  }
+
+  /* KHỐI 1: Top Product Card (Shopee Main Showcase Box) */
+  .customer-product-top-card {
+    display: grid !important;
+    grid-template-columns: minmax(360px, 450px) 1fr;
+    gap: 36px;
+    align-items: start;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    padding: 28px;
+  }
+
+  /* Cột trái: Gallery & Ảnh sản phẩm (Cuộn tự nhiên theo card, KHÔNG STICKY) */
+  .customer-product-gallery-col {
+    display: flex !important;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 450px;
   }
 
   .customer-product-hero {
-    position: sticky;
-    top: 90px;
-    height: 480px;
-    border-radius: 24px;
+    position: relative !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 450px !important;
+    aspect-ratio: 1 / 1 !important;
+    height: auto !important;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+    box-shadow: none;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
   }
 
-  .customer-product-main-content {
+  .customer-product-hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .customer-product-hero:hover .customer-product-hero-img {
+    transform: scale(1.02);
+  }
+
+  /* Ẩn floating buttons trên desktop */
+  .customer-product-hero-nav,
+  .customer-product-hero-scrim {
+    display: none !important;
+  }
+
+  /* Nút Chia sẻ dưới ảnh trên Desktop */
+  .customer-product-desktop-sub-actions {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding-top: 4px;
+  }
+
+  .customer-product-desktop-sub-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+  }
+
+  .customer-product-desktop-sub-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+
+  /* Cột phải: Thông tin & Đặt hàng */
+  .customer-product-summary-col {
+    display: flex !important;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  .customer-product-info-card {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    gap: 14px;
+  }
+
+  .customer-product-title {
+    font-size: 24px !important;
+    font-weight: 750 !important;
+    line-height: 1.35 !important;
+    color: #1e293b !important;
+  }
+
+  .customer-product-meta-row {
+    font-size: 14px !important;
+    gap: 10px;
+  }
+
+  /* Khung Giá Shopee (Hộp xám nổi bật) */
+  .customer-product-price-row {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-top: 4px;
+  }
+
+  .customer-product-price {
+    font-size: 32px !important;
+    font-weight: 800 !important;
+    color: var(--color-primary, #166B4A) !important;
+  }
+
+  .customer-product-orig-price {
+    font-size: 16px !important;
+  }
+
+  .customer-product-discount-pill {
+    font-size: 12px !important;
+    padding: 3px 8px !important;
+  }
+
+  .customer-product-urgency-row {
+    padding-top: 2px;
+    gap: 10px;
+  }
+
+  /* Khung giờ nhận túi (Inline trong cột phải trên Desktop) */
+  .customer-product-pickup-section {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  .customer-product-pickup-section .customer-store-section-header {
+    margin-bottom: 8px;
+  }
+
+  .customer-product-pickup-section .customer-store-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .customer-product-pickup-card {
+    background: #f0fdf4 !important;
+    border: 1px solid #dcfce7 !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+  }
+
+  /* Cụm Mua hàng & Thao tác trên Desktop (Shopee style) */
+  .customer-product-desktop-actions {
+    display: block !important;
+    margin-top: 4px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .customer-product-desktop-buy-box {
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    gap: 20px;
+  }
+
+  .customer-product-desktop-quantity-row {
+    display: flex;
+    align-items: center;
     gap: 16px;
   }
 
-  .customer-product-main-content .customer-product-info-card,
-  .customer-product-main-content .customer-store-section {
-    border-radius: 20px;
-    border: 1px solid var(--color-border-subtle);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  .customer-product-desktop-label {
+    width: 80px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
   }
 
-  .customer-product-hero-nav {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    right: 16px;
+  .customer-product-desktop-stock-hint {
+    font-size: 13.5px;
+    color: #94a3b8;
   }
 
-  .customer-product-bottom-bar {
-    width: min(100%, 840px);
-    border-radius: 20px 20px 0 0;
-    border-left: 1px solid var(--color-border-subtle);
-    border-right: 1px solid var(--color-border-subtle);
+  .customer-product-desktop-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .customer-product-desktop-btn-cart {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    height: 48px !important;
+    min-width: 200px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--color-primary, #166B4A) !important;
+    border: 1.5px solid var(--color-primary, #166B4A) !important;
+    background: rgba(22, 107, 74, 0.08) !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+  }
+
+  .customer-product-desktop-btn-cart:hover {
+    background: rgba(22, 107, 74, 0.16) !important;
+    transform: translateY(-1px);
+  }
+
+  .customer-product-desktop-btn-buy {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 48px !important;
+    min-width: 200px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    background: var(--color-primary, #166B4A) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+    box-shadow: 0 4px 14px rgba(22, 107, 74, 0.28) !important;
+  }
+
+  .customer-product-desktop-btn-buy:hover {
+    background: var(--color-primary-active, #193B2C) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(22, 107, 74, 0.35) !important;
+  }
+
+  .customer-product-desktop-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .customer-product-desktop-banner--closed {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  .customer-product-desktop-banner--upcoming {
+    background: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #fef08a;
+  }
+
+  .customer-product-desktop-banner--order_closed {
+    background: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+  }
+
+  .customer-product-desktop-banner--sold_out {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+  }
+
+  .customer-product-desktop-banner--expired {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fee2e2;
+  }
+
+  /* KHỐI 2: Cửa hàng cung cấp (Full width card dưới Khối 1) */
+  .customer-product-merchant-section {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 22px 28px !important;
+    margin: 0 !important;
+  }
+
+  .customer-product-merchant-section .customer-store-section-header {
+    margin-bottom: 14px;
+  }
+
+  .customer-product-merchant-section .customer-store-section-title {
+    font-size: 15px;
+    font-weight: 750;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .customer-product-merchant-card {
+    border: 1px solid #f1f5f9;
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 16px 20px;
+  }
+
+  /* KHỐI 3: Mô tả & Đánh giá (Full width card dưới cùng) */
+  .customer-product-bottom-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 28px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 32px !important;
+  }
+
+  .customer-product-desc-section,
+  .customer-product-reviews-section {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  .customer-product-shopee-header {
+    background: #f8fafc !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 16px !important;
+    border: 1px solid #f1f5f9 !important;
+  }
+
+  .customer-product-shopee-header .customer-store-section-title {
+    font-size: 15px !important;
+    font-weight: 750 !important;
+    color: #334155 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  .customer-product-description {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #334155;
+  }
+
+  /* ẨN HOÀN TOÀN STICKY BOTTOM BAR TRÊN DESKTOP */
+  .customer-product-bottom-bar,
+  .customer-product-bottom-bar-mobile {
+    display: none !important;
   }
 }
 
-/* 7. Store View (MerchantDetailPage) Desktop Layout */
+/* 7. Store View (MerchantDetailPage) Desktop Block Cards Layout */
 @media (min-width: 768px) {
   .customer-store-view {
     padding-bottom: 60px;
     max-width: 1200px;
     margin: 0 auto;
+    padding: 18px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: calc(100dvh - 64px);
+    background: transparent;
+  }
+
+  /* Desktop Breadcrumb Navigation */
+  .customer-store-desktop-breadcrumb {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: #64748b;
+    padding: 2px 4px;
+  }
+
+  .customer-store-breadcrumb-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-primary, #166B4A);
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .customer-store-breadcrumb-back:hover {
+    opacity: 0.8;
+  }
+
+  .customer-store-breadcrumb-sep {
+    color: #cbd5e1;
+  }
+
+  .customer-store-breadcrumb-current {
+    color: #1e293b;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+  }
+
+  /* KHỐI 1: Store Header & Profile Card */
+  .customer-store-header-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .customer-store-hero {
     position: relative;
-    margin: 16px 0 0;
+    width: 100%;
+    height: 280px;
+    margin: 0;
     overflow: visible;
-    height: 320px;
   }
 
   .customer-store-hero-img {
@@ -5116,34 +6345,226 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
     height: 100%;
     object-fit: cover;
     display: block;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .customer-store-hero-scrim {
-    border-radius: 24px;
+    border-radius: 0;
   }
 
-  .customer-store-bags-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+  .customer-store-hero-nav {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+  }
+
+  .customer-store-floating-logo {
+    right: 32px;
+    bottom: -32px;
+    width: 96px;
+    height: 96px;
+    border-radius: 16px;
+    border: 4px solid #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  }
+
+  .customer-store-floating-logo img {
+    border-radius: 12px;
+  }
+
+  .customer-store-info-section {
+    background: transparent;
+    border: none;
+    padding: 32px 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .customer-store-title {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.3;
+    color: #1e293b;
+    padding-right: 120px;
+    margin: 0;
+  }
+
+  .customer-store-address-row {
+    font-size: 14px;
+    gap: 8px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .customer-store-meta-row {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #334155;
+    margin-top: 2px;
+  }
+
+  /* KHỐI 2: Danh sách túi thực phẩm cứu trợ (Bags Card) */
+  .customer-store-bags-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 32px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid var(--color-border-subtle) !important;
+  }
+
+  .customer-store-bags-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .customer-store-bags-header .customer-store-section-title {
+    font-size: 16px;
+    font-weight: 750;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .customer-store-bag-row {
+    padding: 18px 12px;
+    border-radius: 12px;
+    transition: background 0.18s ease;
+  }
+
+  .customer-store-bag-row:hover {
+    background: #f8fafc;
+  }
+
+  .customer-store-bag-thumb-box {
+    width: 96px;
+    height: 96px;
+    flex: 0 0 96px;
+    border-radius: 14px;
+  }
+
+  .customer-store-bag-name {
+    font-size: 16px;
+  }
+
+  .customer-store-bag-price {
+    font-size: 20px;
+  }
+
+  /* KHỐI 3: Giới thiệu cửa hàng (About Card) */
+  .customer-store-about-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 32px !important;
+    margin: 0 !important;
+  }
+
+  .customer-store-about-card .customer-store-section-header {
+    margin-bottom: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .customer-store-about-card .customer-store-section-title {
+    font-size: 16px;
+    font-weight: 750;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .customer-store-about-body p {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  /* KHỐI 4: Đánh giá (Reviews Card) */
+  .customer-store-reviews-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 24px 32px !important;
+    margin: 0 !important;
+  }
+
+  .customer-store-reviews-card .customer-store-section-header {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .customer-store-reviews-card .customer-store-section-title {
+    font-size: 16px;
+    font-weight: 750;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .customer-store-ratings-card {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 14px;
+    padding: 18px 24px;
   }
 }
 
 /* 8. Search & Map Page Desktop Layout */
 @media (min-width: 768px) {
+  .customer-app-shell:has(.customer-location-page-fullscreen),
+  .customer-app-shell:has(.customer-yindii-search-container) {
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
   .customer-main-content:has(.customer-yindii-search-container),
   .customer-main-content:has(.customer-location-page-fullscreen) {
     padding-inline: 0 !important;
-    min-height: 100vh;
+    height: calc(100vh - 64px) !important;
+    height: calc(100dvh - 64px) !important;
+    min-height: calc(100vh - 64px) !important;
+    max-height: calc(100dvh - 64px) !important;
+    overflow: hidden !important;
   }
 
   .customer-yindii-search-container,
   .customer-location-page-fullscreen {
     width: min(100%, 1200px);
+    height: calc(100vh - 64px) !important;
+    height: calc(100dvh - 64px) !important;
+    min-height: calc(100vh - 64px) !important;
+    max-height: calc(100dvh - 64px) !important;
     margin: 0 auto;
+    overflow: hidden;
+  }
+
+  .customer-location-bottom-card {
+    width: min(calc(100% - 48px), 640px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: 24px;
+    padding: 16px 20px;
+    border-radius: 20px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+  }
+
+  .customer-location-gps-fab {
+    bottom: 200px;
+    right: 24px;
   }
 
   .customer-yindii-list-container {
@@ -5162,9 +6583,10 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 /* 9. Profile Page Desktop Layout */
 @media (min-width: 768px) {
   .customer-profile-screen {
-    width: min(100%, 1000px);
+    width: min(100%, 860px);
     margin: 0 auto;
     gap: 28px;
+    padding-top: 20px;
   }
 
   .customer-profile-card {
@@ -5196,31 +6618,222 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   }
 }
 
-/* 10. Checkout & Payment Desktop Layout */
+/* 10. Checkout & Payment Desktop Layout (Fixed 2-Column Split) */
 @media (min-width: 860px) {
   .customer-checkout-screen {
-    width: min(100%, 1000px);
+    width: min(100%, 1100px);
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 20px;
+  }
+
+  .customer-checkout-content {
     display: grid;
     grid-template-columns: 1fr 380px;
-    gap: 28px;
+    gap: 32px;
     align-items: start;
   }
 
-  .customer-checkout-screen > .customer-screen-header {
-    grid-column: 1 / -1;
+  .customer-checkout-form-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
   }
 
-  .customer-checkout-screen .gsf-order-summary {
+  .customer-checkout-summary-col {
     position: sticky;
-    top: 90px;
+    top: 88px;
   }
 
   .customer-payment-screen {
     width: min(100%, 800px);
     margin: 0 auto;
+    padding-top: 20px;
   }
 }
+
+/* 11. Order Detail Page Desktop Layout */
+@media (min-width: 768px) {
+  .customer-order-detail-screen {
+    width: min(100%, 860px);
+    margin: 0 auto;
+    gap: 20px;
+    padding-top: 20px;
+  }
+}
+
+/* 12. Notifications Page Shopee Desktop Layout */
+@media (min-width: 768px) {
+  .customer-notifications-screen {
+    width: min(100%, 1000px);
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+    min-height: calc(100dvh - 64px);
+    background: transparent;
+  }
+
+  .customer-notifications-screen .customer-screen-header {
+    margin-bottom: 20px;
+    padding: 0 4px;
+  }
+
+  /* Ẩn nút Back trên Desktop Web */
+  .customer-notifications-screen .customer-screen-header .customer-round-button {
+    display: none !important;
+  }
+
+  /* Căn tiêu đề Thông báo chuẩn Desktop Web */
+  .customer-notifications-screen .customer-screen-header-title {
+    position: static !important;
+    transform: none !important;
+    text-align: left !important;
+    max-width: none !important;
+  }
+
+  .customer-notifications-screen .customer-screen-header h1 {
+    text-align: left !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+  }
+
+  /* Nút Đánh dấu Đã đọc tất cả trên Desktop Web: hiển thị dạng pill đầy đủ chữ và icon */
+  .customer-read-all-btn {
+    width: auto !important;
+    height: auto !important;
+    padding: 7px 14px !important;
+    border-radius: 20px !important;
+    gap: 6px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: var(--color-primary) !important;
+    border-color: #d4e7db !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 4px rgba(0, 61, 39, 0.05) !important;
+  }
+
+  .customer-read-all-btn .customer-read-all-text {
+    display: inline !important;
+  }
+
+  .customer-read-all-btn .customer-read-all-icon {
+    width: 16px !important;
+    height: 16px !important;
+    color: var(--color-primary) !important;
+  }
+
+  .customer-read-all-btn:hover:not(:disabled) {
+    background: var(--color-primary-soft) !important;
+    border-color: #a7d0b8 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 8px rgba(0, 61, 39, 0.09) !important;
+  }
+
+  .customer-notifications-screen .customer-notification-list {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    padding: 0;
+    gap: 0;
+  }
+
+  .customer-notifications-screen .customer-notification-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 20px !important;
+    padding: 20px 24px !important;
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background 0.15s ease;
+  }
+
+  .customer-notifications-screen .customer-notification-card:last-child {
+    border-bottom: none !important;
+  }
+
+  .customer-notifications-screen .customer-notification-card:hover {
+    background: #f8fafc;
+  }
+
+  .customer-notifications-screen .customer-notification-card.is-unread {
+    background: #fff8f0 !important;
+    border-left: 4px solid #f97316 !important;
+  }
+
+  .customer-notifications-screen .customer-notification-card.is-unread:hover {
+    background: #ffeedd !important;
+  }
+
+  .customer-notifications-screen .customer-notification-thumb-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    margin-top: 0;
+  }
+
+  .customer-notifications-screen .customer-notification-thumb-wrap.is-logo .customer-notification-thumb-img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .customer-notifications-screen .customer-notification-content-col {
+    flex: 1;
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .customer-notifications-screen .customer-notification-item-title {
+    font-size: 15px;
+    font-weight: 750;
+    color: #1e293b;
+  }
+
+  .customer-notifications-screen .customer-notification-item-body {
+    font-size: 13.5px;
+    color: #475569;
+    line-height: 1.55;
+  }
+
+  .customer-notifications-screen .customer-notification-item-time {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .customer-notifications-screen .customer-notification-action-col {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+
+  .customer-notifications-screen .customer-notification-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .customer-notifications-screen .customer-notification-action-btn:hover {
+    border-color: var(--color-primary, #166B4A);
+    color: var(--color-primary, #166B4A);
+    background: rgba(22, 107, 74, 0.04);
+  }
+}
+
 
 
 

@@ -33,19 +33,16 @@ interface CheckoutPageProps {
 }
 
 export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = false, onBack, onContinue }: CheckoutPageProps) {
-  const defaultPickup = `${items[0]?.bag.pickupStart ?? '18:00'} - ${items[0]?.bag.pickupEnd ?? '20:00'}`;
+  const pickupTime = `${items[0]?.bag.pickupStart ?? '18:00'} - ${items[0]?.bag.pickupEnd ?? '20:00'}`;
   const [name, setName] = useState(user.name || '');
   const [phone, setPhone] = useState(user.phone || '');
   const [nameTouched, setNameTouched] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
-  const [pickupTime, setPickupTime] = useState(defaultPickup);
   const [voucherCode, setVoucherCode] = useState('');
   const [customInputCode, setCustomInputCode] = useState('');
   const [note, setNote] = useState('');
-  const [isPickupOpen, setIsPickupOpen] = useState(false);
   const [isVoucherOpen, setIsVoucherOpen] = useState(false);
 
-  const pickupRef = useRef<HTMLDivElement>(null);
   const voucherRef = useRef<HTMLDivElement>(null);
 
   // Mặc định điền Họ tên và Số điện thoại từ tài khoản đã đăng nhập
@@ -79,17 +76,8 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
   const discountAmount = voucher?.discountValue ?? 0;
   const total = Math.max(0, subtotal - discountAmount);
 
-  const pickupOptions = [
-    { time: defaultPickup, tag: 'Theo giờ quán' },
-    { time: '19:30 - 20:30', tag: 'Ca tối' },
-    { time: '20:00 - 21:00', tag: 'Ca muộn' },
-  ];
-
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (pickupRef.current && !pickupRef.current.contains(event.target as Node)) {
-        setIsPickupOpen(false);
-      }
       if (voucherRef.current && !voucherRef.current.contains(event.target as Node)) {
         setIsVoucherOpen(false);
       }
@@ -122,7 +110,9 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
     <div className="customer-screen customer-checkout-screen">
       <ScreenHeader title="Xác nhận đơn hàng" onBack={onBack} />
 
-      <FormSection title="Thông tin người nhận">
+      <div className="customer-checkout-content">
+        <div className="customer-checkout-form-col">
+          <FormSection title="Thông tin người nhận">
         <label className="customer-field-label">
           <div className="customer-field-label-header">
             <span>Họ và tên người nhận</span>
@@ -187,54 +177,7 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
 
       <FormSection title="Thông tin nhận hàng">
         <InfoRow icon={<MapPin size={19} />} label="Địa điểm" value={items[0]?.bag.merchantName} />
-
-        <div className="customer-dropdown-container" ref={pickupRef}>
-          <label className="customer-field-label">
-            <span>Khung giờ nhận</span>
-            <button
-              type="button"
-              className={`customer-custom-select-trigger ${isPickupOpen ? 'is-open' : ''}`}
-              onClick={() => {
-                setIsPickupOpen(!isPickupOpen);
-                setIsVoucherOpen(false);
-              }}
-            >
-              <div className="customer-select-trigger-left">
-                <Clock3 size={18} />
-                <span className="customer-select-value">{pickupTime}</span>
-              </div>
-              <ChevronDown
-                size={18}
-                className={`customer-select-chevron ${isPickupOpen ? 'is-rotated' : ''}`}
-              />
-            </button>
-          </label>
-
-          {isPickupOpen && (
-            <div className="customer-custom-dropdown-menu">
-              {pickupOptions.map((opt) => {
-                const isSelected = pickupTime === opt.time;
-                return (
-                  <button
-                    key={opt.time}
-                    type="button"
-                    className={`customer-dropdown-option ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => {
-                      setPickupTime(opt.time);
-                      setIsPickupOpen(false);
-                    }}
-                  >
-                    <div className="customer-dropdown-option-info">
-                      <span className="customer-dropdown-time">{opt.time}</span>
-                      {opt.tag && <small className="customer-dropdown-tag">{opt.tag}</small>}
-                    </div>
-                    {isSelected && <Check size={16} className="customer-dropdown-check" />}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <InfoRow icon={<Clock3 size={19} />} label="Khung giờ nhận" value={pickupTime} />
       </FormSection>
 
       <FormSection title="Đơn hàng">
@@ -258,7 +201,6 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
               className={`customer-custom-select-trigger ${isVoucherOpen ? 'is-open' : ''}`}
               onClick={() => {
                 setIsVoucherOpen(!isVoucherOpen);
-                setIsPickupOpen(false);
               }}
             >
               <div className="customer-select-trigger-left">
@@ -450,38 +392,43 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
         </div>
       )}
 
-      <OrderSummary
-        rows={[
-          { label: 'Tạm tính', value: `${subtotal.toLocaleString('vi-VN')}đ` },
-          { label: 'Khuyến mãi', value: `-${discountAmount.toLocaleString('vi-VN')}đ`, tone: 'saving' },
-          { label: 'Tổng thanh toán', value: `${total.toLocaleString('vi-VN')}đ`, tone: 'total' },
-        ]}
-        action={
-          <Button
-            fullWidth
-            size="lg"
-            disabled={!isFormValid || isSubmitting}
-            onClick={() => {
-              if (isSubmitting) return;
-              setNameTouched(true);
-              setPhoneTouched(true);
-              if (!isFormValid) return;
+        </div>
 
-              onContinue({
-                customerName: name.trim(),
-                phone: phoneValidation.cleaned,
-                pickupTime,
-                voucherCode: voucher?.code,
-                discountAmount,
-                note,
-                paymentMethod: 'payos_vietqr',
-              });
-            }}
-          >
-            {isSubmitting ? 'Đang khởi tạo đơn hàng...' : 'Tiếp tục thanh toán'}
-          </Button>
-        }
-      />
+        <div className="customer-checkout-summary-col">
+          <OrderSummary
+            rows={[
+              { label: 'Tạm tính', value: `${subtotal.toLocaleString('vi-VN')}đ` },
+              { label: 'Khuyến mãi', value: `-${discountAmount.toLocaleString('vi-VN')}đ`, tone: 'saving' },
+              { label: 'Tổng thanh toán', value: `${total.toLocaleString('vi-VN')}đ`, tone: 'total' },
+            ]}
+            action={
+              <Button
+                fullWidth
+                size="lg"
+                disabled={!isFormValid || isSubmitting}
+                onClick={() => {
+                  if (isSubmitting) return;
+                  setNameTouched(true);
+                  setPhoneTouched(true);
+                  if (!isFormValid) return;
+
+                  onContinue({
+                    customerName: name.trim(),
+                    phone: phoneValidation.cleaned,
+                    pickupTime,
+                    voucherCode: voucher?.code,
+                    discountAmount,
+                    note,
+                    paymentMethod: 'payos_vietqr',
+                  });
+                }}
+              >
+                {isSubmitting ? 'Đang khởi tạo đơn hàng...' : 'Tiếp tục thanh toán'}
+              </Button>
+            }
+          />
+        </div>
+      </div>
     </div>
   );
 }

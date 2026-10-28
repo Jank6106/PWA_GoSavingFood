@@ -154,13 +154,32 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
           } else if (payload.eventType === 'UPDATE' && payload.new) {
             if (
               payload.new.is_available === false ||
-              payload.new.deleted_at != null ||
-              (payload.new.quantity != null && payload.new.quantity <= 0)
+              payload.new.deleted_at != null
             ) {
               setCatalog((current) => {
                 const updated = {
                   ...current,
                   bags: current.bags.filter((b) => b.id !== payload.new.id),
+                };
+                try {
+                  localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(updated));
+                } catch {}
+                return updated;
+              });
+            } else if (payload.new.quantity != null) {
+              // Cập nhật số lượng túi thay vì xóa khỏi danh mục khi số lượng về 0
+              setCatalog((current) => {
+                const updated = {
+                  ...current,
+                  bags: current.bags.map((b) =>
+                    b.id === payload.new.id
+                      ? {
+                          ...b,
+                          quantity: Number(payload.new.quantity),
+                          isAvailable: payload.new.is_available ?? b.isAvailable,
+                        }
+                      : b
+                  ),
                 };
                 try {
                   localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(updated));

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { AppLayout } from './app/layouts/AppLayout';
 import { AuthProvider } from './contexts/AuthContext';
@@ -11,7 +11,7 @@ import { ProfilePage } from './features/profile/pages/ProfilePage';
 import { useCart } from './hooks/useCart';
 import { useAuth } from './hooks/useAuth';
 import { useCustomerCatalog } from './hooks/useCustomerCatalog';
-import { customerService } from './services/customer.service';
+import { customerService, optimizeImageUrl } from './services/customer.service';
 
 // Lazy-load các trang nặng hoặc chứa mapbox-gl để giảm 70% dung lượng bundle ban đầu
 const SearchPage = lazy(() => import('./features/search/pages/SearchPage').then((m) => ({ default: m.SearchPage })));
@@ -460,6 +460,15 @@ function CustomerApp() {
   const route = history[history.length - 1] || { name: 'tabs', tab: 'home' };
   const activeTab: CustomerTab = route.name === 'tabs' ? route.tab : 'home';
 
+  const activeNav = useMemo(() => {
+    if (route.name === 'tabs') return route.tab;
+    if (route.name === 'notifications') return 'notifications';
+    if (route.name === 'order' || route.name === 'review' || route.name === 'report') return 'orders';
+    if (route.name === 'checkout' || route.name === 'payment' || route.name === 'success') return 'cart';
+    if (route.name === 'search' || route.name === 'bags' || route.name === 'bag' || route.name === 'merchant' || route.name === 'merchant_reviews' || route.name === 'brand' || route.name === 'location') return 'home';
+    return 'home';
+  }, [route]);
+
   const previousRouteRef = useRef<AppRoute>(route);
   useEffect(() => {
     const prevRoute = previousRouteRef.current;
@@ -719,6 +728,66 @@ function CustomerApp() {
     savePendingAuth(null);
   }, [auth.isAuthenticated, auth.user?.id, pendingAuthTarget, catalog.bags, catalog.isLoading, directBag]);
 
+  const enrichedNotifications = useMemo(() => {
+    return notifications.map((item) => {
+      let resolvedImage = item.imageUrl || item.data?.imageUrl || item.data?.image_url || null;
+
+      if (!resolvedImage) {
+        const orderId = item.data?.orderId || item.data?.order_id;
+        if (orderId) {
+          const order = orders.find((o) => o.id === orderId);
+          resolvedImage = order?.items[0]?.imageUrl || null;
+          if (!resolvedImage && order?.items[0]?.bagId) {
+            resolvedImage = catalog.bags.find((b) => b.id === order.items[0].bagId)?.imageUrl || null;
+          }
+        }
+      }
+
+      if (!resolvedImage) {
+        const bagId = item.data?.bagId || item.data?.bag_id;
+        if (bagId) {
+          resolvedImage = catalog.bags.find((b) => b.id === bagId)?.imageUrl || null;
+        }
+      }
+
+      if (!resolvedImage) {
+        const merchantId = item.data?.merchantId || item.data?.merchant_id;
+        if (merchantId) {
+          resolvedImage = catalog.merchants.find((m) => m.id === merchantId)?.logo || null;
+        }
+      }
+
+      if (resolvedImage) {
+        resolvedImage = optimizeImageUrl(resolvedImage, 120, 75);
+      }
+
+      if (resolvedImage !== item.imageUrl) {
+        return { ...item, imageUrl: resolvedImage };
+      }
+      return item;
+    });
+  }, [notifications, orders, catalog.bags, catalog.merchants]);
+
+  const handleSelectNotification = (item: NotificationItem) => {
+    if (!item.read) {
+      void customerService.markNotificationRead(item.id);
+      setNotifications((current) =>
+        current.map((n) => (n.id === item.id ? { ...n, read: true } : n))
+      );
+    }
+    const orderId = item.data?.orderId || item.data?.order_id;
+    const bagId = item.data?.bagId || item.data?.bag_id;
+    const merchantId = item.data?.merchantId || item.data?.merchant_id;
+
+    if (orderId) {
+      push({ name: 'order', id: orderId });
+    } else if (bagId) {
+      push({ name: 'bag', id: bagId });
+    } else if (merchantId) {
+      push({ name: 'merchant', id: merchantId });
+    }
+  };
+
   const handleCheckoutContinue = async (draft: CheckoutDraft, buyNowItem?: CartItem) => {
     const orderItems = buyNowItem ? [buyNowItem] : cart.items;
     if (!orderItems.length || isSubmitting) return;
@@ -860,7 +929,7 @@ function CustomerApp() {
 
   const renderScreen = () => {
     if (route.name === 'tabs') {
-      if (route.tab === 'home') return <HomePage {...catalog} location={location} onSearch={() => push({ name: 'search' })} onLocation={() => push({ name: 'location' })} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })} onAdd={addToCart} onViewAll={() => push({ name: 'bags' })} />;
+      if (route.tab === 'home') return <HomePage {...catalog} location={location} onSearch={() => push({ name: 'search' })} onLocation={() => push({ name: 'location' })} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })} onAdd={addToCart} onViewAll={(categoryId) => push({ name: 'bags', categoryId })} />;
       if (route.tab === 'cart') return <CartPage items={cart.items} isAuthenticated={auth.isAuthenticated} {...cart.summary} onLogin={auth.showAuthModal} onExplore={home} onCheckout={startCheckout} onUpdate={cart.updateQuantity} onRemove={cart.removeItem} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} />;
       if (route.tab === 'orders') return <OrdersPage orders={orders} isAuthenticated={auth.isAuthenticated} onLogin={auth.showAuthModal} onOpenOrder={(order) => push({ name: 'order', id: order.id })} />;
       return (
@@ -907,7 +976,23 @@ function CustomerApp() {
       );
 
 
-    if (route.name === 'bags') return <BagsPage bags={catalog.bags} categories={catalog.categories} onBack={back} onOpen={(bag) => push({ name: 'bag', id: bag.id })} onAdd={addToCart} />;
+    if (route.name === 'bags') {
+      const selectedCatId = route.categoryId;
+      const filteredBags = selectedCatId && selectedCatId !== 'all'
+        ? catalog.bags.filter((b) => b.category === selectedCatId)
+        : catalog.bags;
+      const targetCategory = catalog.categories.find((c) => c.id === selectedCatId);
+      return (
+        <BagsPage
+          title={targetCategory ? `Túi thực phẩm: ${targetCategory.label}` : 'Gợi ý cho bạn'}
+          bags={filteredBags}
+          categories={catalog.categories}
+          onBack={back}
+          onOpen={(bag) => push({ name: 'bag', id: bag.id })}
+          onAdd={addToCart}
+        />
+      );
+    }
     if (route.name === 'bag')
       return (
         <BagDetailPage
@@ -1008,6 +1093,24 @@ function CustomerApp() {
           total={totalAmount}
           isSubmitting={isSubmitting}
           onBack={back}
+          onCancel={(cancelledOrderId, reason) => {
+            const targetId = cancelledOrderId || qOrderId;
+            if (targetId) {
+              setOrders((prev) =>
+                prev.map((o) =>
+                  o.id.toLowerCase() === targetId.toLowerCase()
+                    ? {
+                        ...o,
+                        status: 'cancelled',
+                        cancelledAt: new Date().toISOString(),
+                        cancelReason: reason || 'Người dùng hủy thanh toán tại bước quét mã QR',
+                      }
+                    : o
+                )
+              );
+            }
+            back();
+          }}
           onConfirm={() => {
             const confirmedOrder = matchedOrder || route.order;
             if (confirmedOrder) {
@@ -1133,12 +1236,13 @@ function CustomerApp() {
     if (route.name === 'notifications')
       return (
         <NotificationsPage
-          notifications={notifications}
+          notifications={enrichedNotifications}
           onBack={back}
           onReadAll={() => {
             void customerService.markAllNotificationsRead();
             setNotifications((current) => current.map((item) => ({ ...item, read: true })));
           }}
+          onSelectNotification={handleSelectNotification}
         />
       );
     if (route.name === 'location')
@@ -1161,15 +1265,18 @@ function CustomerApp() {
     <>
       <AppLayout
         activeTab={activeTab}
+        activeNav={activeNav}
         cartCount={cart.summary.count}
         ordersBadgeCount={ordersBadgeCount}
         location={location}
         unreadCount={notifications.filter((item) => !item.read).length}
+        notifications={enrichedNotifications}
         showHeader={isTabs && route.tab === 'home'}
         showBottomNav={isTabs}
         onTabChange={openTab}
         onLocationClick={() => push({ name: 'location' })}
         onNotificationClick={() => push({ name: 'notifications' })}
+        onSelectNotification={handleSelectNotification}
       >
         <Suspense fallback={<ScreenLoadingFallback />}>
           {renderScreen()}

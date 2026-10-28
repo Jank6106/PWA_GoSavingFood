@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, Clock3, MapPin, Plus } from 'lucide-react';
 import type { SurpriseBag } from '../types/customer.types';
 import { getBagTimingInfo } from '../utils/bagTiming';
+import { optimizeImageUrl } from '../../services/customer.service';
 import { PriceDisplay } from './PriceDisplay';
 
 interface BagCardProps {
@@ -35,7 +36,7 @@ export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen
       onClick={() => onOpen(bag)}
     >
       <div className="customer-bag-media">
-        <img src={bag.imageUrl} alt={bag.name} className="customer-bag-photo" loading="lazy" />
+        <img src={optimizeImageUrl(bag.imageUrl, 480, 75)} alt={bag.name} className="customer-bag-photo" loading="lazy" />
       </div>
 
       <div className="customer-bag-top-badges">

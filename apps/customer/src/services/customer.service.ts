@@ -56,9 +56,10 @@ export const HOME_CATEGORIES: Category[] = [
   { id: 'all', label: 'Tất cả', icon: 'all' },
   { id: 'bakery', label: 'Bánh ngọt', icon: 'bakery' },
   { id: 'meat', label: 'Món nóng', icon: 'meat' },
-  { id: 'vegetarian', label: 'Ăn xanh', icon: 'vegetarian' },
+  { id: 'vegetarian', label: 'Món Chay', icon: 'vegetarian' },
   { id: 'beverage', label: 'Đồ uống', icon: 'beverage' },
-  { id: 'other', label: 'Túi bí mật', icon: 'other' },
+  { id: 'raw_food', label: 'Rau củ', icon: 'raw_food' },
+  { id: 'other', label: 'Combo bất ngờ', icon: 'other' },
 ];
 
 const formatRelativeTime = (iso?: string | null) => {
@@ -77,10 +78,26 @@ const formatRelativeTime = (iso?: string | null) => {
 
 export const optimizeImageUrl = (url?: string | null, width = 480, quality = 75): string => {
   if (!url) return '';
+  // SVG vector format is already lossless and super lightweight, bypass compression
+  if (url.startsWith('data:image/svg+xml') || url.endsWith('.svg')) return url;
+
+  // Unsplash CDN auto-format to WebP/AVIF with dimensions and quality compression
   if (url.includes('images.unsplash.com')) {
     const base = url.split('?')[0];
     return `${base}?auto=format&fit=crop&w=${width}&q=${quality}`;
   }
+
+  // Cloudinary CDN optimization
+  if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+    return url.replace('/upload/', `/upload/f_auto,q_${quality},w_${width},c_limit/`);
+  }
+
+  // Google User Content (avatars/photos)
+  if (url.includes('googleusercontent.com')) {
+    const base = url.split('=')[0];
+    return `${base}=w${width}-c`;
+  }
+
   return url;
 };
 
@@ -177,7 +194,9 @@ const normalizeCategory = (cat?: string | null): Exclude<FoodCategory, 'all'> =>
   if (c === 'bakery' || c.includes('bánh')) return 'bakery';
   if (c === 'meat' || c.includes('mặn') || c.includes('thịt')) return 'meat';
   if (c === 'beverage' || c.includes('uống') || c.includes('nước') || c.includes('cà phê')) return 'beverage';
-  if (c === 'vegetarian' || c === 'raw_food' || c.includes('chay') || c.includes('rau') || c.includes('quả') || c.includes('salad')) return 'vegetarian';
+  if (c === 'raw_food' || c.includes('rau') || c.includes('củ') || c.includes('trái cây') || c.includes('nông sản')) return 'raw_food';
+  if (c === 'vegetarian' || c.includes('chay') || c.includes('healthy')) return 'vegetarian';
+  if (c === 'seafood' || c.includes('hải sản') || c.includes('cá') || c.includes('tôm')) return 'seafood';
   return 'other';
 };
 
@@ -2417,7 +2436,7 @@ export const customerService = {
             discountPrice: Number(b.discount_price) || 30000,
             category: normalizeCategory(b.category),
             imageUrl: b.image_url || getBagImage(b.name, null),
-            quantity: Number(b.quantity) || 5,
+            quantity: b.quantity != null ? Number(b.quantity) : 0,
             maxQuantity: Number(b.max_quantity) || 2,
             pickupStart: b.pickup_start?.slice(0, 5) || '11:00',
             pickupEnd: b.pickup_end?.slice(0, 5) || '14:00',
@@ -2541,7 +2560,7 @@ export const customerService = {
           discountPrice: Number(data.discount_price),
           category: (data.category as Exclude<FoodCategory, 'all'>) || 'vegetarian',
           imageUrl: data.image_url || getBagImage(data.name, null),
-          quantity: Number(data.quantity) || 1,
+          quantity: data.quantity != null ? Number(data.quantity) : 0,
           maxQuantity: Number(data.max_quantity) || 2,
           pickupStart: data.pickup_start?.slice(0, 5) || '11:00',
           pickupEnd: data.pickup_end?.slice(0, 5) || '14:00',
@@ -2785,6 +2804,7 @@ export const customerService = {
           body: n.body || '',
           time: formatRelativeTime(n.created_at),
           read: Boolean(n.is_read),
+          imageUrl: n.image_url || n.data?.imageUrl || n.data?.image_url || null,
           data: n.data || null,
         }));
       }
