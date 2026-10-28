@@ -460,9 +460,6 @@ export function RevenueBarChartCard({
     Math.round(maxValue * 0.25),
     0,
   ];
-
-  const activePoint = activeIdx !== null && safePoints[activeIdx] ? safePoints[activeIdx] : null;
-
   return (
     <section className="merchant-card merchant-barchart-card">
       <header className="merchant-barchart-header">
@@ -472,17 +469,6 @@ export function RevenueBarChartCard({
         </div>
 
         <div className="merchant-barchart-controls">
-          {activePoint && (
-            <div className="merchant-barchart-tooltip-pill">
-              <span className="tooltip-dot" />
-              <span className="tooltip-label">{activePoint.date || activePoint.label}:</span>
-              <strong className="tooltip-amount">{activePoint.value.toLocaleString('vi-VN')} VND</strong>
-              {activePoint.orderCount !== undefined && activePoint.orderCount > 0 && (
-                <small className="tooltip-orders">({activePoint.orderCount} đơn)</small>
-              )}
-            </div>
-          )}
-
           {/* Dải Tab chuyển đổi trực tiếp */}
           <div className="merchant-chart-tabs" role="tablist">
             {tabOptions.map((tab) => (
