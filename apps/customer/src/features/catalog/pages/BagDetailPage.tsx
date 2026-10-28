@@ -251,6 +251,13 @@ export function BagDetailPage({
               src={coverUrl}
               alt={bag.name}
               className="customer-product-hero-img"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                const fallback = merchant?.banner || merchant?.logo || DEFAULT_COVER;
+                if (target.src !== fallback) {
+                  target.src = fallback;
+                }
+              }}
             />
             <div className="customer-product-hero-scrim" />
 
