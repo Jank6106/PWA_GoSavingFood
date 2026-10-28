@@ -143,15 +143,26 @@ export async function fetchMerchantOrderById(orderId: string): Promise<MerchantO
       if (!error && data) return mapDbOrder(data);
     }
 
-    const cleanCode = orderId.replace(/^GSF-ORDER-|^GSF-|^#/, '').trim().toLowerCase();
-    if (cleanCode) {
+    const token = orderId.trim().replace(/^#+/, '').replace(/^gsf-(?:order-|qr-)?/i, '').trim();
+    if (token) {
       const { data, error } = await supabase
         .from('orders')
         .select(ORDER_SELECT)
-        .ilike('id', `${cleanCode}%`)
+        .ilike('qr_code', `%${token}%`)
         .limit(1)
         .maybeSingle();
       if (!error && data) return mapDbOrder(data);
+
+      const numericCode = Number(orderId.replace(/\D/g, ''));
+      if (Number.isInteger(numericCode) && numericCode > 1000) {
+        const { data: numOrder } = await supabase
+          .from('orders')
+          .select(ORDER_SELECT)
+          .eq('payment_order_code', numericCode)
+          .limit(1)
+          .maybeSingle();
+        if (numOrder) return mapDbOrder(numOrder);
+      }
     }
     return null;
   } catch (err) {

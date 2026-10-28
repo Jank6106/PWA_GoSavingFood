@@ -16,7 +16,7 @@ import { getBagTimingInfo } from '../../../shared/utils/bagTiming';
 import type { CustomerReview, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const DEFAULT_COVER =
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80';
+  'https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/meals/meal-008.webp';
 
 interface BagDetailPageProps {
   bag: SurpriseBag | null;
@@ -251,11 +251,16 @@ export function BagDetailPage({
               src={coverUrl}
               alt={bag.name}
               className="customer-product-hero-img"
+              loading="eager"
+              decoding="async"
               onError={(e) => {
                 const target = e.currentTarget as HTMLImageElement;
-                const fallback = merchant?.banner || merchant?.logo || DEFAULT_COVER;
-                if (target.src !== fallback) {
-                  target.src = fallback;
+                if (!target.dataset.triedFallback) {
+                  target.dataset.triedFallback = '1';
+                  target.src = (merchant?.banner && !merchant.banner.endsWith('.jpg')) ? merchant.banner : DEFAULT_COVER;
+                } else if (target.dataset.triedFallback === '1') {
+                  target.dataset.triedFallback = '2';
+                  target.src = DEFAULT_COVER;
                 }
               }}
             />

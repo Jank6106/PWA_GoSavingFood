@@ -3700,8 +3700,8 @@ export const customerService = {
       if (isUuid) {
         query = query.eq('id', cleanId);
       } else {
-        const codeOnly = cleanId.replace(/^GSF-ORDER-|^GSF-|^#/, '').trim();
-        query = query.or(`id.ilike.${codeOnly}%,order_code.ilike.%${cleanId}%,qr_code.ilike.%${cleanId}%`);
+        const token = cleanId.replace(/^#+/, '').replace(/^gsf-(?:order-|qr-)?/i, '').trim();
+        query = query.ilike('qr_code', `%${token}%`);
       }
 
       const { data, error } = await query.limit(1).maybeSingle();
@@ -3709,14 +3709,16 @@ export const customerService = {
         return mapCustomerOrderRow(data);
       }
 
-      if (!isUuid) {
-        const { data: fallback } = await supabase
+      // Fallback: match by payment_order_code if numeric
+      const numericCode = Number(cleanId.replace(/\D/g, ''));
+      if (Number.isInteger(numericCode) && numericCode > 1000) {
+        const { data: numOrder } = await supabase
           .from('orders')
           .select(CUSTOMER_ORDER_SELECT)
-          .ilike('qr_code', `%${cleanId}%`)
+          .eq('payment_order_code', numericCode)
           .limit(1)
           .maybeSingle();
-        if (fallback) return mapCustomerOrderRow(fallback);
+        if (numOrder) return mapCustomerOrderRow(numOrder);
       }
 
       try {
