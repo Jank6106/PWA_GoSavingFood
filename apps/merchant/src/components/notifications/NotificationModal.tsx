@@ -120,7 +120,8 @@ export function NotificationModal({
         {items.length ? (
           items.map((item) => {
             const cleanTitle = stripEmojis(item.title);
-            const orderCode = getDisplayOrderCode(item);
+            const rawCode = getDisplayOrderCode(item);
+            const displayCode = rawCode ? (rawCode.startsWith('#') ? rawCode : `#${rawCode}`) : '';
             const cleanDesc = stripEmojis(item.message) || item.message || '';
             const isExpanded = expandedId === item.id;
 
@@ -148,13 +149,13 @@ export function NotificationModal({
                 <div className="merchant-notification-top">
                   <div className={`merchant-notification-icon ${iconTypeClass}`}>
                     {item.type === 'new_order' ? (
-                      <ShoppingBag size={17} strokeWidth={2} />
+                      <ShoppingBag size={18} strokeWidth={2.2} />
                     ) : item.type === 'completed_order' ? (
-                      <CheckCircle2 size={17} strokeWidth={2} />
+                      <CheckCircle2 size={18} strokeWidth={2.2} />
                     ) : item.type === 'cancelled_order' ? (
-                      <AlertCircle size={17} strokeWidth={2} />
+                      <AlertCircle size={18} strokeWidth={2.2} />
                     ) : (
-                      <Bell size={17} strokeWidth={2} />
+                      <Bell size={18} strokeWidth={2.2} />
                     )}
                   </div>
 
@@ -172,22 +173,25 @@ export function NotificationModal({
                     {item.storeName && (
                       <div style={{ marginTop: 2 }}>
                         <span className="merchant-notification-store-tag">
-                          <Store size={11} /> {item.storeName}
+                          <Store size={12} /> {item.storeName}
                         </span>
                       </div>
                     )}
 
-                    {!isExpanded && cleanDesc && (
-                      <p className="merchant-notification-desc">{cleanDesc}</p>
+                    {!isExpanded && (
+                      <>
+                        {cleanDesc && (
+                          <p className="merchant-notification-desc">{cleanDesc}</p>
+                        )}
+                        <div className="merchant-notification-meta">
+                          {displayCode && (
+                            <span className="merchant-notification-code">{displayCode}</span>
+                          )}
+                          {displayCode && <span className="merchant-notification-sep">·</span>}
+                          <span className="merchant-notification-time">{item.timeAgo}</span>
+                        </div>
+                      </>
                     )}
-
-                    <div className="merchant-notification-meta">
-                      {orderCode && (
-                        <span className="merchant-notification-code">#{orderCode}</span>
-                      )}
-                      {orderCode && <span className="merchant-notification-sep">·</span>}
-                      <span className="merchant-notification-time">{item.timeAgo}</span>
-                    </div>
                   </div>
                 </div>
 
@@ -201,15 +205,15 @@ export function NotificationModal({
                     </div>
 
                     <div className="merchant-notification-expanded-meta">
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <span className="merchant-notification-time-detail">
                         <Clock size={12} /> {item.timeAgo} ({formatDetailTime(item.createdAt)})
                       </span>
-                      {orderCode && (
-                        <span className="merchant-notification-code">#{orderCode}</span>
+                      {displayCode && (
+                        <span className="merchant-notification-code">{displayCode}</span>
                       )}
                     </div>
 
-                    {(orderCode || item.orderId) && (
+                    {(displayCode || item.orderId) && (
                       <button
                         type="button"
                         className="merchant-notification-cta"
@@ -218,9 +222,9 @@ export function NotificationModal({
                           onNavigateToOrder?.(item);
                         }}
                       >
-                        <ShoppingBag size={15} />
-                        <span>Xem chi tiết đơn hàng #{orderCode}</span>
-                        <ArrowRight size={15} />
+                        <ShoppingBag size={16} />
+                        <span>Xem chi tiết đơn hàng {displayCode}</span>
+                        <ArrowRight size={16} />
                       </button>
                     )}
                   </div>
