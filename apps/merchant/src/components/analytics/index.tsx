@@ -52,8 +52,6 @@ export function PeriodFilterBar({
     { key: 'today', label: 'Hôm nay' },
     { key: 'this_week', label: 'Tuần này' },
     { key: 'this_month', label: 'Tháng này' },
-    { key: 'last_month', label: 'Tháng trước' },
-    { key: 'this_year', label: 'Năm nay' },
   ];
 
   const handleCustomSubmit = (e: React.FormEvent) => {
@@ -65,9 +63,13 @@ export function PeriodFilterBar({
     }
   };
 
-  const isCustom = timeframe === 'custom';
+  const isCustom = timeframe === 'custom' || timeframe === 'last_month' || timeframe === 'this_year';
   const customChipLabel =
-    isCustom && customRange?.start && customRange?.end
+    timeframe === 'last_month'
+      ? 'Tháng trước'
+      : timeframe === 'this_year'
+      ? 'Năm nay'
+      : timeframe === 'custom' && customRange?.start && customRange?.end
       ? `${customRange.start.slice(8, 10)}/${customRange.start.slice(5, 7)} - ${customRange.end.slice(8, 10)}/${customRange.end.slice(5, 7)}`
       : 'Tùy chỉnh...';
 
@@ -107,6 +109,30 @@ export function PeriodFilterBar({
           size="small"
         >
           <form className="merchant-form" onSubmit={handleCustomSubmit}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <button
+                type="button"
+                className={"merchant-filter-chip" + (timeframe === 'last_month' ? " is-active" : "")}
+                style={{ fontSize: 12, padding: '4px 12px' }}
+                onClick={() => {
+                  onSelectTimeframe('last_month');
+                  setCustomModalOpen(false);
+                }}
+              >
+                Tháng trước
+              </button>
+              <button
+                type="button"
+                className={"merchant-filter-chip" + (timeframe === 'this_year' ? " is-active" : "")}
+                style={{ fontSize: 12, padding: '4px 12px' }}
+                onClick={() => {
+                  onSelectTimeframe('this_year');
+                  setCustomModalOpen(false);
+                }}
+              >
+                Năm nay
+              </button>
+            </div>
             <div className="merchant-form-grid">
               <label className="merchant-field">
                 <span>Từ ngày</span>
