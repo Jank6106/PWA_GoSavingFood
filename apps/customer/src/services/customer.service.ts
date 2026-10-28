@@ -4836,7 +4836,9 @@ export const customerService = {
       };
       if (updates.name !== undefined) dbPayload.name = updates.name;
       if (updates.phone !== undefined) dbPayload.phone = updates.phone;
-      if (updates.avatar !== undefined) dbPayload.avatar_url = updates.avatar;
+      if (updates.avatar !== undefined && !updates.avatar.startsWith('data:')) {
+        dbPayload.avatar_url = updates.avatar;
+      }
 
       const { error } = await supabase
         .from('users')
@@ -4855,7 +4857,7 @@ export const customerService = {
         metaPayload.custom_name = trimmedName;
       }
       if (updates.phone) metaPayload.phone = updates.phone;
-      if (updates.avatar) {
+      if (updates.avatar && !updates.avatar.startsWith('data:')) {
         metaPayload.avatar_url = updates.avatar;
         metaPayload.picture = updates.avatar;
         metaPayload.avatar = updates.avatar;

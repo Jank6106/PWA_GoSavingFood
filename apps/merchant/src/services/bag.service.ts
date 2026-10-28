@@ -1,12 +1,81 @@
 import type { BagInput, BagItem, BagStatus } from '../types';
 import { supabase } from './supabase';
-import { optimizeImageUrl } from './utils';
+import { base64ToBlob, optimizeImageUrl } from './utils';
 
 const DEFAULT_BAG_IMAGE = optimizeImageUrl(
   'https://images.unsplash.com/photo-1509440159596-0249088772ff',
   400,
   75
 );
+
+export function getBagCategoryFallbackImage(category = 'bakery'): string {
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('salad') || cat.includes('chay') || cat.includes('vegan')) {
+    return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80';
+  }
+  if (
+    cat.includes('uống') ||
+    cat.includes('nước') ||
+    cat.includes('trà') ||
+    cat.includes('cà phê') ||
+    cat.includes('beverage') ||
+    cat.includes('coffee')
+  ) {
+    return 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80';
+  }
+  if (cat.includes('trái cây') || cat.includes('hoa quả') || cat.includes('fruit')) {
+    return 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=800&q=80';
+  }
+  if (cat.includes('cơm') || cat.includes('mặn') || cat.includes('meal') || cat.includes('thức ăn')) {
+    return 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80';
+  }
+  return DEFAULT_BAG_IMAGE;
+}
+
+export async function uploadBagImageToStorage(
+  folderId: string,
+  imageStr: string,
+  category = 'bakery'
+): Promise<string> {
+  if (!imageStr) {
+    return getBagCategoryFallbackImage(category);
+  }
+
+  // Nếu đã là link HTTPS/CDN, lưu trực tiếp URL sạch
+  if (imageStr.startsWith('http://') || imageStr.startsWith('https://')) {
+    return imageStr;
+  }
+
+  // Nếu là dữ liệu Base64: đẩy lên Supabase Storage bucket 'bag-images'
+  if (imageStr.startsWith('data:')) {
+    try {
+      const blob = base64ToBlob(imageStr);
+      const ext = blob.type.includes('webp') ? 'webp' : blob.type.includes('png') ? 'png' : 'jpg';
+      const fileName = `${folderId}/bag_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('bag-images')
+        .upload(fileName, blob, {
+          contentType: blob.type,
+          upsert: true,
+        });
+
+      if (!uploadError) {
+        const { data } = supabase.storage.from('bag-images').getPublicUrl(fileName);
+        if (data?.publicUrl) {
+          return data.publicUrl;
+        }
+      } else {
+        console.warn('Upload ảnh túi lên Supabase Storage bucket bag-images thất bại:', uploadError.message);
+      }
+    } catch (err) {
+      console.warn('Lỗi khi nén/upload ảnh túi lên storage:', err);
+    }
+  }
+
+  // Fallback an toàn: Dùng ảnh CDN theo danh mục, TUYỆT ĐỐI không lưu Base64 vào database!
+  return getBagCategoryFallbackImage(category);
+}
 
 const BAGS_CACHE_PREFIX = 'gsf_merchant_bags:';
 const bagsInFlight = new Map<string, Promise<BagItem[]>>();
@@ -314,6 +383,9 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     return exp.toISOString();
   })();
 
+  const rawImage = input.imageUrl || input.imageUrls?.[0] || '';
+  const finalImageUrl = await uploadBagImageToStorage(targetStoreId, rawImage, input.category);
+
   const { data, error } = await supabase
     .from('surprise_bags')
     .insert({
@@ -323,7 +395,7 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
       original_price: input.originalPrice,
       discount_price: input.salePrice,
       category: normalizeCategoryToDb(input.category),
-      image_url: input.imageUrl || input.imageUrls?.[0] || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600',
+      image_url: finalImageUrl,
       quantity: input.quantity,
       max_quantity: 2,
       pickup_start:
@@ -358,6 +430,8 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     id: data.id,
     storeId: targetStoreId,
     category: normalizeCategoryToUi(data.category),
+    imageUrl: finalImageUrl,
+    imageUrls: [finalImageUrl],
     availableQuantity: input.quantity,
     status: input.quantity > 0 ? 'active' : 'sold_out',
     createdAt: data.created_at || new Date().toISOString(),
@@ -367,6 +441,9 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
 
 export async function updateBagItem(bagId: string, input: BagInput): Promise<BagItem> {
   invalidateBagInFlight();
+  const rawImage = input.imageUrl || input.imageUrls?.[0] || '';
+  const finalImageUrl = await uploadBagImageToStorage(bagId, rawImage, input.category);
+
   const { error } = await supabase
     .from('surprise_bags')
     .update({
@@ -375,7 +452,7 @@ export async function updateBagItem(bagId: string, input: BagInput): Promise<Bag
       original_price: input.originalPrice,
       discount_price: input.salePrice,
       category: normalizeCategoryToDb(input.category),
-      image_url: input.imageUrl || input.imageUrls[0],
+      image_url: finalImageUrl,
       quantity: input.quantity,
       pickup_start:
         input.pickupTimeStart.length === 5 ? `${input.pickupTimeStart}:00` : input.pickupTimeStart,

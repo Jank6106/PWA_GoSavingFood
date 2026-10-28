@@ -258,15 +258,11 @@ async function uploadStoreImageToStorage(
     console.warn(`Lỗi khi nén/upload ảnh ${prefix}:`, err);
   }
 
-  // Nếu upload storage thất bại và base64 quá lớn (> 60KB), dùng fallback CDN để tránh làm phình DB
-  if (imageStr.length > 60000) {
-    console.warn('Ảnh Base64 quá lớn, dùng fallback CDN để tránh phình database.');
-    return prefix === 'logo'
-      ? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80'
-      : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80';
-  }
-
-  return imageStr;
+  // Fallback an toàn: Nếu upload storage thất bại, dùng CDN fallback - TUYỆT ĐỐI không lưu Base64 vào database!
+  console.warn(`Upload ${prefix} lên ${bucket} thất bại, dùng fallback CDN để bảo vệ database.`);
+  return prefix === 'logo'
+    ? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80'
+    : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80';
 }
 
 export async function updateStoreImages(
