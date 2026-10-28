@@ -131,6 +131,35 @@ export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrde
   return fetchPromise;
 }
 
+export async function fetchMerchantOrderById(orderId: string): Promise<MerchantOrder | null> {
+  try {
+    if (!orderId) return null;
+    if (isValidUuid(orderId)) {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT)
+        .eq('id', orderId)
+        .maybeSingle();
+      if (!error && data) return mapDbOrder(data);
+    }
+
+    const cleanCode = orderId.replace(/^GSF-ORDER-|^GSF-|^#/, '').trim().toLowerCase();
+    if (cleanCode) {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT)
+        .ilike('id', `${cleanCode}%`)
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) return mapDbOrder(data);
+    }
+    return null;
+  } catch (err) {
+    console.warn('fetchMerchantOrderById error:', err);
+    return null;
+  }
+}
+
 const fetchOrderRow = async (orderId: string) => {
   const { data, error } = await supabase
     .from('orders')

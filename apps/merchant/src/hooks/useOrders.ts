@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  fetchMerchantOrderById,
   fetchMerchantOrders,
   getCachedMerchantOrders,
   setCachedMerchantOrders,
@@ -111,19 +112,43 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
 
   useEffect(() => {
     if (!targetOrderId) return;
-    const findAndSelect = () => {
+    let isCancelled = false;
+
+    const findAndSelect = async () => {
+      const cleanTarget = targetOrderId.trim().toLowerCase();
       const target = allOrders.find(
         (o) =>
-          o.id === targetOrderId ||
-          o.orderCode.toLowerCase() === targetOrderId.toLowerCase() ||
-          targetOrderId.toLowerCase().includes(o.orderCode.toLowerCase())
+          o.id.toLowerCase() === cleanTarget ||
+          o.orderCode.toLowerCase() === cleanTarget ||
+          cleanTarget.includes(o.orderCode.toLowerCase()) ||
+          o.orderCode.toLowerCase().includes(cleanTarget.replace(/^#/, ''))
       );
       if (target) {
         setSelectedOrder(target);
         setIsDetailModalOpen(true);
+        return;
+      }
+
+      try {
+        const directOrder = await fetchMerchantOrderById(targetOrderId);
+        if (!isCancelled && directOrder) {
+          setAllOrders((prev) => {
+            if (prev.some((o) => o.id === directOrder.id)) return prev;
+            return [directOrder, ...prev];
+          });
+          setSelectedOrder(directOrder);
+          setIsDetailModalOpen(true);
+        }
+      } catch (err) {
+        console.warn('Lỗi khi nạp chi tiết đơn hàng trực tiếp:', err);
       }
     };
-    findAndSelect();
+
+    void findAndSelect();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [targetOrderId, allOrders]);
 
   const summary = useMemo(

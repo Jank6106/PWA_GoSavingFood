@@ -84,7 +84,8 @@ export default function App() {
 
   const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
   const [isGlobalQRScannerOpen, setIsGlobalQRScannerOpen] = useState(false);
-  const storeId = auth.user?.storeId ?? STORE_ID;
+  const [overrideStoreId, setOverrideStoreId] = useState<string | null>(null);
+  const storeId = overrideStoreId || auth.user?.storeId || STORE_ID;
   const store = useStoreProfile(storeId);
   const { toastMessage, showToast } = useToast();
 
@@ -198,15 +199,19 @@ export default function App() {
     }
   }, [auth.user, route]);
 
-  const handleSelectNotification = useCallback(
+  const handleNavigateToOrder = useCallback(
     (item: NotificationItem) => {
+      if (item.storeId && item.storeId !== storeId) {
+        setOverrideStoreId(item.storeId);
+      }
       notifications.setIsOpen(false);
       navigateTo('orders');
-      if (item.orderId) {
-        setTargetOrderId(item.orderId);
+      const orderTarget = item.orderId || item.orderCode || null;
+      if (orderTarget) {
+        setTargetOrderId(orderTarget);
       }
     },
-    [notifications, navigateTo]
+    [notifications, navigateTo, storeId]
   );
 
   const handleLogin = async (credentials: LoginCredentials) => {
@@ -353,7 +358,7 @@ export default function App() {
         onClose={() => notifications.setIsOpen(false)}
         onRead={(id) => void notifications.markAsRead(id)}
         onReadAll={() => void notifications.markAllAsRead()}
-        onSelect={handleSelectNotification}
+        onNavigateToOrder={handleNavigateToOrder}
       />
     </div>
   );

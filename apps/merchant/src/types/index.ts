@@ -225,6 +225,8 @@ export interface NotificationItem {
   id: string;
   orderId?: string;
   orderCode?: string;
+  storeId?: string;
+  storeName?: string;
   title: string;
   message: string;
   type: 'new_order' | 'pickup_reminder' | 'completed_order' | 'cancelled_order' | 'review_alert';
