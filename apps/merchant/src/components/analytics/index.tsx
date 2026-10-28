@@ -435,7 +435,7 @@ export function RevenueBarChartCard({
     return Math.ceil(maxVal / magnitude) * magnitude;
   }, [points]);
 
-  // 4 mốc lưới trục Y
+  // 5 mốc lưới trục Y (100%, 75%, 50%, 25%, 0%)
   const yTicks = [
     maxValue,
     Math.round(maxValue * 0.75),
@@ -443,11 +443,6 @@ export function RevenueBarChartCard({
     Math.round(maxValue * 0.25),
     0,
   ];
-
-  const svgHeight = 220;
-  const paddingBottom = 46;
-  const paddingTop = 20;
-  const chartHeight = svgHeight - paddingTop - paddingBottom;
 
   const activePoint = activeIdx !== null && points[activeIdx] ? points[activeIdx] : null;
 
@@ -480,90 +475,71 @@ export function RevenueBarChartCard({
           ))}
         </div>
 
-        {/* Khung vẽ cột SVG */}
-        <div className="merchant-barchart-svg-wrapper">
-          <svg
-            className="merchant-barchart-svg"
-            viewBox={`0 0 ${Math.max(points.length * 48, 340)} ${svgHeight}`}
-            preserveAspectRatio="none"
-          >
-            {/* Lưới ngang */}
-            {yTicks.map((_, idx) => {
-              const y = paddingTop + (idx / (yTicks.length - 1)) * chartHeight;
-              return (
-                <line
-                  key={idx}
-                  x1="0"
-                  y1={y}
-                  x2="100%"
-                  y2={y}
-                  stroke="#e2e8f0"
-                  strokeWidth="1"
-                  strokeDasharray="3 3"
-                />
-              );
-            })}
+        {/* Khung vẽ cột HTML/CSS mượt mà, không méo font */}
+        <div className="merchant-barchart-plot-area">
+          {/* Lưới ngang (Gridlines) */}
+          <div className="merchant-barchart-gridlines" aria-hidden="true">
+            {yTicks.map((_, idx) => (
+              <div key={idx} className="merchant-barchart-gridline" />
+            ))}
+          </div>
 
-            {/* Các cột Bar */}
+          {/* Các cột hiển thị (Bars Track) */}
+          <div className="merchant-barchart-bars-track">
             {points.map((pt, idx) => {
-              const totalBars = points.length;
-              const svgWidth = Math.max(totalBars * 48, 340);
-              const colWidth = svgWidth / totalBars;
-              const barWidth = Math.max(12, Math.min(28, colWidth * 0.42));
-              const barX = idx * colWidth + (colWidth - barWidth) / 2;
-
-              const barHeight = Math.max(pt.value > 0 ? (pt.value / maxValue) * chartHeight : 3, 3);
-              const barY = paddingTop + (chartHeight - barHeight);
               const isSelected = activeIdx === idx;
-              const isRotate = totalBars > 7;
-              const shouldRenderLabel = totalBars <= 10 || idx % Math.ceil(totalBars / 6) === 0 || idx === totalBars - 1;
+              const heightPercent = maxValue > 0 ? (pt.value / maxValue) * 100 : 0;
+              const displayHeight = pt.value > 0 ? Math.max(heightPercent, 4) : 2;
+
+              // Tách nhãn phụ chi tiết ngày (nếu có, ví dụ "01/10 - 07/10" hoặc "28/10")
+              let subLabel: string | null = null;
+              if (pt.date && points.length <= 8) {
+                const parenMatch = pt.date.match(/\((.*?)\)/);
+                if (parenMatch) {
+                  subLabel = parenMatch[1];
+                } else if (pt.date.includes(',')) {
+                  subLabel = pt.date.split(',')[1]?.trim() || null;
+                }
+              }
 
               return (
-                <g
+                <div
                   key={idx}
-                  className="bar-group"
+                  className={`merchant-barchart-col ${isSelected ? 'is-selected' : ''}`}
                   onMouseEnter={() => setActiveIdx(idx)}
                   onMouseLeave={() => setActiveIdx(null)}
                   onClick={() => setActiveIdx(isSelected ? null : idx)}
                 >
-                  {/* Cột chính */}
-                  <rect
-                    x={barX}
-                    y={barY}
-                    width={barWidth}
-                    height={barHeight}
-                    rx="3"
-                    ry="3"
-                    fill={isSelected ? '#059669' : '#166B4A'}
-                    className="bar-rect"
-                  />
+                  {/* Vùng cột chứa thanh doanh thu */}
+                  <div className="barchart-bar-box">
+                    {isSelected && pt.value > 0 && (
+                      <div className="barchart-bar-floating-badge">
+                        {pt.value >= 1000
+                          ? `${Math.round(pt.value / 1000).toLocaleString('vi-VN')}k`
+                          : pt.value}
+                      </div>
+                    )}
+                    <div
+                      className={`barchart-bar-fill ${isSelected ? 'is-active' : ''} ${pt.value === 0 ? 'is-zero' : ''}`}
+                      style={{ height: `${displayHeight}%` }}
+                    />
+                  </div>
 
-                  {/* Vùng cảm ứng chạm trong suốt rộng hơn để dễ bấm trên điện thoại */}
-                  <rect
-                    x={idx * colWidth}
-                    y={0}
-                    width={colWidth}
-                    height={svgHeight}
-                    fill="transparent"
-                    style={{ cursor: 'pointer' }}
-                  />
-
-                  {/* Nhãn trục X: ngang rõ ràng khi ít cột, nghiêng nhẹ có chọn lọc khi nhiều cột */}
-                  {shouldRenderLabel && (
-                    <text
-                      x={barX + barWidth / 2}
-                      y={isRotate ? paddingTop + chartHeight + 14 : paddingTop + chartHeight + 18}
-                      textAnchor={isRotate ? 'end' : 'middle'}
-                      transform={isRotate ? `rotate(-35 ${barX + barWidth / 2} ${paddingTop + chartHeight + 14})` : undefined}
-                      className={`barchart-x-label ${isSelected ? 'is-active' : ''}`}
-                    >
+                  {/* Nhãn trục X chuẩn Typography Inter, không bị kéo dãn */}
+                  <div className="barchart-x-label-group">
+                    <span className={`barchart-x-title ${isSelected ? 'is-active' : ''}`}>
                       {pt.label}
-                    </text>
-                  )}
-                </g>
+                    </span>
+                    {subLabel && (
+                      <span className="barchart-x-subtitle">
+                        {subLabel}
+                      </span>
+                    )}
+                  </div>
+                </div>
               );
             })}
-          </svg>
+          </div>
         </div>
       </div>
     </section>

@@ -834,67 +834,164 @@ h1, h2, h3, p { margin: 0; }
 
 .merchant-barchart-container {
   display: flex;
-  gap: 8px;
-  align-items: stretch;
+  gap: 12px;
+  align-items: flex-start;
   width: 100%;
+  margin-top: 8px;
 }
 
 .merchant-barchart-y-axis {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 154px;
-  padding-top: 14px;
+  height: 180px;
   flex-shrink: 0;
   min-width: 68px;
   text-align: right;
-  padding-right: 6px;
+  padding-right: 8px;
+  user-select: none;
 }
 
 .y-axis-tick {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 550;
   color: #94a3b8;
   font-family: Inter, monospace, sans-serif;
   line-height: 1;
 }
 
-.merchant-barchart-svg-wrapper {
+.merchant-barchart-plot-area {
   flex: 1;
-  overflow-x: auto;
-  scrollbar-width: none;
+  position: relative;
   min-width: 0;
-}
-.merchant-barchart-svg-wrapper::-webkit-scrollbar {
-  display: none;
+  display: flex;
+  flex-direction: column;
 }
 
-.merchant-barchart-svg {
+/* Lưới ngang (Gridlines) */
+.merchant-barchart-gridlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.merchant-barchart-gridline {
+  border-bottom: 1px dashed #e2e8f0;
   width: 100%;
-  height: 220px;
-  display: block;
+  height: 0;
 }
 
-.barchart-x-label {
-  font-size: 10px;
-  fill: #64748b;
-  font-weight: 550;
-  font-family: Inter, sans-serif;
-  transition: fill 0.15s ease;
+/* Khung chứa các cột (Bars Track) */
+.merchant-barchart-bars-track {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  width: 100%;
+  position: relative;
+  z-index: 2;
 }
 
-.barchart-x-label.is-active {
-  fill: #166B4A;
-  font-weight: 800;
+.merchant-barchart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 0 4px;
+  min-width: 0;
+  transition: opacity 0.15s ease;
 }
 
-.bar-rect {
-  transition: fill 0.15s ease, opacity 0.15s ease;
+/* Vùng chứa chiều cao cột (180px) */
+.barchart-bar-box {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
 }
 
-.bar-group:hover .bar-rect {
-  fill: #059669;
+.barchart-bar-floating-badge {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #059669;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+  pointer-events: none;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.barchart-bar-fill {
+  width: 100%;
+  max-width: 38px;
+  min-width: 12px;
+  border-radius: 6px 6px 2px 2px;
+  background-color: #166B4A;
+  transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, transform 0.15s ease;
+}
+
+.merchant-barchart-col:hover .barchart-bar-fill,
+.barchart-bar-fill.is-active {
+  background-color: #059669;
   filter: brightness(1.08);
+  transform: scaleY(1.02);
+  transform-origin: bottom;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+}
+
+.barchart-bar-fill.is-zero {
+  background-color: #cbd5e1;
+  opacity: 0.6;
+}
+
+/* Nhãn trục X chuẩn Typography Inter, không bao giờ bị méo hoặc dẹt */
+.barchart-x-label-group {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  min-height: 38px;
+}
+
+.barchart-x-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  font-family: Inter, sans-serif;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.merchant-barchart-col:hover .barchart-x-title,
+.barchart-x-title.is-active {
+  color: #166B4A;
+  font-weight: 700;
+}
+
+.barchart-x-subtitle {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #94a3b8;
+  font-family: Inter, sans-serif;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
 }
 .merchant-revenue-card {
   display: flex;
