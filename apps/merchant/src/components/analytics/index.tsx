@@ -426,7 +426,7 @@ export function RevenueBarChartCard({
 
   const tabOptions = [
     { key: 'hourly' as const, label: 'Theo giờ', subtitle: 'Khung giờ đặt & nhận túi hôm nay', points: hourlyPoints },
-    { key: 'daily' as const, label: 'Theo ngày (7 ngày)', subtitle: 'Doanh thu 7 ngày gần nhất', points: dailyPoints },
+    { key: 'daily' as const, label: 'Theo ngày', subtitle: 'Doanh thu 7 ngày gần nhất', points: dailyPoints },
     { key: 'weekly' as const, label: 'Theo tuần', subtitle: 'Doanh thu các tuần trong tháng này', points: weeklyPoints },
     { key: 'monthly' as const, label: 'Theo tháng', subtitle: 'Doanh thu 12 tháng trong năm', points: monthlyPoints },
   ];
