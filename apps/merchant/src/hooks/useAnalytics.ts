@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   exportAnalyticsReport,
+  fetchAllRevenueCharts,
   fetchAnalyticsMetrics,
   fetchPeriodAnalytics,
   fetchRecentReviews,
@@ -13,6 +14,7 @@ import type {
   PeriodKpiData,
   ReviewItem,
   RevenueChartPoint,
+  MultiPeriodCharts,
 } from '../types';
 import { useToast } from './useToast';
 
@@ -21,6 +23,7 @@ export function useAnalytics(storeId: string) {
   const [cachedData] = useState(() => getCachedAnalytics(storeId));
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(() => cachedData?.metrics ?? null);
   const [chartData, setChartData] = useState<RevenueChartPoint[]>(() => cachedData?.chartData ?? []);
+  const [allCharts, setAllCharts] = useState<MultiPeriodCharts | null>(null);
   const [timeframe, setTimeframe] = useState<AnalyticsTimeframe>('this_month');
   const [customRange, setCustomRange] = useState<{ start: string; end: string } | undefined>(undefined);
   const [periodKpi, setPeriodKpi] = useState<PeriodKpiData | null>(null);
@@ -68,11 +71,13 @@ export function useAnalytics(storeId: string) {
   const loadData = useCallback(async () => {
     setError(null);
     try {
-      const [nextMetrics, nextPeriod, nextReviews] = await Promise.all([
+      const [nextMetrics, nextPeriod, nextReviews, nextCharts] = await Promise.all([
         fetchAnalyticsMetrics(storeId),
         fetchPeriodAnalytics(storeId, timeframe, customRange),
         fetchRecentReviews(storeId),
+        fetchAllRevenueCharts(storeId),
       ]);
+      setAllCharts(nextCharts);
       setMetrics(nextMetrics);
       setPeriodKpi({
         periodLabel: nextPeriod.periodLabel,
@@ -137,6 +142,7 @@ export function useAnalytics(storeId: string) {
     metrics,
     periodKpi,
     chartData,
+    allCharts,
     timeframe,
     customRange,
     reviews,

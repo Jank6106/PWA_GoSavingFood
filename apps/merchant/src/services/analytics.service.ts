@@ -6,6 +6,7 @@ import type {
   PeriodKpiData,
   ReviewItem,
   RevenueChartPoint,
+  MultiPeriodCharts,
 } from '../types';
 import { supabase } from './supabase';
 
@@ -619,6 +620,117 @@ export async function fetchPeriodAnalytics(
     statusBreakdown,
     chartData,
   };
+}
+
+export async function fetchAllRevenueCharts(storeId: string): Promise<MultiPeriodCharts> {
+  const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id, status, final_amount, created_at')
+    .eq('store_id', storeId)
+    .gte('created_at', yearStart.toISOString());
+
+  if (error) {
+    console.warn('Lỗi lấy dữ liệu đa biểu đồ:', error.message);
+  }
+
+  const revenueOrders = (data || []).filter((o: any) => isRevenueStatus(o.status));
+
+  // 1. Biểu đồ Theo Giờ (Hôm nay / 24h)
+  const todayStr = now.toDateString();
+  const todayRevenueOrders = revenueOrders.filter(
+    (o: any) => new Date(o.created_at).toDateString() === todayStr
+  );
+  const hourSlots = [
+    { label: '06:00', start: 6, end: 9, title: '06:00 - 09:00 (Sáng sớm)' },
+    { label: '09:00', start: 9, end: 12, title: '09:00 - 12:00 (Buổi sáng)' },
+    { label: '12:00', start: 12, end: 15, title: '12:00 - 15:00 (Bữa trưa)' },
+    { label: '15:00', start: 15, end: 18, title: '15:00 - 18:00 (Buổi chiều)' },
+    { label: '18:00', start: 18, end: 21, title: '18:00 - 21:00 (Tan tầm & Tối)' },
+    { label: '21:00', start: 21, end: 24, title: '21:00 - 24:00 (Đêm muộn)' },
+  ];
+  const hourly: RevenueChartPoint[] = hourSlots.map((slot) => {
+    const matching = todayRevenueOrders.filter((o: any) => {
+      const h = new Date(o.created_at).getHours();
+      return h >= slot.start && h < slot.end;
+    });
+    return {
+      label: slot.label,
+      date: slot.title,
+      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      orderCount: matching.length,
+    };
+  });
+
+  // 2. Biểu đồ Theo Ngày (7 ngày gần nhất)
+  const oneDayMs = 24 * 3600 * 1000;
+  const daily: RevenueChartPoint[] = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now.getTime() - (6 - i) * oneDayMs);
+    const dateStr = d.toDateString();
+    const matching = revenueOrders.filter(
+      (o: any) => new Date(o.created_at).toDateString() === dateStr
+    );
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return {
+      label: DAY_LABELS[d.getDay()],
+      date: `${DAY_LABELS[d.getDay()]}, ${dd}/${mm}`,
+      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      orderCount: matching.length,
+    };
+  });
+
+  // 3. Biểu đồ Theo Tuần (Tháng này)
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const weeks = [
+    { startDay: 1, endDay: 7, label: 'Tuần 1' },
+    { startDay: 8, endDay: 14, label: 'Tuần 2' },
+    { startDay: 15, endDay: 21, label: 'Tuần 3' },
+    { startDay: 22, endDay: 28, label: 'Tuần 4' },
+  ];
+  if (lastDayOfMonth > 28) {
+    weeks.push({ startDay: 29, endDay: lastDayOfMonth, label: 'Tuần 5' });
+  }
+  const currMonth = now.getMonth();
+  const currYear = now.getFullYear();
+  const mmStr = String(currMonth + 1).padStart(2, '0');
+  const weekly: RevenueChartPoint[] = weeks.map((w) => {
+    const matching = revenueOrders.filter((o: any) => {
+      const od = new Date(o.created_at);
+      return (
+        od.getFullYear() === currYear &&
+        od.getMonth() === currMonth &&
+        od.getDate() >= w.startDay &&
+        od.getDate() <= w.endDay
+      );
+    });
+    const dd1 = String(w.startDay).padStart(2, '0');
+    const dd2 = String(w.endDay).padStart(2, '0');
+    return {
+      label: w.label,
+      date: `${w.label} (${dd1}/${mmStr} - ${dd2}/${mmStr})`,
+      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      orderCount: matching.length,
+    };
+  });
+
+  // 4. Biểu đồ Theo Tháng (Năm nay)
+  const monthly: RevenueChartPoint[] = Array.from({ length: 12 }, (_, m) => {
+    const matching = revenueOrders.filter((o: any) => {
+      const od = new Date(o.created_at);
+      return od.getFullYear() === currYear && od.getMonth() === m;
+    });
+    return {
+      label: `T${m + 1}`,
+      date: `Tháng ${m + 1}/${currYear}`,
+      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      orderCount: matching.length,
+    };
+  });
+
+  return { hourly, daily, weekly, monthly };
 }
 
 export async function fetchRevenueChart(

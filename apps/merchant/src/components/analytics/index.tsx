@@ -17,6 +17,7 @@ import type {
   PeakHourStat,
   RevenueChartPoint,
   ReviewItem,
+  MultiPeriodCharts,
 } from '../../types';
 import { Button, Modal } from '../ui';
 
@@ -404,38 +405,38 @@ export function OrderStatusDonutChart({
 }
 
 // ============================================================================
-// 5. BIỂU ĐỒ CỘT DOANH THU (BAR CHART ADAPTIVE THEO KỲ)
+// 5. BIỂU ĐỒ CỘT DOANH THU (CHUYÊN BIỆT: THEO GIỜ, THEO NGÀY 7 NGÀY, THEO TUẦN & THÁNG)
 // ============================================================================
-export function RevenueBarChartCard({
-  data,
-  periodLabel,
+export function SingleBarChartPlot({
+  title,
+  subtitle,
+  points,
 }: {
-  data: RevenueChartPoint[];
-  periodLabel: string;
+  title: string;
+  subtitle: string;
+  points: RevenueChartPoint[];
 }) {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
-  const points = useMemo(() => {
-    if (!data || data.length === 0) {
+  const safePoints = useMemo(() => {
+    if (!points || points.length === 0) {
       return Array.from({ length: 7 }, (_, i) => ({
-        label: `T${i + 1}`,
+        label: "T" + (i + 1),
         value: 0,
-        date: `Ngày ${i + 1}`,
+        date: "Ngày " + (i + 1),
         orderCount: 0,
       }));
     }
-    return data;
-  }, [data]);
-
-  const maxValue = useMemo(() => {
-    const maxVal = Math.max(...points.map((p) => p.value), 0);
-    if (maxVal <= 0) return 200000;
-    // Làm tròn lên mốc đẹp (50k, 100k, 500k, 1M...)
-    const magnitude = Math.pow(10, Math.floor(Math.log10(maxVal)));
-    return Math.ceil(maxVal / magnitude) * magnitude;
+    return points;
   }, [points]);
 
-  // 5 mốc lưới trục Y (100%, 75%, 50%, 25%, 0%)
+  const maxValue = useMemo(() => {
+    const maxVal = Math.max(...safePoints.map((p) => p.value), 0);
+    if (maxVal <= 0) return 200000;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(maxVal)));
+    return Math.ceil(maxVal / magnitude) * magnitude;
+  }, [safePoints]);
+
   const yTicks = [
     maxValue,
     Math.round(maxValue * 0.75),
@@ -444,14 +445,14 @@ export function RevenueBarChartCard({
     0,
   ];
 
-  const activePoint = activeIdx !== null && points[activeIdx] ? points[activeIdx] : null;
+  const activePoint = activeIdx !== null && safePoints[activeIdx] ? safePoints[activeIdx] : null;
 
   return (
-    <section className="merchant-card merchant-barchart-card">
-      <header className="merchant-barchart-header">
-        <div>
-          <h3>Doanh thu theo thời gian</h3>
-          <small>Biểu đồ cột theo {periodLabel}</small>
+    <div className="single-barchart-wrapper">
+      <header className="single-barchart-header">
+        <div className="single-barchart-title-group">
+          <h4>{title}</h4>
+          <small>{subtitle}</small>
         </div>
         {activePoint && (
           <div className="merchant-barchart-tooltip-pill">
@@ -486,14 +487,14 @@ export function RevenueBarChartCard({
 
           {/* Các cột hiển thị (Bars Track) */}
           <div className="merchant-barchart-bars-track">
-            {points.map((pt, idx) => {
+            {safePoints.map((pt, idx) => {
               const isSelected = activeIdx === idx;
               const heightPercent = maxValue > 0 ? (pt.value / maxValue) * 100 : 0;
               const displayHeight = pt.value > 0 ? Math.max(heightPercent, 4) : 2;
 
               // Tách nhãn phụ chi tiết ngày (nếu có, ví dụ "01/10 - 07/10" hoặc "28/10")
               let subLabel: string | null = null;
-              if (pt.date && points.length <= 8) {
+              if (pt.date && safePoints.length <= 8) {
                 const parenMatch = pt.date.match(/\((.*?)\)/);
                 if (parenMatch) {
                   subLabel = parenMatch[1];
@@ -505,7 +506,7 @@ export function RevenueBarChartCard({
               return (
                 <div
                   key={idx}
-                  className={`merchant-barchart-col ${isSelected ? 'is-selected' : ''}`}
+                  className={"merchant-barchart-col" + (isSelected ? " is-selected" : "")}
                   onMouseEnter={() => setActiveIdx(idx)}
                   onMouseLeave={() => setActiveIdx(null)}
                   onClick={() => setActiveIdx(isSelected ? null : idx)}
@@ -515,19 +516,19 @@ export function RevenueBarChartCard({
                     {isSelected && pt.value > 0 && (
                       <div className="barchart-bar-floating-badge">
                         {pt.value >= 1000
-                          ? `${Math.round(pt.value / 1000).toLocaleString('vi-VN')}k`
+                          ? Math.round(pt.value / 1000).toLocaleString('vi-VN') + "k"
                           : pt.value}
                       </div>
                     )}
                     <div
-                      className={`barchart-bar-fill ${isSelected ? 'is-active' : ''} ${pt.value === 0 ? 'is-zero' : ''}`}
-                      style={{ height: `${displayHeight}%` }}
+                      className={"barchart-bar-fill" + (isSelected ? " is-active" : "") + (pt.value === 0 ? " is-zero" : "")}
+                      style={{ height: displayHeight + "%" }}
                     />
                   </div>
 
                   {/* Nhãn trục X chuẩn Typography Inter, không bị kéo dãn */}
                   <div className="barchart-x-label-group">
-                    <span className={`barchart-x-title ${isSelected ? 'is-active' : ''}`}>
+                    <span className={"barchart-x-title" + (isSelected ? " is-active" : "")}>
                       {pt.label}
                     </span>
                     {subLabel && (
@@ -542,6 +543,106 @@ export function RevenueBarChartCard({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function RevenueBarChartCard({
+  data,
+  periodLabel,
+  allCharts,
+}: {
+  data: RevenueChartPoint[];
+  periodLabel: string;
+  allCharts?: MultiPeriodCharts | null;
+}) {
+  const [selectedTab, setSelectedTab] = useState<'daily' | 'hourly' | 'weekly' | 'monthly'>('daily');
+  const [showAllThree, setShowAllThree] = useState<boolean>(false);
+
+  const hourlyPoints = allCharts?.hourly || [];
+  const dailyPoints = allCharts?.daily || [];
+  const weeklyPoints = allCharts?.weekly || data;
+  const monthlyPoints = allCharts?.monthly || [];
+
+  const tabOptions = [
+    { key: 'hourly' as const, label: 'Theo giờ', subtitle: 'Khung giờ đặt & nhận túi hôm nay', points: hourlyPoints },
+    { key: 'daily' as const, label: 'Theo ngày (7 ngày)', subtitle: 'Doanh thu 7 ngày gần nhất', points: dailyPoints },
+    { key: 'weekly' as const, label: 'Theo tuần', subtitle: 'Doanh thu các tuần trong tháng này', points: weeklyPoints },
+    { key: 'monthly' as const, label: 'Theo tháng', subtitle: 'Doanh thu 12 tháng trong năm', points: monthlyPoints },
+  ];
+
+  const currentTabDef = tabOptions.find((t) => t.key === selectedTab) || tabOptions[1];
+
+  return (
+    <section className="merchant-card merchant-barchart-card">
+      <header className="merchant-barchart-header">
+        <div>
+          <h3>Doanh thu theo thời gian</h3>
+          <small>
+            {showAllThree
+              ? 'Đang hiển thị đồng thời 3 biểu đồ theo ' + periodLabel
+              : currentTabDef.subtitle + ' (' + periodLabel + ')'}
+          </small>
+        </div>
+
+        <div className="merchant-barchart-controls">
+          {/* Nút bấm chuyển chế độ xem: 3 biểu đồ đồng thời hoặc xem từng tab */}
+          <button
+            type="button"
+            className="merchant-chart-mode-toggle"
+            onClick={() => setShowAllThree(!showAllThree)}
+          >
+            {showAllThree ? 'Thu gọn về 1 biểu đồ' : 'Xem cả 3 biểu đồ'}
+          </button>
+
+          {/* Dải Tab chuyển đổi trực tiếp */}
+          {!showAllThree && (
+            <div className="merchant-chart-tabs" role="tablist">
+              {tabOptions.map((tab) => (
+                <button
+                  type="button"
+                  key={tab.key}
+                  className={"merchant-chart-tab-btn" + (selectedTab === tab.key ? " is-active" : "")}
+                  onClick={() => setSelectedTab(tab.key)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </header>
+
+      {showAllThree ? (
+        <div className="merchant-multi-charts-grid">
+          {/* Biểu đồ 1: Theo giờ */}
+          <SingleBarChartPlot
+            title="1. Biểu đồ theo giờ"
+            subtitle="Khung giờ hôm nay"
+            points={hourlyPoints}
+          />
+
+          {/* Biểu đồ 2: Theo ngày (7 ngày) */}
+          <SingleBarChartPlot
+            title="2. Biểu đồ theo ngày (7 ngày gần nhất)"
+            subtitle="7 ngày qua"
+            points={dailyPoints}
+          />
+
+          {/* Biểu đồ 3: Theo tuần (Tháng này) */}
+          <SingleBarChartPlot
+            title="3. Biểu đồ theo tuần & tháng"
+            subtitle="Các tuần trong tháng này"
+            points={weeklyPoints}
+          />
+        </div>
+      ) : (
+        <SingleBarChartPlot
+          title={currentTabDef.label}
+          subtitle={currentTabDef.subtitle}
+          points={currentTabDef.points.length > 0 ? currentTabDef.points : data}
+        />
+      )}
     </section>
   );
 }

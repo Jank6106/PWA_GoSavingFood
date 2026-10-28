@@ -101,6 +101,7 @@ export function AnalyticsScreen({ storeId }: { storeId: string }) {
           <RevenueBarChartCard
             data={state.chartData}
             periodLabel={periodLabel}
+            allCharts={state.allCharts}
           />
 
           {/* CÁC PHẦN GIỮ LẠI: Túi bán chạy nhất + Đánh giá gần đây */}

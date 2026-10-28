@@ -203,6 +203,15 @@ export interface RevenueChartPoint {
   orderCount?: number;
 }
 
+export type RevenueChartTab = 'hourly' | 'daily' | 'weekly' | 'monthly';
+
+export interface MultiPeriodCharts {
+  hourly: RevenueChartPoint[];
+  daily: RevenueChartPoint[];
+  weekly: RevenueChartPoint[];
+  monthly: RevenueChartPoint[];
+}
+
 export interface ReviewItem {
   id: string;
   customerName: string;
