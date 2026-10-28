@@ -160,8 +160,29 @@ img { display: block; max-width: 100%; }
               backdrop-filter 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Dải thanh trên cùng cố định 1 màu xanh #193B2C cho vùng Status Bar / tai thỏ trên iPhone */
+.customer-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--color-primary-active, #193B2C);
+  z-index: 1;
+  pointer-events: none;
+}
+
 .customer-header.is-transparent {
-  background: linear-gradient(to bottom, rgba(25, 59, 44, 0.99) 0%, rgba(22, 107, 74, 0.94) 34%, rgba(22, 107, 74, 0.65) 62%, rgba(22, 107, 74, 0.22) 82%, rgba(22, 107, 74, 0.04) 93%, transparent 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(25, 59, 44, 0.98) 0%,
+    rgba(25, 59, 44, 0.98) env(safe-area-inset-top, 0px),
+    rgba(22, 107, 74, 0.92) calc(env(safe-area-inset-top, 0px) + 16px),
+    rgba(22, 107, 74, 0.55) calc(env(safe-area-inset-top, 0px) + 38px),
+    rgba(22, 107, 74, 0.15) calc(env(safe-area-inset-top, 0px) + 52px),
+    transparent calc(env(safe-area-inset-top, 0px) + 60px)
+  );
   border: none;
   outline: none;
   box-shadow: none;
@@ -178,6 +199,8 @@ img { display: block; max-width: 100%; }
 }
 
 .customer-header-inner {
+  position: relative;
+  z-index: 2;
   display: flex;
   width: min(100%, 1200px);
   height: 60px;

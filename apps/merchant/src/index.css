@@ -2041,7 +2041,11 @@ h1, h2, h3, p { margin: 0; }
 .merchant-notification-modal { width: min(100%, 520px); height: min(640px, 78vh); overflow: hidden; }.merchant-notification-modal .merchant-modal-body { height: calc(100% - 78px); overflow: auto; }
 @media (max-width: 767px) { .merchant-store-status { min-width: auto; width: auto; height: 32px; padding: 0 9px; gap: 5px; }.merchant-store-status span { display: none; }.merchant-store-status b { display: inline; font-size: 11px; }.merchant-inventory-options { align-items: flex-start; flex-direction: column; gap: 6px; } }
 @media (max-width: 480px) {
-  .merchant-app-header { padding: 8px 10px; }
+  .merchant-app-header {
+    padding-top: max(8px, calc(env(safe-area-inset-top, 0px) + 8px));
+    padding-bottom: 8px;
+    padding-inline: 10px;
+  }
   .merchant-app-header-inner { min-height: 44px; gap: 8px; }
   .merchant-header-brand { gap: 9px; }
   .merchant-header-brand > span { width: 34px; height: 34px; flex: 0 0 34px; }
