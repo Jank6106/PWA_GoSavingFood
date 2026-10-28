@@ -625,8 +625,65 @@ function CustomerApp() {
   const selectedMerchant =
     catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? directMerchant ?? null;
   const selectedBrand = route.name === 'brand' ? catalog.brands.find((brand) => brand.id === route.id) ?? null : null;
-  const selectedOrderId = route.name === 'order' || route.name === 'review' || route.name === 'report' ? route.id : route.name === 'success' ? route.orderId : null;
-  const selectedOrder = selectedOrderId ? orders.find((order) => order.id.toLowerCase() === selectedOrderId.toLowerCase()) ?? null : null;
+  const [directOrder, setDirectOrder] = useState<Order | null>(null);
+  const [orderLoadFailed, setOrderLoadFailed] = useState(false);
+
+  const selectedOrderId =
+    route.name === 'order' || route.name === 'review' || route.name === 'report'
+      ? route.id
+      : route.name === 'success'
+      ? route.orderId
+      : null;
+
+  const selectedOrder = useMemo(() => {
+    if (!selectedOrderId) return null;
+    const clean = selectedOrderId.trim().toLowerCase();
+    const found = orders.find(
+      (order) =>
+        order.id.toLowerCase() === clean ||
+        order.orderCode.toLowerCase() === clean ||
+        clean.includes(order.orderCode.toLowerCase()) ||
+        order.orderCode.toLowerCase().includes(clean.replace(/^#|^gsf-order-|^gsf-/, '')) ||
+        order.id.toLowerCase().startsWith(clean.replace(/^#|^gsf-order-|^gsf-/, ''))
+    );
+    return found ?? directOrder ?? null;
+  }, [selectedOrderId, orders, directOrder]);
+
+  useEffect(() => {
+    if (!selectedOrderId) {
+      if (directOrder) setDirectOrder(null);
+            setOrderLoadFailed(false);
+      return;
+    }
+
+    if (selectedOrder) {
+            setOrderLoadFailed(false);
+      return;
+    }
+
+    let active = true;
+        setOrderLoadFailed(false);
+
+    void customerService
+      .getOrder(selectedOrderId)
+      .then((ord) => {
+        if (!active) return;
+                if (ord) {
+          setDirectOrder(ord);
+          setOrders((prev) => (prev.some((o) => o.id === ord.id) ? prev : [ord, ...prev]));
+        } else {
+          setOrderLoadFailed(true);
+        }
+      })
+      .catch(() => {
+        if (!active) return;
+                setOrderLoadFailed(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedOrderId, selectedOrder]);
 
   const addToCart = (bag: SurpriseBag, quantity = 1): boolean => {
     if (!auth.isAuthenticated) {
@@ -775,7 +832,12 @@ function CustomerApp() {
         current.map((n) => (n.id === item.id ? { ...n, read: true } : n))
       );
     }
-    const orderId = item.data?.orderId || item.data?.order_id;
+    const orderId =
+      item.data?.orderId ||
+      item.data?.order_id ||
+      item.data?.orderCode ||
+      item.data?.order_code ||
+      item.data?.id;
     const bagId = item.data?.bagId || item.data?.bag_id;
     const merchantId = item.data?.merchantId || item.data?.merchant_id;
 
@@ -785,6 +847,13 @@ function CustomerApp() {
       push({ name: 'bag', id: bagId });
     } else if (merchantId) {
       push({ name: 'merchant', id: merchantId });
+    } else {
+      const match = (item.body + ' ' + item.title).match(/GSF-[A-Z0-9-]{4,30}/i);
+      if (match) {
+        push({ name: 'order', id: match[0] });
+      } else if (item.icon === 'order' || item.title.toLowerCase().includes('đơn hàng')) {
+        openTab('orders');
+      }
     }
   };
 
@@ -1139,10 +1208,27 @@ function CustomerApp() {
     }
     if (route.name === 'order') {
       if (!selectedOrder) {
+        if (orderLoadFailed) {
+          return (
+            <div className="customer-screen customer-screen--center" style={{ padding: '2rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '40px', marginBottom: '0.75rem' }}>📦</div>
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>Không tìm thấy đơn hàng</h3>
+              <p style={{ fontSize: '13.5px', color: '#64748b', maxWidth: '360px', margin: '0 auto 1.5rem', lineHeight: 1.5 }}>
+                Đơn hàng này không tồn tại hoặc bạn chưa đăng nhập tài khoản sở hữu đơn. Vui lòng kiểm tra lại.
+              </p>
+              <button type="button" className="customer-primary-btn" onClick={() => openTab('orders')}>
+                Xem danh sách đơn hàng
+              </button>
+            </div>
+          );
+        }
+
         return (
           <div className="customer-screen customer-screen--center" style={{ padding: '2rem', textAlign: 'center' }}>
-            <p>Đang tải chi tiết đơn hàng...</p>
-            <button type="button" className="customer-secondary-btn" onClick={() => openTab('orders')} style={{ marginTop: '1rem' }}>
+            <div className="customer-spinner" style={{ margin: '0 auto 1rem' }} />
+            <p style={{ fontWeight: 600, color: '#0f172a' }}>Đang tải chi tiết đơn hàng...</p>
+            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '0.25rem' }}>Vui lòng đợi trong giây lát</p>
+            <button type="button" className="customer-secondary-btn" onClick={() => openTab('orders')} style={{ marginTop: '1.25rem' }}>
               Quay lại danh sách đơn
             </button>
           </div>

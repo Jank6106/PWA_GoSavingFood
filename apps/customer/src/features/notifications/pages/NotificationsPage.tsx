@@ -43,7 +43,14 @@ export function NotificationsPage({
       {notifications.length ? (
         <div className="customer-notification-list">
           {notifications.map((item) => {
-            const hasOrder = Boolean(item.data?.orderId || item.data?.order_id);
+            const hasOrder = Boolean(
+              item.data?.orderId ||
+              item.data?.order_id ||
+              item.data?.orderCode ||
+              item.data?.order_code ||
+              (item.body + ' ' + item.title).match(/GSF-[A-Z0-9-]{4,30}/i) ||
+              item.icon === 'order'
+            );
             const hasBag = Boolean(item.data?.bagId || item.data?.bag_id);
             const hasMerchant = Boolean(item.data?.merchantId || item.data?.merchant_id);
             const hasTarget = hasOrder || hasBag || hasMerchant;

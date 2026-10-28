@@ -3215,6 +3215,73 @@ export const HANOI_BAGS: SurpriseBag[] = [
 }
 ];
 
+function mapCustomerOrderRow(o: any): Order {
+  const rev = Array.isArray(o.reviews) ? o.reviews[0] : o.reviews;
+  const isOverdue =
+    o.status === 'pending_payment' &&
+    o.payment_expires_at &&
+    new Date(o.payment_expires_at).getTime() <= Date.now();
+
+  const normalizedStatus = isOverdue
+    ? 'expired'
+    : o.status === 'picked_up'
+    ? 'completed'
+    : o.status;
+
+  return {
+    id: o.id,
+    orderCode: o.order_code || `GSF-${o.id.slice(0, 6).toUpperCase()}`,
+    merchantId: o.store_id,
+    merchantName: o.stores?.name || 'Quán đối tác',
+    items: (o.order_items || []).map((item: any) => ({
+      bagId: item.bag_id,
+      bagName: item.bag_name || 'Túi cứu trợ thực phẩm',
+      imageUrl:
+        item.surprise_bags?.image_url ||
+        item.image_url ||
+        'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80',
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+      totalPrice: item.total_price || item.unit_price * item.quantity,
+    })),
+    totalOriginalPrice: Number(o.total_original_price) || Number(o.final_amount),
+    totalDiscountPrice: Number(o.total_discount_price) || Number(o.final_amount),
+    discountAmount: Number(o.discount_amount) || 0,
+    finalAmount: Number(o.final_amount) || 0,
+    status: normalizedStatus,
+    paymentMethod: o.payment_method === 'cash' ? 'payos_vietqr' : (o.payment_method || 'payos_vietqr'),
+    paymentStatus: o.payment_status || (o.status === 'pending_payment' ? 'pending' : 'success'),
+    pickupTime: o.pickup_time || '11:00 - 14:00',
+    pickupAddress: o.stores?.address || 'Hà Nội',
+    createdAt: o.created_at,
+    paidAt: o.paid_at || undefined,
+    completedAt: o.completed_at || undefined,
+    cancelledAt: o.cancelled_at || undefined,
+    cancelReason: isOverdue ? 'Hết thời hạn thanh toán (TTL 30 phút)' : (o.cancel_reason || undefined),
+    note: o.note || undefined,
+    qrCode: o.qr_code || `GSF-ORDER-${o.id}`,
+    pickupToken: o.pickup_token || undefined,
+    recipientName: o.recipient_name || undefined,
+    recipientPhone: o.recipient_phone || undefined,
+    paymentExpiresAt: o.payment_expires_at || undefined,
+    review: rev
+      ? {
+          rating: Number(rev.rating) || 5,
+          tags: Array.isArray(rev.tags) ? rev.tags : undefined,
+          comment: rev.comment || '',
+          createdAt: rev.created_at || o.created_at,
+        }
+      : undefined,
+  };
+}
+
+const CUSTOMER_ORDER_SELECT = `
+  *,
+  stores (name, address, phone, logo_url),
+  order_items (*, surprise_bags (image_url)),
+  reviews (*)
+`;
+
 export const customerService = {
   getStaticHome() {
     return {
@@ -3592,81 +3659,19 @@ export const customerService = {
     try {
       const query = supabase
         .from('orders')
-        .select(
-          `
-          *,
-          stores (name, address, phone, logo_url),
-          order_items (*, surprise_bags (image_url)),
-          reviews (*)
-        `
-        )
+        .select(CUSTOMER_ORDER_SELECT)
         .eq('customer_id', currentUserId)
         .order('created_at', { ascending: false });
 
       const { data, error } = await query;
       if (!error && Array.isArray(data)) {
-        let hasOverdueOrders = false;
-        const remoteOrders = data.map((o: any) => {
-          const rev = Array.isArray(o.reviews) ? o.reviews[0] : o.reviews;
-          const isOverdue =
+        const hasOverdueOrders = data.some(
+          (o: any) =>
             o.status === 'pending_payment' &&
             o.payment_expires_at &&
-            new Date(o.payment_expires_at).getTime() <= Date.now();
-
-          if (isOverdue) hasOverdueOrders = true;
-
-          const normalizedStatus = isOverdue
-            ? 'expired'
-            : o.status === 'picked_up'
-            ? 'completed'
-            : o.status;
-
-          return {
-            id: o.id,
-            orderCode: o.order_code || `GSF-${o.id.slice(0, 6).toUpperCase()}`,
-            merchantId: o.store_id,
-            merchantName: o.stores?.name || 'Quán đối tác',
-            items: (o.order_items || []).map((item: any) => ({
-              bagId: item.bag_id,
-              bagName: item.bag_name || 'Túi cứu trợ thực phẩm',
-              imageUrl:
-                item.surprise_bags?.image_url ||
-                item.image_url ||
-                'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80',
-              quantity: item.quantity,
-              unitPrice: item.unit_price,
-              totalPrice: item.total_price || item.unit_price * item.quantity,
-            })),
-            totalOriginalPrice: Number(o.total_original_price) || Number(o.final_amount),
-            totalDiscountPrice: Number(o.total_discount_price) || Number(o.final_amount),
-            discountAmount: Number(o.discount_amount) || 0,
-            finalAmount: Number(o.final_amount) || 0,
-            status: normalizedStatus,
-            paymentMethod: o.payment_method === 'cash' ? 'payos_vietqr' : (o.payment_method || 'payos_vietqr'),
-            paymentStatus: o.payment_status || (o.status === 'pending_payment' ? 'pending' : 'success'),
-            pickupTime: o.pickup_time || '11:00 - 14:00',
-            pickupAddress: o.stores?.address || 'Hà Nội',
-            createdAt: o.created_at,
-            paidAt: o.paid_at || undefined,
-            completedAt: o.completed_at || undefined,
-            cancelledAt: o.cancelled_at || undefined,
-            cancelReason: isOverdue ? 'Hết thời hạn thanh toán (TTL 30 phút)' : (o.cancel_reason || undefined),
-            note: o.note || undefined,
-            qrCode: o.qr_code || `GSF-ORDER-${o.id}`,
-            pickupToken: o.pickup_token || undefined,
-            recipientName: o.recipient_name || undefined,
-            recipientPhone: o.recipient_phone || undefined,
-            paymentExpiresAt: o.payment_expires_at || undefined,
-            review: rev
-              ? {
-                  rating: Number(rev.rating) || 5,
-                  tags: Array.isArray(rev.tags) ? rev.tags : undefined,
-                  comment: rev.comment || '',
-                  createdAt: rev.created_at || o.created_at,
-                }
-              : undefined,
-          };
-        });
+            new Date(o.payment_expires_at).getTime() <= Date.now()
+        );
+        const remoteOrders = data.map(mapCustomerOrderRow);
 
         if (hasOverdueOrders) {
           void customerService.cleanupExpiredPendingOrders();
@@ -3680,6 +3685,58 @@ export const customerService = {
       console.warn('Lấy đơn hàng từ Supabase lỗi:', err);
     }
     return localOrders;
+  },
+
+  async getOrder(orderId: string): Promise<Order | null> {
+    if (!orderId) return null;
+    const cleanId = orderId.trim();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cleanId);
+
+    try {
+      let query = supabase
+        .from('orders')
+        .select(CUSTOMER_ORDER_SELECT);
+
+      if (isUuid) {
+        query = query.eq('id', cleanId);
+      } else {
+        const codeOnly = cleanId.replace(/^GSF-ORDER-|^GSF-|^#/, '').trim();
+        query = query.or(`id.ilike.${codeOnly}%,order_code.ilike.%${cleanId}%,qr_code.ilike.%${cleanId}%`);
+      }
+
+      const { data, error } = await query.limit(1).maybeSingle();
+      if (!error && data) {
+        return mapCustomerOrderRow(data);
+      }
+
+      if (!isUuid) {
+        const { data: fallback } = await supabase
+          .from('orders')
+          .select(CUSTOMER_ORDER_SELECT)
+          .ilike('qr_code', `%${cleanId}%`)
+          .limit(1)
+          .maybeSingle();
+        if (fallback) return mapCustomerOrderRow(fallback);
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const key = `gsf_local_orders_${user.id}`;
+          const localOrders: Order[] = JSON.parse(localStorage.getItem(key) || '[]');
+          const target = localOrders.find(
+            (o) =>
+              o.id.toLowerCase() === cleanId.toLowerCase() ||
+              o.orderCode.toLowerCase() === cleanId.toLowerCase() ||
+              cleanId.toLowerCase().includes(o.orderCode.toLowerCase())
+          );
+          if (target) return target;
+        }
+      } catch {}
+    } catch (err) {
+      console.warn('Lấy chi tiết đơn hàng lỗi:', err);
+    }
+    return null;
   },
 
   async getNotifications(): Promise<NotificationItem[]> {
