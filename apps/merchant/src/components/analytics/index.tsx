@@ -1,5 +1,4 @@
 import {
-  ChevronDown,
   Clock,
   CreditCard,
   Flame,
@@ -9,7 +8,7 @@ import {
   Store,
   Wallet,
 } from 'lucide-react';
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import type {
   AnalyticsMetrics,
   AnalyticsTimeframe,
@@ -26,7 +25,7 @@ function formatVndCurrency(amount: number): string {
 }
 
 // ============================================================================
-// 1. DẢI NÚT LỌC THỜI GIAN (CUỘN NGANG + DROPDOWN TÙY CHỈNH)
+// 1. DẢI NÚT LỌC THỜI GIAN (GỌN GÀNG, TRỰC QUAN CHO MERCHANT)
 // ============================================================================
 export function PeriodFilterBar({
   timeframe,
@@ -39,9 +38,7 @@ export function PeriodFilterBar({
   customRange?: { start: string; end: string };
   onApplyCustomRange?: (start: string, end: string) => void;
 }) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [customModalOpen, setCustomModalOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [startDate, setStartDate] = useState(
     customRange?.start || new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
@@ -50,44 +47,13 @@ export function PeriodFilterBar({
     customRange?.end || new Date().toISOString().slice(0, 10)
   );
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    if (dropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [dropdownOpen]);
-
   const mainChips: { key: AnalyticsTimeframe; label: string }[] = [
-    { key: 'yesterday', label: 'Hôm qua' },
     { key: 'today', label: 'Hôm nay' },
     { key: 'this_week', label: 'Tuần này' },
     { key: 'this_month', label: 'Tháng này' },
     { key: 'last_month', label: 'Tháng trước' },
-    { key: 'this_year', label: 'Năm này' },
-    { key: 'last_year', label: 'Năm trước' },
+    { key: 'this_year', label: 'Năm nay' },
   ];
-
-  const dropdownOptions: { key: AnalyticsTimeframe; label: string }[] = [
-    { key: '24h', label: '24 giờ' },
-    { key: '7d', label: '7 ngày' },
-    { key: '30d', label: '30 ngày' },
-    { key: '1y', label: '1 năm' },
-    { key: 'custom', label: 'Tùy chỉnh...' },
-    { key: 'all', label: 'Tất cả' },
-  ];
-
-  const isDropdownOptionActive = dropdownOptions.some((opt) => opt.key === timeframe);
-
-  const getDropdownLabel = () => {
-    const matched = dropdownOptions.find((opt) => opt.key === timeframe);
-    if (matched) return matched.label;
-    return 'Tùy chỉnh';
-  };
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +63,12 @@ export function PeriodFilterBar({
       setCustomModalOpen(false);
     }
   };
+
+  const isCustom = timeframe === 'custom';
+  const customChipLabel =
+    isCustom && customRange?.start && customRange?.end
+      ? `${customRange.start.slice(8, 10)}/${customRange.start.slice(5, 7)} - ${customRange.end.slice(8, 10)}/${customRange.end.slice(5, 7)}`
+      : 'Tùy chỉnh...';
 
   return (
     <div className="merchant-period-filter-wrapper">
@@ -115,42 +87,14 @@ export function PeriodFilterBar({
           );
         })}
 
-        {/* Dropdown Tùy chỉnh */}
-        <div className="merchant-dropdown-anchor" ref={dropdownRef}>
-          <button
-            type="button"
-            className={`merchant-filter-chip merchant-dropdown-trigger ${
-              isDropdownOptionActive ? 'is-active' : ''
-            }`}
-            onClick={() => setDropdownOpen((prev) => !prev)}
-            aria-expanded={dropdownOpen}
-          >
-            <span>{getDropdownLabel()}</span>
-            <ChevronDown size={14} className={dropdownOpen ? 'is-rotated' : ''} />
-          </button>
-
-          {dropdownOpen && (
-            <div className="merchant-period-dropdown-menu">
-              {dropdownOptions.map((opt) => (
-                <button
-                  type="button"
-                  key={opt.key}
-                  className={`merchant-dropdown-item ${timeframe === opt.key ? 'is-selected' : ''}`}
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    if (opt.key === 'custom') {
-                      setCustomModalOpen(true);
-                    } else {
-                      onSelectTimeframe(opt.key);
-                    }
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Nút lọc Tùy chỉnh trực tiếp */}
+        <button
+          type="button"
+          className={`merchant-filter-chip ${isCustom ? 'is-active' : ''}`}
+          onClick={() => setCustomModalOpen(true)}
+        >
+          {customChipLabel}
+        </button>
       </div>
 
       {/* Modal chọn khoảng ngày Tùy chỉnh */}
@@ -239,14 +183,16 @@ export function PeakHoursCard({
   peakHours?: PeakHourStat[];
 }) {
   const items = peakHours && peakHours.length > 0 ? peakHours : [
-    { slot: 'Giờ tan tầm & Tối', timeRange: '18:00 - 22:00', orderCount: 0, percentage: 60 },
-    { slot: 'Buổi chiều', timeRange: '14:00 - 18:00', orderCount: 0, percentage: 25 },
-    { slot: 'Bữa trưa', timeRange: '11:00 - 14:00', orderCount: 0, percentage: 15 },
+    { slot: 'Giờ tan tầm & Tối', timeRange: '18:00 - 22:00', orderCount: 0, percentage: 0 },
+    { slot: 'Buổi chiều', timeRange: '14:00 - 18:00', orderCount: 0, percentage: 0 },
+    { slot: 'Bữa trưa', timeRange: '11:00 - 14:00', orderCount: 0, percentage: 0 },
     { slot: 'Buổi sáng', timeRange: '06:00 - 11:00', orderCount: 0, percentage: 0 },
   ];
 
-  const maxItem = items.reduce((max, cur) => (cur.percentage > max.percentage ? cur : max), items[0]);
   const hasOrders = items.some((item) => item.orderCount > 0);
+  const maxItem = hasOrders
+    ? items.reduce((max, cur) => (cur.percentage > max.percentage ? cur : max), items[0])
+    : null;
 
   return (
     <section className="merchant-card merchant-peak-hours-card">
@@ -255,7 +201,7 @@ export function PeakHoursCard({
           <Clock size={17} className="peak-hours-header-icon" />
           <h3>Khung giờ nhận hàng cao điểm</h3>
         </div>
-        {maxItem && maxItem.percentage > 0 && (
+        {hasOrders && maxItem && maxItem.percentage > 0 && (
           <span className="merchant-peak-tag">
             <Flame size={12} /> {maxItem.timeRange}
           </span>
@@ -264,7 +210,8 @@ export function PeakHoursCard({
 
       <div className="merchant-peak-hours-list">
         {items.map((item, idx) => {
-          const isTop = (hasOrders && item.slot === maxItem?.slot) || (!hasOrders && idx === 0);
+          const isTop = Boolean(hasOrders && maxItem && item.orderCount > 0 && item.slot === maxItem.slot);
+          const percentVal = hasOrders ? item.percentage : 0;
           return (
             <div className={`merchant-peak-row ${isTop ? 'is-peak' : ''}`} key={idx}>
               <div className="peak-row-meta">
@@ -273,14 +220,22 @@ export function PeakHoursCard({
                   <span className="peak-slot-badge">{item.timeRange}</span>
                 </div>
                 <div className="peak-slot-stats">
-                  <strong className="peak-slot-percent">{item.percentage}%</strong>
+                  <strong
+                    className="peak-slot-percent"
+                    style={{ color: isTop ? '#166B4A' : '#64748b' }}
+                  >
+                    {percentVal}%
+                  </strong>
                   <span className="peak-slot-count">({item.orderCount} đơn)</span>
                 </div>
               </div>
               <div className="peak-bar-track">
                 <div
                   className={`peak-bar-fill ${isTop ? 'is-primary' : ''}`}
-                  style={{ width: `${Math.max(item.percentage > 0 ? 5 : 0, Math.min(100, item.percentage))}%` }}
+                  style={{
+                    width: `${percentVal > 0 ? Math.max(5, Math.min(100, percentVal)) : 0}%`,
+                    backgroundColor: isTop ? '#166B4A' : '#cbd5e1',
+                  }}
                 />
               </div>
             </div>
@@ -290,7 +245,11 @@ export function PeakHoursCard({
 
       <footer className="merchant-peak-footer">
         <Sparkles size={13} className="peak-footer-icon" />
-        <span>Gợi ý: Đóng gói sẵn tại quầy trước khung giờ cao điểm để khách nhận nhanh.</span>
+        <span>
+          {hasOrders
+            ? 'Gợi ý: Đóng gói sẵn tại quầy trước khung giờ cao điểm để khách nhận nhanh.'
+            : 'Chưa có đơn hàng trong khoảng thời gian này để thống kê giờ cao điểm.'}
+        </span>
       </footer>
     </section>
   );
@@ -525,7 +484,7 @@ export function RevenueBarChartCard({
         <div className="merchant-barchart-svg-wrapper">
           <svg
             className="merchant-barchart-svg"
-            viewBox={`0 0 ${Math.max(points.length * 36, 400)} ${svgHeight}`}
+            viewBox={`0 0 ${Math.max(points.length * 48, 340)} ${svgHeight}`}
             preserveAspectRatio="none"
           >
             {/* Lưới ngang */}
@@ -548,14 +507,16 @@ export function RevenueBarChartCard({
             {/* Các cột Bar */}
             {points.map((pt, idx) => {
               const totalBars = points.length;
-              const svgWidth = Math.max(totalBars * 36, 400);
+              const svgWidth = Math.max(totalBars * 48, 340);
               const colWidth = svgWidth / totalBars;
-              const barWidth = Math.max(10, Math.min(22, colWidth * 0.45));
+              const barWidth = Math.max(12, Math.min(28, colWidth * 0.42));
               const barX = idx * colWidth + (colWidth - barWidth) / 2;
 
               const barHeight = Math.max(pt.value > 0 ? (pt.value / maxValue) * chartHeight : 3, 3);
               const barY = paddingTop + (chartHeight - barHeight);
               const isSelected = activeIdx === idx;
+              const isRotate = totalBars > 7;
+              const shouldRenderLabel = totalBars <= 10 || idx % Math.ceil(totalBars / 6) === 0 || idx === totalBars - 1;
 
               return (
                 <g
@@ -587,16 +548,18 @@ export function RevenueBarChartCard({
                     style={{ cursor: 'pointer' }}
                   />
 
-                  {/* Nhãn trục X xoay 45 độ y như ảnh */}
-                  <text
-                    x={barX + barWidth / 2}
-                    y={paddingTop + chartHeight + 14}
-                    textAnchor="end"
-                    transform={`rotate(-45 ${barX + barWidth / 2} ${paddingTop + chartHeight + 14})`}
-                    className={`barchart-x-label ${isSelected ? 'is-active' : ''}`}
-                  >
-                    {pt.label}
-                  </text>
+                  {/* Nhãn trục X: ngang rõ ràng khi ít cột, nghiêng nhẹ có chọn lọc khi nhiều cột */}
+                  {shouldRenderLabel && (
+                    <text
+                      x={barX + barWidth / 2}
+                      y={isRotate ? paddingTop + chartHeight + 14 : paddingTop + chartHeight + 18}
+                      textAnchor={isRotate ? 'end' : 'middle'}
+                      transform={isRotate ? `rotate(-35 ${barX + barWidth / 2} ${paddingTop + chartHeight + 14})` : undefined}
+                      className={`barchart-x-label ${isSelected ? 'is-active' : ''}`}
+                    >
+                      {pt.label}
+                    </text>
+                  )}
                 </g>
               );
             })}

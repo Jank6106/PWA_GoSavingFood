@@ -65,9 +65,9 @@ const EMPTY_METRICS: AnalyticsMetrics = {
   foodSavedKg: 0,
   topSellingBags: [],
   peakHours: [
-    { slot: 'Giờ tan tầm & Tối', timeRange: '18:00 - 22:00', orderCount: 0, percentage: 60 },
-    { slot: 'Buổi chiều', timeRange: '14:00 - 18:00', orderCount: 0, percentage: 25 },
-    { slot: 'Bữa trưa', timeRange: '11:00 - 14:00', orderCount: 0, percentage: 15 },
+    { slot: 'Giờ tan tầm & Tối', timeRange: '18:00 - 22:00', orderCount: 0, percentage: 0 },
+    { slot: 'Buổi chiều', timeRange: '14:00 - 18:00', orderCount: 0, percentage: 0 },
+    { slot: 'Bữa trưa', timeRange: '11:00 - 14:00', orderCount: 0, percentage: 0 },
     { slot: 'Buổi sáng', timeRange: '06:00 - 11:00', orderCount: 0, percentage: 0 },
   ],
 };
@@ -221,19 +221,19 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
       slot: 'Giờ tan tầm & Tối',
       timeRange: '18:00 - 22:00',
       orderCount: hourCounts.evening,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 60,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Buổi chiều',
       timeRange: '14:00 - 18:00',
       orderCount: hourCounts.afternoon,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 25,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Bữa trưa',
       timeRange: '11:00 - 14:00',
       orderCount: hourCounts.noon,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 15,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Buổi sáng',
@@ -299,7 +299,7 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
 export function getPeriodRange(
   timeframe: AnalyticsTimeframe,
   customRange?: { start: string; end: string }
-): { start: Date; end: Date; label: string; mode: 'hourly' | 'daily' | 'monthly' } {
+): { start: Date; end: Date; label: string; mode: 'hourly' | 'daily' | 'weekly' | 'monthly' } {
   const now = new Date();
 
   if (timeframe === 'today') {
@@ -333,17 +333,17 @@ export function getPeriodRange(
       start.setHours(0, 0, 0, 0);
       const end = new Date(now);
       end.setHours(23, 59, 59, 999);
-      return { start, end, label: '30 ngày qua', mode: 'daily' };
+      return { start, end, label: '30 ngày qua', mode: 'weekly' };
     }
     const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-    return { start, end, label: 'tháng này', mode: 'daily' };
+    return { start, end, label: 'tháng này', mode: 'weekly' };
   }
 
   if (timeframe === 'last_month') {
     const start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
     const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-    return { start, end, label: 'tháng trước', mode: 'daily' };
+    return { start, end, label: 'tháng trước', mode: 'weekly' };
   }
 
   if (timeframe === 'this_year' || timeframe === '1y') {
@@ -369,7 +369,9 @@ export function getPeriodRange(
     start.setHours(0, 0, 0, 0);
     const end = new Date(customRange.end);
     end.setHours(23, 59, 59, 999);
-    return { start, end, label: 'tùy chỉnh', mode: 'daily' };
+    const diffDays = Math.round((end.getTime() - start.getTime()) / (24 * 3600 * 1000)) + 1;
+    const mode = diffDays <= 8 ? 'daily' : diffDays <= 35 ? 'weekly' : 'monthly';
+    return { start, end, label: 'tùy chỉnh', mode };
   }
 
   const start = new Date(2024, 0, 1);
@@ -476,7 +478,7 @@ export async function fetchPeriodAnalytics(
   let chartData: RevenueChartPoint[] = [];
 
   if (mode === 'hourly') {
-    const hours = [6, 8, 10, 12, 14, 16, 18, 20, 22];
+    const hours = [6, 9, 12, 15, 18, 21];
     chartData = hours.map((h, idx) => {
       const nextH = hours[idx + 1] ?? 24;
       const matching = revenueOrders.filter((o: any) => {
@@ -495,7 +497,7 @@ export async function fetchPeriodAnalytics(
     const oneDayMs = 24 * 3600 * 1000;
     const diffDays = Math.max(
       1,
-      Math.min(31, Math.round((end.getTime() - start.getTime()) / oneDayMs) + 1)
+      Math.min(8, Math.round((end.getTime() - start.getTime()) / oneDayMs) + 1)
     );
 
     chartData = Array.from({ length: diffDays }, (_, i) => {
@@ -508,11 +510,46 @@ export async function fetchPeriodAnalytics(
 
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
-      const label = `Th${mm}-${dd}`;
 
       return {
-        label,
+        label: DAY_LABELS[d.getDay()],
         date: `${DAY_LABELS[d.getDay()]}, ${dd}/${mm}`,
+        value: val,
+        orderCount: matching.length,
+      };
+    });
+  } else if (mode === 'weekly') {
+    // Nhóm theo tuần trong tháng: Tuần 1 (01-07), Tuần 2 (08-14), Tuần 3 (15-21), Tuần 4 (22-28), Tuần 5 (29-cuối tháng)
+    const mm = String(start.getMonth() + 1).padStart(2, '0');
+    const lastDayOfMonth = end.getDate();
+
+    const weeks: { startDay: number; endDay: number; label: string }[] = [
+      { startDay: 1, endDay: 7, label: 'Tuần 1' },
+      { startDay: 8, endDay: 14, label: 'Tuần 2' },
+      { startDay: 15, endDay: 21, label: 'Tuần 3' },
+      { startDay: 22, endDay: 28, label: 'Tuần 4' },
+    ];
+    if (lastDayOfMonth > 28) {
+      weeks.push({ startDay: 29, endDay: lastDayOfMonth, label: 'Tuần 5' });
+    }
+
+    chartData = weeks.map((w) => {
+      const matching = revenueOrders.filter((o: any) => {
+        const od = new Date(o.created_at);
+        return (
+          od.getFullYear() === start.getFullYear() &&
+          od.getMonth() === start.getMonth() &&
+          od.getDate() >= w.startDay &&
+          od.getDate() <= w.endDay
+        );
+      });
+      const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
+      const dd1 = String(w.startDay).padStart(2, '0');
+      const dd2 = String(w.endDay).padStart(2, '0');
+
+      return {
+        label: w.label,
+        date: `${w.label} (${dd1}/${mm} - ${dd2}/${mm})`,
         value: val,
         orderCount: matching.length,
       };
@@ -526,7 +563,7 @@ export async function fetchPeriodAnalytics(
       });
       const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
       return {
-        label: `Thg ${m + 1}`,
+        label: `T${m + 1}`,
         date: `Tháng ${m + 1}/${year}`,
         value: val,
         orderCount: matching.length,
@@ -550,19 +587,19 @@ export async function fetchPeriodAnalytics(
       slot: 'Giờ tan tầm & Tối',
       timeRange: '18:00 - 22:00',
       orderCount: hourCounts.evening,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 60,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Buổi chiều',
       timeRange: '14:00 - 18:00',
       orderCount: hourCounts.afternoon,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 25,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Bữa trưa',
       timeRange: '11:00 - 14:00',
       orderCount: hourCounts.noon,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 15,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Buổi sáng',
