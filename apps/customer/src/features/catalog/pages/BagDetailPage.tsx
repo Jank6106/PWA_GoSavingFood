@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ChevronLeft,
+  Sparkles,
   Clock3,
   MapPin,
   Share2,
@@ -125,6 +126,25 @@ export function BagDetailPage({
     }
     return null;
   }, [userCoords, merchant?.latitude, merchant?.longitude, merchant?.distance]);
+
+  const categoryTip = useMemo(() => {
+    if (bag?.category === 'meat') {
+      return 'Thức ăn đóng hộp từ ca trưa/tối. Khuyên dùng: Hâm nóng lại 1–2 phút bằng lò vi sóng hoặc áp chảo trước khi thưởng thức để giữ trọn độ giòn thơm chuẩn vị.';
+    }
+    if (bag?.category === 'beverage') {
+      return 'Phục vụ đồ uống đóng chai bảo quản lạnh sẵn trong ngày (Cold Brew, trà ủ lạnh, nước ép) kèm bánh nướng. Quán không dùng đá pha tại chỗ để tránh tan đá nhạt vị.';
+    }
+    if (bag?.category === 'bakery') {
+      return 'Bánh nướng tươi mới trong ngày từ tiệm. Quý khách có thể thưởng thức ngay hoặc bảo quản trong ngăn mát tủ lạnh.';
+    }
+    if (bag?.category === 'vegetarian') {
+      return 'Món chay thanh tịnh đóng hộp mang về cuối ca. Vui lòng hâm nóng lại 1–2 phút trước khi dùng bữa.';
+    }
+    if (bag?.category === 'raw_food') {
+      return 'Nông sản, rau củ quả tươi đạt chuẩn VietGAP cần giải cứu trong ngày, bảo quản mát hoặc dùng tươi.';
+    }
+    return 'Thức ăn đóng hộp chế biến sẵn mang về cuối ca. Vui lòng làm nóng lại bằng lò nướng/nồi chiên không dầu 3–5 phút để giòn ngon nhất.';
+  }, [bag?.category]);
 
   const handleShare = async () => {
     if (!bag) return;
@@ -275,6 +295,22 @@ export function BagDetailPage({
         <div className="customer-product-summary-col">
           {/* Main Product Info & Price */}
           <section className="customer-product-info-card">
+            <div className="customer-product-yindii-tag">
+              <Sparkles size={13} strokeWidth={2.4} />
+              <span>
+                {bag.category === 'meat'
+                  ? 'Món nóng cuối ca • Hâm nóng khi dùng'
+                  : bag.category === 'beverage'
+                  ? 'Đồ uống đóng chai • Kèm bánh nướng'
+                  : bag.category === 'bakery'
+                  ? 'Bánh tươi trong ngày • Surprise Bag'
+                  : bag.category === 'vegetarian'
+                  ? 'Món chay thanh đạm • Đóng hộp cuối ca'
+                  : bag.category === 'raw_food'
+                  ? 'Nông sản sạch • Chuẩn VietGAP'
+                  : 'Túi cứu trợ thực phẩm • Chuẩn Yindii'}
+              </span>
+            </div>
             <h1 className="customer-product-title">{bag.name}</h1>
 
             {/* Rating and Distance Row */}
@@ -510,6 +546,38 @@ export function BagDetailPage({
             <p className="customer-product-description">
               {bag.description || 'Chưa có thông tin mô tả cho túi hàng này.'}
             </p>
+
+            {/* Hướng dẫn tiêu chuẩn Túi Cứu Trợ GoSavingFood (Mô hình Yindii) */}
+            <div className="customer-product-yindii-guide">
+              <div className="customer-product-yindii-header">
+                <Sparkles size={16} className="customer-product-yindii-icon" />
+                <span className="customer-product-yindii-title">Đặc trưng Túi Cứu Trợ (Surprise Bag)</span>
+                <span className="customer-product-yindii-badge">Chuẩn Yindii</span>
+              </div>
+
+              <div className="customer-product-yindii-list">
+                <div className="customer-product-yindii-row">
+                  <span className="customer-product-yindii-bullet">🌱</span>
+                  <div className="customer-product-yindii-text">
+                    <strong>Chất lượng đảm bảo:</strong> Món ngon chuẩn bị trong ngày chưa bán hết cuối ca, chung tay cùng cửa hàng chống lãng phí thực phẩm & nhận mức giá ưu đãi đến 70%.
+                  </div>
+                </div>
+
+                <div className="customer-product-yindii-row">
+                  <span className="customer-product-yindii-bullet">📦</span>
+                  <div className="customer-product-yindii-text">
+                    <strong>Đóng gói mang đi:</strong> Món ăn được quán đóng hộp/túi giấy cẩn thận mang về, quý khách đến nhận trực tiếp tại quầy trong khung giờ hẹn.
+                  </div>
+                </div>
+
+                <div className="customer-product-yindii-row customer-product-yindii-row--highlight">
+                  <span className="customer-product-yindii-bullet">💡</span>
+                  <div className="customer-product-yindii-text">
+                    <strong>Khuyên dùng:</strong> {categoryTip}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
