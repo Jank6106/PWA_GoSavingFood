@@ -1188,7 +1188,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 120000,
     "discountPrice": 45000,
     "category": "bakery",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/bakery/bakery-001.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "07:30",
@@ -1224,7 +1224,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 130000,
     "discountPrice": 48000,
     "category": "bakery",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/bakery/bakery-001.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "07:30",
@@ -1260,7 +1260,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 110000,
     "discountPrice": 40000,
     "category": "bakery",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/bakery/bakery-001.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "07:30",
@@ -1332,7 +1332,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 125000,
     "discountPrice": 45000,
     "category": "bakery",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/bakery/bakery-001.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "08:30",
@@ -1386,7 +1386,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 115000,
     "discountPrice": 42000,
     "category": "bakery",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/bakery/bakery-001.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "07:00",
@@ -1872,7 +1872,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 125000,
     "discountPrice": 46000,
     "category": "other",
-    "imageUrl": "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/meals/kfc-chicken-bucket.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "09:30",
@@ -1890,7 +1890,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 115000,
     "discountPrice": 42000,
     "category": "other",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/meals/kfc-burger-eggtart.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "09:30",
@@ -2016,7 +2016,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 135000,
     "discountPrice": 49000,
     "category": "bakery",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/bakery/bakery-001.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "07:30",
@@ -2070,7 +2070,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 165000,
     "discountPrice": 59000,
     "category": "bakery",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/bakery/bakery-001.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "08:30",
@@ -2178,7 +2178,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 155000,
     "discountPrice": 56000,
     "category": "bakery",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/bakery/bakery-001.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "07:30",
@@ -2196,7 +2196,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "originalPrice": 95000,
     "discountPrice": 35000,
     "category": "bakery",
-    "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80",
+    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/bakery/bakery-001.webp",
     "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "07:00",
@@ -3078,7 +3078,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
   "originalPrice": 75000,
   "discountPrice": 29000,
   "category": "other",
-  "imageUrl": "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80",
+  "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/meals/kfc-popcorn-chicken.webp",
   "quantity": 6,
   "maxQuantity": 3,
   "pickupStart": "10:00",
@@ -3316,7 +3316,7 @@ export const customerService = {
               const { data: directStores, error: storesErr } = await supabase
                 .from('stores')
                 .select('id, name, description, phone, address, logo_url, banner_url, rating, total_ratings, is_open, open_time, close_time, latitude, longitude')
-                .limit(50);
+                .limit(300);
               if (!storesErr && Array.isArray(directStores)) return directStores;
 
               const { data: storesData } = await supabase.rpc('list_stores_nearby', {
@@ -3325,7 +3325,7 @@ export const customerService = {
                 p_radius: 500000,
                 p_category: null,
                 p_page: 1,
-                p_limit: 50,
+                p_limit: 300,
               });
               return Array.isArray(storesData) ? storesData : [];
             } catch {
@@ -3341,7 +3341,7 @@ export const customerService = {
                 .eq('is_available', true)
                 .is('deleted_at', null)
                 .order('created_at', { ascending: false })
-                .limit(50);
+                .limit(300);
               if (!bagsErr && Array.isArray(directBags)) return directBags;
 
               const { data: nearbyBags } = await supabase.rpc('list_bags_nearby', {
@@ -3350,7 +3350,7 @@ export const customerService = {
                 p_radius: 500000,
                 p_category: null,
                 p_page: 1,
-                p_limit: 50,
+                p_limit: 300,
               });
               return Array.isArray(nearbyBags) ? nearbyBags : [];
             } catch {

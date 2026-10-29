@@ -606,6 +606,7 @@ function CustomerApp() {
   }, [route, selectedBag, directBag]);
 
   const [directMerchant, setDirectMerchant] = useState<Merchant | null>(null);
+  const [directMerchantBags, setDirectMerchantBags] = useState<SurpriseBag[] | null>(null);
 
   const selectedMerchantId =
     route.name === 'merchant' || route.name === 'merchant_reviews'
@@ -613,14 +614,16 @@ function CustomerApp() {
       : selectedBag?.merchantId;
 
   useEffect(() => {
-    if (selectedMerchantId && !catalog.merchants.some((m) => m.id === selectedMerchantId)) {
+    if (selectedMerchantId) {
       void customerService.getMerchant(selectedMerchantId).then((res) => {
         if (res?.merchant) setDirectMerchant(res.merchant);
+        if (res?.bags && res.bags.length > 0) setDirectMerchantBags(res.bags);
       });
-    } else if (!selectedMerchantId && directMerchant) {
-      setDirectMerchant(null);
+    } else {
+      if (directMerchant) setDirectMerchant(null);
+      if (directMerchantBags) setDirectMerchantBags(null);
     }
-  }, [selectedMerchantId, catalog.merchants, directMerchant]);
+  }, [selectedMerchantId]);
 
   const selectedMerchant =
     catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? directMerchant ?? null;
@@ -1090,17 +1093,22 @@ function CustomerApp() {
           }}
         />
       );
-    if (route.name === 'merchant')
+    if (route.name === 'merchant') {
+      const merchantBags =
+        directMerchantBags && directMerchantBags.length > 0
+          ? directMerchantBags
+          : catalog.bags.filter((bag) => bag.merchantId === route.id);
       return (
         <MerchantDetailPage
           merchant={selectedMerchant}
-          bags={catalog.bags.filter((bag) => bag.merchantId === route.id)}
+          bags={merchantBags}
           onBack={back}
           onOpenBag={(bag) => push({ name: 'bag', id: bag.id })}
           onAdd={addToCart}
           onOpenReviews={(merchantId) => push({ name: 'merchant_reviews', id: merchantId })}
         />
       );
+    }
     if (route.name === 'merchant_reviews')
       return (
         <MerchantReviewsView

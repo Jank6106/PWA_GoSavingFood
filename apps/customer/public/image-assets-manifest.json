@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-10-28T16:18:02.983Z",
-  "totalAssets": 54,
+  "totalAssets": 57,
   "bucket": "product-images",
   "assets": [
     {
@@ -865,6 +865,54 @@
       "objectPath": "mixed/mixed-010.webp",
       "publicUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/mixed/mixed-010.webp",
       "fileSizeBytes": 277770,
+      "mimeType": "image/webp"
+    },
+    {
+      "category": "meals",
+      "filename": "kfc-chicken-bucket.webp",
+      "title": "KFC crispy fried chicken bucket and french fries",
+      "sourceUrl": "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb",
+      "photographer": "Unsplash Contributor",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "status": "verified_production_use",
+      "localPath": "assets/product-images/meals/kfc-chicken-bucket.webp",
+      "storageBucket": "product-images",
+      "objectPath": "meals/kfc-chicken-bucket.webp",
+      "publicUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/meals/kfc-chicken-bucket.webp",
+      "fileSizeBytes": 147560,
+      "mimeType": "image/webp"
+    },
+    {
+      "category": "meals",
+      "filename": "kfc-popcorn-chicken.webp",
+      "title": "KFC golden popcorn chicken bites and crispy fries",
+      "sourceUrl": "https://images.unsplash.com/photo-1562967914-608f82629710",
+      "photographer": "Unsplash Contributor",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "status": "verified_production_use",
+      "localPath": "assets/product-images/meals/kfc-popcorn-chicken.webp",
+      "storageBucket": "product-images",
+      "objectPath": "meals/kfc-popcorn-chicken.webp",
+      "publicUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/meals/kfc-popcorn-chicken.webp",
+      "fileSizeBytes": 184520,
+      "mimeType": "image/webp"
+    },
+    {
+      "category": "meals",
+      "filename": "kfc-burger-eggtart.webp",
+      "title": "KFC Zinger chicken burger and egg tart pastry combo",
+      "sourceUrl": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
+      "photographer": "Unsplash Contributor",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "status": "verified_production_use",
+      "localPath": "assets/product-images/meals/kfc-burger-eggtart.webp",
+      "storageBucket": "product-images",
+      "objectPath": "meals/kfc-burger-eggtart.webp",
+      "publicUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/meals/kfc-burger-eggtart.webp",
+      "fileSizeBytes": 198420,
       "mimeType": "image/webp"
     }
   ],
