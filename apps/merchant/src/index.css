@@ -1076,6 +1076,48 @@ h1, h2, h3, p { margin: 0; }
   margin-bottom: 16px;
 }
 
+.merchant-barchart-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+
+.merchant-chart-tabs {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 999px;
+  gap: 2px;
+}
+
+.merchant-chart-tab-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.merchant-chart-tab-btn:hover {
+  color: #1e293b;
+}
+
+.merchant-chart-tab-btn.is-active {
+  background: #ffffff;
+  color: #166B4A;
+  font-weight: 750;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+
 .merchant-barchart-header {
   display: flex;
   align-items: center;
@@ -1134,67 +1176,164 @@ h1, h2, h3, p { margin: 0; }
 
 .merchant-barchart-container {
   display: flex;
-  gap: 8px;
-  align-items: stretch;
+  gap: 12px;
+  align-items: flex-start;
   width: 100%;
+  margin-top: 8px;
 }
 
 .merchant-barchart-y-axis {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 154px;
-  padding-top: 14px;
+  height: 180px;
   flex-shrink: 0;
   min-width: 68px;
   text-align: right;
-  padding-right: 6px;
+  padding-right: 8px;
+  user-select: none;
 }
 
 .y-axis-tick {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 550;
   color: #94a3b8;
   font-family: Inter, monospace, sans-serif;
   line-height: 1;
 }
 
-.merchant-barchart-svg-wrapper {
+.merchant-barchart-plot-area {
   flex: 1;
-  overflow-x: auto;
-  scrollbar-width: none;
+  position: relative;
   min-width: 0;
-}
-.merchant-barchart-svg-wrapper::-webkit-scrollbar {
-  display: none;
+  display: flex;
+  flex-direction: column;
 }
 
-.merchant-barchart-svg {
+/* Lưới ngang (Gridlines) */
+.merchant-barchart-gridlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.merchant-barchart-gridline {
+  border-bottom: 1px dashed #e2e8f0;
   width: 100%;
-  height: 220px;
-  display: block;
+  height: 0;
 }
 
-.barchart-x-label {
-  font-size: 10px;
-  fill: #64748b;
-  font-weight: 550;
-  font-family: Inter, sans-serif;
-  transition: fill 0.15s ease;
+/* Khung chứa các cột (Bars Track) */
+.merchant-barchart-bars-track {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  width: 100%;
+  position: relative;
+  z-index: 2;
 }
 
-.barchart-x-label.is-active {
-  fill: #166B4A;
-  font-weight: 800;
+.merchant-barchart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 0 4px;
+  min-width: 0;
+  transition: opacity 0.15s ease;
 }
 
-.bar-rect {
-  transition: fill 0.15s ease, opacity 0.15s ease;
+/* Vùng chứa chiều cao cột (180px) */
+.barchart-bar-box {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
 }
 
-.bar-group:hover .bar-rect {
-  fill: #059669;
+.barchart-bar-floating-badge {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #059669;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+  pointer-events: none;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.barchart-bar-fill {
+  width: 100%;
+  max-width: 38px;
+  min-width: 12px;
+  border-radius: 6px 6px 2px 2px;
+  background-color: #166B4A;
+  transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, transform 0.15s ease;
+}
+
+.merchant-barchart-col:hover .barchart-bar-fill,
+.barchart-bar-fill.is-active {
+  background-color: #059669;
   filter: brightness(1.08);
+  transform: scaleY(1.02);
+  transform-origin: bottom;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+}
+
+.barchart-bar-fill.is-zero {
+  background-color: #cbd5e1;
+  opacity: 0.6;
+}
+
+/* Nhãn trục X chuẩn Typography Inter, không bao giờ bị méo hoặc dẹt */
+.barchart-x-label-group {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  min-height: 38px;
+}
+
+.barchart-x-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  font-family: Inter, sans-serif;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.merchant-barchart-col:hover .barchart-x-title,
+.barchart-x-title.is-active {
+  color: #166B4A;
+  font-weight: 700;
+}
+
+.barchart-x-subtitle {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #94a3b8;
+  font-family: Inter, sans-serif;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
 }
 .merchant-revenue-card {
   display: flex;
@@ -1849,9 +1988,37 @@ h1, h2, h3, p { margin: 0; }
   color: var(--text-muted);
   font-size: 10px;
 }
-.merchant-review-card header > span {
-  display: flex;
-  gap: 1px;
+.merchant-review-card header > span,
+.merchant-review-stars-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.merchant-review-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.merchant-review-stars svg.is-filled {
+  color: #f59e0b;
+  fill: #f59e0b;
+}
+
+.merchant-review-stars svg.is-empty {
+  color: #cbd5e1;
+  fill: #f1f5f9;
+}
+
+.merchant-review-rating-badge {
+  font-size: 11px;
+  font-weight: 750;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 1px 6px;
+  border-radius: 6px;
+  line-height: 1.3;
 }
 .merchant-review-card p {
   margin-top: 8px;
@@ -1917,22 +2084,273 @@ h1, h2, h3, p { margin: 0; }
 .merchant-detail-content dt { color: var(--text-secondary); font-size: 9px; }
 .merchant-detail-content dd { margin: 4px 0 0; font-size: 12px; font-weight: 800; }
 .merchant-modal-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.merchant-notification-list { display: flex; flex-direction: column; gap: 8px; }
-.merchant-notification { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff; cursor: pointer; text-align: left; transition: all .15s ease; }
-.merchant-notification:hover { background: #f8fafc; border-color: #cbd5e1; }
-.merchant-notification.is-unread { background: #f8fafc; border-color: #cbd5e1; }
-.merchant-notification-icon { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; border-radius: 10px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
-.merchant-notification-body { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
-.merchant-notification-header { display: flex; align-items: center; gap: 6px; }
-.merchant-notification-header strong { font-size: 13.5px; font-weight: 750; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.1px; }
-.merchant-notification-dot { width: 6px; height: 6px; border-radius: 50%; background: #0f172a; flex-shrink: 0; }
-.merchant-notification-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; line-height: 1.4; }
-.merchant-notification-code { font-weight: 700; color: #334155; }
-.merchant-notification-sep { color: #94a3b8; font-size: 10px; }
-.merchant-notification-time { color: #64748b; }
-.merchant-notification-desc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
-.merchant-notification-arrow { display: flex; align-items: center; color: #94a3b8; flex-shrink: 0; margin-left: auto; transition: transform .15s ease, color .15s ease; }
-.merchant-notification:hover .merchant-notification-arrow { transform: translateX(2px); color: #475569; }
+/* Merchant Notifications (Yindii Partner Model) */
+.merchant-notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.merchant-notification {
+  position: relative;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+}
+
+.merchant-notification:hover {
+  background: #fafbfc;
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.merchant-notification.is-unread {
+  background: #fcfdfd;
+  border-left: 4px solid #005639;
+  border-color: #cbd5e1 #cbd5e1 #cbd5e1 #005639;
+}
+
+.merchant-notification.is-unread:hover {
+  background: #f8fafc;
+}
+
+.merchant-notification.is-expanded {
+  border-color: #005639;
+  box-shadow: 0 4px 16px rgba(0, 86, 57, 0.09);
+  background: #ffffff;
+}
+
+.merchant-notification-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.merchant-notification-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  flex: 0 0 38px;
+  border-radius: 10px;
+  margin-top: 2px;
+  transition: transform 0.15s ease;
+}
+
+.merchant-notification-icon.is-new-order {
+  background: #ecfdf5;
+  color: #005639;
+  border: 1px solid #a7f3d0;
+}
+
+.merchant-notification-icon.is-completed {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.merchant-notification-icon.is-cancelled {
+  background: #fef2f2;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+}
+
+.merchant-notification-icon.is-default {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.merchant-notification-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 4px;
+}
+
+.merchant-notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.merchant-notification-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.merchant-notification-title-wrap strong {
+  font-size: 14px;
+  font-weight: 750;
+  color: #0f172a;
+  letter-spacing: -0.15px;
+  line-height: 1.35;
+}
+
+.merchant-notification-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #005639;
+  flex-shrink: 0;
+}
+
+.merchant-notification-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: #64748b;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.merchant-notification:hover .merchant-notification-arrow {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.merchant-notification-store-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.merchant-notification-desc {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.45;
+  margin: 3px 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.merchant-notification-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.merchant-notification-code {
+  font-weight: 700;
+  color: #005639;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  letter-spacing: 0.1px;
+}
+
+.merchant-notification-sep {
+  color: #cbd5e1;
+  font-size: 10px;
+}
+
+.merchant-notification-time {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.merchant-notification-expanded {
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.merchant-notification-full-desc {
+  font-size: 13px;
+  color: #1e293b;
+  line-height: 1.55;
+  background: #f8fafc;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  word-break: break-word;
+}
+
+.merchant-notification-expanded-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748b;
+  padding: 0 2px;
+}
+
+.merchant-notification-cta {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  height: 42px !important;
+  padding: 0 16px !important;
+  background: #005639 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.1px !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 2px 6px rgba(0, 86, 57, 0.2) !important;
+  box-sizing: border-box !important;
+}
+
+.merchant-notification-cta:hover {
+  background: #00422c !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 86, 57, 0.25) !important;
+}
+
+.merchant-notification-cta:active {
+  transform: translateY(0) !important;
+}
 
 .merchant-notification-modal header > button { background: #f1f5f9 !important; color: #475569 !important; border-radius: 50% !important; transition: background .15s ease, color .15s ease; }
 .merchant-notification-modal header > button:hover { background: #e2e8f0 !important; color: #0f172a !important; }

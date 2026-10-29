@@ -1,16 +1,10 @@
 import { ChevronDown, ImagePlus, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react';
 import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES } from '../../mocks';
-import { compressImageFile, optimizeImageUrl } from '../../services/utils';
+import { compressImageToBlob, optimizeImageUrl } from '../../services/utils';
 import type { BagInput, BagItem } from '../../types';
 import { getBagCategory, getVnTimeMinutes, parseTimeToMinutes, type BagTabCategory } from '../../utils/bagTiming';
 import { Button, Field, Modal, SelectField, TextAreaField } from '../ui';
-
-const readImageFiles = async (files: FileList) => {
-  const list = Array.from(files).filter((file) => file.type.startsWith('image/'));
-  const results = await Promise.all(list.map((file) => compressImageFile(file, 800, 0.75)));
-  return results.filter((url): url is string => Boolean(url));
-};
 
 export function BagFilterBar({
   searchQuery,
@@ -427,6 +421,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   const [pickupTimeStart, setPickupTimeStart] = useState(bag?.pickupTimeStart ?? '18:00');
   const [pickupTimeEnd, setPickupTimeEnd] = useState(bag?.pickupTimeEnd ?? '20:00');
   const [imageUrls, setImageUrls] = useState<string[]>(bag?.imageUrls?.length ? bag.imageUrls : (bag?.imageUrl ? [bag.imageUrl] : []));
+  const [imageBlob, setImageBlob] = useState<Blob | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -448,6 +443,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
       setPickupTimeStart(bag?.pickupTimeStart ?? '18:00');
       setPickupTimeEnd(bag?.pickupTimeEnd ?? '20:00');
       setImageUrls(bag?.imageUrls?.length ? bag.imageUrls : (bag?.imageUrl ? [bag.imageUrl] : []));
+      setImageBlob(null);
       setImageError(null);
       setFormError(null);
     }
@@ -482,9 +478,13 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
 
   const uploadFiles = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length) return;
-    const files = await readImageFiles(event.target.files);
-    setImageUrls((current) => [...current, ...files]);
-    setImageError(null);
+    const file = event.target.files[0];
+    const compressed = await compressImageToBlob(file, 640, 0.8);
+    if (compressed) {
+      setImageBlob(compressed.blob);
+      setImageUrls([compressed.previewUrl]);
+      setImageError(null);
+    }
     event.target.value = '';
   };
 
@@ -544,6 +544,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
       quantity: qty,
       imageUrl: imageUrls[0],
       imageUrls: imageUrls,
+      imageBlob: imageBlob || undefined,
       pickupTimeStart,
       pickupTimeEnd,
       bagType,

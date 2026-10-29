@@ -31,10 +31,14 @@ const mapNotification = (row: any): NotificationItem => {
     row?.data?.orderCode ||
     row?.data?.order_code ||
     (orderId ? `GSF-${String(orderId).slice(0, 6).toUpperCase()}` : undefined);
+  const storeId = row?.data?.storeId || row?.data?.store_id;
+  const storeName = row?.data?.storeName || row?.data?.store_name;
   return {
     id: row.id,
     orderId,
     orderCode,
+    storeId,
+    storeName,
     title: row.title || 'Thông báo',
     message: row.body || '',
     type: inferNotificationType(row),

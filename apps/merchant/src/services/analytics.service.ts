@@ -6,6 +6,7 @@ import type {
   PeriodKpiData,
   ReviewItem,
   RevenueChartPoint,
+  MultiPeriodCharts,
 } from '../types';
 import { supabase } from './supabase';
 
@@ -65,9 +66,9 @@ const EMPTY_METRICS: AnalyticsMetrics = {
   foodSavedKg: 0,
   topSellingBags: [],
   peakHours: [
-    { slot: 'Giờ tan tầm & Tối', timeRange: '18:00 - 22:00', orderCount: 0, percentage: 60 },
-    { slot: 'Buổi chiều', timeRange: '14:00 - 18:00', orderCount: 0, percentage: 25 },
-    { slot: 'Bữa trưa', timeRange: '11:00 - 14:00', orderCount: 0, percentage: 15 },
+    { slot: 'Giờ tan tầm & Tối', timeRange: '18:00 - 22:00', orderCount: 0, percentage: 0 },
+    { slot: 'Buổi chiều', timeRange: '14:00 - 18:00', orderCount: 0, percentage: 0 },
+    { slot: 'Bữa trưa', timeRange: '11:00 - 14:00', orderCount: 0, percentage: 0 },
     { slot: 'Buổi sáng', timeRange: '06:00 - 11:00', orderCount: 0, percentage: 0 },
   ],
 };
@@ -221,19 +222,19 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
       slot: 'Giờ tan tầm & Tối',
       timeRange: '18:00 - 22:00',
       orderCount: hourCounts.evening,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 60,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Buổi chiều',
       timeRange: '14:00 - 18:00',
       orderCount: hourCounts.afternoon,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 25,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Bữa trưa',
       timeRange: '11:00 - 14:00',
       orderCount: hourCounts.noon,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 15,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Buổi sáng',
@@ -299,7 +300,7 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
 export function getPeriodRange(
   timeframe: AnalyticsTimeframe,
   customRange?: { start: string; end: string }
-): { start: Date; end: Date; label: string; mode: 'hourly' | 'daily' | 'monthly' } {
+): { start: Date; end: Date; label: string; mode: 'hourly' | 'daily' | 'weekly' | 'monthly' } {
   const now = new Date();
 
   if (timeframe === 'today') {
@@ -333,17 +334,17 @@ export function getPeriodRange(
       start.setHours(0, 0, 0, 0);
       const end = new Date(now);
       end.setHours(23, 59, 59, 999);
-      return { start, end, label: '30 ngày qua', mode: 'daily' };
+      return { start, end, label: '30 ngày qua', mode: 'weekly' };
     }
     const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-    return { start, end, label: 'tháng này', mode: 'daily' };
+    return { start, end, label: 'tháng này', mode: 'weekly' };
   }
 
   if (timeframe === 'last_month') {
     const start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
     const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-    return { start, end, label: 'tháng trước', mode: 'daily' };
+    return { start, end, label: 'tháng trước', mode: 'weekly' };
   }
 
   if (timeframe === 'this_year' || timeframe === '1y') {
@@ -369,7 +370,9 @@ export function getPeriodRange(
     start.setHours(0, 0, 0, 0);
     const end = new Date(customRange.end);
     end.setHours(23, 59, 59, 999);
-    return { start, end, label: 'tùy chỉnh', mode: 'daily' };
+    const diffDays = Math.round((end.getTime() - start.getTime()) / (24 * 3600 * 1000)) + 1;
+    const mode = diffDays <= 8 ? 'daily' : diffDays <= 35 ? 'weekly' : 'monthly';
+    return { start, end, label: 'tùy chỉnh', mode };
   }
 
   const start = new Date(2024, 0, 1);
@@ -476,7 +479,7 @@ export async function fetchPeriodAnalytics(
   let chartData: RevenueChartPoint[] = [];
 
   if (mode === 'hourly') {
-    const hours = [6, 8, 10, 12, 14, 16, 18, 20, 22];
+    const hours = [6, 9, 12, 15, 18, 21];
     chartData = hours.map((h, idx) => {
       const nextH = hours[idx + 1] ?? 24;
       const matching = revenueOrders.filter((o: any) => {
@@ -495,7 +498,7 @@ export async function fetchPeriodAnalytics(
     const oneDayMs = 24 * 3600 * 1000;
     const diffDays = Math.max(
       1,
-      Math.min(31, Math.round((end.getTime() - start.getTime()) / oneDayMs) + 1)
+      Math.min(8, Math.round((end.getTime() - start.getTime()) / oneDayMs) + 1)
     );
 
     chartData = Array.from({ length: diffDays }, (_, i) => {
@@ -508,11 +511,46 @@ export async function fetchPeriodAnalytics(
 
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
-      const label = `Th${mm}-${dd}`;
 
       return {
-        label,
+        label: DAY_LABELS[d.getDay()],
         date: `${DAY_LABELS[d.getDay()]}, ${dd}/${mm}`,
+        value: val,
+        orderCount: matching.length,
+      };
+    });
+  } else if (mode === 'weekly') {
+    // Nhóm theo tuần trong tháng: Tuần 1 (01-07), Tuần 2 (08-14), Tuần 3 (15-21), Tuần 4 (22-28), Tuần 5 (29-cuối tháng)
+    const mm = String(start.getMonth() + 1).padStart(2, '0');
+    const lastDayOfMonth = end.getDate();
+
+    const weeks: { startDay: number; endDay: number; label: string }[] = [
+      { startDay: 1, endDay: 7, label: 'Tuần 1' },
+      { startDay: 8, endDay: 14, label: 'Tuần 2' },
+      { startDay: 15, endDay: 21, label: 'Tuần 3' },
+      { startDay: 22, endDay: 28, label: 'Tuần 4' },
+    ];
+    if (lastDayOfMonth > 28) {
+      weeks.push({ startDay: 29, endDay: lastDayOfMonth, label: 'Tuần 5' });
+    }
+
+    chartData = weeks.map((w) => {
+      const matching = revenueOrders.filter((o: any) => {
+        const od = new Date(o.created_at);
+        return (
+          od.getFullYear() === start.getFullYear() &&
+          od.getMonth() === start.getMonth() &&
+          od.getDate() >= w.startDay &&
+          od.getDate() <= w.endDay
+        );
+      });
+      const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
+      const dd1 = String(w.startDay).padStart(2, '0');
+      const dd2 = String(w.endDay).padStart(2, '0');
+
+      return {
+        label: w.label,
+        date: `${w.label} (${dd1}/${mm} - ${dd2}/${mm})`,
         value: val,
         orderCount: matching.length,
       };
@@ -526,7 +564,7 @@ export async function fetchPeriodAnalytics(
       });
       const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
       return {
-        label: `Thg ${m + 1}`,
+        label: `T${m + 1}`,
         date: `Tháng ${m + 1}/${year}`,
         value: val,
         orderCount: matching.length,
@@ -550,19 +588,19 @@ export async function fetchPeriodAnalytics(
       slot: 'Giờ tan tầm & Tối',
       timeRange: '18:00 - 22:00',
       orderCount: hourCounts.evening,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 60,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.evening / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Buổi chiều',
       timeRange: '14:00 - 18:00',
       orderCount: hourCounts.afternoon,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 25,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.afternoon / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Bữa trưa',
       timeRange: '11:00 - 14:00',
       orderCount: hourCounts.noon,
-      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 15,
+      percentage: totalHourCount > 0 ? Math.round((hourCounts.noon / totalHourCount) * 100) : 0,
     },
     {
       slot: 'Buổi sáng',
@@ -582,6 +620,117 @@ export async function fetchPeriodAnalytics(
     statusBreakdown,
     chartData,
   };
+}
+
+export async function fetchAllRevenueCharts(storeId: string): Promise<MultiPeriodCharts> {
+  const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('id, status, final_amount, created_at')
+    .eq('store_id', storeId)
+    .gte('created_at', yearStart.toISOString());
+
+  if (error) {
+    console.warn('Lỗi lấy dữ liệu đa biểu đồ:', error.message);
+  }
+
+  const revenueOrders = (data || []).filter((o: any) => isRevenueStatus(o.status));
+
+  // 1. Biểu đồ Theo Giờ (Hôm nay / 24h)
+  const todayStr = now.toDateString();
+  const todayRevenueOrders = revenueOrders.filter(
+    (o: any) => new Date(o.created_at).toDateString() === todayStr
+  );
+  const hourSlots = [
+    { label: '06:00', start: 6, end: 9, title: '06:00 - 09:00 (Sáng sớm)' },
+    { label: '09:00', start: 9, end: 12, title: '09:00 - 12:00 (Buổi sáng)' },
+    { label: '12:00', start: 12, end: 15, title: '12:00 - 15:00 (Bữa trưa)' },
+    { label: '15:00', start: 15, end: 18, title: '15:00 - 18:00 (Buổi chiều)' },
+    { label: '18:00', start: 18, end: 21, title: '18:00 - 21:00 (Tan tầm & Tối)' },
+    { label: '21:00', start: 21, end: 24, title: '21:00 - 24:00 (Đêm muộn)' },
+  ];
+  const hourly: RevenueChartPoint[] = hourSlots.map((slot) => {
+    const matching = todayRevenueOrders.filter((o: any) => {
+      const h = new Date(o.created_at).getHours();
+      return h >= slot.start && h < slot.end;
+    });
+    return {
+      label: slot.label,
+      date: slot.title,
+      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      orderCount: matching.length,
+    };
+  });
+
+  // 2. Biểu đồ Theo Ngày (7 ngày gần nhất)
+  const oneDayMs = 24 * 3600 * 1000;
+  const daily: RevenueChartPoint[] = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now.getTime() - (6 - i) * oneDayMs);
+    const dateStr = d.toDateString();
+    const matching = revenueOrders.filter(
+      (o: any) => new Date(o.created_at).toDateString() === dateStr
+    );
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return {
+      label: DAY_LABELS[d.getDay()],
+      date: `${DAY_LABELS[d.getDay()]}, ${dd}/${mm}`,
+      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      orderCount: matching.length,
+    };
+  });
+
+  // 3. Biểu đồ Theo Tuần (Tháng này)
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const weeks = [
+    { startDay: 1, endDay: 7, label: 'Tuần 1' },
+    { startDay: 8, endDay: 14, label: 'Tuần 2' },
+    { startDay: 15, endDay: 21, label: 'Tuần 3' },
+    { startDay: 22, endDay: 28, label: 'Tuần 4' },
+  ];
+  if (lastDayOfMonth > 28) {
+    weeks.push({ startDay: 29, endDay: lastDayOfMonth, label: 'Tuần 5' });
+  }
+  const currMonth = now.getMonth();
+  const currYear = now.getFullYear();
+  const mmStr = String(currMonth + 1).padStart(2, '0');
+  const weekly: RevenueChartPoint[] = weeks.map((w) => {
+    const matching = revenueOrders.filter((o: any) => {
+      const od = new Date(o.created_at);
+      return (
+        od.getFullYear() === currYear &&
+        od.getMonth() === currMonth &&
+        od.getDate() >= w.startDay &&
+        od.getDate() <= w.endDay
+      );
+    });
+    const dd1 = String(w.startDay).padStart(2, '0');
+    const dd2 = String(w.endDay).padStart(2, '0');
+    return {
+      label: w.label,
+      date: `${w.label} (${dd1}/${mmStr} - ${dd2}/${mmStr})`,
+      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      orderCount: matching.length,
+    };
+  });
+
+  // 4. Biểu đồ Theo Tháng (Năm nay)
+  const monthly: RevenueChartPoint[] = Array.from({ length: 12 }, (_, m) => {
+    const matching = revenueOrders.filter((o: any) => {
+      const od = new Date(o.created_at);
+      return od.getFullYear() === currYear && od.getMonth() === m;
+    });
+    return {
+      label: `T${m + 1}`,
+      date: `Tháng ${m + 1}/${currYear}`,
+      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      orderCount: matching.length,
+    };
+  });
+
+  return { hourly, daily, weekly, monthly };
 }
 
 export async function fetchRevenueChart(

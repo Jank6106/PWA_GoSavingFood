@@ -36,7 +36,19 @@ export function BagCard({ bag, compact = false, distanceLabel = '0,8 km', onOpen
       onClick={() => onOpen(bag)}
     >
       <div className="customer-bag-media">
-        <img src={optimizeImageUrl(bag.imageUrl, 480, 75)} alt={bag.name} className="customer-bag-photo" loading="lazy" />
+        <img
+          src={optimizeImageUrl(bag.imageUrl, 480, 75)}
+          alt={bag.name}
+          className="customer-bag-photo"
+          loading="lazy"
+          onError={(e) => {
+            const target = e.currentTarget as HTMLImageElement;
+            const fallback = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=80';
+            if (target.src !== fallback) {
+              target.src = fallback;
+            }
+          }}
+        />
       </div>
 
       <div className="customer-bag-top-badges">

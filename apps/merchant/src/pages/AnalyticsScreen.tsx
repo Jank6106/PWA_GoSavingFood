@@ -24,7 +24,7 @@ export function AnalyticsScreen({ storeId }: { storeId: string }) {
   const totalOrders = state.periodKpi?.totalOrders ?? state.metrics?.totalOrders ?? 0;
   const peakHours = state.periodKpi?.peakHours || state.metrics?.peakHours || [];
   const statusSlices = state.periodKpi?.statusBreakdown || [
-    { key: 'completed', label: 'Đã thanh toán', count: completedOrders, percentage: 100, color: '#166B4A' },
+    { key: 'completed', label: 'Đã thanh toán', count: completedOrders, percentage: totalOrders > 0 ? 100 : 0, color: '#166B4A' },
     { key: 'cancelled', label: 'Hủy', count: 0, percentage: 0, color: '#059669' },
     { key: 'pending', label: 'Chờ thanh toán', count: 0, percentage: 0, color: '#a7f3d0' },
   ];
@@ -101,6 +101,7 @@ export function AnalyticsScreen({ storeId }: { storeId: string }) {
           <RevenueBarChartCard
             data={state.chartData}
             periodLabel={periodLabel}
+            allCharts={state.allCharts}
           />
 
           {/* CÁC PHẦN GIỮ LẠI: Túi bán chạy nhất + Đánh giá gần đây */}

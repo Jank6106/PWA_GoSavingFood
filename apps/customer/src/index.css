@@ -6888,3 +6888,172 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 
 
 
+
+
+/* Yindii-Style Product Guide & Tag */
+.customer-product-yindii-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  width: fit-content;
+}
+
+.customer-product-yindii-guide {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+}
+
+.customer-product-yindii-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.customer-product-yindii-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.customer-product-yindii-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.customer-product-yindii-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  border-radius: 9999px;
+}
+
+.customer-product-yindii-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.customer-product-yindii-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1e293b;
+}
+
+.customer-product-yindii-bullet {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.customer-product-yindii-text strong {
+  color: #0f172a;
+}
+
+.customer-product-yindii-row--highlight {
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+}
+
+.customer-product-yindii-row--highlight .customer-product-yindii-text {
+  color: #15803d;
+}
+
+/* ============================================================================
+   CUSTOMER GLOBAL UTILITY BUTTONS & ANIMATED SPINNERS
+   ============================================================================ */
+.customer-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 22px;
+  background: #166B4A;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(22, 107, 74, 0.22);
+}
+
+.customer-primary-btn:hover {
+  background: #125439;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 107, 74, 0.3);
+}
+
+.customer-primary-btn:active {
+  transform: translateY(0);
+}
+
+.customer-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  background: #f8fafc;
+  color: #334155;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 650;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.customer-secondary-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.customer-secondary-btn:active {
+  transform: translateY(0);
+}
+
+.customer-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3.5px solid #e2e8f0;
+  border-top-color: #166B4A;
+  border-radius: 50%;
+  animation: customer-global-spin 0.8s linear infinite;
+}
+
+@keyframes customer-global-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+

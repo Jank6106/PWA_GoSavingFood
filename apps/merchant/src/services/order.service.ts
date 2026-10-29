@@ -131,6 +131,46 @@ export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrde
   return fetchPromise;
 }
 
+export async function fetchMerchantOrderById(orderId: string): Promise<MerchantOrder | null> {
+  try {
+    if (!orderId) return null;
+    if (isValidUuid(orderId)) {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT)
+        .eq('id', orderId)
+        .maybeSingle();
+      if (!error && data) return mapDbOrder(data);
+    }
+
+    const token = orderId.trim().replace(/^#+/, '').replace(/^gsf-(?:order-|qr-)?/i, '').trim();
+    if (token) {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT)
+        .ilike('qr_code', `%${token}%`)
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) return mapDbOrder(data);
+
+      const numericCode = Number(orderId.replace(/\D/g, ''));
+      if (Number.isInteger(numericCode) && numericCode > 1000) {
+        const { data: numOrder } = await supabase
+          .from('orders')
+          .select(ORDER_SELECT)
+          .eq('payment_order_code', numericCode)
+          .limit(1)
+          .maybeSingle();
+        if (numOrder) return mapDbOrder(numOrder);
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn('fetchMerchantOrderById error:', err);
+    return null;
+  }
+}
+
 const fetchOrderRow = async (orderId: string) => {
   const { data, error } = await supabase
     .from('orders')

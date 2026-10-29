@@ -49,7 +49,9 @@ export interface BagItem {
   createdAt: string;
 }
 
-export type BagInput = Omit<BagItem, 'id' | 'storeId' | 'availableQuantity' | 'status' | 'createdAt'>;
+export type BagInput = Omit<BagItem, 'id' | 'storeId' | 'availableQuantity' | 'status' | 'createdAt'> & {
+  imageBlob?: Blob | File;
+};
 
 export type OrderStatus = 'pending' | 'processing' | 'confirmed' | 'completed' | 'cancelled';
 export type OrderStatusFilter = OrderStatus | 'all';
@@ -203,6 +205,15 @@ export interface RevenueChartPoint {
   orderCount?: number;
 }
 
+export type RevenueChartTab = 'hourly' | 'daily' | 'weekly' | 'monthly';
+
+export interface MultiPeriodCharts {
+  hourly: RevenueChartPoint[];
+  daily: RevenueChartPoint[];
+  weekly: RevenueChartPoint[];
+  monthly: RevenueChartPoint[];
+}
+
 export interface ReviewItem {
   id: string;
   customerName: string;
@@ -216,6 +227,8 @@ export interface NotificationItem {
   id: string;
   orderId?: string;
   orderCode?: string;
+  storeId?: string;
+  storeName?: string;
   title: string;
   message: string;
   type: 'new_order' | 'pickup_reminder' | 'completed_order' | 'cancelled_order' | 'review_alert';
