@@ -918,13 +918,30 @@ function CustomerApp() {
   const handlePaymentConfirm = async (draft: CheckoutDraft, existingOrder?: Order, buyNowItem?: CartItem) => {
     if (existingOrder) {
       if (!buyNowItem) cart.clear();
-      setOrders((current) =>
-        current.map((o) =>
-          o.id === existingOrder.id
-            ? { ...o, status: 'paid', paymentStatus: 'success' }
-            : o
-        )
-      );
+      try {
+        const freshOrder = await customerService.getOrder(existingOrder.id);
+        if (freshOrder) {
+          setOrders((current) =>
+            current.map((o) => (o.id === existingOrder.id ? freshOrder : o))
+          );
+        } else {
+          setOrders((current) =>
+            current.map((o) =>
+              o.id === existingOrder.id
+                ? { ...o, status: 'paid', paymentStatus: 'success' }
+                : o
+            )
+          );
+        }
+      } catch {
+        setOrders((current) =>
+          current.map((o) =>
+            o.id === existingOrder.id
+              ? { ...o, status: 'paid', paymentStatus: 'success' }
+              : o
+          )
+        );
+      }
       resetToSuccess(existingOrder.id);
       return;
     }
