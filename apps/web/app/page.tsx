@@ -11,6 +11,7 @@ import { ImpactCalculator } from "./components/ImpactCalculator";
 import { CommunityAndPartners } from "./components/CommunityAndPartners";
 import { FoodMarquee } from "./components/FoodMarquee";
 import { Footer } from "./components/Footer";
+import { PWAInstallModal } from "./components/PWAInstallModal";
 
 function getAppUrls() {
   if (typeof window === "undefined") {
@@ -65,12 +66,12 @@ export default function Home() {
     }
   }, []);
 
+  const [installModalOpen, setInstallModalOpen] = useState(false);
+  const [installTarget, setInstallTarget] = useState<"customer" | "merchant">("customer");
+
   const handleInstall = (target: "customer" | "merchant") => {
-    if (typeof window !== "undefined") {
-      const currentUrls = getAppUrls();
-      const dest = target === "customer" ? currentUrls.customerUrl : currentUrls.merchantUrl;
-      window.location.assign(dest);
-    }
+    setInstallTarget(target);
+    setInstallModalOpen(true);
   };
 
   return (
@@ -102,6 +103,15 @@ export default function Home() {
       <FoodMarquee />
       {/* 6. Footer */}
       <Footer customerUrl={urls.customerUrl} merchantUrl={urls.merchantUrl} onInstall={handleInstall} />
+
+      {/* Popup Hướng Dẫn Tải App PWA / Mở Bản Web */}
+      <PWAInstallModal
+        isOpen={installModalOpen}
+        target={installTarget}
+        onClose={() => setInstallModalOpen(false)}
+        customerUrl={urls.customerUrl}
+        merchantUrl={urls.merchantUrl}
+      />
     </div>
   );
 }
