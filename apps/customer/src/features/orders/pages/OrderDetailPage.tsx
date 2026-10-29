@@ -133,7 +133,10 @@ export function OrderDetailPage({
 
       // 2. Tra cứu PayOS xem đã thanh toán chưa
       void customerService
-        .checkPayOSStatus({ orderId: currentOrder.id, orderCode: currentOrder.orderCode })
+        .checkPayOSStatus({
+          orderId: currentOrder.id,
+          orderCode: currentOrder.paymentOrderCode || undefined,
+        })
         .then((res) => {
           if (res?.paid || res?.status === 'PAID') {
             const updated: Order = {
