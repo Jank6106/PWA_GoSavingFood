@@ -2188,24 +2188,6 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "createdAt": "2026-10-28T06:05:37.040Z"
   },
   {
-    "id": "14a29188-ad1d-49ff-bed9-bccb7aac0533",
-    "merchantId": "5b051934-45e2-4cbe-92b7-7e78c4b51710",
-    "merchantName": "KFC Vietnam - Bà Triệu",
-    "name": "Lạp xưởng nướng đá",
-    "description": "test",
-    "originalPrice": 120000,
-    "discountPrice": 45000,
-    "category": "other",
-    "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/meals/kfc-popcorn-chicken.webp",
-    "quantity": 3,
-    "maxQuantity": 2,
-    "pickupStart": "18:00",
-    "pickupEnd": "20:00",
-    "isAvailable": false,
-    "rating": 4.7,
-    "createdAt": "2026-10-29T03:06:46.460Z"
-  },
-  {
     "id": "5f637281-5d7e-478f-8b58-330ed5eb2326",
     "merchantId": "5b051934-45e2-4cbe-92b7-7e78c4b51710",
     "merchantName": "KFC Vietnam - Bà Triệu",
@@ -2251,7 +2233,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
     "discountPrice": 29000,
     "category": "other",
     "imageUrl": "https://lblwvbedtlxjtkcuxmsf.supabase.co/storage/v1/object/public/product-images/meals/kfc-popcorn-chicken.webp",
-    "quantity": 6,
+    "quantity": 5,
     "maxQuantity": 3,
     "pickupStart": "10:00",
     "pickupEnd": "22:00",
