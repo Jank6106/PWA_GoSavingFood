@@ -21,6 +21,7 @@ export function useStoreProfile(storeId: string) {
   const { toastMessage, showToast } = useToast();
 
   const loadProfile = useCallback(async () => {
+    if (!storeId) return;
     setError(null);
     try {
       const data = await fetchStoreProfile(storeId);
@@ -32,14 +33,25 @@ export function useStoreProfile(storeId: string) {
     }
   }, [storeId]);
 
-  const isFetchedRef = useRef(false);
+  const lastFetchedStoreIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isFetchedRef.current) {
-      isFetchedRef.current = true;
+    if (!storeId) return;
+
+    // SWR: Cập nhật ngay từ cache của storeId mới nếu có
+    const cached = getCachedStoreProfile(storeId);
+    if (cached) {
+      setProfile(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
+    if (lastFetchedStoreIdRef.current !== storeId) {
+      lastFetchedStoreIdRef.current = storeId;
       void loadProfile();
     }
-  }, [loadProfile]);
+  }, [storeId, loadProfile]);
 
   // Lắng nghe Realtime trên bảng stores để đồng bộ trạng thái đóng/mở tức thì
   useEffect(() => {

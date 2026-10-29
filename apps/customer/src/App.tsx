@@ -606,6 +606,7 @@ function CustomerApp() {
   }, [route, selectedBag, directBag]);
 
   const [directMerchant, setDirectMerchant] = useState<Merchant | null>(null);
+  const [directMerchantBags, setDirectMerchantBags] = useState<SurpriseBag[] | null>(null);
 
   const selectedMerchantId =
     route.name === 'merchant' || route.name === 'merchant_reviews'
@@ -613,14 +614,16 @@ function CustomerApp() {
       : selectedBag?.merchantId;
 
   useEffect(() => {
-    if (selectedMerchantId && !catalog.merchants.some((m) => m.id === selectedMerchantId)) {
+    if (selectedMerchantId) {
       void customerService.getMerchant(selectedMerchantId).then((res) => {
         if (res?.merchant) setDirectMerchant(res.merchant);
+        if (res?.bags && res.bags.length > 0) setDirectMerchantBags(res.bags);
       });
-    } else if (!selectedMerchantId && directMerchant) {
-      setDirectMerchant(null);
+    } else {
+      if (directMerchant) setDirectMerchant(null);
+      if (directMerchantBags) setDirectMerchantBags(null);
     }
-  }, [selectedMerchantId, catalog.merchants, directMerchant]);
+  }, [selectedMerchantId]);
 
   const selectedMerchant =
     catalog.merchants.find((merchant) => merchant.id === selectedMerchantId) ?? directMerchant ?? null;
@@ -638,14 +641,23 @@ function CustomerApp() {
   const selectedOrder = useMemo(() => {
     if (!selectedOrderId) return null;
     const clean = selectedOrderId.trim().toLowerCase();
-    const found = orders.find(
-      (order) =>
-        order.id.toLowerCase() === clean ||
-        order.orderCode.toLowerCase() === clean ||
-        clean.includes(order.orderCode.toLowerCase()) ||
-        order.orderCode.toLowerCase().includes(clean.replace(/^#|^gsf-order-|^gsf-/, '')) ||
-        order.id.toLowerCase().startsWith(clean.replace(/^#|^gsf-order-|^gsf-/, ''))
-    );
+    const rawClean = clean.replace(/^#+/, '').replace(/^gsf-(?:order-|qr-)?/i, '').trim();
+    const hexMatch = rawClean.match(/[0-9a-f]{6,8}/i);
+    const hex = hexMatch ? hexMatch[0].toLowerCase() : '';
+    const hex6 = hex.slice(0, 6);
+
+    const found = orders.find((order) => {
+      const orderIdLower = order.id.toLowerCase();
+      const orderCodeLower = order.orderCode.toLowerCase();
+      const cleanOrderCode = orderCodeLower.replace(/^#+/, '').replace(/^gsf-(?:order-|qr-)?/i, '').trim();
+
+      if (orderIdLower === clean || orderCodeLower === clean) return true;
+      if (clean.includes(orderIdLower) || clean.includes(orderCodeLower)) return true;
+      if (rawClean && (orderIdLower.includes(rawClean) || orderCodeLower.includes(rawClean))) return true;
+      if (cleanOrderCode && rawClean.includes(cleanOrderCode)) return true;
+      if (hex6 && (orderIdLower.startsWith(hex6) || orderCodeLower.includes(hex6))) return true;
+      return false;
+    });
     return found ?? directOrder ?? null;
   }, [selectedOrderId, orders, directOrder]);
 
@@ -928,13 +940,30 @@ function CustomerApp() {
   const handlePaymentConfirm = async (draft: CheckoutDraft, existingOrder?: Order, buyNowItem?: CartItem) => {
     if (existingOrder) {
       if (!buyNowItem) cart.clear();
-      setOrders((current) =>
-        current.map((o) =>
-          o.id === existingOrder.id
-            ? { ...o, status: 'paid', paymentStatus: 'success' }
-            : o
-        )
-      );
+      try {
+        const freshOrder = await customerService.getOrder(existingOrder.id);
+        if (freshOrder) {
+          setOrders((current) =>
+            current.map((o) => (o.id === existingOrder.id ? freshOrder : o))
+          );
+        } else {
+          setOrders((current) =>
+            current.map((o) =>
+              o.id === existingOrder.id
+                ? { ...o, status: 'paid', paymentStatus: 'success' }
+                : o
+            )
+          );
+        }
+      } catch {
+        setOrders((current) =>
+          current.map((o) =>
+            o.id === existingOrder.id
+              ? { ...o, status: 'paid', paymentStatus: 'success' }
+              : o
+          )
+        );
+      }
       resetToSuccess(existingOrder.id);
       return;
     }
@@ -1103,17 +1132,22 @@ function CustomerApp() {
           }}
         />
       );
-    if (route.name === 'merchant')
+    if (route.name === 'merchant') {
+      const merchantBags =
+        directMerchantBags && directMerchantBags.length > 0
+          ? directMerchantBags
+          : catalog.bags.filter((bag) => bag.merchantId === route.id);
       return (
         <MerchantDetailPage
           merchant={selectedMerchant}
-          bags={catalog.bags.filter((bag) => bag.merchantId === route.id)}
+          bags={merchantBags}
           onBack={back}
           onOpenBag={(bag) => push({ name: 'bag', id: bag.id })}
           onAdd={addToCart}
           onOpenReviews={(merchantId) => push({ name: 'merchant_reviews', id: merchantId })}
         />
       );
+    }
     if (route.name === 'merchant_reviews')
       return (
         <MerchantReviewsView

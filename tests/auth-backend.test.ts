@@ -324,6 +324,45 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     expect(stores && stores.length > 0).toBe(true);
     // Xác minh cửa hàng có logo_url chuẩn
     expect(stores![0].logo_url).toBeTruthy();
+    expect(stores).toHaveLength(1);
+    expect(stores![0].name).toContain('KFC Vietnam');
+  }, 15000);
+
+  it('12.1. Đăng nhập tài khoản Đối tác merchant@gosavingfood.app sở hữu duy nhất Bếp Chay An Lạc', async () => {
+    const merchClient = createClient(SUPABASE_URL, ANON_KEY);
+    const { data: merchData, error: merchErr } = await merchClient.auth.signInWithPassword({
+      email: 'merchant@gosavingfood.app',
+      password: 'Password1234'
+    });
+
+    expect(merchErr).toBeNull();
+    expect(merchData.user).toBeDefined();
+
+    const { data: stores, error: storesErr } = await merchClient
+      .from('stores')
+      .select('id, name, status, logo_url, banner_url')
+      .eq('owner_user_id', merchData.user.id);
+
+    expect(storesErr).toBeNull();
+    expect(stores).toHaveLength(1);
+    expect(stores![0].name).toContain('Bếp Chay An Lạc');
+  }, 15000);
+
+  it('12.2. Kiểm định tính độc lập mật khẩu: không cho phép dùng chéo mật khẩu', async () => {
+    const merchClient = createClient(SUPABASE_URL, ANON_KEY);
+    // merchant@gosavingfood.vn không được đăng nhập bằng Password1234
+    const { error: err1 } = await merchClient.auth.signInWithPassword({
+      email: 'merchant@gosavingfood.vn',
+      password: 'Password1234'
+    });
+    expect(err1).not.toBeNull();
+
+    // merchant@gosavingfood.app không được đăng nhập bằng Password123!
+    const { error: err2 } = await merchClient.auth.signInWithPassword({
+      email: 'merchant@gosavingfood.app',
+      password: 'Password123!'
+    });
+    expect(err2).not.toBeNull();
   }, 15000);
 
   it('13. Đăng nhập tài khoản Quản trị viên admin@gsf.app và xác thực vai trò quản trị', async () => {

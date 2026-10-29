@@ -169,10 +169,12 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
 
   const isPayosLoading = !payosData;
   const transferContent = payosData?.description || effectiveOrderCode;
-  const rawAccount = payosData?.accountNumber || 'V3CAS8823316420';
+  const rawAccount = payosData?.accountNumber || import.meta.env.VITE_PAYOS_BANK_ACCOUNT || '8823316420';
   const bankAccount = rawAccount.startsWith('V3CAS') ? rawAccount : `V3CAS${rawAccount}`;
-  const bankName = 'BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam';
-  const accountHolder = payosData?.accountName || 'NGUYEN HUU DANH';
+  const bankName = import.meta.env.VITE_PAYOS_BANK_NAME
+    ? `${import.meta.env.VITE_PAYOS_BANK_NAME} - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam`
+    : 'BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam';
+  const accountHolder = payosData?.accountName || import.meta.env.VITE_PAYOS_ACCOUNT_NAME || 'GoSavingFood';
 
   // Link VietQR Pro chuẩn Napas 24/7 từ VietQR API
   const qrImageUrl = `https://img.vietqr.io/image/BIDV-${bankAccount}-compact2.png?amount=${effectiveTotal}&addInfo=${encodeURIComponent(

@@ -90,7 +90,7 @@ describe('PRODUCTION BACKEND AUDIT & STRESS SUITE (Kiểm định Chất lượn
 
     // Bảo hiểm: Dọn mọi bản ghi audit mồ côi
     await supabaseAdmin.from('users').delete().like('email', 'audit_cust_%');
-  });
+  }, 30000);
 
   // ============================================================================
   // NHÓM 1: BẢO MẬT DỮ LIỆU & RLS (DATA ISOLATION & PERMISSION)

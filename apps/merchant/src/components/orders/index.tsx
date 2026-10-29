@@ -41,7 +41,12 @@ export function OrderFilterBar({ statusFilter, searchQuery, summary, onStatusFil
               className={statusFilter === item.key ? 'is-active' : ''}
               onClick={(e) => {
                 onStatusFilterChange(item.key);
-                e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                const container = chipsRef.current;
+                if (container) {
+                  const btn = e.currentTarget;
+                  const targetScroll = btn.offsetLeft - container.offsetWidth / 2 + btn.offsetWidth / 2;
+                  container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+                }
               }}
             >
               {item.label} <b>{item.count}</b>

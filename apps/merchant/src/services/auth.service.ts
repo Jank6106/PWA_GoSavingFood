@@ -215,48 +215,29 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
     email = username.includes('@') ? username : `${username.toLowerCase()}@gosavingfood.vn`;
   }
 
-  const candidateEmails = [
-    email,
-    email.endsWith('@gosavingfood.vn') ? email.replace('@gosavingfood.vn', '@gosavingfood.app') : null,
-    email.endsWith('@gosavingfood.app') ? email.replace('@gosavingfood.app', '@gosavingfood.vn') : null,
-  ].filter((e): e is string => Boolean(e));
-
-  const candidatePasswords = [
-    rawPassword,
-    rawPassword === 'Password1234' ? 'Password123!' : null,
-    rawPassword === 'Password123!' ? 'Password1234' : null,
-    rawPassword === '12345600Aa!' ? 'Password123!' : null,
-    rawPassword === 'Password123!' ? '12345600Aa!' : null,
-    rawPassword === '123456' ? 'Password123!' : null,
-  ].filter((p): p is string => Boolean(p));
-
   let user = null;
   let lastError: any = null;
 
-  outerLoop: for (const em of candidateEmails) {
-    for (const pwd of candidatePasswords) {
-      const { data: signInData, error: signInError } =
-        await supabase.auth.signInWithPassword({ email: em, password: pwd });
+  // Xác thực chính xác 1:1 bằng Supabase Auth với email và mật khẩu do người dùng cung cấp
+  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password: rawPassword,
+  });
 
-      if (!signInError && signInData.user) {
-        user = signInData.user;
-        break outerLoop;
-      } else {
-        lastError = signInError;
-      }
+  if (!signInError && signInData.user) {
+    user = signInData.user;
+  } else {
+    lastError = signInError;
 
-      // Nếu nhập bằng SĐT mà thất bại với email thật, thử thêm synthetic email
-      if (parsed.type === 'phone' && em !== parsed.syntheticEmail && parsed.syntheticEmail) {
-        const { data: fallbackData, error: fallbackError } =
-          await supabase.auth.signInWithPassword({
-            email: parsed.syntheticEmail,
-            password: pwd,
-          });
+    // Nếu đăng nhập bằng SĐT và tìm kiếm email thật thất bại, thử bằng synthetic email (nếu có)
+    if (parsed.type === 'phone' && parsed.syntheticEmail && parsed.syntheticEmail !== email) {
+      const { data: fallbackData, error: fallbackError } = await supabase.auth.signInWithPassword({
+        email: parsed.syntheticEmail,
+        password: rawPassword,
+      });
 
-        if (!fallbackError && fallbackData.user) {
-          user = fallbackData.user;
-          break outerLoop;
-        }
+      if (!fallbackError && fallbackData.user) {
+        user = fallbackData.user;
       }
     }
   }
@@ -417,35 +398,15 @@ export async function changePasswordService(
 
     // Nếu không phải là bước setup ban đầu, tiến hành xác thực mật khẩu hiện tại
     if (oldPassword !== 'initial') {
-      const candidateOldPasswords = [
-        oldPassword,
-        oldPassword === '12345600Aa!' ? 'Password123!' : null,
-        oldPassword === 'Password123!' ? '12345600Aa!' : null,
-        oldPassword === '123456' ? 'Password123!' : null,
-      ].filter((p): p is string => Boolean(p));
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: oldPassword,
+      });
 
-      let isVerified = false;
-      let lastVerifyError = null;
-
-      for (const pwd of candidateOldPasswords) {
-        const { error: signInErr } = await supabase.auth.signInWithPassword({
-          email: userEmail,
-          password: pwd,
-        });
-        if (!signInErr) {
-          isVerified = true;
-          verifiedPassword = pwd;
-          break;
-        } else {
-          lastVerifyError = signInErr;
-        }
+      if (signInErr) {
+        throw new Error(mapSupabaseAuthError(signInErr) || 'Mật khẩu hiện tại không chính xác.');
       }
-
-      if (!isVerified) {
-        throw new Error(
-          lastVerifyError ? mapSupabaseAuthError(lastVerifyError) : 'Mật khẩu hiện tại không chính xác.'
-        );
-      }
+      verifiedPassword = oldPassword;
     }
 
     // 2. Cập nhật mật khẩu mới trên Supabase Auth (kèm current_password khi có yêu cầu bảo mật)
@@ -462,24 +423,6 @@ export async function changePasswordService(
         password: newPassword,
       });
       updateError = error;
-
-      if (
-        updateError &&
-        (updateError.message?.includes('Current password required') ||
-          updateError.message?.includes('current_password'))
-      ) {
-        const defaultSetupPasswords = ['Password123!', '12345600Aa!', '123456'];
-        for (const defaultPwd of defaultSetupPasswords) {
-          const { error: retryError } = await supabase.auth.updateUser({
-            password: newPassword,
-            current_password: defaultPwd,
-          });
-          if (!retryError) {
-            updateError = null;
-            break;
-          }
-        }
-      }
     }
 
     if (updateError) {
