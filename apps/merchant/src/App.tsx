@@ -84,8 +84,7 @@ export default function App() {
 
   const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
   const [isGlobalQRScannerOpen, setIsGlobalQRScannerOpen] = useState(false);
-  const [overrideStoreId, setOverrideStoreId] = useState<string | null>(null);
-  const storeId = overrideStoreId || auth.user?.storeId || STORE_ID;
+  const storeId = auth.user?.storeId || STORE_ID;
   const store = useStoreProfile(storeId);
   const { toastMessage, showToast } = useToast();
 
@@ -201,9 +200,6 @@ export default function App() {
 
   const handleNavigateToOrder = useCallback(
     (item: NotificationItem) => {
-      if (item.storeId && item.storeId !== storeId) {
-        setOverrideStoreId(item.storeId);
-      }
       notifications.setIsOpen(false);
       navigateTo('orders');
       const orderTarget = item.orderId || item.orderCode || null;
@@ -211,7 +207,7 @@ export default function App() {
         setTargetOrderId(orderTarget);
       }
     },
-    [notifications, navigateTo, storeId]
+    [notifications, navigateTo]
   );
 
   const handleLogin = async (credentials: LoginCredentials) => {
