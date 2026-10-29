@@ -575,6 +575,7 @@ export function SearchPage({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm món ăn hoặc quán gần bạn..."
             className="customer-yindii-pill-input"
+            style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
           />
           {query.trim().length > 0 && (
             <button

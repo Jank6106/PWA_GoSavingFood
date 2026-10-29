@@ -299,7 +299,8 @@ img { display: block; max-width: 100%; }
 
 .customer-search-trigger, .customer-search-box { display: flex; min-height: 50px; align-items: center; gap: 10px; width: 100%; padding: 0 15px; border: 1px solid var(--color-border-subtle); border-radius: 15px; background: #fff; color: var(--color-text-muted); box-shadow: 0 4px 16px rgb(25 28 29 / 4%); }
 .customer-search-trigger { cursor: pointer; }
-.customer-search-box input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--color-text-primary); font-size: 16px; }
+.customer-search-box input { min-width: 0; flex: 1; border: 0 !important; outline: 0 !important; background: transparent; color: var(--color-text-primary); font-size: 16px; }
+.customer-search-box input:focus, .customer-search-box input:focus-visible { border: 0 !important; outline: 0 !important; outline-style: none !important; box-shadow: none !important; -webkit-box-shadow: none !important; }
 
 .customer-category-bar { display: flex; gap: 14px; margin: 0 -16px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; overscroll-behavior-x: contain; }
 .customer-category-bar::-webkit-scrollbar { display: none; width: 0; height: 0; }
@@ -2508,10 +2509,18 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
 .customer-yindii-pill-back:hover {
   background: #f1f5f9;
 }
+.customer-yindii-pill-back:focus,
+.customer-yindii-pill-back:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
 
 .customer-yindii-pill-input {
-  border: none;
-  outline: none;
+  border: none !important;
+  outline: none !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
   background: transparent;
   font-size: 14.5px;
   color: #1e293b;
@@ -2519,6 +2528,17 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   min-width: 0;
   font-family: inherit;
   font-weight: 500;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.customer-yindii-pill-input:focus,
+.customer-yindii-pill-input:focus-visible,
+.customer-yindii-pill-input:active {
+  border: none !important;
+  outline: none !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
 }
 .customer-yindii-pill-input::placeholder {
   color: #94a3b8;
@@ -2537,6 +2557,11 @@ button.customer-checkout-item:hover .customer-order-item-arrow { color: var(--co
   cursor: pointer;
   flex-shrink: 0;
   padding: 0;
+}
+.customer-yindii-pill-clear:focus,
+.customer-yindii-pill-clear:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .customer-yindii-pill-trailing {
