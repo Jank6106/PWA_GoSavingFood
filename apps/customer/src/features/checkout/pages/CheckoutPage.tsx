@@ -21,6 +21,7 @@ import {
 import { validateRecipientPhone } from '../../../shared/utils/validation';
 import { getBagTimingInfo } from '../../../shared/utils/bagTiming';
 import type { CartItem, CheckoutDraft, User, Voucher } from '../../../shared/types/customer.types';
+import { customerService } from '../../../services/customer.service';
 
 interface CheckoutPageProps {
   items: CartItem[];
@@ -40,6 +41,9 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [voucherCode, setVoucherCode] = useState('');
   const [customInputCode, setCustomInputCode] = useState('');
+  const [customVoucher, setCustomVoucher] = useState<Voucher | null>(null);
+  const [voucherError, setVoucherError] = useState<string | null>(null);
+  const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
   const [note, setNote] = useState('');
   const [isVoucherOpen, setIsVoucherOpen] = useState(false);
 
@@ -67,13 +71,20 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
   const timingError = invalidTimingItem ? getBagTimingInfo(invalidTimingItem.bag).detailMessage : null;
   const isFormValid = isNameValid && isPhoneValid && !timingError;
 
-  const voucher = vouchers.find(
-    (item) =>
-      item.code === voucherCode.trim().toUpperCase() &&
-      item.isActive &&
-      subtotal >= item.minOrderValue
-  );
-  const discountAmount = voucher?.discountValue ?? 0;
+  const voucher =
+    (customVoucher &&
+    customVoucher.code === voucherCode.trim().toUpperCase() &&
+    customVoucher.isActive &&
+    subtotal >= customVoucher.minOrderValue
+      ? customVoucher
+      : null) ||
+    vouchers.find(
+      (item) =>
+        item.code === voucherCode.trim().toUpperCase() &&
+        item.isActive &&
+        subtotal >= item.minOrderValue
+    );
+  const discountAmount = voucher ? Math.min(subtotal, voucher.discountValue) : 0;
   const total = Math.max(0, subtotal - discountAmount);
 
   useEffect(() => {
@@ -86,10 +97,67 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleApplyCustomCode = () => {
-    if (!customInputCode.trim()) return;
-    setVoucherCode(customInputCode.trim().toUpperCase());
-    setIsVoucherOpen(false);
+  const handleApplyCustomCode = async () => {
+    const rawCode = customInputCode.trim().toUpperCase();
+    if (!rawCode) return;
+    setVoucherError(null);
+    setIsApplyingVoucher(true);
+
+    try {
+      // 1. Kiểm tra trong danh sách public vouchers trước
+      const existing = vouchers.find((item) => item.code.toUpperCase() === rawCode);
+      if (existing) {
+        if (!existing.isActive) {
+          setVoucherError('Mã ưu đãi không còn hiệu lực.');
+          setIsApplyingVoucher(false);
+          return;
+        }
+        if (subtotal < existing.minOrderValue) {
+          setVoucherError(
+            `Đơn hàng chưa đạt mức tối thiểu ${existing.minOrderValue.toLocaleString('vi-VN')}đ.`
+          );
+          setIsApplyingVoucher(false);
+          return;
+        }
+        setVoucherCode(existing.code);
+        setCustomVoucher(existing);
+        setVoucherError(null);
+        setIsVoucherOpen(false);
+        setIsApplyingVoucher(false);
+        return;
+      }
+
+      // 2. Tra cứu mã từ server (hỗ trợ mã ẩn như TMU2026 và kiểm tra giới hạn 1 lần/tài khoản)
+      const fetchedVoucher = await customerService.getVoucherByCode(rawCode, user.id);
+      if (!fetchedVoucher || !fetchedVoucher.isActive) {
+        setVoucherError('Mã ưu đãi không hợp lệ hoặc đã hết hạn.');
+        setIsApplyingVoucher(false);
+        return;
+      }
+
+      if (fetchedVoucher.isAlreadyUsed) {
+        setVoucherError('Bạn đã sử dụng mã ưu đãi này rồi (chỉ áp dụng 1 lần/tài khoản).');
+        setIsApplyingVoucher(false);
+        return;
+      }
+
+      if (subtotal < fetchedVoucher.minOrderValue) {
+        setVoucherError(
+          `Đơn hàng chưa đạt mức tối thiểu ${fetchedVoucher.minOrderValue.toLocaleString('vi-VN')}đ.`
+        );
+        setIsApplyingVoucher(false);
+        return;
+      }
+
+      setVoucherCode(fetchedVoucher.code);
+      setCustomVoucher(fetchedVoucher);
+      setVoucherError(null);
+      setIsVoucherOpen(false);
+    } catch {
+      setVoucherError('Không thể áp dụng mã ưu đãi lúc này. Vui lòng thử lại.');
+    } finally {
+      setIsApplyingVoucher(false);
+    }
   };
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,7 +278,7 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
                     <>
                       <strong className="customer-voucher-applied-code">{voucher.code}</strong>
                       <span className="customer-voucher-applied-desc">
-                        -Giảm {voucher.discountValue.toLocaleString('vi-VN')}đ
+                        -Giảm {discountAmount.toLocaleString('vi-VN')}đ
                       </span>
                     </>
                   ) : voucherCode ? (
@@ -246,8 +314,12 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
                 <input
                   type="text"
                   value={customInputCode}
-                  onChange={(e) => setCustomInputCode(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    setCustomInputCode(e.target.value.toUpperCase());
+                    if (voucherError) setVoucherError(null);
+                  }}
                   placeholder="Nhập mã ưu đãi..."
+                  disabled={isApplyingVoucher}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -259,61 +331,87 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
                   type="button"
                   className="customer-voucher-apply-btn"
                   onClick={handleApplyCustomCode}
-                  disabled={!customInputCode.trim()}
+                  disabled={!customInputCode.trim() || isApplyingVoucher}
                 >
-                  Áp dụng
+                  {isApplyingVoucher ? '...' : 'Áp dụng'}
                 </button>
               </div>
 
+              {voucherError && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    color: '#dc2626',
+                    backgroundColor: '#fef2f2',
+                    borderRadius: '8px',
+                    margin: '4px 10px 8px 10px',
+                    border: '1px solid #fee2e2',
+                  }}
+                >
+                  <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                  <span>{voucherError}</span>
+                </div>
+              )}
+
               {/* Danh sách voucher có sẵn */}
               <div className="customer-voucher-list-options">
-                {vouchers.map((item) => {
-                  const isEligible = subtotal >= item.minOrderValue;
-                  const isSelected = voucher?.code === item.code;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      disabled={!isEligible}
-                      className={`customer-voucher-option-card ${
-                        isSelected ? 'is-selected' : ''
-                      } ${!isEligible ? 'is-disabled' : ''}`}
-                      onClick={() => {
-                        if (isSelected) {
-                          setVoucherCode('');
-                          setCustomInputCode('');
-                        } else {
-                          setVoucherCode(item.code);
-                          setCustomInputCode(item.code);
-                        }
-                        setIsVoucherOpen(false);
-                      }}
-                    >
-                      <div className="customer-voucher-card-left">
-                        <div className="customer-voucher-card-code-row">
-                          <strong>{item.code}</strong>
-                          <span className="customer-voucher-val">
-                            Giảm {item.discountValue.toLocaleString('vi-VN')}đ
-                          </span>
+                {vouchers
+                  .filter((item) => !item.isHidden)
+                  .map((item) => {
+                    const isEligible = subtotal >= item.minOrderValue;
+                    const isSelected = voucher?.code === item.code;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        disabled={!isEligible}
+                        className={`customer-voucher-option-card ${
+                          isSelected ? 'is-selected' : ''
+                        } ${!isEligible ? 'is-disabled' : ''}`}
+                        onClick={() => {
+                          if (isSelected) {
+                            setVoucherCode('');
+                            setCustomInputCode('');
+                            setCustomVoucher(null);
+                            setVoucherError(null);
+                          } else {
+                            setVoucherCode(item.code);
+                            setCustomInputCode(item.code);
+                            setCustomVoucher(item);
+                            setVoucherError(null);
+                          }
+                          setIsVoucherOpen(false);
+                        }}
+                      >
+                        <div className="customer-voucher-card-left">
+                          <div className="customer-voucher-card-code-row">
+                            <strong>{item.code}</strong>
+                            <span className="customer-voucher-val">
+                              Giảm {item.discountValue.toLocaleString('vi-VN')}đ
+                            </span>
+                          </div>
+                          {!isEligible && (
+                            <small className="customer-voucher-min-alert">
+                              Đơn tối thiểu {item.minOrderValue.toLocaleString('vi-VN')}đ
+                            </small>
+                          )}
                         </div>
-                        {!isEligible && (
-                          <small className="customer-voucher-min-alert">
-                            Đơn tối thiểu {item.minOrderValue.toLocaleString('vi-VN')}đ
-                          </small>
-                        )}
-                      </div>
-                      <div className="customer-voucher-card-right">
-                        {isSelected ? (
-                          <Check size={18} className="customer-dropdown-check" />
-                        ) : (
-                          <span className="customer-voucher-apply-tag">
-                            {isEligible ? 'Chọn mã' : 'Chưa đủ'}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="customer-voucher-card-right">
+                          {isSelected ? (
+                            <Check size={18} className="customer-dropdown-check" />
+                          ) : (
+                            <span className="customer-voucher-apply-tag">
+                              {isEligible ? 'Chọn mã' : 'Chưa đủ'}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
               </div>
 
               {voucherCode && (
@@ -323,6 +421,8 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
                   onClick={() => {
                     setVoucherCode('');
                     setCustomInputCode('');
+                    setCustomVoucher(null);
+                    setVoucherError(null);
                     setIsVoucherOpen(false);
                   }}
                 >

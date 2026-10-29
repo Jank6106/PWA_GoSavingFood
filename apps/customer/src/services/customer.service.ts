@@ -2892,7 +2892,8 @@ export const customerService = {
       const { data, error } = await supabase
         .from('vouchers')
         .select('*')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .or('is_hidden.is.null,is_hidden.eq.false');
       if (!error && Array.isArray(data) && data.length > 0) {
         return data.map((v: any) => ({
           id: v.id,
@@ -2901,12 +2902,73 @@ export const customerService = {
           discountValue: Number(v.discount_value),
           minOrderValue: Number(v.min_order_value) || 0,
           isActive: v.is_active,
+          isHidden: !!v.is_hidden,
         }));
       }
     } catch {
       // Lỗi truy vấn vouchers -> trả rỗng
     }
     return [];
+  },
+
+  async getVoucherByCode(code: string, userId?: string): Promise<(Voucher & { isAlreadyUsed?: boolean }) | null> {
+    try {
+      const trimmed = code.trim().toUpperCase();
+      if (!trimmed) return null;
+
+      const { data, error } = await supabase
+        .from('vouchers')
+        .select('*')
+        .ilike('code', trimmed)
+        .eq('is_active', true)
+        .is('deleted_at', null)
+        .maybeSingle();
+
+      if (error || !data) return null;
+
+      // Kiểm tra ngày bắt đầu / kết thúc và số lượng nếu có
+      const now = new Date();
+      if (data.start_date && new Date(data.start_date) > now) {
+        return null;
+      }
+      if (data.end_date && new Date(data.end_date) < now) {
+        return null;
+      }
+      if (data.quantity !== null && data.quantity !== undefined && (data.used_count || 0) >= data.quantity) {
+        return null;
+      }
+
+      // Kiểm tra xem tài khoản này đã từng dùng mã này chưa (1 lần / 1 tài khoản)
+      let isAlreadyUsed = false;
+      if (userId) {
+        const { data: existingOrders } = await supabase
+          .from('orders')
+          .select('id, status')
+          .eq('customer_id', userId)
+          .ilike('voucher_code', trimmed)
+          .is('deleted_at', null);
+
+        if (
+          Array.isArray(existingOrders) &&
+          existingOrders.some((o: any) => !['cancelled', 'expired'].includes(o.status))
+        ) {
+          isAlreadyUsed = true;
+        }
+      }
+
+      return {
+        id: data.id,
+        code: data.code,
+        description: data.description || 'Ưu đãi GoSavingFood',
+        discountValue: Number(data.discount_value),
+        minOrderValue: Number(data.min_order_value) || 0,
+        isActive: data.is_active,
+        isHidden: !!data.is_hidden,
+        isAlreadyUsed,
+      };
+    } catch {
+      return null;
+    }
   },
 
   async searchLocations(query: string, proximity?: [number, number]): Promise<LocationSuggestion[]> {
@@ -3585,8 +3647,11 @@ export const customerService = {
       throw new Error(mapCreateOrderError(error));
     }
 
-    const createdId = (rpcResult as { order_id?: string; pickup_token?: string } | null)?.order_id || orderId;
+    const createdId = (rpcResult as { order_id?: string; pickup_token?: string; status?: string; payment_status?: string } | null)?.order_id || orderId;
     const pickupToken = (rpcResult as { pickup_token?: string } | null)?.pickup_token;
+    const isZeroAmount = order.finalAmount <= 0;
+    const resolvedStatus = ((rpcResult as any)?.status as Order['status']) || (isZeroAmount ? 'paid' : 'pending_payment');
+    const resolvedPaymentStatus = ((rpcResult as any)?.payment_status as Order['paymentStatus']) || (isZeroAmount ? 'success' : 'pending');
 
     return {
       ...order,
@@ -3597,8 +3662,9 @@ export const customerService = {
       recipientName: customerInfo?.name?.trim() || undefined,
       recipientPhone: customerInfo?.phone?.trim() || undefined,
       paymentExpiresAt: new Date(Date.now() + 30 * 60000).toISOString(),
-      status: 'pending_payment',
-      paymentStatus: 'pending',
+      status: resolvedStatus,
+      paymentStatus: resolvedPaymentStatus,
+      paidAt: resolvedPaymentStatus === 'success' ? new Date().toISOString() : undefined,
       createdAt: new Date().toISOString(),
     };
   },

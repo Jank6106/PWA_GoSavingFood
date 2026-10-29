@@ -67,9 +67,11 @@ export function CancelOrderModal({
 
   if (!isOpen) return null;
 
+  const isRefundNeeded = isPaid && finalAmount > 0;
+
   const handleConfirm = () => {
     let bankInfo: BankRefundInfo | undefined = undefined;
-    if (isPaid) {
+    if (isRefundNeeded) {
       if (!refundAccountNumber.trim() || !refundAccountHolder.trim()) {
         setFormError('Vui lòng nhập đầy đủ số tài khoản và tên chủ tài khoản để nhận tiền hoàn.');
         return;
@@ -84,13 +86,15 @@ export function CancelOrderModal({
     onConfirm(selectedCancelReason, bankInfo);
   };
 
-  const modalTitle = title || (isPaid ? 'Hủy đơn & Hoàn tiền' : 'Hủy đơn hàng');
-  const modalSubtitle = subtitle || (isPaid ? 'Đơn hàng sẽ bị hủy và hoàn tiền 100%' : 'Hủy đơn hàng chưa thanh toán');
-  const defaultWarning = isPaid
+  const modalTitle = title || (isRefundNeeded ? 'Hủy đơn & Hoàn tiền' : 'Hủy đơn hàng');
+  const modalSubtitle = subtitle || (isRefundNeeded ? 'Đơn hàng sẽ bị hủy và hoàn tiền 100%' : 'Hủy đơn hàng');
+  const defaultWarning = isRefundNeeded
     ? `Quán chưa chuẩn bị món nên bạn được hủy miễn phí. Số tiền ${finalAmount.toLocaleString('vi-VN')}đ sẽ được hoàn 100% về tài khoản bạn cung cấp.`
+    : isPaid
+    ? 'Đơn hàng áp dụng voucher miễn phí sẽ được hủy ngay lập tức và hoàn lại lượt dùng voucher (không phát sinh chi phí).'
     : 'Đơn hàng chưa thanh toán sẽ được hủy ngay lập tức và không phát sinh bất kỳ khoản phí nào.';
 
-  const defaultConfirmLabel = isPaid ? 'Xác nhận hủy & Hoàn tiền' : 'Xác nhận hủy đơn';
+  const defaultConfirmLabel = isRefundNeeded ? 'Xác nhận hủy & Hoàn tiền' : 'Xác nhận hủy đơn';
 
   return (
     <div
@@ -162,7 +166,7 @@ export function CancelOrderModal({
             </div>
           </div>
 
-          {isPaid && (
+          {isRefundNeeded && (
             <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <label className="customer-form-label" style={{ fontWeight: 750, color: 'var(--color-text-primary)' }}>
                 Thông tin nhận tiền hoàn (100%):

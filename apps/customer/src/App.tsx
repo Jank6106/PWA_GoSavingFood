@@ -800,6 +800,8 @@ function CustomerApp() {
       const originalTotal = buyNowItem
         ? buyNowItem.bag.originalPrice * buyNowItem.quantity
         : cart.summary.original;
+      const finalAmount = Math.max(0, subtotal - draft.discountAmount);
+      const isZeroAmount = finalAmount === 0;
 
       const order: Omit<Order, 'id' | 'orderCode' | 'createdAt'> = {
         merchantId: orderItems[0].merchantId,
@@ -815,10 +817,10 @@ function CustomerApp() {
         totalOriginalPrice: originalTotal,
         totalDiscountPrice: subtotal,
         discountAmount: draft.discountAmount,
-        finalAmount: Math.max(0, subtotal - draft.discountAmount),
-        status: 'pending_payment',
+        finalAmount: finalAmount,
+        status: isZeroAmount ? 'paid' : 'pending_payment',
         paymentMethod: draft.paymentMethod,
-        paymentStatus: 'pending',
+        paymentStatus: isZeroAmount ? 'success' : 'pending',
         pickupTime: draft.pickupTime,
         pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
         note: draft.note?.trim() || undefined,
@@ -829,8 +831,19 @@ function CustomerApp() {
         phone: draft.phone,
       });
 
+      auth.updateProfile({ name: draft.customerName, phone: draft.phone });
+      recentlyCreatedOrderIds.current.add(created.id);
       setOrders((current) => [created, ...current]);
-      push({ name: 'payment', draft, order: created, buyNowItem });
+      setOrdersBadgeCount((prev) => prev + 1);
+
+      if (isZeroAmount) {
+        if (!buyNowItem) {
+          cart.clear();
+        }
+        resetToSuccess(created.id);
+      } else {
+        push({ name: 'payment', draft, order: created, buyNowItem });
+      }
     } catch (error) {
       console.error('Tạo đơn hàng trước lỗi:', error);
       window.alert(
@@ -887,9 +900,9 @@ function CustomerApp() {
         totalDiscountPrice: subtotal,
         discountAmount: draft.discountAmount,
         finalAmount: Math.max(0, subtotal - draft.discountAmount),
-        status: 'pending_payment',
+        status: Math.max(0, subtotal - draft.discountAmount) <= 0 ? 'paid' : 'pending_payment',
         paymentMethod: draft.paymentMethod,
-        paymentStatus: 'pending',
+        paymentStatus: Math.max(0, subtotal - draft.discountAmount) <= 0 ? 'success' : 'pending',
         pickupTime: draft.pickupTime,
         pickupAddress: merchant?.address ?? 'Địa chỉ cửa hàng',
         note: draft.note?.trim() || undefined,

@@ -196,6 +196,8 @@ export interface Voucher {
   discountValue: number;
   minOrderValue: number;
   isActive: boolean;
+  isHidden?: boolean;
+  isAlreadyUsed?: boolean;
 }
 
 export interface LocationSuggestion {
