@@ -102,14 +102,16 @@ export function useAnalytics(storeId: string) {
     }
   }, [storeId, timeframe, customRange]);
 
-  const isFetchedRef = useRef(false);
+  const lastFetchedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isFetchedRef.current) {
-      isFetchedRef.current = true;
+    if (!storeId) return;
+    const key = `${storeId}_${timeframe}_${customRange?.start || ''}_${customRange?.end || ''}`;
+    if (lastFetchedKeyRef.current !== key) {
+      lastFetchedKeyRef.current = key;
       void loadData();
     }
-  }, [loadData]);
+  }, [storeId, timeframe, customRange, loadData]);
 
   const exportReport = async () => {
     setExporting(true);

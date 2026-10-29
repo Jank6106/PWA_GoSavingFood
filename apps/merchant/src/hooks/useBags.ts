@@ -56,11 +56,13 @@ export function useBags(storeId: string) {
     }
   }, [storeId]);
 
-  const isFetchedRef = useRef(false);
+  const lastFetchedStoreIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isFetchedRef.current) {
-      isFetchedRef.current = true;
+    if (!storeId) return;
+
+    if (lastFetchedStoreIdRef.current !== storeId) {
+      lastFetchedStoreIdRef.current = storeId;
       // Áp dụng TTL: nếu cache còn mới trong vòng 60s thì không fetch lại ngay
       let isFresh = false;
       try {
