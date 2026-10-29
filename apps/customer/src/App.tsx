@@ -641,14 +641,23 @@ function CustomerApp() {
   const selectedOrder = useMemo(() => {
     if (!selectedOrderId) return null;
     const clean = selectedOrderId.trim().toLowerCase();
-    const found = orders.find(
-      (order) =>
-        order.id.toLowerCase() === clean ||
-        order.orderCode.toLowerCase() === clean ||
-        clean.includes(order.orderCode.toLowerCase()) ||
-        order.orderCode.toLowerCase().includes(clean.replace(/^#|^gsf-order-|^gsf-/, '')) ||
-        order.id.toLowerCase().startsWith(clean.replace(/^#|^gsf-order-|^gsf-/, ''))
-    );
+    const rawClean = clean.replace(/^#+/, '').replace(/^gsf-(?:order-|qr-)?/i, '').trim();
+    const hexMatch = rawClean.match(/[0-9a-f]{6,8}/i);
+    const hex = hexMatch ? hexMatch[0].toLowerCase() : '';
+    const hex6 = hex.slice(0, 6);
+
+    const found = orders.find((order) => {
+      const orderIdLower = order.id.toLowerCase();
+      const orderCodeLower = order.orderCode.toLowerCase();
+      const cleanOrderCode = orderCodeLower.replace(/^#+/, '').replace(/^gsf-(?:order-|qr-)?/i, '').trim();
+
+      if (orderIdLower === clean || orderCodeLower === clean) return true;
+      if (clean.includes(orderIdLower) || clean.includes(orderCodeLower)) return true;
+      if (rawClean && (orderIdLower.includes(rawClean) || orderCodeLower.includes(rawClean))) return true;
+      if (cleanOrderCode && rawClean.includes(cleanOrderCode)) return true;
+      if (hex6 && (orderIdLower.startsWith(hex6) || orderCodeLower.includes(hex6))) return true;
+      return false;
+    });
     return found ?? directOrder ?? null;
   }, [selectedOrderId, orders, directOrder]);
 

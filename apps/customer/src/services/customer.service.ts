@@ -3691,54 +3691,65 @@ export const customerService = {
     if (!orderId) return null;
     const cleanId = orderId.trim();
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cleanId);
+    const rawToken = cleanId.replace(/^#+/, '').replace(/^gsf-(?:order-|qr-)?/i, '').trim();
+    const hexMatch = rawToken.match(/[0-9a-f]{6,8}/i);
+    const hexToken = hexMatch ? hexMatch[0] : rawToken;
 
-    try {
-      let query = supabase
-        .from('orders')
-        .select(CUSTOMER_ORDER_SELECT);
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000));
 
-      if (isUuid) {
-        query = query.eq('id', cleanId);
-      } else {
-        const token = cleanId.replace(/^#+/, '').replace(/^gsf-(?:order-|qr-)?/i, '').trim();
-        query = query.ilike('qr_code', `%${token}%`);
-      }
-
-      const { data, error } = await query.limit(1).maybeSingle();
-      if (!error && data) {
-        return mapCustomerOrderRow(data);
-      }
-
-      // Fallback: match by payment_order_code if numeric
-      const numericCode = Number(cleanId.replace(/\D/g, ''));
-      if (Number.isInteger(numericCode) && numericCode > 1000) {
-        const { data: numOrder } = await supabase
-          .from('orders')
-          .select(CUSTOMER_ORDER_SELECT)
-          .eq('payment_order_code', numericCode)
-          .limit(1)
-          .maybeSingle();
-        if (numOrder) return mapCustomerOrderRow(numOrder);
-      }
-
+    const fetchPromise = (async (): Promise<Order | null> => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const key = `gsf_local_orders_${user.id}`;
-          const localOrders: Order[] = JSON.parse(localStorage.getItem(key) || '[]');
-          const target = localOrders.find(
-            (o) =>
-              o.id.toLowerCase() === cleanId.toLowerCase() ||
-              o.orderCode.toLowerCase() === cleanId.toLowerCase() ||
-              cleanId.toLowerCase().includes(o.orderCode.toLowerCase())
-          );
-          if (target) return target;
+        let query = supabase
+          .from('orders')
+          .select(CUSTOMER_ORDER_SELECT);
+
+        if (isUuid) {
+          query = query.eq('id', cleanId);
+        } else {
+          query = query.ilike('qr_code', `%${hexToken}%`);
         }
-      } catch {}
-    } catch (err) {
-      console.warn('Lấy chi tiết đơn hàng lỗi:', err);
-    }
-    return null;
+
+        const { data, error } = await query.limit(1).maybeSingle();
+        if (!error && data) {
+          return mapCustomerOrderRow(data);
+        }
+
+        // Fallback: match by payment_order_code if numeric
+        const numericCode = Number(cleanId.replace(/\D/g, ''));
+        if (Number.isInteger(numericCode) && numericCode > 1000) {
+          const { data: numOrder } = await supabase
+            .from('orders')
+            .select(CUSTOMER_ORDER_SELECT)
+            .eq('payment_order_code', numericCode)
+            .limit(1)
+            .maybeSingle();
+          if (numOrder) return mapCustomerOrderRow(numOrder);
+        }
+
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const key = `gsf_local_orders_${user.id}`;
+            const localOrders: Order[] = JSON.parse(localStorage.getItem(key) || '[]');
+            const cleanLower = cleanId.toLowerCase();
+            const hexLower = hexToken.toLowerCase();
+            const target = localOrders.find(
+              (o) =>
+                o.id.toLowerCase() === cleanLower ||
+                o.orderCode.toLowerCase() === cleanLower ||
+                cleanLower.includes(o.orderCode.toLowerCase()) ||
+                (hexLower && (o.id.toLowerCase().includes(hexLower) || o.orderCode.toLowerCase().includes(hexLower)))
+            );
+            if (target) return target;
+          }
+        } catch {}
+      } catch (err) {
+        console.warn('Lấy chi tiết đơn hàng lỗi:', err);
+      }
+      return null;
+    })();
+
+    return Promise.race([fetchPromise, timeoutPromise]);
   },
 
   async getNotifications(): Promise<NotificationItem[]> {
