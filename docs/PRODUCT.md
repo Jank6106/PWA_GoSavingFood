@@ -9,7 +9,7 @@
 ## 1. Product Vision & Problem Statement
 - **Product Vision (`CONFIRMED` from `apps/web` & `apps/customer/public/manifest.json`)**: Build a food-rescue platform in Vietnam connecting food businesses with surplus end-of-day or near-expiry food ("Surprise Bags") to local consumers at discounted prices.
 - **Problem Statement (`CONFIRMED` from `apps/web/app/components/ShockingReality.tsx` & `SolutionGoSavingFood.tsx`)**: Restaurants, bakeries, cafés, and supermarkets generate edible surplus food daily that would otherwise be wasted, while consumers seek affordable, quality meals.
-- **Geographic Focus (`CONFIRMED` from `scripts/seed_34_partners_and_bags.mjs` & `customer.service.ts`)**: Currently seeded and operating with **54 partner stores and 113+ Surprise Bags in Hanoi, Vietnam** (default proximity coordinates `[105.8542, 21.0285]`).
+- **Geographic Focus (`CONFIRMED` from `0036_expand_merchants_and_yindii_bags.sql` & `customer.service.ts`)**: Currently seeded and operating with **54 partner stores and 113+ Surprise Bags in Hanoi, Vietnam** (default proximity coordinates `[105.8542, 21.0285]`).
 
 ---
 
@@ -19,7 +19,7 @@
 | :--- | :--- | :--- | :--- |
 | **Customer** | `EXISTING` | `apps/customer` (`/explore/`) | Consumers browsing nearby Surprise Bags, purchasing via VietQR/voucher, and picking up in-store using a QR token. |
 | **Merchant (Store Partner)** | `EXISTING` | `apps/merchant` | 1:1 store owner managing store status, Surprise Bag listings/stock, order fulfillment, QR pickup verification, and revenue analytics. |
-| **Platform Admin** | `PLANNED` | `apps/admin` (empty) | DB schema defines `user_role = 'admin'`, `admin_audit_logs`, `settlements`, and `get_admin_dashboard_stats()`, but no Admin frontend exists in the repo (`CONFIRMED`). |
+| **Platform Admin** | `PLANNED` | `apps/admin` (chưa tạo app) | DB schema defines `user_role = 'admin'`, `admin_audit_logs`, `settlements`, and `get_admin_dashboard_stats()`, but no Admin frontend exists in the repo (`CONFIRMED`). |
 
 - **Detailed Marketing Personas (`UNKNOWN`)**: Specific demographic/marketing persona profiles are not documented in source code.
 
@@ -53,7 +53,7 @@
   - Store settings (open/close status, hours, GPS location update) & revenue/order analytics (`AnalyticsScreen`).
 
 ### Planned / Incomplete Features (`PLANNED`)
-- **Admin Dashboard (`apps/admin`)**: Folder created (`node_modules` only); DB already contains `admin_audit_logs`, `settlements`, `banners`, `issues`, `refund_requests`, and `get_admin_dashboard_stats()` RPC, but no UI exists.
+- **Admin Dashboard (`apps/admin`)**: Not created yet; DB already contains `admin_audit_logs`, `settlements`, `banners`, `issues`, `refund_requests`, and `get_admin_dashboard_stats()` RPC, but no UI exists.
 - **Web Push Notifications (`PLANNED`)**: `push_subscriptions` table and RLS exist in PostgreSQL (`CONFIRMED`), but `apps/customer` and `apps/merchant` currently use Supabase Realtime + in-app `notifications` table rather than active VAPID Web Push subscription flows (`INFERRED` — no VAPID key in `.env.example` or push registration in `sw.js`).
 - **Merchant Settlements & Refund Disbursement UI (`PLANNED`)**: `settlements` and `refund_requests` tables exist in DB; payout/refund execution UI is `Missing` / `UNKNOWN`.
 - **Customer Issue Reporting UI (`PLANNED`)**: `issues` table and `issue_status`/`reporter_role` enums exist in DB; UI integration status is `UNKNOWN / Not verified in frontend`.

@@ -11,10 +11,9 @@ This Next.js app owns the entire public landing page. Customer and merchant PWAs
 - `app/globals.css`: Tailwind and global defaults.
 - `app/landing.css`: landing layout, brand tokens, header and motion styles.
 - `app/fonts/`: local fonts and their OFL licenses.
-- `public/media/`: supplied `logo.svg`, `logo.png`, `hero.mp4` (video 1), `problem.mp4` (video 2).
+- `public/media/`: `logo-mark.svg`, `hero-scrub.mp4` (video 1), `hero-poster.jpg`, `problem-scrub.mp4` (video 2), `problem-poster.jpg`, and `imagery/`.
 - `public/manifest.json`, `public/sw.js`: PWA configuration. Video range requests pass directly to the network.
 - `DESIGN.md`, `.impeccable/design.json`: design reference.
-- `.impeccable/review/`: local visual QA captures, not public assets.
 
 The supplied SVG uses embedded raster images/masks rather than editable vector paths. Preserve the source; a true path-based export can replace it later without changing component code.
 

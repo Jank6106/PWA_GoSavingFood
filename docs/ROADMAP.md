@@ -36,7 +36,7 @@
 
 1. **Admin Portal (`apps/admin`)**
    - **Goal**: Build admin UI for platform stats (`get_admin_dashboard_stats`), store approval/suspension, banner management (`banners`), issue resolution (`issues`), refund processing (`refund_requests`), and merchant payouts (`settlements`).
-   - **Status**: `PLANNED` (DB schema + RLS + RPCs partially exist; `apps/admin` currently contains only `node_modules/`).
+   - **Status**: `PLANNED` (DB schema + RLS + RPCs partially exist; no `apps/admin` app code exists yet).
    - **Technical Impact**: Enables manual/automated settlement & refund operations currently lacking UI.
 
 2. **Web Push Notifications (`push_subscriptions`)**

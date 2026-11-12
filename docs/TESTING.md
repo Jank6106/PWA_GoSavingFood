@@ -22,7 +22,6 @@ pnpm vitest run tests/bagTiming.test.ts tests/mapbox.test.ts tests/envHelper.tes
 pnpm test                                      # Runs ALL Vitest files (including live DB tests)
 node scripts/comprehensive-system-audit.mjs    # 25-check DB integrity, 1:1 merchant isolation, HANOI_BAGS sync & E2E order/RLS audit
 node scripts/api-smoke-test.mjs                # API smoke checks
-node scripts/test-cancellation-lifecycle.mjs   # Order cancellation & stock/refund lifecycle check
 ```
 
 ### Build Verification

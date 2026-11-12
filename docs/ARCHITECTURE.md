@@ -58,7 +58,7 @@ flowchart TB
 | Landing & API Host (`apps/web`) | Next.js `16.3.3`, React `19.2.8`, Tailwind CSS v4, GSAP | TypeScript `ignoreBuildErrors: true` in `next.config.ts` |
 | Customer PWA (`apps/customer`) | Vite `8.2.2`, React `19.2.8`, TypeScript `~6.0.2`, `mapbox-gl`, `qrcode.react` | **No** `react-router`, **no** TanStack Query, **no** Zod/MSW |
 | Merchant PWA (`apps/merchant`) | Vite `8.2.2`, React `19.2.8`, TypeScript `~6.0.2`, `html5-qrcode` | **No** `react-router`, **no** TanStack Query |
-| Shared UI (`packages/ui`) | React + CSS design tokens (`@gosavingfood/ui`) | `Badge`, `Button`, `Card`, `Chip`, `Dialog`, `EmptyState`, `ErrorState`, `Input`, `Skeleton` |
+| Shared UI (`packages/ui`) | React + CSS design tokens (`@gosavingfood/ui`) | `Badge`, `Button`, `Card`, `Dialog`, `EmptyState`, `ErrorState`, `Input`, `Skeleton` |
 | Database & BaaS | Supabase (`@supabase/supabase-js@^2.117.2`), PostgreSQL `17.11`, PostGIS `3.3.7` | `pg_cron`, `pgcrypto`, `uuid-ossp`, `supabase_vault` |
 | Edge / Proxy | Cloudflare Worker (`scripts/deploy-worker.mjs`) | Proxies `api.gosavingfood.app` -> `lblwvbedtlxjtkcuxmsf.supabase.co` |
 | Payments | PayOS v2 REST API | Server-only in `apps/web/app/api/payos/*` |
@@ -89,8 +89,8 @@ flowchart TB
 - **Hooks (`src/hooks/*`)**: `useAuth`, `useStoreProfile`, `useBags`, `useOrders`, `useNotifications`, `useAnalytics` — manage 60-second `localStorage` TTL/SWR caches, re-sync when `storeId` changes, and subscribe to Supabase Realtime.
 - **QR Verification**: Global draggable QR scanner button (`DraggableQRFab`) + `html5-qrcode` calling `verify_pickup_qr` RPC.
 
-### `apps/admin` (`PLANNED` / Empty)
-- Contains only `node_modules/`; no application code or `package.json` exists.
+### `apps/admin` (`PLANNED` / Not created)
+- No application directory, `package.json`, or source code exists yet (`PLANNED`).
 
 ### `packages/ui`
 - Shared React UI components and CSS tokens (`tokens.css`, `components.css`). `INFERRED` partially adopted (`apps/customer` and `apps/merchant` still contain significant custom CSS in `src/index.css`).

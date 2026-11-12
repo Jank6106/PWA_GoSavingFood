@@ -11,7 +11,7 @@
 - **Primary users**:
   - **Customers** (`apps/customer`): Discover nearby stores/bags via Mapbox + PostGIS, purchase Surprise Bags online via PayOS VietQR (or 100% voucher), and pick up in-store using QR tokens.
   - **Merchants** (`apps/merchant`): Manage store profile/open status, publish daily or shelf-life Surprise Bags, process live orders, scan customer pickup QRs, and view analytics.
-  - **Admins**: `UNKNOWN / PLANNED` (`apps/admin` folder has no source code; DB has `admin` role, `admin_audit_logs`, `settlements`, and `get_admin_dashboard_stats` RPC).
+  - **Admins**: `UNKNOWN / PLANNED` (No `apps/admin` UI app exists yet; DB has `admin` role, `admin_audit_logs`, `settlements`, and `get_admin_dashboard_stats` RPC).
 - **Core use cases**: Store/bag geo-discovery -> Checkout -> PayOS VietQR payment (or 0đ voucher) -> Merchant order preparation -> In-store QR pickup verification -> Customer review.
 
 ---
@@ -32,7 +32,7 @@
 - Database (`supabase/migrations/0009`–`0041`): PostgreSQL 17 + PostGIS 3.3.7, 16 public tables, 5 public WebP/image storage buckets, automated audit script passing 25/25 checks (`scripts/comprehensive-system-audit.mjs` verified in git history `ad98e7de`).
 
 ### In Progress / Unfinished (`CONFIRMED`)
-- `apps/admin`: Directory exists on disk with `node_modules/` only — zero source files.
+- **Admin Portal (`apps/admin`)**: `PLANNED` — no source files or app package exist yet (DB schema & admin RPCs partially exist).
 
 ### Known Issues & Technical Debt (`CONFIRMED`)
 1. **Critical Security / Authorization Debt** (see [`docs/SECURITY.md`](docs/SECURITY.md)):

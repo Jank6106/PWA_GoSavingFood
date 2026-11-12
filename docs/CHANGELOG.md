@@ -17,6 +17,14 @@
 - Redirected `scripts/db-inspect.mjs` and `scripts/show-rpc.mjs` output/input to gitignored `scratch/supabase-backend-raw.md`.
 
 ### Removed
+- Cleaned up Group 2 & Group 3 unused media, dead UI components, and legacy scripts:
+  - Removed unreferenced media/logo/font/QA captures in `apps/web` (`public/media/{hero.mp4,problem.mp4,problem-compatible.mp4,logo.png,logo.svg}`, `public/{logo.png,logo.svg,pwa-192x192.svg,pwa-512x512.svg}`, `app/fonts/{Manrope.ttf,Manrope-OFL.txt}`, `.impeccable/review/`) and unused `apps/merchant/public/logo.png`.
+  - Removed unused UI components & CSS (`apps/customer/src/shared/components/{SearchField,StickyActions}.tsx`, `packages/ui/src/components/Badge/Chip.tsx`, and `.gsf-chip` rules in `packages/ui/src/styles/components.css`).
+  - Removed 42 historical one-off migration/seed/check/ad-hoc test scripts from `scripts/`, retaining active operational, audit, deployment, and transaction-seeding tools.
+- Cleaned up Group 1 unused/template/scratch files:
+  - Removed `scratch/` directory (8 legacy tracked test/debug scripts and 3 untracked env backup files).
+  - Removed unused Vite/Next.js starter templates (`apps/customer/src/App.css`, `apps/merchant/src/App.css`, `react.svg`, `vite.svg`, `hero.png`, `icons.svg`, `apps/customer/public/favicon.{png,svg}`, `apps/merchant/public/favicon.svg`, `apps/web/public/{file,globe,next,vercel,window}.svg`).
+  - Removed duplicate `apps/customer/public/image-assets-manifest.json` (kept root [`image-assets-manifest.json`](../image-assets-manifest.json)), empty `apps/admin/` folder, and standalone `apps/web/{pnpm-lock.yaml,pnpm-workspace.yaml,tsconfig.tsbuildinfo}`.
 - Removed obsolete `apps/customer/scratch_transition.cjs` containing a legacy hardcoded `service_role` key.
 - Deleted obsolete, redundant, empty, and misformatted docs/rules (`docs/ai-rules.md`, `docs/integratePayOSDoc.md`, `docs/supabase-backend-raw.md`, `docs/MAPBOX_INTEGRATION.md`, `docs/GSF_Kich_Ban_Kiem_Thu_Giao_Tiep_Cus_Mer.docx`, `rules/*`, `apps/customer/docs/*`, `apps/merchant/docs/*`, `apps/web/CLAUDE.md`).
 

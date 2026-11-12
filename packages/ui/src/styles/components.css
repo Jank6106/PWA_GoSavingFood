@@ -296,42 +296,6 @@
   color: var(--color-text-secondary);
 }
 
-/* Filter Chip */
-.gsf-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: var(--radius-full);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-secondary);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  background-color: var(--color-bg-card);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border-subtle);
-  transition: all var(--transition-fast);
-  user-select: none;
-  outline: none;
-}
-
-.gsf-chip:hover {
-  border-color: var(--color-border-input);
-  background-color: var(--color-bg-muted);
-}
-
-.gsf-chip--selected {
-  background-color: var(--color-primary-soft);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  font-weight: var(--font-weight-semibold);
-}
-
-.gsf-chip--selected:hover {
-  background-color: var(--color-primary-soft-hover);
-  border-color: var(--color-primary);
-}
-
 /* ==========================================================================
    CARD
    ========================================================================== */
