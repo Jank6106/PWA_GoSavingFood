@@ -8,7 +8,7 @@
  *
  * Cách chạy:  node scripts/db-inspect.mjs
  * Yêu cầu:    DATABASE_URL trong biến môi trường hoặc file `.env` ở thư mục gốc.
- * Kết quả:    docs/supabase-backend-raw.md  (script KHÔNG ghi vào database)
+ * Kết quả:    scratch/supabase-backend-raw.md  (script KHÔNG ghi vào database)
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -221,8 +221,8 @@ const output = [
   ...sections,
 ].join('\n');
 
-mkdirSync(resolve(ROOT_DIR, 'docs'), { recursive: true });
-const outPath = resolve(ROOT_DIR, 'docs/supabase-backend-raw.md');
+mkdirSync(resolve(ROOT_DIR, 'scratch'), { recursive: true });
+const outPath = resolve(ROOT_DIR, 'scratch/supabase-backend-raw.md');
 writeFileSync(outPath, output, 'utf8');
 
 console.log(`\n📄 Đã ghi ${outPath} (${(output.length / 1024).toFixed(1)} KB)`);

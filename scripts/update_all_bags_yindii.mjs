@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
+import { getSupabaseConfig } from './lib/env.mjs';
 
-const sb = createClient(
-  'https://lblwvbedtlxjtkcuxmsf.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxibHd2YmVkdGx4anRrY3V4bXNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MjcyMjY3MSwiZXhwIjoyMTA4Mjk4NjcxfQ.vnOu0yTCCeKgWQ0q6uPKPbrnTtPcGoY4x129_G4faII'
-);
+function createAdminClient() {
+  const { url, serviceRoleKey } = getSupabaseConfig({ requireServiceRole: true });
+  return createClient(url, serviceRoleKey);
+}
 
 // Map of updated Yindii-style name & description for all 63 bags
 export const YINDII_BAG_UPDATES = {
@@ -274,6 +274,7 @@ export const YINDII_BAG_UPDATES = {
 };
 
 async function run() {
+  const sb = createAdminClient();
   console.log(`Starting to update all ${Object.keys(YINDII_BAG_UPDATES).length} bags to Yindii style...`);
 
   let count = 0;
@@ -295,4 +296,6 @@ async function run() {
   console.log(`Successfully updated ${count} bags in Supabase!`);
 }
 
-run().catch(console.error);
+if (process.argv[1] && process.argv[1].endsWith('update_all_bags_yindii.mjs')) {
+  run().catch(console.error);
+}

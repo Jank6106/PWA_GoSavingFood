@@ -1,6 +1,7 @@
 # GoSavingFood — Design System
 
-> Applies to both Customer App and Merchant App. Defines visual style only, not user flows, features, or screen layouts.
+> Applies to both Customer App (`apps/customer`) and Merchant App (`apps/merchant`). Defines visual style only, not user flows, features, or screen layouts.
+> For the `apps/web` Landing Page's warm editorial palette and typography, see [`../apps/web/DESIGN.md`](../apps/web/DESIGN.md). Shared UI primitives live in [`../packages/ui`](../packages/ui).
 
 ## 1. Style
 

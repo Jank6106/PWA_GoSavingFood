@@ -145,8 +145,8 @@ async function run() {
     // 3. Khách bấm hủy đơn kèm thông tin tài khoản ngân hàng
     const bankInfo = {
       bankName: 'MB Bank',
-      accountNumber: '038823316420',
-      accountHolder: 'NGUYEN HUU DANH',
+      accountNumber: '0123456789',
+      accountHolder: 'TEST CUSTOMER',
     };
 
     await client.query(`
@@ -170,7 +170,7 @@ async function run() {
     if (Number(refundRecord.amount) !== Number(bag.discount_price)) {
       throw new Error(`❌ Test 2: Số tiền hoàn tiền không khớp`);
     }
-    if (!refundRecord.bank_account_info || refundRecord.bank_account_info.accountNumber !== '038823316420') {
+    if (!refundRecord.bank_account_info || refundRecord.bank_account_info.accountNumber !== '0123456789') {
       throw new Error(`❌ Test 2: Thông tin tài khoản ngân hàng không lưu đúng: ${JSON.stringify(refundRecord.bank_account_info)}`);
     }
     if (!notifs2.length || !notifs2[0].title.includes('hủy')) {

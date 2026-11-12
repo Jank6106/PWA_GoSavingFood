@@ -1,6 +1,7 @@
 /**
- * scripts/show-rpc.mjs — In định nghĩa RPC từ docs/supabase-backend-raw.md
+ * scripts/show-rpc.mjs — In định nghĩa RPC từ scratch/supabase-backend-raw.md
  * Cách dùng: node scripts/show-rpc.mjs create_order_transaction [tên_khác...]
+ * Chạy `node scripts/db-inspect.mjs` trước nếu chưa có file raw.
  * Không truyền tham số: in tất cả RPC.
  */
 import { readFileSync } from 'node:fs';
@@ -8,7 +9,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const rawPath = resolve(HERE, '..', 'docs/supabase-backend-raw.md');
+const rawPath = resolve(HERE, '..', 'scratch/supabase-backend-raw.md');
 const text = readFileSync(rawPath, 'utf8');
 
 const fence = '```';

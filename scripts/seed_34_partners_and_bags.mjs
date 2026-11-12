@@ -1,12 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseConfig } from './lib/env.mjs';
 
-const SUPABASE_URL = 'https://lblwvbedtlxjtkcuxmsf.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxibHd2YmVkdGx4anRrY3V4bXNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MjcyMjY3MSwiZXhwIjoyMTA4Mjk4NjcxfQ.vnOu0yTCCeKgWQ0q6uPKPbrnTtPcGoY4x129_G4faII';
 const OWNER_USER_ID = '20205ac1-1255-4759-a44b-6abe4e097890';
-
-const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
 
 // 34 Stores Definition
 export const ALL_STORES = [
@@ -2407,6 +2402,10 @@ export const ALL_BAGS = [
 ];
 
 async function seed() {
+  const { url, serviceRoleKey } = getSupabaseConfig({ requireServiceRole: true });
+  const supabaseAdmin = createClient(url, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
   console.log(`Starting to seed ${ALL_STORES.length} stores and ${ALL_BAGS.length} bags...`);
 
   // 1. Process Stores

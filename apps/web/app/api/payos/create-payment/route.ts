@@ -91,6 +91,11 @@ export async function POST(request: Request) {
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         const supabaseAdmin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
 
+        const fallbackBankAccount = process.env.PAYOS_BANK_ACCOUNT || '';
+        const fallbackAccountName = process.env.PAYOS_ACCOUNT_NAME || 'GoSavingFood';
+        const formatVirtualAccount = (raw: string) =>
+          raw ? (raw.startsWith('V3CAS') ? raw : `V3CAS${raw}`) : '';
+
         // Kiểm tra xem đơn hàng đã được tạo link thanh toán trước đó hay chưa (Idempotency)
         if (supabaseAdmin) {
           const { data: existingOrder } = await supabaseAdmin
@@ -108,8 +113,9 @@ export async function POST(request: Request) {
             new Date(existingOrder.payment_expires_at).getTime() > Date.now()
           ) {
             console.log(`[PayOS] Order ${orderId} has valid cached PayOS QR (${existingOrder.payment_order_code}). Reusing.`);
-            const rawReusedAcc = String(existingOrder.payos_account_number || 'V3CAS8823316420');
-            const vaReusedAcc = rawReusedAcc.startsWith('V3CAS') ? rawReusedAcc : `V3CAS${rawReusedAcc}`;
+            const vaReusedAcc = formatVirtualAccount(
+              String(existingOrder.payos_account_number || fallbackBankAccount)
+            );
             resolveInFlight({
               success: true,
               orderCode: existingOrder.payment_order_code,
@@ -117,7 +123,7 @@ export async function POST(request: Request) {
               checkoutUrl: existingOrder.checkout_url,
               qrCode: existingOrder.payos_qr_code,
               accountNumber: vaReusedAcc,
-              accountName: 'NGUYEN HUU DANH',
+              accountName: fallbackAccountName,
               bin: '970418',
               amount,
               description: existingOrder.payos_description || cleanDesc,
@@ -211,8 +217,7 @@ export async function POST(request: Request) {
           description: payosDescription,
         } = payosData.data;
 
-        const rawCreatedAcc = String(accountNumber || 'V3CAS8823316420');
-        const vaCreatedAcc = rawCreatedAcc.startsWith('V3CAS') ? rawCreatedAcc : `V3CAS${rawCreatedAcc}`;
+        const vaCreatedAcc = formatVirtualAccount(String(accountNumber || fallbackBankAccount));
         const finalDescription = payosDescription || cleanDesc;
 
         // Cập nhật thông tin PayOS vào Supabase orders (bao gồm cache payos_qr_code tạm trong 33 phút)
@@ -225,7 +230,7 @@ export async function POST(request: Request) {
               checkout_url: checkoutUrl,
               payos_qr_code: qrCode,
               payos_description: finalDescription,
-              payos_account_number: vaCreatedAcc,
+              payos_account_number: vaCreatedAcc || null,
               updated_at: new Date().toISOString(),
             })
             .eq('id', orderId);
@@ -238,7 +243,7 @@ export async function POST(request: Request) {
           checkoutUrl,
           qrCode,
           accountNumber: vaCreatedAcc,
-          accountName: accountName || 'NGUYEN HUU DANH',
+          accountName: accountName || fallbackAccountName,
           bin: bin || '970418',
           amount,
           description: finalDescription,

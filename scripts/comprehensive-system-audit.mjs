@@ -1,14 +1,18 @@
-import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
 import crypto from 'node:crypto';
+import { getSupabaseConfig } from './lib/env.mjs';
 
-const envText = readFileSync('.env', 'utf8');
-const dbUrl = envText.match(/DATABASE_URL=([^\r\n]+)/)[1].trim();
-
-const SUPABASE_URL = 'https://lblwvbedtlxjtkcuxmsf.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxibHd2YmVkdGx4anRrY3V4bXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MjI2NzEsImV4cCI6MjEwODI5ODY3MX0.Dgcssc3UzYyk4z80xGhNWGlZnJzIqt_T9gDdBVrFeAI';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxibHd2YmVkdGx4anRrY3V4bXNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MjcyMjY3MSwiZXhwIjoyMTA4Mjk4NjcxfQ.vnOu0yTCCeKgWQ0q6uPKPbrnTtPcGoY4x129_G4faII';
+const {
+  url: SUPABASE_URL,
+  anonKey: ANON_KEY,
+  serviceRoleKey: SERVICE_KEY,
+  databaseUrl: dbUrl,
+} = getSupabaseConfig({
+  requireAnon: true,
+  requireServiceRole: true,
+  requireDatabaseUrl: true,
+});
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },

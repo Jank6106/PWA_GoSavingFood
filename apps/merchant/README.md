@@ -1,33 +1,28 @@
-# GoSavingFood Merchant PWA
+# GoSavingFood Merchant PWA (`apps/merchant`)
 
-Ứng dụng quản lý dành cho đối tác cửa hàng, được xây bằng React, TypeScript và Vite.
+Store partner Progressive Web App (`gsf-merchant-pwa.vercel.app`).
 
-## Kiến trúc
+> **Project-wide context & rules**: See [`../../AI_CONTEXT.md`](../../AI_CONTEXT.md) and [`../../AGENTS.md`](../../AGENTS.md).
 
+## Architecture (`CONFIRMED`)
 ```text
 src/
-├── types/       # Data contracts
-├── mocks/       # Unified demo dataset
-├── services/    # API/mock adapters, không phụ thuộc React
-├── hooks/       # State, computed data và mutations
-├── components/  # UI theo domain
-├── pages/       # Screen composition
-├── App.tsx      # Auth flow và tab shell
-└── index.css    # Merchant design system + responsive layout
+├── types/       # Domain types (BagItem, MerchantOrder, StoreProfile, AnalyticsMetrics, NotificationItem)
+├── mocks/       # Fallback constants (STORE_ID)
+├── services/    # Supabase adapters (auth, bag, order, store, notification, analytics)
+├── hooks/       # SWR localStorage caches (60s TTL), Supabase Realtime sync, mutations
+├── components/  # Domain UI components (bags, orders, layout, notifications, ui)
+├── pages/       # BagManagementScreen, OrderManagementScreen, AnalyticsScreen, SettingsScreen, FirstTimeSetupScreen, LoginScreen
+├── utils/       # bagTiming, validation
+└── App.tsx      # Auth gating & ?tab= screen shell + global QR scanner FAB
 ```
 
-Luồng dữ liệu tuân theo `Types → Services → Hooks → UI`. Túi hàng được đồng bộ sang kệ hàng thông qua subscription trong inventory service.
+- **Strict Layering**: `pages/` or `components/` -> `hooks/` -> `services/` -> Supabase. UI components must NOT import from `services/`.
+- **1:1 Isolation**: Each merchant credential maps 1:1 to a single store via `stores.owner_user_id`.
 
-## Chạy ứng dụng
-
-Từ thư mục gốc workspace:
-
+## Commands (from repo root)
 ```bash
-pnpm --filter=merchant dev
-pnpm --filter=merchant build
-pnpm --filter=merchant lint
+pnpm --filter merchant dev    # http://localhost:5174
+pnpm --filter merchant build  # tsc -b && vite build
+pnpm --filter merchant lint   # eslint .
 ```
-
-Development server mặc định chạy tại `http://localhost:5174`.
-
-Tài khoản demo được điền sẵn trên màn hình đăng nhập. Lần đăng nhập đầu tiên sẽ đi qua wizard thiết lập cửa hàng; trạng thái hoàn thành được lưu riêng theo từng tài khoản trong local storage của trình duyệt.

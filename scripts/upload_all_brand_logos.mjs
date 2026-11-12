@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseConfig } from './lib/env.mjs';
 
-const SUPABASE_URL = 'https://lblwvbedtlxjtkcuxmsf.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxibHd2YmVkdGx4anRrY3V4bXNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MjcyMjY3MSwiZXhwIjoyMTA4Mjk4NjcxfQ.vnOu0yTCCeKgWQ0q6uPKPbrnTtPcGoY4x129_G4faII';
+const { url: SUPABASE_URL, serviceRoleKey: SERVICE_KEY } = getSupabaseConfig({
+  requireServiceRole: true,
+});
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false }

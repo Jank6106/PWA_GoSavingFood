@@ -5,30 +5,20 @@
  * to Supabase Storage ('product-images' bucket) for GoSavingFood.
  * Updates database records in `surprise_bags` and exports manifest.
  */
-import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
+import { ROOT_DIR, getSupabaseConfig } from './lib/env.mjs';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT_DIR = resolve(HERE, '..');
-
-const parseEnvFile = (text) => {
-  const map = {};
-  for (const rawLine of text.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('#')) continue;
-    const eq = line.indexOf('=');
-    if (eq <= 0) continue;
-    map[line.slice(0, eq).trim()] = line.slice(eq + 1).trim().replace(/^['"]|['"]$/g, '');
-  }
-  return map;
-};
-
-const env = parseEnvFile(readFileSync(resolve(ROOT_DIR, '.env'), 'utf8'));
-const SUPABASE_URL = env.SUPABASE_URL || 'https://lblwvbedtlxjtkcuxmsf.supabase.co';
-const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxibHd2YmVkdGx4anRrY3V4bXNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MjcyMjY3MSwiZXhwIjoyMTA4Mjk4NjcxfQ.vnOu0yTCCeKgWQ0q6uPKPbrnTtPcGoY4x129_G4faII';
+const {
+  url: SUPABASE_URL,
+  serviceRoleKey: SERVICE_KEY,
+  databaseUrl: DATABASE_URL,
+} = getSupabaseConfig({
+  requireServiceRole: true,
+  requireDatabaseUrl: true,
+});
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false },
@@ -720,7 +710,7 @@ async function main() {
   // 4. Update PostgreSQL database `surprise_bags` records with matching category images
   console.log('🔄 Updating database surprise_bags records...');
   const pgClient = new pg.Client({
-    connectionString: env.DATABASE_URL,
+    connectionString: DATABASE_URL,
     ssl: { rejectUnauthorized: false },
   });
 

@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
+import { getSupabaseConfig } from './lib/env.mjs';
 
-const sb = createClient(
-  'https://lblwvbedtlxjtkcuxmsf.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxibHd2YmVkdGx4anRrY3V4bXNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MjcyMjY3MSwiZXhwIjoyMTA4Mjk4NjcxfQ.vnOu0yTCCeKgWQ0q6uPKPbrnTtPcGoY4x129_G4faII'
-);
+const { url: SUPABASE_URL, serviceRoleKey: SERVICE_KEY } = getSupabaseConfig({
+  requireServiceRole: true,
+});
+const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
 export const NEW_50_BAGS = [
   // ================= 1. MEAT / MÓN NÓNG (9 bags) =================

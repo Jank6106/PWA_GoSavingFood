@@ -169,21 +169,29 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
 
   const isPayosLoading = !payosData;
   const transferContent = payosData?.description || effectiveOrderCode;
-  const rawAccount = payosData?.accountNumber || import.meta.env.VITE_PAYOS_BANK_ACCOUNT || '8823316420';
-  const bankAccount = rawAccount.startsWith('V3CAS') ? rawAccount : `V3CAS${rawAccount}`;
+  const rawAccount = payosData?.accountNumber || import.meta.env.VITE_PAYOS_BANK_ACCOUNT || '';
+  const bankAccount = rawAccount
+    ? rawAccount.startsWith('V3CAS')
+      ? rawAccount
+      : `V3CAS${rawAccount}`
+    : '';
   const bankName = import.meta.env.VITE_PAYOS_BANK_NAME
     ? `${import.meta.env.VITE_PAYOS_BANK_NAME} - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam`
     : 'BIDV - Ngân hàng TMCP Đầu tư và Phát triển Việt Nam';
   const accountHolder = payosData?.accountName || import.meta.env.VITE_PAYOS_ACCOUNT_NAME || 'GoSavingFood';
 
-  // Link VietQR Pro chuẩn Napas 24/7 từ VietQR API
-  const qrImageUrl = `https://img.vietqr.io/image/BIDV-${bankAccount}-compact2.png?amount=${effectiveTotal}&addInfo=${encodeURIComponent(
-    transferContent
-  )}&accountName=${encodeURIComponent(accountHolder)}`;
+  // Link VietQR Pro chuẩn Napas 24/7 từ VietQR API (chỉ tạo khi có bankAccount hợp lệ)
+  const qrImageUrl = bankAccount
+    ? `https://img.vietqr.io/image/BIDV-${bankAccount}-compact2.png?amount=${effectiveTotal}&addInfo=${encodeURIComponent(
+        transferContent
+      )}&accountName=${encodeURIComponent(accountHolder)}`
+    : '';
 
   const fallbackQrData =
     payosData?.qrCode ||
-    `00020101021238590010A000000727012900069704180115${bankAccount}0208QRIBFTTA5303704540${effectiveTotal}5802VN62180814${transferContent}6304`;
+    (bankAccount
+      ? `00020101021238590010A000000727012900069704180115${bankAccount}0208QRIBFTTA5303704540${effectiveTotal}5802VN62180814${transferContent}6304`
+      : '');
 
   const cleanupPaymentSession = useCallback(() => {
     try {
@@ -601,17 +609,23 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
         };
         img.onerror = () => {
           URL.revokeObjectURL(url);
-          window.open(qrImageUrl, '_blank');
+          if (qrImageUrl) window.open(qrImageUrl, '_blank');
         };
         img.src = url;
         return;
       }
 
-      window.open(qrImageUrl, '_blank');
-      showToast('Đang mở ảnh QR để bạn tải về.');
+      if (qrImageUrl) {
+        window.open(qrImageUrl, '_blank');
+        showToast('Đang mở ảnh QR để bạn tải về.');
+      } else {
+        showToast('Đang tải mã QR PayOS, vui lòng chờ...');
+      }
     } catch {
-      window.open(qrImageUrl, '_blank');
-      showToast('Đang mở ảnh QR để bạn tải về.');
+      if (qrImageUrl) {
+        window.open(qrImageUrl, '_blank');
+        showToast('Đang mở ảnh QR để bạn tải về.');
+      }
     }
   };
 
@@ -712,7 +726,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
             <div style={{ padding: '6px', background: '#fff', borderRadius: '12px' }}>
               <QRCodeSVG value={payosData.qrCode} size={200} level="M" />
             </div>
-          ) : !isImgError ? (
+          ) : qrImageUrl && !isImgError ? (
             <img
               src={qrImageUrl}
               alt="Mã VietQR"
@@ -720,9 +734,28 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
               style={{ width: '200px', height: 'auto', borderRadius: '12px' }}
               onError={() => setIsImgError(true)}
             />
-          ) : (
+          ) : fallbackQrData ? (
             <div style={{ padding: '6px', background: '#fff', borderRadius: '12px' }}>
               <QRCodeSVG value={fallbackQrData} size={200} level="M" />
+            </div>
+          ) : (
+            <div
+              style={{
+                width: '200px',
+                height: '200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#f8faf9',
+                borderRadius: '12px',
+                color: 'var(--color-text-muted)',
+                fontSize: '13px',
+                fontWeight: 600,
+                textAlign: 'center',
+                padding: '16px',
+              }}
+            >
+              Đang tạo mã VietQR PayOS...
             </div>
           )}
         </div>
