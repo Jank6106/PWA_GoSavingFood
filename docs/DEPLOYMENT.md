@@ -50,7 +50,21 @@ pnpm test          # Runs `vitest run`
 
 ---
 
-## 4. Database Migrations (`CONFIRMED`)
+## 4. Local Docker Database (`CONFIRMED`)
+
+```bash
+pnpm db:start    # Start Supabase services in Docker
+pnpm db:status   # Show local URLs and keys
+pnpm db:reset    # Recreate the local database, apply migrations, and load supabase/seed.sql
+pnpm db:stop
+```
+
+Create the ignored root `.env.test` from `.env.test.example`, then copy the local anon and service-role keys from `pnpm db:status`. Local integration tests use this file before `.env` when `NODE_ENV=test` or `USE_LOCAL_DB=true`; values already exported by the shell still take precedence. `pnpm test:local` checks that API and database URLs are loopback hosts before it runs.
+
+> [!IMPORTANT]
+> The checked-in migration history has no baseline before `0009`, and it has duplicate version prefixes. A new Supabase project may therefore fail during migration replay. Migrations `0009`–`0041` must remain unchanged per the Docker testing plan; resolve the baseline/version-history problem in a separately reviewed migration strategy before treating a clean `db reset` as supported.
+
+## 5. Database Migrations (`CONFIRMED`)
 
 - Migrations reside in `supabase/migrations/` (`0009_*.sql` through `0041_*.sql`).
 - Managed by custom Node runner [`scripts/db-migrate.mjs`](../scripts/db-migrate.mjs) using `DATABASE_URL` from root `.env`:
@@ -63,7 +77,7 @@ pnpm test          # Runs `vitest run`
 
 ---
 
-## 5. Required Environment Variables (`.env.example`, `turbo.json`, `next.config.ts`)
+## 6. Required Environment Variables (`.env.example`, `turbo.json`, `next.config.ts`)
 
 Never commit actual secrets. Required variables in root `.env` / Vercel project settings:
 
@@ -82,7 +96,7 @@ Never commit actual secrets. Required variables in root `.env` / Vercel project 
 
 ---
 
-## 6. Observability, Backup & Rollback (`CONFIRMED` / `UNKNOWN`)
+## 7. Observability, Backup & Rollback (`CONFIRMED` / `UNKNOWN`)
 - **Observability**: `console.log` / `console.warn` / `console.error` in Next.js API routes and Vite apps; no external APM/Sentry/Datadog integration found in repo (`CONFIRMED`).
 - **Backup**: `UNKNOWN` (relies on Supabase Cloud managed backups; no backup scripts in repo).
 - **Rollback**:

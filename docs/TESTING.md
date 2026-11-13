@@ -8,18 +8,37 @@
 
 ### Safe Offline Unit Tests
 ```bash
-pnpm vitest run tests/bagTiming.test.ts tests/mapbox.test.ts tests/envHelper.test.ts
+pnpm test
+# Equivalent explicit command:
+pnpm test:offline
 ```
 - `tests/bagTiming.test.ts`: Tests `daily` vs `shelf_life` bag availability and expiry rules (`customer` & `merchant`).
 - `tests/mapbox.test.ts`: Tests `toLngLat` / `fromLngLat` coordinate conversion and Haversine distance calculation.
 - `tests/envHelper.test.ts`: Tests root `.env` loading and validation helpers (`scripts/lib/env.mjs`).
+
+### Local Docker Supabase Integration & Audit Suites
+Local integration suites are guarded by `scripts/test-local.mjs`: they refuse to start unless both the API and PostgreSQL URLs resolve to loopback hosts. The root `.env.test` is ignored by Git; copy `.env.test.example` and replace the keys with the values printed by `pnpm db:start` / `pnpm db:status`.
+
+```bash
+pnpm db:start
+pnpm db:status
+pnpm db:reset
+pnpm test:local
+pnpm test:audit
+pnpm db:stop
+```
+
+Supabase Studio is available at `http://127.0.0.1:54323`. `pnpm db:reset` resets only the local Docker database, applies migrations, then runs `supabase/seed.sql`.
+
+> [!IMPORTANT]
+> The committed migrations currently start at `0009` and assume an existing database schema; do not use them as a fresh-install baseline. The Supabase CLI also requires unique migration versions, while this repository currently has duplicate version prefixes. Until these repository constraints are resolved without rewriting migrations `0009`–`0041`, a fresh local `db reset` may fail before loading the seed.
 
 ### Live Supabase Integration & Audit Suites (Run with Care)
 > [!WARNING]
 > The suites below execute directly against the **live Supabase project** (`lblwvbedtlxjtkcuxmsf.supabase.co`). They create/delete temporary test users and orders during execution. All credentials (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`) are loaded from root `.env` via `scripts/lib/env.mjs`.
 
 ```bash
-pnpm test                                      # Runs ALL Vitest files (including live DB tests)
+pnpm test:live                                 # Runs ALL Vitest files; may reach live DB
 node scripts/comprehensive-system-audit.mjs    # 25-check DB integrity, 1:1 merchant isolation, HANOI_BAGS sync & E2E order/RLS audit
 node scripts/api-smoke-test.mjs                # API smoke checks
 ```

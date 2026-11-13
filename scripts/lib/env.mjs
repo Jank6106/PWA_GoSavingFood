@@ -35,17 +35,23 @@ function parseEnvContent(text) {
  * Loads variables from the monorepo root `.env` into `process.env`
  * without overriding variables already provided by the shell or CI environment.
  */
-export function loadRootEnv() {
+export function loadRootEnv({ rootDir = ROOT_DIR } = {}) {
   if (envLoaded) return process.env;
   envLoaded = true;
 
-  const envPath = resolve(ROOT_DIR, '.env');
-  if (!existsSync(envPath)) return process.env;
+  const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.USE_LOCAL_DB === 'true';
+  const envPaths = isTestEnvironment
+    ? [resolve(rootDir, '.env.test'), resolve(rootDir, '.env')]
+    : [resolve(rootDir, '.env')];
 
-  const parsed = parseEnvContent(readFileSync(envPath, 'utf8'));
-  for (const [key, value] of Object.entries(parsed)) {
-    if (process.env[key] === undefined) {
-      process.env[key] = value;
+  for (const envPath of envPaths) {
+    if (!existsSync(envPath)) continue;
+
+    const parsed = parseEnvContent(readFileSync(envPath, 'utf8'));
+    for (const [key, value] of Object.entries(parsed)) {
+      if (process.env[key] === undefined) {
+        process.env[key] = value;
+      }
     }
   }
   return process.env;

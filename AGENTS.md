@@ -1,6 +1,7 @@
 # AI Engineering Instructions (`AGENTS.md`)
 
 ## Before making changes
+
 1. Read [`AI_CONTEXT.md`](AI_CONTEXT.md).
 2. Read [`docs/PRODUCT.md`](docs/PRODUCT.md).
 3. Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -10,6 +11,7 @@
 7. If documentation and implementation conflict, identify the conflict before modifying the system.
 
 ## Engineering Principles
+
 - Preserve existing architecture unless change is justified.
 - Prefer incremental, minimal-scope changes over unnecessary rewrites; only touch files in the direct dependency path of the task.
 - Do not introduce new dependencies without a clear reason.
@@ -21,6 +23,7 @@
 - New behavior should have tests where practical.
 
 ## Repository-Specific Rules (`CONFIRMED` from codebase)
+
 1. **Strict PWA Layering**:
    - In `apps/customer`: `features/*/pages|components` -> `hooks/` or `contexts/` -> `services/` -> Supabase/API. UI components must NOT call `supabase` or `fetch('/api/...')` directly.
    - In `apps/merchant`: `pages/` or `components/` -> `hooks/` -> `services/` -> Supabase. UI components must NOT import from `services/`.
@@ -41,6 +44,7 @@
    - `apps/customer/src/services/customer.service.ts` currently embeds `HANOI_BAGS` fallback data; changes to seeded DB bag IDs/images will break 1:1 audit checks in `scripts/comprehensive-system-audit.mjs` unless updated or removed.
 
 ## Security
+
 - Treat all external input (including webhook payloads, URL params, client prices/amounts, and RPC parameters) as untrusted.
 - Enforce authentication and authorization server-side (Next.js API routes, RLS, `SECURITY DEFINER` RPCs using `auth.uid()`).
 - Do not expose secrets, tokens, or PII in logs or client bundles.
@@ -48,6 +52,7 @@
 - **Warning on Tests**: `tests/auth-backend.test.ts` and `tests/production-backend-audit.test.ts` execute against the live Supabase project, not an isolated local DB. Run with care.
 
 ## Before finishing a task
+
 1. Run relevant builds & tests (`pnpm turbo build`, `pnpm test` or targeted vitest/audit scripts).
 2. Review security impact (especially RLS, `SECURITY DEFINER` functions, and `/api/payos/*`).
 3. Review backward compatibility (DB migrations, mobile PWA caches, PayOS API payloads).

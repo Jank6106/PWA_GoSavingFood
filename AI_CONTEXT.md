@@ -30,6 +30,7 @@
 - Merchant PWA (`apps/merchant`): 1:1 isolated merchant-store login, first-time setup wizard, bag CRUD (`daily` & `shelf_life`), order lifecycle management, HTML5 QR scanner (`verify_pickup_qr`), realtime notifications, analytics dashboard, mobile-responsive order screen.
 - Landing Page (`apps/web`): Editorial landing page with GSAP animations, impact calculator, iOS/Android PWA install guide modal, standalone PWA redirect to `/explore/`, and 5 PayOS API routes.
 - Database (`supabase/migrations/0009`–`0041`): PostgreSQL 17 + PostGIS 3.3.7, 16 public tables, 5 public WebP/image storage buckets, automated audit script passing 25/25 checks (`scripts/comprehensive-system-audit.mjs` verified in git history `ad98e7de`).
+- Local Database Testing: Docker Supabase commands, isolated `.env.test`, offline default `pnpm test`, loopback-guarded `pnpm test:local`, and local `supabase/seed.sql` are configured. Fresh database replay remains blocked by the absence of a pre-0009 baseline and duplicate migration version prefixes; migrations `0009`–`0041` remain untouched.
 
 ### In Progress / Unfinished (`CONFIRMED`)
 - **Admin Portal (`apps/admin`)**: `PLANNED` — no source files or app package exist yet (DB schema & admin RPCs partially exist).

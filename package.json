@@ -11,7 +11,15 @@
     "dev:web": "pnpm --filter web dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "test": "vitest run"
+    "db:start": "npx supabase start",
+    "db:stop": "npx supabase stop",
+    "db:reset": "npx supabase db reset",
+    "db:status": "npx supabase status",
+    "test:offline": "vitest run tests/bagTiming.test.ts tests/mapbox.test.ts tests/envHelper.test.ts",
+    "test:local": "node scripts/test-local.mjs",
+    "test:audit": "node scripts/test-local.mjs audit",
+    "test:live": "vitest run",
+    "test": "pnpm test:offline"
   },
   "private": true,
   "keywords": [],

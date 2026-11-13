@@ -1,4 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { getEnv, getSupabaseConfig, requireAnyEnv, requireEnv } from '../scripts/lib/env.mjs';
 
 const TEST_KEYS = [
@@ -66,6 +71,29 @@ describe('Environment Helper (scripts/lib/env.mjs)', () => {
       serviceRoleKey: 'service-test',
       databaseUrl: 'postgresql://user:pass@localhost:5432/db',
     });
+  });
+
+  it('loads .env.test before .env in test mode without overriding shell values', () => {
+    const fixtureDir = mkdtempSync(join(tmpdir(), 'gsf-env-test-'));
+    const envModuleUrl = pathToFileURL(join(process.cwd(), 'scripts/lib/env.mjs')).href;
+    try {
+      writeFileSync(join(fixtureDir, '.env.test'), 'GSF_ENV_PRIORITY=test-value\nGSF_ENV_TEST_ONLY=test-only\n');
+      writeFileSync(join(fixtureDir, '.env'), 'GSF_ENV_PRIORITY=base-value\nGSF_ENV_BASE_ONLY=base-only\nGSF_ENV_SHELL=shell-fallback\n');
+      const script = `import { loadRootEnv } from '${envModuleUrl}'; loadRootEnv({ rootDir: ${JSON.stringify(fixtureDir)} }); console.log(JSON.stringify({ priority: process.env.GSF_ENV_PRIORITY, testOnly: process.env.GSF_ENV_TEST_ONLY, baseOnly: process.env.GSF_ENV_BASE_ONLY, shell: process.env.GSF_ENV_SHELL }));`;
+      const output = execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+        encoding: 'utf8',
+        env: { ...process.env, NODE_ENV: 'test', GSF_ENV_SHELL: 'from-shell' },
+      });
+
+      expect(JSON.parse(output)).toEqual({
+        priority: 'test-value',
+        testOnly: 'test-only',
+        baseOnly: 'base-only',
+        shell: 'from-shell',
+      });
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true });
+    }
   });
 });
 

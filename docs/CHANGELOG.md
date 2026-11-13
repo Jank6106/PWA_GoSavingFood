@@ -5,10 +5,13 @@
 ## [Unreleased]
 
 ### Added
+- Added Docker Supabase database commands, a local test seed, and ignored `.env.test` configuration template.
+- Added local and offline test commands; `pnpm test` now runs offline unit suites by default and local integration commands enforce loopback URLs.
 - Project Memory Pack documentation structure (`README.md`, `AI_CONTEXT.md`, `AGENTS.md`, `docs/*.md`, `docs/adr/ADR-001..005.md`).
 - Centralized root `.env` loader [`scripts/lib/env.mjs`](../scripts/lib/env.mjs) (with TypeScript declarations [`scripts/lib/env.d.ts`](../scripts/lib/env.d.ts)) and offline unit test [`tests/envHelper.test.ts`](../tests/envHelper.test.ts).
 
 ### Changed
+- Documented migration-history blockers that prevent a clean Docker database replay without changing the protected migration files.
 - Extracted hardcoded `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SUPABASE_URL`, and `DATABASE_URL` credentials out of `tests/` (`auth-backend.test.ts`, `production-backend-audit.test.ts`) and 13 `scripts/*.mjs` files into `.env` via `scripts/lib/env.mjs`.
 - Replaced hardcoded PayOS fallback bank account/holder values in [`apps/web/app/api/payos/create-payment/route.ts`](../apps/web/app/api/payos/create-payment/route.ts) with `PAYOS_BANK_ACCOUNT` / `PAYOS_ACCOUNT_NAME` env vars, and removed the hardcoded fallback bank account from [`apps/customer/src/features/checkout/pages/PaymentPage.tsx`](../apps/customer/src/features/checkout/pages/PaymentPage.tsx).
 - Replaced personal sample bank info in [`scripts/test-cancellation-lifecycle.mjs`](../scripts/test-cancellation-lifecycle.mjs) with synthetic test fixture values.
