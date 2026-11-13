@@ -1,6 +1,6 @@
 import { CheckCircle2, Clock, Headphones, ImageUp, KeyRound, LogOut, Mail, MapPin, MessageSquare, Pencil, Phone, Save, Send, ShoppingBag, Sparkles, Star, Trash2, X } from 'lucide-react';
-import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
-import { compressImageFile, optimizeImageUrl } from '../../services/utils';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { compressImageFile, optimizeImageUrl } from '../../utils/browser';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../../types';
 import { Button, Field, Modal, TextAreaField } from '../ui';
 
@@ -135,7 +135,11 @@ export function StoreInfoFormCard({ profile, saving, onSave }: { profile: StoreP
     openingHours: profile.openingHours || '08:00',
     closingHours: profile.closingHours || '22:00',
   });
-  useEffect(() => {
+  const [profileInputs, setProfileInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (profileInputs === null || [profile].some((value, index) => !Object.is(value, profileInputs[index]))) {
+    setProfileInputs([profile]);
+
     setForm({
       name: profile.name,
       description: profile.description,
@@ -144,7 +148,8 @@ export function StoreInfoFormCard({ profile, saving, onSave }: { profile: StoreP
       openingHours: profile.openingHours || '08:00',
       closingHours: profile.closingHours || '22:00',
     });
-  }, [profile]);
+
+  }
   const startEditing = () => {
     setForm({
       name: profile.name,
@@ -224,14 +229,19 @@ export function ChangePasswordModal({
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const [openInputs, setOpenInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (openInputs === null || [open].some((value, index) => !Object.is(value, openInputs[index]))) {
+    setOpenInputs([open]);
+
     if (open) {
       setOldPassword('');
       setNewPassword('');
       setConfirm('');
       setError('');
     }
-  }, [open]);
+
+  }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -332,20 +342,30 @@ export function SupportModal({
   const [phone, setPhone] = useState(contactPhone || '');
   const [submittedTicket, setSubmittedTicket] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [phoneInputs, setPhoneInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (phoneInputs === null || [contactPhone, phone].some((value, index) => !Object.is(value, phoneInputs[index]))) {
+    setPhoneInputs([contactPhone, phone]);
+
     if (contactPhone && !phone) {
       setPhone(contactPhone);
     }
-  }, [contactPhone, phone]);
 
-  useEffect(() => {
+  }
+
+  const [ticketInputs, setTicketInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (ticketInputs === null || [open].some((value, index) => !Object.is(value, ticketInputs[index]))) {
+    setTicketInputs([open]);
+
     if (!open) {
       setSubmittedTicket(null);
       setSubject('');
       setDescription('');
       setActiveTab('form');
     }
-  }, [open]);
+
+  }
 
   const submit = (event: FormEvent) => {
     event.preventDefault();

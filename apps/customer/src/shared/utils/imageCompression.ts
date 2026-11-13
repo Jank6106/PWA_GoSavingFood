@@ -1,3 +1,4 @@
+import { errorMessage } from './errors';
 /**
  * Helper nén ảnh đại diện phía client (Client-side Image Optimization)
  * - Tự động crop tâm (Center Crop) vuông 1:1
@@ -142,8 +143,8 @@ export function compressAvatarFile(
           };
 
           tryExportWebp();
-        } catch (err: any) {
-          reject(new Error(err?.message || 'Lỗi trong quá trình nén ảnh.'));
+        } catch (err: unknown) {
+          reject(new Error(errorMessage(err) || 'Lỗi trong quá trình nén ảnh.', { cause: err }));
         }
       };
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffectEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import {
@@ -454,6 +454,10 @@ export function SearchPage({
   }, [effectiveMerchants, bags, selectedMerchantId]);
 
   // 1. Khởi tạo Mapbox Map CHỈ 1 LẦN DUY NHẤT
+  const readMapCenter = useEffectEvent(() => centerCoords);
+  const updateMapUserMarker = useEffectEvent(updateUserMarker);
+  const renderMapClusters = useEffectEvent(renderClusterMarkers);
+
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -462,7 +466,7 @@ export function SearchPage({
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: centerCoords,
+      center: readMapCenter(),
       zoom: 13.5,
       attributionControl: false,
     });
@@ -471,13 +475,13 @@ export function SearchPage({
 
     map.on('load', () => {
       map.resize();
-      updateUserMarker(centerCoords);
-      renderClusterMarkers();
+      updateMapUserMarker(readMapCenter());
+      renderMapClusters();
     });
 
     // Khi người dùng di chuyển hoặc zoom bản đồ xong -> tự động tính toán lại cụm và bung logo
     map.on('moveend', () => {
-      renderClusterMarkers();
+      renderMapClusters();
     });
 
     // Click vào khoảng trống bản đồ -> bỏ chọn quán đang mở
@@ -498,16 +502,19 @@ export function SearchPage({
     };
   }, []);
 
+  const cameraLng = centerCoords[0];
+  const cameraLat = centerCoords[1];
+
   // 2. Di chuyển camera khi centerCoords thay đổi
   useEffect(() => {
     if (!mapRef.current) return;
-    updateUserMarker(centerCoords);
+    updateUserMarker([cameraLng, cameraLat]);
     mapRef.current.flyTo({
-      center: centerCoords,
+      center: [cameraLng, cameraLat],
       zoom: 14,
       essential: true,
     });
-  }, [centerCoords[0], centerCoords[1], updateUserMarker]);
+  }, [cameraLng, cameraLat, updateUserMarker]);
 
   // 3. Cập nhật lại markers khi danh sách cửa hàng/túi hoặc quán đang chọn thay đổi
   useEffect(() => {

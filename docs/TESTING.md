@@ -34,6 +34,8 @@ The new `0000_baseline_schema.sql` exports the Cloud schema without data and add
 Verified 2026-11-13: offline 14/14 tests; local 42/42 tests across five suites.
 Clean local reset applied 42 migrations and seed; Studio returned HTTP 200. Build passed from Turbo cache. Workspace lint reported 113 errors and 3 warnings in unchanged merchant files.
 
+Reverified after ESLint cleanup on 2026-11-14: Merchant and workspace lint both completed with zero errors/warnings, all three apps built, offline 14/14, Docker integration 42/42 and Playwright E2E 9/9 passed. No lint rules were disabled and no migrations were changed by this cleanup. See `docs/reports/ESLINT_CLEANUP_2026-11-14.md` for the current acceptance results and file list; the preceding reset result is historical.
+
 ### Live Supabase Integration & Audit Suites (Run with Care)
 > [!WARNING]
 > The suites below execute directly against the **live Supabase project** (`lblwvbedtlxjtkcuxmsf.supabase.co`). They create/delete temporary test users and orders during execution. All credentials (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`) are loaded from root `.env` via `scripts/lib/env.mjs`.

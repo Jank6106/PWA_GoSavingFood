@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffectEvent, useEffect, useState } from 'react';
 import {
   AlertCircle,
   Calendar,
@@ -74,7 +74,7 @@ function formatPickupTimeDisplay(pickupTime?: string): string {
         const year = d.getFullYear();
         return `${hours}:${minutes} · ${day}/${month}/${year}`;
       }
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
   }
   return pickupTime;
 }
@@ -109,12 +109,17 @@ export function OrderDetailPage({
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [orderInputs, setOrderInputs] = useState<readonly unknown[] | null>(null);
+  // Prop-backed drafts are reset before stale values can be committed.
+  if (orderInputs === null || [order].some((value, index) => !Object.is(value, orderInputs[index]))) {
+    setOrderInputs([order]);
+
     setCurrentOrder(order);
     setNoteValue(order.note || '');
-  }, [order]);
 
-  useEffect(() => {
+  }
+
+  const checkPendingOrder = useEffectEvent(() => {
     if (currentOrder.status === 'pending_payment' || currentOrder.paymentStatus === 'pending') {
       // 1. Kiểm tra nếu đã quá hạn TTL thì chuyển sang expired
       if (
@@ -149,6 +154,11 @@ export function OrderDetailPage({
           }
         });
     }
+  });
+  useEffect(() => {
+    // Initial tick of the external payment/expiry check, cancelled on order changes.
+    const timer = window.setTimeout(() => checkPendingOrder(), 0);
+    return () => window.clearTimeout(timer);
   }, [currentOrder.id]);
 
   const showToast = (msg: string) => {

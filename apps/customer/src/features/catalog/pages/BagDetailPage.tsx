@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffectEvent, useEffect, useMemo, useState } from 'react';
 import {
   ChevronLeft,
   Sparkles,
@@ -62,7 +62,8 @@ export function BagDetailPage({
   }, []);
 
   // Tính toán thời điểm hết hạn thực tế từ backend hoặc khung giờ pickupEnd của hôm nay
-  const targetExpiryMs = useMemo(() => {
+  const [targetExpiryMs, setTargetExpiryMs] = useState(0);
+  const refreshExpiry = useEffectEvent(() => { setTargetExpiryMs((() => {
     if (!bag) return 0;
     // 1. Nếu backend có expiresAt hợp lệ trong vòng 36h tới (không phải mock +7 ngày)
     if (bag.expiresAt) {
@@ -86,6 +87,11 @@ export function BagDetailPage({
     }
 
     return 0;
+  })()); });
+  useEffect(() => {
+    // Read wall-clock time on a scheduled tick rather than during rendering.
+    const timer = window.setTimeout(() => refreshExpiry(), 0);
+    return () => window.clearTimeout(timer);
   }, [bag?.expiresAt, bag?.pickupEnd]);
 
   const countdown = useMemo(() => {
@@ -100,7 +106,7 @@ export function BagDetailPage({
     return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
   }, [bag, now, targetExpiryMs]);
 
-  const timing = useMemo(() => getBagTimingInfo(bag), [bag, now]);
+  const timing = useMemo(() => getBagTimingInfo(bag, now > 0 ? new Date(now) : undefined), [bag, now]);
 
   // Tính khoảng cách thực tế từ vị trí đã xác nhận trên Map tới tọa độ của quán
   const distanceFormatted = useMemo(() => {
@@ -125,7 +131,7 @@ export function BagDetailPage({
       return `${(m / 1000).toFixed(1)} km`;
     }
     return null;
-  }, [userCoords, merchant?.latitude, merchant?.longitude, merchant?.distance]);
+  }, [userCoords, merchant]);
 
   const categoryTip = useMemo(() => {
     if (bag?.category === 'meat') {

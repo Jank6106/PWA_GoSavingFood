@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { errorMessage } from '../../../shared/utils/errors';
+import { useState, useRef } from 'react';
 import {
   Bell,
   Camera,
@@ -50,6 +51,10 @@ export function ProfilePage(props: ProfilePageProps) {
     return <AuthRequiredState onLogin={props.onLogin} />;
   }
 
+  return <AuthenticatedProfilePage {...props} user={props.user} />;
+}
+
+function AuthenticatedProfilePage(props: ProfilePageProps & {user: User}) {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(props.user.name);
@@ -59,20 +64,30 @@ export function ProfilePage(props: ProfilePageProps) {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Sync name, phone, email with props.user if updated externally (e.g. from onboarding modal)
-  useEffect(() => {
+  const [userInputs, setUserInputs] = useState<readonly unknown[] | null>(null);
+  // Prop-backed drafts are reset before stale values can be committed.
+  if (userInputs === null || [props.user?.name, props.user?.phone, props.user?.email, isEditing].some((value, index) => !Object.is(value, userInputs[index]))) {
+    setUserInputs([props.user?.name, props.user?.phone, props.user?.email, isEditing]);
+
     if (!isEditing && props.user) {
       setName(props.user.name || '');
       setPhone(props.user.phone || '');
       setEmail(props.user.email || '');
     }
-  }, [props.user?.name, props.user?.phone, props.user?.email, isEditing]);
+
+  }
 
   // Sync avatar with props.user.avatar if updated externally
-  useEffect(() => {
+  const [avatarInputs, setAvatarInputs] = useState<readonly unknown[] | null>(null);
+  // Prop-backed drafts are reset before stale values can be committed.
+  if (avatarInputs === null || [props.user?.avatar, isUploadingAvatar].some((value, index) => !Object.is(value, avatarInputs[index]))) {
+    setAvatarInputs([props.user?.avatar, isUploadingAvatar]);
+
     if (!isUploadingAvatar) {
       setAvatar(props.user?.avatar || '');
     }
-  }, [props.user?.avatar, isUploadingAvatar]);
+
+  }
 
   // New states for modals and notification switch
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
@@ -147,12 +162,12 @@ export function ProfilePage(props: ProfilePageProps) {
       setTimeout(() => {
         setToastFeedback(null);
       }, 2500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[ProfilePage] Upload avatar error:', err);
       // Rollback về ảnh cũ khi thất bại
       setAvatar(previousAvatar);
       props.onUpdateProfile?.({ avatar: previousAvatar });
-      setToastFeedback(err?.message || 'Không thể tải ảnh lên. Vui lòng thử lại.');
+      setToastFeedback(errorMessage(err) || 'Không thể tải ảnh lên. Vui lòng thử lại.');
       setTimeout(() => {
         setToastFeedback(null);
       }, 3200);

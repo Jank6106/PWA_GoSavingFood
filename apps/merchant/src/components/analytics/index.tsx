@@ -42,7 +42,7 @@ export function PeriodFilterBar({
   const [customModalOpen, setCustomModalOpen] = useState(false);
 
   const [startDate, setStartDate] = useState(
-    customRange?.start || new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
+    () => customRange?.start || new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
   );
   const [endDate, setEndDate] = useState(
     customRange?.end || new Date().toISOString().slice(0, 10)

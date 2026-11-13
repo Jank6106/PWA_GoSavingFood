@@ -102,7 +102,7 @@ export function useAuth() {
     } catch (reason) {
       const msg = reason instanceof Error ? reason.message : 'Không thể đổi mật khẩu.';
       setError(msg);
-      throw new Error(msg);
+      throw new Error(msg, { cause: reason });
     } finally {
       setLoading(false);
     }
@@ -164,3 +164,5 @@ export function useAuth() {
     clearError: () => setError(null),
   };
 }
+
+export { getCachedMerchantUser } from '../services/auth.service';

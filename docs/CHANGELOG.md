@@ -14,6 +14,7 @@
 - Centralized root `.env` loader [`scripts/lib/env.mjs`](../scripts/lib/env.mjs) (with TypeScript declarations [`scripts/lib/env.d.ts`](../scripts/lib/env.d.ts)) and offline unit test [`tests/envHelper.test.ts`](../tests/envHelper.test.ts).
 
 ### Changed
+- 2026-11-14: Cleared Merchant ESLint debt (113 errors, 3 warnings) and existing Customer/Web diagnostics without disabling rules. Added typed database payloads and unknown-error narrowing, corrected React hook/ref usage, and moved Merchant browser utilities out of services to preserve UI layering. Verified workspace lint with zero diagnostics, all three builds, offline 14/14, Docker integration 42/42, and Playwright E2E 9/9. See `docs/reports/ESLINT_CLEANUP_2026-11-14.md` for changed files and terminal excerpts.
 - Merchant startup and login now verify the server-side profile role before resolving a store; unverified local cache cannot open the dashboard. Auth event profile requests run after the SDK auth lock is released. Added explicit E2E gateway/base-path settings and kept Vitest specs separate.
 - Docker acceptance: clean reset applied 42 migrations and seed; Studio HTTP 200; zero leftover test users. Workspace build passed from Turbo cache. Workspace lint failed in unchanged merchant source (113 errors, 3 warnings).
 - Local Docker SMTP/OAuth configuration is isolated; production audit is explicit, and live tests bypass `.env.test`. Verified offline 14/14 and local 42/42 tests.

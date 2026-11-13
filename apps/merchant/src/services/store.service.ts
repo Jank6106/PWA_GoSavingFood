@@ -1,3 +1,4 @@
+import type { StoreRow } from '../types/database';
 import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../types';
 import { deleteStorageObjectByUrl } from './bag.service';
 import { fetchCompletedBagQuantity } from './order.service';
@@ -61,7 +62,7 @@ export function setCachedStoreProfile(storeId: string, profile: StoreProfile | n
   }
 }
 
-const mapStoreRow = (store: any): StoreProfile => ({
+const mapStoreRow = (store: StoreRow): StoreProfile => ({
   id: store.id,
   userId: store.owner_user_id || '',
   name: store.name,
@@ -151,7 +152,7 @@ export async function updateStoreProfile(
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Chưa đăng nhập tài khoản cửa hàng.');
 
-  const updatePayload: Record<string, any> = {
+  const updatePayload: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
   if (input.name !== undefined) updatePayload.name = input.name;
@@ -272,7 +273,7 @@ export async function updateStoreImages(
   input: StoreImageUpdate
 ): Promise<StoreProfile | null> {
   const currentStore = await fetchStoreProfile(storeId);
-  const updatePayload: Record<string, any> = {};
+  const updatePayload: Record<string, unknown> = {};
 
   if (input.coverImage) {
     updatePayload.banner_url = await uploadStoreImageToStorage(
