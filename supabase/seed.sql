@@ -3,8 +3,27 @@
 DO $$
 DECLARE
   merchant_id uuid := 'd9c04baf-e9db-4ed1-8a59-6f5a94bb5521';
+  customer_id uuid := 'c1000000-0000-0000-0000-000000000001';
   store_id uuid := '2a9a946b-5984-4559-b0ed-5a56b5d4b946';
 BEGIN
+  INSERT INTO auth.users (
+    id, aud, role, email, encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  ) VALUES (
+    customer_id, 'authenticated', 'authenticated', 'customer.local@gosavingfood.test',
+    crypt('LocalTest123!', gen_salt('bf')), now(),
+    '{"provider":"email","providers":["email"],"role":"customer"}'::jsonb,
+    '{"name":"Local Test Customer","phone":"0987654321","role":"customer"}'::jsonb,
+    now(), now()
+  ) ON CONFLICT (id) DO UPDATE SET
+    encrypted_password = EXCLUDED.encrypted_password,
+    raw_app_meta_data = EXCLUDED.raw_app_meta_data,
+    raw_user_meta_data = EXCLUDED.raw_user_meta_data,
+    updated_at = now();
+
+  INSERT INTO public.users (id, name, email, phone, role, updated_at)
+  VALUES (customer_id, 'Local Test Customer', 'customer.local@gosavingfood.test', '0987654321', 'customer', now())
+  ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, phone = EXCLUDED.phone, role = 'customer';
   INSERT INTO auth.users (
     id, aud, role, email, encrypted_password, email_confirmed_at,
     raw_app_meta_data, raw_user_meta_data, created_at, updated_at
@@ -16,10 +35,22 @@ BEGIN
     now(), now()
   ) ON CONFLICT (id) DO UPDATE SET
     email = EXCLUDED.email,
+    encrypted_password = EXCLUDED.encrypted_password,
     email_confirmed_at = EXCLUDED.email_confirmed_at,
     raw_app_meta_data = EXCLUDED.raw_app_meta_data,
     raw_user_meta_data = EXCLUDED.raw_user_meta_data,
     updated_at = now();
+
+  -- GoTrue expects empty token strings and email identities for seeded logins.
+  UPDATE auth.users SET instance_id = '00000000-0000-0000-0000-000000000000',
+    confirmation_token = '', recovery_token = '',
+    email_change = '', email_change_token_new = '', email_change_token_current = ''
+  WHERE id IN (merchant_id, customer_id);
+  INSERT INTO auth.identities (id, user_id, provider_id, provider, identity_data, created_at, updated_at)
+  SELECT id, id, id::text, 'email',
+    jsonb_build_object('sub', id::text, 'email', email, 'email_verified', true), now(), now()
+  FROM auth.users WHERE id IN (merchant_id, customer_id)
+  ON CONFLICT (provider_id, provider) DO UPDATE SET identity_data = EXCLUDED.identity_data;
 
   INSERT INTO public.stores (
     id, owner_user_id, name, description, phone, address, location,

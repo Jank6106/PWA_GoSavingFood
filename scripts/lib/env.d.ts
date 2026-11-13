@@ -1,6 +1,6 @@
 export const ROOT_DIR: string;
 
-export function loadRootEnv(): NodeJS.ProcessEnv;
+export function loadRootEnv(options?: { rootDir?: string }): NodeJS.ProcessEnv;
 export function getEnv(name: string, fallback?: string): string;
 export function requireEnv(name: string, context?: string): string;
 export function requireAnyEnv(names: string[], context?: string): string;

@@ -30,16 +30,16 @@ pnpm dev:merchant  # Vite on http://localhost:5174
 ```bash
 pnpm build         # Runs `turbo build`: builds @gosavingfood/ui -> web, customer, merchant
 pnpm lint          # Runs `turbo lint` across packages
-pnpm test          # Runs `vitest run`
+pnpm test          # Offline unit suites only
 ```
 - **Caveat on `apps/web` build**: `apps/web/next.config.ts` sets `typescript: { ignoreBuildErrors: true }`. Run `tsc --noEmit` inside `apps/web` manually if strict TypeScript validation is desired.
-- **Caveat on `pnpm test`**: `tests/auth-backend.test.ts` and `tests/production-backend-audit.test.ts` execute live requests against production Supabase (`lblwvbedtlxjtkcuxmsf.supabase.co`). `tests/bagTiming.test.ts` and `tests/mapbox.test.ts` are pure unit tests.
+- Run backend integration with `pnpm test:local`; Cloud verification is explicit via `pnpm test:live` or `pnpm test:audit`.
 
 ---
 
 ## 3. Production Hosting & Infrastructure (`CONFIRMED`)
 
-- **Docker**: None. No `Dockerfile` or `docker-compose.yml` exists in the repository.
+- **Docker**: Supabase CLI manages the local test stack; production hosting remains Vercel/Supabase Cloud.
 - **CI/CD**: None. No `.github/workflows` or automated CI pipeline exists in the repository.
 - **Vercel Deployments** (3 separate projects inferred from 3 `vercel.json` files + root `vercel.json`):
   1. **`apps/web`** (root `vercel.json` -> `pnpm --filter=web build`, output `apps/web/.next`): Primary domain **`gosavingfood.app`** (`www.gosavingfood.app` permanently redirects to apex). Rewrites `/explore/*` to `CUSTOMER_APP_URL` (`https://gsf-customer-pwa.vercel.app`) and `/merchant/*` to `MERCHANT_APP_URL` (`https://gsf-merchant-pwa.vercel.app`).
@@ -61,8 +61,9 @@ pnpm db:stop
 
 Create the ignored root `.env.test` from `.env.test.example`, then copy the local anon and service-role keys from `pnpm db:status`. Local integration tests use this file before `.env` when `NODE_ENV=test` or `USE_LOCAL_DB=true`; values already exported by the shell still take precedence. `pnpm test:local` checks that API and database URLs are loopback hosts before it runs.
 
-> [!IMPORTANT]
-> The checked-in migration history has no baseline before `0009`, and it has duplicate version prefixes. A new Supabase project may therefore fail during migration replay. Migrations `0009`–`0041` must remain unchanged per the Docker testing plan; resolve the baseline/version-history problem in a separately reviewed migration strategy before treating a clean `db reset` as supported.
+Fresh local databases replay `0000_baseline_schema.sql`, historical migrations, then `seed.sql`. Renumbering preserves SQL bytes and lexical order. The custom Cloud runner recognizes old filenames through `supabase/migration-renames.json` and skips the bootstrap snapshot on existing databases. Never repair or renumber Cloud migration history to match the local CLI ledger.
+
+Local SMTP uses Mailpit (54324), and external Google OAuth is disabled in the local config. If pnpm is absent from PATH, use `corepack.cmd pnpm` on Windows. Studio: http://localhost:54323.
 
 ## 5. Database Migrations (`CONFIRMED`)
 

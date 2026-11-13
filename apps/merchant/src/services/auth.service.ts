@@ -10,6 +10,14 @@ import { delay, optimizeImageUrl } from './utils';
 const SETUP_KEY_PREFIX = 'gsf-merchant-setup-completed';
 export const MERCHANT_CACHE_KEY = 'gsf_merchant_cached_user';
 
+async function requireMerchantRole(userId: string): Promise<void> {
+  const { data, error } = await supabase.from('users').select('role').eq('id', userId).maybeSingle();
+  if (error || data?.role !== 'merchant') {
+    setCachedMerchantUser(null);
+    throw new Error('Tài khoản này không có quyền quản lý cửa hàng.');
+  }
+}
+
 const getSetupKey = (userId: string) => `${SETUP_KEY_PREFIX}:${userId}`;
 export const isSetupCompleted = (userId: string) =>
   typeof window !== 'undefined' && window.localStorage.getItem(getSetupKey(userId)) === 'true';
@@ -243,6 +251,7 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
   }
 
   if (user) {
+    await requireMerchantRole(user.id);
     const store = await ensureUserStore(user, username);
     const isComplete = isStoreProfileComplete(store, user);
     const storeId = store?.id || 'b0000000-0000-0000-0000-000000000002';
@@ -524,6 +533,7 @@ export async function getCurrentMerchantSession(): Promise<AuthUser | null> {
     }
 
     const user = session.user;
+    await requireMerchantRole(user.id);
     const cached = getCachedMerchantUser();
 
     // Nếu đã có cache trùng ID:
@@ -553,7 +563,8 @@ export async function getCurrentMerchantSession(): Promise<AuthUser | null> {
     setCachedMerchantUser(authUser);
     return authUser;
   } catch {
-    return getCachedMerchantUser();
+    setCachedMerchantUser(null);
+    return null;
   }
 }
 

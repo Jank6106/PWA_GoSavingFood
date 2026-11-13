@@ -7,3 +7,6 @@
 | ADR-003 | Supabase (PostgreSQL 17 + PostGIS + Auth + Realtime + Storage) as Unified Backend | Accepted (`CONFIRMED`) | [`docs/adr/ADR-003-supabase-postgresql-postgis-backend.md`](adr/ADR-003-supabase-postgresql-postgis-backend.md) |
 | ADR-004 | PayOS VietQR Online-Only Payments (Cash Disabled) + 0đ Voucher Fast-Path | Accepted (`CONFIRMED`) | [`docs/adr/ADR-004-payos-vietqr-and-zero-vnd-voucher-flow.md`](adr/ADR-004-payos-vietqr-and-zero-vnd-voucher-flow.md) |
 | ADR-005 | State-Based Routing & Custom Service/Hook Layers in Vite PWAs | Accepted (`CONFIRMED`) | [`docs/adr/ADR-005-state-based-pwa-routing-and-service-layer.md`](adr/ADR-005-state-based-pwa-routing-and-service-layer.md) |
+
+| ADR-006 | Docker database bootstrap and migration filename compatibility | Accepted | [ADR-006](adr/ADR-006-local-database-bootstrap.md) |
+| ADR-007 | Isolated Playwright browser tests and verified Merchant startup | Accepted | [ADR-007](adr/ADR-007-local-browser-e2e.md) |

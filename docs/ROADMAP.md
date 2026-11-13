@@ -5,6 +5,8 @@
 ---
 
 ## NOW (Recently Completed / Active Stabilization — `CONFIRMED`)
+- **Browser E2E testing (2026-11-14)**: Auth/route/session/logout and voucher-zero order/Realtime/QR coverage implemented with isolated Docker fixtures. Workspace lint debt remains separate from the passing tests/build.
+- **Docker database testing**: Local baseline replay and seed implemented; offline 14/14 and local 42/42 tests verified (2026-11-13). Production audit remains separate.
 - **Customer & Merchant PWA Stabilization** (`CONFIRMED` from commits `ccc457f0`, `7b8e671a`, `e4b02942`, `da0d10f6`):
   - Goal: Eliminate mobile horizontal overflow on Merchant orders, fix order detail deep-linking from notifications, re-sync hooks on `storeId` change, fix PayOS `check-status` with numeric `paymentOrderCode`, and support 0đ voucher orders (`TMU2026`).
   - Status: Merged to `master` (`396f294c`); verified with `pnpm turbo build` and `25/25` audit script (`ad98e7de`).

@@ -4,7 +4,7 @@ import fs from "node:fs";
 
 // Nạp file .env tập trung từ thư mục gốc Monorepo
 const rootEnvPath = path.resolve(process.cwd(), process.cwd().endsWith("web") ? "../../.env" : ".env");
-if (fs.existsSync(rootEnvPath)) {
+if (process.env.E2E_LOCAL !== 'true' && fs.existsSync(rootEnvPath)) {
   process.loadEnvFile(rootEnvPath);
 }
 
@@ -64,13 +64,13 @@ const nextConfig: NextConfig = {
       // Fallback dev proxy cho merchant
       {
         source: "/merchant",
-        destination: isProd ? merchantTarget : "http://localhost:5174",
+        destination: isProd ? merchantTarget : process.env.E2E_LOCAL === 'true' ? "http://localhost:5174/merchant/" : "http://localhost:5174",
       },
       {
         source: "/merchant/:path*",
         destination: isProd
           ? `${merchantTarget}/:path*`
-          : "http://localhost:5174/:path*",
+          : process.env.E2E_LOCAL === 'true' ? "http://localhost:5174/merchant/:path*" : "http://localhost:5174/:path*",
       },
     ];
   },
