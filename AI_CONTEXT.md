@@ -21,7 +21,7 @@
 ### Project Snapshot
 - **Last reviewed**: 2026-11-14 (Hanh integration into master, preserving Customer Finder and payment lifecycle changes; see CHANGELOG for merge validation)
 - **Current version**: `1.0.0` (per root/app `package.json`; no Git semver tags exist)
-- **Current integration**: `Hanh` (`9ac8677`) merged with `master` (`6e6ef12`) in an isolated integration worktree. Merchant AI quick-fill rejects expired labels, respects store closing time and preserves the displayed rounded price. This snapshot does not establish production deployment state.
+- **Current integration**: Hanh `9ac8677` integrated into master via PR #7 (`435e3e4`), followed by integration of Hanh `364ee3a` with photo/auth optimizations. Merchant AI quick-fill rejects expired labels, respects store closing time and preserves the displayed rounded price. This snapshot does not establish production deployment state.
 - **Production status**: `INFERRED` Active / Live (`gosavingfood.app`, `gsf-customer-pwa.vercel.app`, `gsf-merchant-pwa.vercel.app`, `api.gosavingfood.app` Cloudflare proxy, Supabase project `lblwvbedtlxjtkcuxmsf` — `UNKNOWN` exact live traffic/monitoring state)
 
 ### Working (`CONFIRMED`)
@@ -30,7 +30,7 @@
 - Full monorepo build passes (`pnpm turbo build`: `web`, `customer`, `merchant`, `@gosavingfood/ui`).
 
 - Customer PWA (`apps/customer`): Email/phone & OAuth login, Mapbox search + PostGIS nearby bags/stores, cart, checkout, PayOS VietQR payment + 33-min QR cache + polling fallback, 0đ voucher flow (`TMU2026`), order tracking, notifications, reviews, account deletion.
-- Merchant PWA (`apps/merchant`): 1:1 isolated merchant-store login, first-time setup wizard, bag CRUD (`daily` & `shelf_life`) with AI Đăng Hàng photo quick-fill (OpenAI GPT vision, Gemini fallback) & closing-time discount suggestion, order lifecycle management, HTML5 QR scanner (`verify_pickup_qr`), realtime notifications, analytics dashboard, mobile-responsive order screen.
+- Merchant PWA (`apps/merchant`): 1:1 isolated merchant-store login, first-time setup wizard, bag CRUD (`daily` & `shelf_life`) with AI Đăng Hàng photo quick-fill (OpenAI GPT vision) & closing-time discount suggestion, order lifecycle management, HTML5 QR scanner (`verify_pickup_qr`), realtime notifications, analytics dashboard, mobile-responsive order screen.
 - Landing Page (`apps/web`): Editorial landing page with GSAP animations, impact calculator, iOS/Android PWA install guide modal, standalone PWA redirect to `/explore/`, and 5 PayOS API routes.
 - Database (`supabase/migrations/0009`–`0041`): PostgreSQL 17 + PostGIS 3.3.7, 16 public tables, 5 public WebP/image storage buckets, automated audit script passing 25/25 checks (`scripts/comprehensive-system-audit.mjs` verified in git history `ad98e7de`).
 - Local Database Testing: Docker Supabase runs on 54321/54322 (Studio 54323). Cloud schema-only baseline plus byte-preserved renumbered migrations support fresh replay; seed is local. Offline 14/14 and local 42/42 tests verified on 2026-11-13. Production catalog audit remains explicit and separate.

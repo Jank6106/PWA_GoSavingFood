@@ -36,14 +36,15 @@ const blobToDataUrl = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
-/** Nén ảnh cho form (640px, giống luồng upload cũ) và cho AI (1024px để đọc được nhãn hạn dùng). */
+/**
+ * Nén ảnh 1 LẦN (1024px, WebP ~0.8) dùng chung cho form và AI.
+ * Trước đây giải mã ảnh gốc 12MP hai lần (640px + 1024px) -> chậm vài giây trên điện thoại.
+ * 1024px vẫn đủ nét để AI đọc nhãn hạn dùng; ảnh bìa vẫn nhỏ (~100–200KB).
+ */
 export async function prepareBagPhoto(file: File) {
-  const [forForm, forAi] = await Promise.all([
-    compressImageToBlob(file, 640, 0.8),
-    compressImageToBlob(file, 1024, 0.85),
-  ]);
-  if (!forForm || !forAi) throw new Error('Không xử lý được ảnh, vui lòng chụp lại.');
-  return { formBlob: forForm.blob, previewUrl: forForm.previewUrl, aiBlob: forAi.blob };
+  const compressed = await compressImageToBlob(file, 1024, 0.8);
+  if (!compressed) throw new Error('Không xử lý được ảnh, vui lòng chụp lại.');
+  return { formBlob: compressed.blob, previewUrl: compressed.previewUrl, aiBlob: compressed.blob };
 }
 
 /** Ping nhẹ để route AI (Next.js dev compile / Vercel cold start) sẵn sàng trước khi chủ quán chụp ảnh. */
