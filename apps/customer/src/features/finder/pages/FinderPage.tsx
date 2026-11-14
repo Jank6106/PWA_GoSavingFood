@@ -144,7 +144,7 @@ export function FinderPage({
         </button>
 
         <div className="gsf-finder-topbar-title-block">
-          <h1 className="gsf-finder-topbar-title">Tìm món theo nhu cầu</h1>
+          <h1 className="gsf-finder-topbar-title">Bạn muốn ăn gì hôm nay?</h1>
           {onOpenLocation ? (
             <button
               type="button"

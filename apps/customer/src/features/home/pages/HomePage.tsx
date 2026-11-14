@@ -205,13 +205,13 @@ export function HomePage({
           type="button"
           className="customer-finder-trigger"
           onClick={onFinder ?? onSearch}
-          aria-label="Tìm món theo nhu cầu: ngân sách, số người, khu vực"
+          aria-label="Bạn muốn ăn gì hôm nay? Tìm theo ngân sách, số người, khu vực"
         >
           <span className="customer-finder-icon-wrap">
             <Sparkles size={18} strokeWidth={2.4} />
           </span>
           <span className="customer-finder-text">
-            <span className="customer-finder-title">Tìm món theo nhu cầu</span>
+            <span className="customer-finder-title">Bạn muốn ăn gì hôm nay?</span>
             <span className="customer-finder-desc">Theo ngân sách, số người, khung giờ nhận...</span>
           </span>
           <ArrowRight size={18} className="customer-finder-arrow" />
