@@ -19,6 +19,7 @@ import { ErrorState, Skeleton } from '@gosavingfood/ui';
 import { BagCard, MerchantCard, SectionHeading } from '../../../shared/components';
 import { isBagVisibleOnMarket } from '../../../shared/utils/bagTiming';
 import { BrandMarquee, HomeBanner } from '../components';
+import { TodayDeals } from '../components/TodayDeals';
 import type { Banner, Brand, Category, FoodCategory, Merchant, SurpriseBag } from '../../../shared/types/customer.types';
 
 const categoryIcons: Record<string, typeof UtensilsCrossed> = {
@@ -115,6 +116,7 @@ interface HomePageProps {
   isLoading: boolean;
   error: string | null;
   location: string;
+  onFinder?: () => void;
   onSearch: () => void;
   onLocation: () => void;
   onOpenBag: (bag: SurpriseBag) => void;
@@ -133,6 +135,7 @@ export function HomePage({
   isLoading,
   error,
   location,
+  onFinder,
   onSearch,
   onLocation,
   onOpenBag,
@@ -184,7 +187,7 @@ export function HomePage({
 
   return (
     <div className="customer-screen customer-home-screen">
-      {/* KHỐI 1: TỔNG HỢP BANNER + TÌM KIẾM + ĐỊA ĐIỂM TRONG 1 KHỐI DUY NHẤT (DESKTOP) */}
+      {/* KHỐI 1: TỔNG HỢP BANNER + TÌM KIẾM + TÌM MÓN THEO NHU CẦU + ĐỊA ĐIỂM TRONG 1 KHỐI DUY NHẤT (DESKTOP) */}
       <section className="customer-home-top-unified-block">
         <HomeBanner
           banners={banners}
@@ -197,12 +200,38 @@ export function HomePage({
           <span>Tìm cửa hàng hoặc túi thực phẩm...</span>
         </button>
 
+        {/* LỐI VÀO RÕ RÀNG: TÌM MÓN THEO NHU CẦU (FINDER) */}
+        <button
+          type="button"
+          className="customer-finder-trigger"
+          onClick={onFinder ?? onSearch}
+          aria-label="Tìm món theo nhu cầu: ngân sách, số người, khu vực"
+        >
+          <span className="customer-finder-icon-wrap">
+            <Sparkles size={18} strokeWidth={2.4} />
+          </span>
+          <span className="customer-finder-text">
+            <span className="customer-finder-title">Tìm món theo nhu cầu</span>
+            <span className="customer-finder-desc">Theo ngân sách, số người, khung giờ nhận...</span>
+          </span>
+          <ArrowRight size={18} className="customer-finder-arrow" />
+        </button>
+
         <button type="button" className="customer-location-card" onClick={onLocation}>
           <span className="customer-location-pin"><MapPin size={20} /></span>
           <span><small>Đang khám phá quanh</small><strong>{location}</strong></span>
           <ArrowRight size={18} />
         </button>
       </section>
+
+      {/* KHỐI: HỜI NHẤT HÔM NAY (TODAY DEALS) */}
+      <TodayDeals
+        bags={bags}
+        merchants={merchants}
+        isLoading={isBagsLoading}
+        onOpenBag={onOpenBag}
+        onAdd={onAdd}
+      />
 
       {/* TỪNG DANH MỤC THÀNH CÁC KHỐI DANH SÁCH RIÊNG BIỆT */}
       {isBagsLoading ? (
@@ -263,7 +292,7 @@ export function HomePage({
       {!isBagsLoading && !hasAnyBags && (
         <section className="customer-content-section customer-home-block">
           <div style={{ padding: '20px 16px', color: 'var(--color-text-tertiary, #888)', fontSize: 13, textAlign: 'center' }}>
-            Hiện chưa có túi cứu trợ quanh khu vực này.
+            Hiện chưa có túi giải cứu quanh khu vực này.
           </div>
         </section>
       )}

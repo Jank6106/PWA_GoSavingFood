@@ -199,7 +199,8 @@ export function SearchPage({
   onLocationChange,
 }: SearchPageProps) {
   // Chế độ xem: 'map' (bản đồ full) hoặc 'list' (danh sách món/quán gợi ý)
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [viewMode, setViewMode] = useState<'map' | 'list'>(MAPBOX_TOKEN.trim() ? 'map' : 'list');
+  const [mapUnavailable, setMapUnavailable] = useState(!MAPBOX_TOKEN.trim());
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
@@ -455,19 +456,31 @@ export function SearchPage({
 
   // 1. Khởi tạo Mapbox Map CHỈ 1 LẦN DUY NHẤT
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!mapContainerRef.current || !MAPBOX_TOKEN.trim()) return;
 
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: centerCoords,
-      zoom: 13.5,
-      attributionControl: false,
-    });
+    const showListFallback = () => {
+      setMapUnavailable(true);
+      setViewMode('list');
+    };
+    let map: mapboxgl.Map;
+    try {
+      map = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: centerCoords,
+        zoom: 13.5,
+        attributionControl: false,
+      });
+    } catch {
+      // Missing/invalid configuration or WebGL must not unmount the app.
+      const frame = requestAnimationFrame(showListFallback);
+      return () => cancelAnimationFrame(frame);
+    }
 
     mapRef.current = map;
+    map.on('error', showListFallback);
 
     map.on('load', () => {
       map.resize();
@@ -594,7 +607,7 @@ export function SearchPage({
       <div className="customer-yindii-filter-bar">
         <div className="customer-yindii-filter-scroll">
           {/* Trong List View: Item đầu tiên là button 'Map view' màu xanh (Yindii style) */}
-          {viewMode === 'list' && (
+          {viewMode === 'list' && !mapUnavailable && (
             <button
               type="button"
               className="customer-yindii-mapview-pill-btn"
@@ -877,6 +890,11 @@ export function SearchPage({
           display: viewMode === 'list' ? 'block' : 'none',
         }}
       >
+        {mapUnavailable && (
+          <p role="status" style={{ color: 'var(--color-text-secondary, #5D6B63)', fontSize: 14 }}>
+            Bản đồ hiện chưa khả dụng. Bạn vẫn có thể tìm và chọn túi trong danh sách bên dưới.
+          </p>
+        )}
         {/* Header hiển thị số lượng túi */}
         <div className="customer-yindii-list-count">
           <span>{filteredBags.length} món & túi cứu trợ quanh bạn</span>

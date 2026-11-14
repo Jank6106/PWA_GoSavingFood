@@ -15,6 +15,8 @@ pnpm test:offline
 - `tests/bagTiming.test.ts`: Tests `daily` vs `shelf_life` bag availability and expiry rules (`customer` & `merchant`).
 - `tests/mapbox.test.ts`: Tests `toLngLat` / `fromLngLat` coordinate conversion and Haversine distance calculation.
 - `tests/envHelper.test.ts`: Tests root `.env` loading and validation helpers (`scripts/lib/env.mjs`).
+- `tests/customerFinder*.test.ts`: Local Finder constraints, inventory/time/price validation, server response mocks, timeout and coordinator regressions; no real AI calls.
+- `tests/customerDeals.test.ts`: Deal ranking, metre distances and price/pickup/expiry guards. All of these run through `pnpm test`; do not replace this with an unrestricted `vitest run`, which also discovers live suites.
 
 ### Local Docker Supabase Integration & Audit Suites
 Local integration suites are guarded by `scripts/test-local.mjs`: they refuse to start unless both the API and PostgreSQL URLs resolve to loopback hosts. The root `.env.test` is ignored by Git; copy `.env.test.example` and replace the keys with the values printed by `pnpm db:start` / `pnpm db:status`.

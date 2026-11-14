@@ -19,13 +19,13 @@
 ## 2. Current State & Project Snapshot (`CONFIRMED`)
 
 ### Project Snapshot
-- **Last reviewed**: 2026-11-12
+- **Last reviewed**: 2026-11-14 (customer local preview and Mapbox configuration verified)
 - **Current version**: `1.0.0` (per root/app `package.json`; no Git semver tags exist)
-- **Current branch**: `master` (clean working tree, synced with `origin/master` at merge `396f294c`)
+- **Current implementation branch**: `Hung`, based on `2c912c4`; customer work was developed on `feat/customer-hackathon` and packaged on `Hung` for review. This snapshot does not establish remote push or production deployment state.
 - **Production status**: `INFERRED` Active / Live (`gosavingfood.app`, `gsf-customer-pwa.vercel.app`, `gsf-merchant-pwa.vercel.app`, `api.gosavingfood.app` Cloudflare proxy, Supabase project `lblwvbedtlxjtkcuxmsf` — `UNKNOWN` exact live traffic/monitoring state)
 
 ### Working (`CONFIRMED`)
-- Full monorepo build passes (`pnpm turbo build`: `web`, `customer`, `merchant`, `@gosavingfood/ui`).
+- Current customer build passes (`tsc -b && vite build`) and 85 offline tests pass. The full monorepo build was recorded in the earlier repository baseline and was not rerun for this customer-only change.
 - Customer PWA (`apps/customer`): Email/phone & OAuth login, Mapbox search + PostGIS nearby bags/stores, cart, checkout, PayOS VietQR payment + 33-min QR cache + polling fallback, 0đ voucher flow (`TMU2026`), order tracking, notifications, reviews, account deletion.
 - Merchant PWA (`apps/merchant`): 1:1 isolated merchant-store login, first-time setup wizard, bag CRUD (`daily` & `shelf_life`), order lifecycle management, HTML5 QR scanner (`verify_pickup_qr`), realtime notifications, analytics dashboard, mobile-responsive order screen.
 - Landing Page (`apps/web`): Editorial landing page with GSAP animations, impact calculator, iOS/Android PWA install guide modal, standalone PWA redirect to `/explore/`, and 5 PayOS API routes.
@@ -33,6 +33,8 @@
 - Local Database Testing: Docker Supabase commands, isolated `.env.test`, offline default `pnpm test`, loopback-guarded `pnpm test:local`, and local `supabase/seed.sql` are configured. Fresh database replay remains blocked by the absence of a pre-0009 baseline and duplicate migration version prefixes; migrations `0009`–`0041` remain untouched.
 
 ### In Progress / Unfinished (`CONFIRMED`)
+- **Customer hackathon**: Home entry + Today Deals and a lazy-loaded Finder screen are implemented and accepted for local preview (85 offline tests, customer build, scoped lint, Orca browser 390px/1440px). Back/Forward/reload no longer duplicate history writes in StrictMode. Default is an explicitly labelled local rules filter. Optional `/api/ai/customer-search` consumes normalized constraints; no AI backend/model/key is implemented or exercised here. Coordinator review is at [`docs/hackathon/customer/REVIEW.md`](docs/hackathon/customer/REVIEW.md), plan at [`docs/plans/CUSTOMER_HACKATHON_PLAN.md`](docs/plans/CUSTOMER_HACKATHON_PLAN.md). Physical-phone/PWA restart and real-AI acceptance remain pending.
+- Catalogue bags/stores now carry optional `catalogSource` (`remote` / `demo`); hardcoded fallbacks are tagged `demo`. `remote` identifies the data source only and does not verify merchant consent or partnership. Customer cache namespace is v6.
 - **Admin Portal (`apps/admin`)**: `PLANNED` — no source files or app package exist yet (DB schema & admin RPCs partially exist).
 
 ### Known Issues & Technical Debt (`CONFIRMED`)

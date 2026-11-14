@@ -5,12 +5,16 @@
 ## [Unreleased]
 
 ### Added
+- Customer hackathon: Today Deals on Home, a dedicated Finder route, local Vietnamese budget/group/category/area/pickup filtering, optional server-constraints contract, and focused offline regression suites. Server AI integration and physical-device acceptance are pending; see `hackathon/customer/REVIEW.md`.
 - Added Docker Supabase database commands, a local test seed, and ignored `.env.test` configuration template.
 - Added local and offline test commands; `pnpm test` now runs offline unit suites by default and local integration commands enforce loopback URLs.
 - Project Memory Pack documentation structure (`README.md`, `AI_CONTEXT.md`, `AGENTS.md`, `docs/*.md`, `docs/adr/ADR-001..005.md`).
 - Centralized root `.env` loader [`scripts/lib/env.mjs`](../scripts/lib/env.mjs) (with TypeScript declarations [`scripts/lib/env.d.ts`](../scripts/lib/env.d.ts)) and offline unit test [`tests/envHelper.test.ts`](../tests/envHelper.test.ts).
 
 ### Changed
+- Customer map search falls back to its searchable list when the Mapbox token is missing or the map fails to initialize/load, instead of crashing the entire app. Location selection shows a recoverable map error and keeps GPS/current-location selection usable.
+- Root `pnpm test` includes Finder, coordinator regression and customer deal suites while remaining offline. Customer fallbacks carry `catalogSource: demo`, catalogue cache uses v6, and bag cards use semantic open/add controls with honest distance/image/price states.
+- Customer navigation writes browser history outside state updaters, preventing StrictMode duplicate entries and incorrect Back/reload restoration. Finder preserves metre precision before display, including stores within 50 m. Local acceptance: 85 offline tests, customer build, scoped lint and browser mobile/desktop; evidence in `hackathon/customer/REVIEW.md`.
 - Documented migration-history blockers that prevent a clean Docker database replay without changing the protected migration files.
 - Extracted hardcoded `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SUPABASE_URL`, and `DATABASE_URL` credentials out of `tests/` (`auth-backend.test.ts`, `production-backend-audit.test.ts`) and 13 `scripts/*.mjs` files into `.env` via `scripts/lib/env.mjs`.
 - Replaced hardcoded PayOS fallback bank account/holder values in [`apps/web/app/api/payos/create-payment/route.ts`](../apps/web/app/api/payos/create-payment/route.ts) with `PAYOS_BANK_ACCOUNT` / `PAYOS_ACCOUNT_NAME` env vars, and removed the hardcoded fallback bank account from [`apps/customer/src/features/checkout/pages/PaymentPage.tsx`](../apps/customer/src/features/checkout/pages/PaymentPage.tsx).

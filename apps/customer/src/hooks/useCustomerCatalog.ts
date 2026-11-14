@@ -12,8 +12,8 @@ interface CatalogState {
   bags: SurpriseBag[];
 }
 
-const CATALOG_CACHE_KEY = 'gsf_customer_catalog_cache_v5';
-const CATALOG_TIMESTAMP_KEY = 'gsf_customer_catalog_cached_at_v5';
+const CATALOG_CACHE_KEY = 'gsf_customer_catalog_cache_v6';
+const CATALOG_TIMESTAMP_KEY = 'gsf_customer_catalog_cached_at_v6';
 const CATALOG_TTL_MS = 3 * 60 * 1000; // 3 phút
 
 function getInitialCatalog(): CatalogState {
