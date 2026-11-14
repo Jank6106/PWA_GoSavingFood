@@ -13,3 +13,5 @@
 | ADR-008 | GitHub Actions quality gate with isolated Docker databases | Accepted | [ADR-008](adr/ADR-008-local-ci-quality-gate.md) |
 
 Both branches independently assigned ADR-006. The distinct filenames and existing IDs are preserved for link compatibility; use the decision title to distinguish them.
+| ADR-009 | Stable PayOS payment identity and full reservation deadline | Accepted | [ADR-009](adr/ADR-009-payment-lifecycle.md) |
+

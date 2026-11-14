@@ -121,21 +121,6 @@ export function OrderDetailPage({
 
   const checkPendingOrder = useEffectEvent(() => {
     if (currentOrder.status === 'pending_payment' || currentOrder.paymentStatus === 'pending') {
-      // 1. Kiểm tra nếu đã quá hạn TTL thì chuyển sang expired
-      if (
-        currentOrder.paymentExpiresAt &&
-        new Date(currentOrder.paymentExpiresAt).getTime() <= Date.now()
-      ) {
-        const expiredOrder: Order = {
-          ...currentOrder,
-          status: 'expired',
-        };
-        setCurrentOrder(expiredOrder);
-        onUpdateOrder?.(expiredOrder);
-        void customerService.cleanupExpiredPendingOrders();
-        return;
-      }
-
       // 2. Tra cứu PayOS xem đã thanh toán chưa
       void customerService
         .checkPayOSStatus({

@@ -11,7 +11,7 @@ In production, `apps/customer` calls `https://gosavingfood.app/api/payos/*` (or 
 
 | Method | Endpoint | Purpose | Auth / Authz (`CONFIRMED`) | Input | Output | Error Handling |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/payos/create-payment` | Creates PayOS payment link & caches VietQR for 33m | **None** (`Missing` JWT/ownership check); CORS `*` | `{ orderId, amount, description?, items?, returnUrl?, cancelUrl? }` | `{ success, orderCode, paymentLinkId, checkoutUrl, qrCode, accountNumber, accountName, bin, amount, description }` | `400` missing fields; `500` PayOS/config error. Deduplicates concurrent `orderId` calls via in-memory `Map`. |
+| `POST` | `/api/payos/create-payment` | Creates PayOS payment link & caches VietQR for 33m | **None** (`Missing` JWT/ownership check); CORS `*` | `{ orderId, amount, description?, items?, returnUrl?, cancelUrl? }` | `{ success, orderCode, paymentLinkId, checkoutUrl, qrCode, accountNumber, accountName, bin, amount, description }` | `400` missing fields; `500` PayOS/config error. Uses a DB-reserved code across serverless workers (0042); see updated lifecycle below. |
 | `GET` | `/api/payos/check-status` | Polls PayOS `v2/payment-requests/{orderCode}` & confirms order in DB if `PAID` | **None** (`Missing` auth); CORS `*`; uses `service_role` | Query: `orderCode` (numeric `payment_order_code`) and/or `orderId` (UUID) | `{ success, status, paid, updated }` | `400` missing params or PayOS error (falls back to DB status check); `500` missing credentials. |
 | `POST` | `/api/payos/webhook` | Receives PayOS payment confirmation webhooks | PayOS `signature` HMAC-SHA256 verified (`timingSafeEqual`) | `{ data: { orderCode, paymentLinkId, ... }, signature }` or `{ test: true }` | `{ success: true, result }` | `400` invalid signature or missing `orderCode`; `500` missing key / RPC error. |
 | `GET` | `/api/payos/webhook` | Webhook health check | Public | None | `{ status: 'online', message, timestamp }` | — |
@@ -19,7 +19,7 @@ In production, `apps/customer` calls `https://gosavingfood.app/api/payos/*` (or 
 | `GET` / `POST` | `/api/payos/cleanup-expired` | Runs `cleanup_expired_pending_orders` RPC & cancels expired PayOS links | **None** (`Missing` cron/auth header); CORS `*` | None | `{ success: true, expiredCount, cancelledPayOSCount }` | `500` RPC/DB config error. |
 
 ### Important Validation Notes
-- `create-payment` strips Vietnamese diacritics from `description` and truncates to **25 ASCII characters** per PayOS limits.
+- After 0042, `create-payment` derives a stable ASCII description from the reserved numeric code; request descriptions/amounts are not authoritative.
 - `check-status` **must receive numeric `paymentOrderCode`** (not textual `GSF-...` orderCode); if `orderCode` is omitted and `orderId` is provided, the route looks up `payment_order_code` in `orders`.
 
 ---
@@ -53,3 +53,12 @@ Invoked via `supabase.rpc(name, params)` using `SUPABASE_ANON_KEY` + user JWT se
   - Mapbox GL JS vector tiles (`mapbox-gl@^3.32.0`)
 - **Supabase Cloud (`lblwvbedtlxjtkcuxmsf.supabase.co` / Cloudflare Proxy `api.gosavingfood.app`)**: Direct REST (`/rest/v1/`), Auth (`/auth/v1/`), Realtime (`/realtime/v1/`), and Storage (`/storage/v1/`) via `@supabase/supabase-js`.
 - **Resend SMTP (`RESEND_API_KEY`, `RESEND_SMTP_PASS`)**: Listed in `.env.example` (likely used in Supabase Auth SMTP settings — `UNKNOWN` if called from application code; no direct `resend` SDK import in `apps/`).
+
+
+### Payment lifecycle update (0042, 2026-11-14)
+
+After applying migration 0042, create-payment reserves one numeric code under a DB row lock and uses orders.final_amount (client amount/items are not authoritative). Reopening an existing link reconciles PayOS first; paid orders return success/paid/status/updated without a new link. Pending responses include expiresAt from DB and cached QR/account/bank fields. Legacy links without QR open their original checkout URL; recovery never cancels or allocates a new code. Provider timeouts are retryable with the same code. No in-memory lock is relied on across serverless instances.
+
+check-status resolves the DB mapping by orderId before using a browser code, confirms through the RPC only and reports updated only after DB success. It never overwrites preparing/completed/expired states directly. Late payments return REFUND_PENDING, not PAID. cancel-payment accepts only cancelled/expired unpaid DB orders and uses their stored code. cleanup-expired reconciles due provider links before the cleanup RPC. Webhooks validate successful event code and amount and no longer log raw payment payloads.
+
+reserve_payos_payment and confirm_payos_payment are service-role-only. Existing HTTP authentication/CORS debt remains; this change does not claim to resolve all PayOS API access controls.

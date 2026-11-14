@@ -54,3 +54,21 @@ Sources: [Mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini), [Na
 ## Luna switch — 2026-11-14
 
 Primary `gpt-6-luna`, fallback `gpt-5.4-mini`; explicitly use reasoning effort `none` to preserve the extraction latency budget (Luna otherwise defaults to medium). Live adapter tests: Luna text 2034 ms, correct 2 people/100000 VND/vegetarian/20:00; Luna synthetic-label vision 1391 ms, both MFG/EXP dates correct; forced invalid primary fell back to Mini in 2231 ms. Single samples, not quality/latency benchmarks. Historical Mini/Nano results above are retained. [Luna documentation](https://developers.openai.com/api/docs/models/gpt-6-luna).
+
+
+## Vercel Production configuration — 2026-11-14
+
+Configured OPENAI_API_KEY (server-side sensitive), OPENAI_MODEL=gpt-6-luna and OPENAI_FALLBACK_MODELS=gpt-5.4-mini for Production on gsf_landingpage. Enabled VITE_CUSTOMER_FINDER_API_ENABLED=true on gsf-customer-pwa. Values came from the user-supplied env file; only these four AI-related variables were updated. Existing database/payment configuration was preserved.
+
+Redeployed each project's current Production revision to apply environment changes:
+- Web: dpl_2ZbPvTGcffx9rQBMnAKB4JdtTx72 — READY.
+- Customer: dpl_2w2NXMVw3TNCCwfk84GeeGDzyZXe — READY.
+
+Verification: OpenAI model access for the supplied key returned success; GET https://gosavingfood.app/api/ai/customer-search returned HTTP 200 with configured=true and requiresAuth=true; unauthenticated POST returned HTTP 401. No authenticated production inference was performed. Open https://gosavingfood.app/explore/?view=finder and sign in to use AI search. Supabase secrets were not changed because this model adapter runs on Vercel.
+
+
+## Production model switch — 2026-11-14
+
+At the user's request, Production now uses OPENAI_MODEL=gpt-6.1-terra and OPENAI_FALLBACK_MODELS=gpt-6-luna. The existing sensitive OPENAI_API_KEY was preserved; the placeholder in the user's example was not stored as a key. Customer's Finder flag remains enabled.
+
+Both model IDs were accessible with the existing key. Backend redeployment: dpl_5UaEecHgmdWTnXcPnxNzkks6M89i. This environment override supersedes the earlier Production Luna/Mini chain; repository defaults are unchanged. No source commit/push is required to activate the Vercel environment override.

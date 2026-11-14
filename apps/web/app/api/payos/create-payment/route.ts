@@ -1,270 +1,91 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
-import { createClient } from '@supabase/supabase-js';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders });
-}
-
-function createSignature(
-  data: {
-    amount: number;
-    cancelUrl: string;
-    description: string;
-    orderCode: number;
-    returnUrl: string;
-  },
-  key: string
-) {
-  const signData = `amount=${data.amount}&cancelUrl=${data.cancelUrl}&description=${data.description}&orderCode=${data.orderCode}&returnUrl=${data.returnUrl}`;
-  return crypto.createHmac('sha256', key).update(signData).digest('hex');
-}
-
-// In-memory lock để deduplicate concurrent requests cho cùng một orderId (tránh tạo trùng đơn trên PayOS)
-const inFlightRequests = new Map<string, Promise<unknown>>();
-
+import crypto from 'node:crypto';
+import { corsHeaders, isSettled, paymentDB, payosRequest, reconcilePayment } from '../payment';
+export async function OPTIONS() { return NextResponse.json({}, { headers: corsHeaders }); }
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { orderId, amount, description, items, returnUrl, cancelUrl } = body;
-
-    if (!orderId || !amount) {
-      return NextResponse.json(
-        { success: false, error: 'orderId and amount are required' },
-        { status: 400, headers: corsHeaders }
-      );
+    const { orderId } = await request.json();
+    if (typeof orderId !== 'string' || !/^[0-9a-f-]{36}$/i.test(orderId)) {
+      return NextResponse.json({ success: false, error: 'Invalid orderId' }, { status: 400, headers: corsHeaders });
     }
-
-    // 1. Deduplicate concurrent requests (React StrictMode hoặc double-click)
-    if (inFlightRequests.has(orderId)) {
-      console.log(`[PayOS] Deduplicating concurrent create-payment for orderId: ${orderId}`);
-      try {
-        const sharedResult = await inFlightRequests.get(orderId);
-        return NextResponse.json(sharedResult, { headers: corsHeaders });
-      } catch (err: unknown) {
-        const errMsg = err instanceof Error ? err.message : 'Payment creation failed';
-        return NextResponse.json(
-          { success: false, error: errMsg },
-          { status: 500, headers: corsHeaders }
-        );
-      }
+    const db = paymentDB();
+    const { data: order, error } = await db.rpc('reserve_payos_payment', { p_order_id: orderId });
+    if (error || !order) throw new Error('Không thể tải đơn hàng.');
+    const settled = () => NextResponse.json({ success: true, paid: true, status: 'PAID', updated: true }, { headers: corsHeaders });
+    if (isSettled(order)) return settled();
+    if (order.status !== 'pending_payment' || order.payment_status !== 'pending') {
+      return NextResponse.json({ success: false, error: 'Đơn hàng không còn chờ thanh toán.' }, { status: 409, headers: corsHeaders });
     }
-
-    // 2. NGAY LẬP TỨC đăng ký Promise xử lý vào Map TRƯỚC BẤT KỲ AWAIT NÀO!
-    let resolveInFlight!: (val: unknown) => void;
-    let rejectInFlight!: (err: unknown) => void;
-    const inFlightPromise = new Promise((resolve, reject) => {
-      resolveInFlight = resolve;
-      rejectInFlight = reject;
-    });
-    inFlightRequests.set(orderId, inFlightPromise);
-
-    (async () => {
-      try {
-        const clientId = process.env.PAYOS_CLIENT_ID;
-        const apiKey = process.env.PAYOS_API_KEY;
-        const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
-
-        if (!clientId || !apiKey || !checksumKey) {
-          throw new Error('PayOS credentials not configured on server');
-        }
-
-        // PayOS yêu cầu orderCode là số nguyên (tối đa 9007199254740991)
-        // Dùng timestamp 6 chữ số cuối + 2 số ngẫu nhiên để tránh trùng
-        const orderCode = Number(String(Date.now()).slice(-6) + Math.floor(Math.random() * 90 + 10));
-
-        // Description tối đa 25 ký tự, không dấu
-        const cleanDesc = (description || `GSF ${String(orderCode).slice(-4)}`)
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-zA-Z0-9 -]/g, '')
-          .trim()
-          .slice(0, 25);
-
-        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        const supabaseAdmin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
-
-        const fallbackBankAccount = process.env.PAYOS_BANK_ACCOUNT || '';
-        const fallbackAccountName = process.env.PAYOS_ACCOUNT_NAME || 'GoSavingFood';
-        const formatVirtualAccount = (raw: string) =>
-          raw ? (raw.startsWith('V3CAS') ? raw : `V3CAS${raw}`) : '';
-
-        // Kiểm tra xem đơn hàng đã được tạo link thanh toán trước đó hay chưa (Idempotency)
-        if (supabaseAdmin) {
-          const { data: existingOrder } = await supabaseAdmin
-            .from('orders')
-            .select('payment_order_code, payment_link_id, checkout_url, payos_qr_code, payos_description, payos_account_number, status, payment_expires_at')
-            .eq('id', orderId)
-            .single();
-
-          if (
-            existingOrder?.payment_order_code &&
-            existingOrder?.checkout_url &&
-            existingOrder?.payos_qr_code &&
-            existingOrder?.status === 'pending_payment' &&
-            existingOrder?.payment_expires_at &&
-            new Date(existingOrder.payment_expires_at).getTime() > Date.now()
-          ) {
-            console.log(`[PayOS] Order ${orderId} has valid cached PayOS QR (${existingOrder.payment_order_code}). Reusing.`);
-            const vaReusedAcc = formatVirtualAccount(
-              String(existingOrder.payos_account_number || fallbackBankAccount)
-            );
-            resolveInFlight({
-              success: true,
-              orderCode: existingOrder.payment_order_code,
-              paymentLinkId: existingOrder.payment_link_id,
-              checkoutUrl: existingOrder.checkout_url,
-              qrCode: existingOrder.payos_qr_code,
-              accountNumber: vaReusedAcc,
-              accountName: fallbackAccountName,
-              bin: '970418',
-              amount,
-              description: existingOrder.payos_description || cleanDesc,
-            });
-            return;
-          }
-
-          // Nếu có mã cũ nhưng thiếu payos_qr_code (đơn cũ trước khi có cache), hủy mã cũ trên PayOS để tạo mã mới chuẩn 100%
-          if (existingOrder?.payment_order_code && !existingOrder?.payos_qr_code) {
-            try {
-              await fetch(`https://api-merchant.payos.vn/v2/payment-requests/${existingOrder.payment_order_code}/cancel`, {
-                method: 'POST',
-                headers: {
-                  'x-client-id': clientId,
-                  'x-api-key': apiKey,
-                  'Content-Type': 'application/json',
-                  'User-Agent': 'GoSavingFood/1.0',
-                },
-                body: JSON.stringify({ cancellationReason: 'Tạo lại mã thanh toán mới có đầy đủ QR' }),
-              });
-            } catch {}
-          }
-        }
-
-        interface PaymentItem {
-          name?: string;
-          quantity?: number;
-          price?: number;
-        }
-
-        const payload: {
-          orderCode: number;
-          amount: number;
-          description: string;
-          cancelUrl: string;
-          returnUrl: string;
-          signature?: string;
-          items?: Array<{ name: string; quantity: number; price: number }>;
-        } = {
-          orderCode,
-          amount: Math.round(amount),
-          description: cleanDesc,
-          cancelUrl: cancelUrl || 'https://gosavingfood.vn/checkout',
-          returnUrl: returnUrl || `https://gosavingfood.vn/orders/success?orderId=${orderId}`,
-        };
-
-        if (Array.isArray(items) && items.length > 0) {
-          payload.items = (items as PaymentItem[]).map((it) => ({
-            name: String(it.name || 'Món ăn').slice(0, 50),
-            quantity: Number(it.quantity || 1),
-            price: Number(it.price || amount),
-          }));
-        }
-
-        payload.signature = createSignature(
-          {
-            amount: payload.amount,
-            cancelUrl: payload.cancelUrl,
-            description: payload.description,
-            orderCode: payload.orderCode,
-            returnUrl: payload.returnUrl,
-          },
-          checksumKey
-        );
-
-        // Gửi request tới PayOS API
-        const payosRes = await fetch('https://api-merchant.payos.vn/v2/payment-requests', {
-          method: 'POST',
-          headers: {
-            'x-client-id': clientId,
-            'x-api-key': apiKey,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const payosData = await payosRes.json();
-
-        if (payosData.code !== '00') {
-          console.error('[PayOS] createPaymentLink error:', payosData);
-          throw new Error(payosData.desc || 'PayOS Error');
-        }
-
-        const {
-          checkoutUrl,
-          qrCode,
-          accountNumber,
-          accountName,
-          bin,
-          paymentLinkId,
-          description: payosDescription,
-        } = payosData.data;
-
-        const vaCreatedAcc = formatVirtualAccount(String(accountNumber || fallbackBankAccount));
-        const finalDescription = payosDescription || cleanDesc;
-
-        // Cập nhật thông tin PayOS vào Supabase orders (bao gồm cache payos_qr_code tạm trong 33 phút)
-        if (supabaseAdmin) {
-          await supabaseAdmin
-            .from('orders')
-            .update({
-              payment_order_code: orderCode,
-              payment_link_id: paymentLinkId,
-              checkout_url: checkoutUrl,
-              payos_qr_code: qrCode,
-              payos_description: finalDescription,
-              payos_account_number: vaCreatedAcc || null,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', orderId);
-        }
-
-        resolveInFlight({
-          success: true,
-          orderCode,
-          paymentLinkId,
-          checkoutUrl,
-          qrCode,
-          accountNumber: vaCreatedAcc,
-          accountName: accountName || fallbackAccountName,
-          bin: bin || '970418',
-          amount,
-          description: finalDescription,
-        });
-      } catch (err) {
-        rejectInFlight(err);
+    if (order.payment_link_id || order.checkout_url) {
+      const remote = await reconcilePayment(order);
+      if (remote.status === 'PAID') {
+        const { data: latest, error: readError } = await db.from('orders').select('status,payment_status').eq('id', orderId).single();
+        if (readError) throw readError;
+        if (isSettled(latest)) return settled();
+        throw new Error('Thanh toán đã được ghi nhận để xử lý hoàn tiền.');
       }
-    })();
-
+      if (remote.status === 'CANCELLED' || remote.status === 'EXPIRED') throw new Error('Link thanh toán đã đóng.');
+    }
+    if (!order.payment_expires_at || new Date(order.payment_expires_at).getTime() <= Date.now()) {
+      return NextResponse.json({ success: false, error: 'Đơn hàng đã hết thời gian thanh toán.' }, { status: 409, headers: corsHeaders });
+    }
+    const cached = {
+      success: true, orderCode: Number(order.payment_order_code),
+      paymentLinkId: order.payment_link_id, checkoutUrl: order.checkout_url,
+      qrCode: order.payos_qr_code || '', accountNumber: order.payos_account_number || '',
+      accountName: order.payos_account_name || '', bin: order.payos_bin || '',
+      amount: Number(order.final_amount), description: order.payos_description || '',
+      expiresAt: order.payment_expires_at,
+    };
+    if (order.checkout_url) return NextResponse.json(cached, { headers: corsHeaders });
+    const orderCode = Number(order.payment_order_code);
+    if (!Number.isSafeInteger(orderCode) || orderCode <= 0) throw new Error('Invalid reserved payment code');
+    const amount = Number(order.final_amount);
+    const description = 'GSF ' + orderCode;
+    const returnUrl = new URL('/explore/?view=payment&orderId=' + encodeURIComponent(orderId), request.url).href;
+    const cancelUrl = returnUrl;
+    const key = process.env.PAYOS_CHECKSUM_KEY;
+    if (!key) throw new Error('PayOS credentials missing');
+    const signature = crypto.createHmac('sha256', key)
+      .update(`amount=${amount}&cancelUrl=${cancelUrl}&description=${description}&orderCode=${orderCode}&returnUrl=${returnUrl}`).digest('hex');
+    let remote;
     try {
-      const responseData = await inFlightPromise;
-      return NextResponse.json(responseData, { headers: corsHeaders });
-    } finally {
-      inFlightRequests.delete(orderId);
+      remote = await payosRequest('', { orderCode, amount, description, returnUrl, cancelUrl, signature,
+        expiredAt: Math.floor(new Date(order.payment_expires_at).getTime() / 1000) });
+    } catch {
+      // An interrupted/concurrent worker can only recover this same provider code.
+      remote = await reconcilePayment(order);
+      if (remote.status === 'PAID') {
+        const { data: latest, error: readError } = await db.from('orders').select('status,payment_status').eq('id', orderId).single();
+        if (readError) throw readError;
+        if (isSettled(latest)) return settled();
+        throw new Error('Thanh toán đã được ghi nhận để xử lý hoàn tiền.');
+      }
+      if (!['PENDING', 'PROCESSING'].includes(remote.status) || !remote.id) throw new Error('Không thể khôi phục link thanh toán.');
+      remote = { ...remote, paymentLinkId: remote.id, checkoutUrl: 'https://pay.payos.vn/web/' + encodeURIComponent(remote.id) };
     }
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Internal Server Error';
-    console.error('[PayOS] Create payment error:', err);
-    return NextResponse.json(
-      { success: false, error: errorMsg },
-      { status: 500, headers: corsHeaders }
-    );
+    const patch = {
+      payment_link_id: remote.paymentLinkId, checkout_url: remote.checkoutUrl,
+      payos_qr_code: remote.qrCode || null, payos_description: remote.description || description,
+      payos_account_number: remote.accountNumber || null,
+      payos_account_name: remote.accountName || null, payos_bin: remote.bin || null,
+    };
+    // A recovering worker must not overwrite a complete QR saved by another worker.
+    let update = db.from('orders').update(patch).eq('id', orderId).eq('payment_order_code', orderCode)
+      .eq('status', 'pending_payment').eq('payment_status', 'pending');
+    if (!remote.qrCode) update = update.is('payos_qr_code', null);
+    const { error: saveError } = await update;
+    if (saveError) throw new Error('Không thể lưu mã thanh toán. Vui lòng thử lại.');
+    const { data: latest, error: readError } = await db.from('orders').select('*').eq('id', orderId).single();
+    if (readError) throw readError;
+    if (isSettled(latest)) return settled();
+    if (latest.status !== 'pending_payment') throw new Error('Trạng thái đơn hàng đã thay đổi.');
+    return NextResponse.json({ ...cached, checkoutUrl: latest.checkout_url,
+      paymentLinkId: latest.payment_link_id, qrCode: latest.payos_qr_code || '',
+      accountNumber: latest.payos_account_number || '', accountName: latest.payos_account_name || '',
+      bin: latest.payos_bin || '', description: latest.payos_description || description,
+    }, { headers: corsHeaders });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Payment unavailable' }, { status: 503, headers: corsHeaders });
   }
 }

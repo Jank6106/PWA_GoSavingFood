@@ -59,7 +59,7 @@
 2. **[CRITICAL] Client-Trusted Pricing in `create_order_transaction` (`0040_zero_vnd_order_flow.sql`)**:
    - The RPC validates `p_final_amount >= p_total_discount_price - p_discount_amount`, **but both `p_total_discount_price` and `p_discount_amount` come directly from client input**. An attacker calling `place_order` RPC directly could pass `p_total_discount_price = 0, p_discount_amount = 0, p_final_amount = 0` to place 0đ orders without a voucher.
 3. **[HIGH] Unauthenticated PayOS Next.js Endpoints (`apps/web/app/api/payos/*`)**:
-   - `POST /api/payos/create-payment`: No Supabase JWT check, no ownership check on `orderId`, trusts `amount` from request body, and sets `Access-Control-Allow-Origin: '*'`.
+   - `POST /api/payos/create-payment`: No Supabase JWT check, no ownership check on `orderId`, reads the payment amount from DB after 0042, and sets `Access-Control-Allow-Origin: '*'`.
    - `POST /api/payos/cancel-payment`: Any unauthenticated caller knowing an `orderId` or `orderCode` can cancel a PayOS payment link.
    - `GET/POST /api/payos/cleanup-expired`: Publicly triggerable without a cron secret/Bearer token.
    - `GET /api/payos/check-status`: Includes a self-healing direct DB update fallback (`service_role`) if RPC fails, without authenticating the caller.
@@ -70,6 +70,6 @@
 6. **[MEDIUM] `typescript: { ignoreBuildErrors: true }` in `apps/web/next.config.ts`**:
    - Type errors in Next.js API routes or UI are silently ignored during `next build`.
 7. **[RESOLVED] Hardcoded Fallback Bank Details**:
-   - `apps/web/app/api/payos/create-payment/route.ts` now reads `PAYOS_BANK_ACCOUNT` and `PAYOS_ACCOUNT_NAME` from `process.env`, and `apps/customer/src/features/checkout/pages/PaymentPage.tsx` no longer embeds a fallback personal bank account number.
+   - `apps/web/app/api/payos/create-payment/route.ts` now preserves provider account details in the DB cache, and `apps/customer/src/features/checkout/pages/PaymentPage.tsx` no longer embeds a fallback personal bank account number.
 8. **[INFO] Hidden Voucher Visibility via RLS**:
    - `vouchers` has `SELECT: Public can view active vouchers`; adding `is_hidden = true` (`0041`) without updating the RLS `SELECT` predicate allows querying `vouchers` directly via Supabase REST `anon` key to discover hidden promo codes like `TMU2026`.

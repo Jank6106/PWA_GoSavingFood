@@ -20,7 +20,7 @@ const filters: Array<{ id: FilterId; label: string }> = [
   { id: 'preparing', label: 'Đang xử lý' },
   { id: 'ready_for_pickup', label: 'Chờ lấy' },
   { id: 'completed', label: 'Hoàn thành' },
-  { id: 'cancelled', label: 'Đã hủy' },
+  { id: 'cancelled', label: 'Đã hủy / Hết hạn' },
 ];
 
 function formatPickupTimeDisplay(pickupTime?: string): string {
