@@ -1,9 +1,11 @@
-import { ChevronDown, ImagePlus, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react';
+import { Camera, ChevronDown, ImagePlus, Loader2, PackageOpen, Plus, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react';
+import { useAiBagDraft, type AiDraftStatus } from '../../hooks/useAiBagDraft';
 import { PRESET_BAG_CATEGORIES } from '../../mocks';
 import { compressImageToBlob, optimizeImageUrl } from '../../utils/browser';
 import type { BagInput, BagItem } from '../../types';
 import { getBagCategory, getVnTimeMinutes, parseTimeToMinutes, type BagTabCategory } from '../../utils/bagTiming';
+import type { DiscountSuggestion } from '../../utils/discountSuggestion';
 import { Button, Field, Modal, SelectField, TextAreaField } from '../ui';
 
 export function BagFilterBar({
@@ -408,12 +410,107 @@ function MerchantTimePicker({
   );
 }
 
-export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?: BagItem; open: boolean; saving: boolean; onClose: () => void; onSubmit: (input: BagInput) => void }) {
+/**
+ * Khối "AI Đăng Hàng" — chụp 1 ảnh, AI điền sẵn form. Chỉ hiển thị khi TẠO túi mới.
+ * Hoàn toàn tùy chọn: chủ quán vẫn có thể bỏ qua và nhập tay như cũ.
+ */
+function AiQuickFillPanel({
+  status,
+  error,
+  discount,
+  onPickFile,
+}: {
+  status: AiDraftStatus;
+  error: string | null;
+  discount: DiscountSuggestion | null;
+  onPickFile: (file: File) => void;
+}) {
+  const analyzing = status === 'analyzing';
+  return (
+    <div
+      style={{
+        border: '1.5px dashed #86efac',
+        background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 14,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--primary)', fontWeight: 800, fontSize: 14 }}>
+        <Sparkles size={18} />
+        <span>AI Đăng Hàng</span>
+      </div>
+      <p style={{ margin: 0, fontSize: 12.5, color: '#475569', lineHeight: 1.45 }}>
+        Chụp 1 ảnh món còn dư — AI tự điền tên, loại, mô tả, hạn dùng và gợi ý mức giảm giá. Bạn chỉ cần kiểm tra rồi bấm tạo.
+      </p>
+      <label
+        aria-disabled={analyzing}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          minHeight: 46,
+          borderRadius: 12,
+          background: analyzing ? '#94a3b8' : 'var(--primary)',
+          color: '#fff',
+          fontWeight: 700,
+          fontSize: 14,
+          cursor: analyzing ? 'wait' : 'pointer',
+          pointerEvents: analyzing ? 'none' : 'auto',
+        }}
+      >
+        {analyzing ? <Loader2 size={18} className="spin" /> : <Camera size={18} />}
+        <span>{analyzing ? 'AI đang đọc ảnh…' : status === 'done' ? 'Chụp lại ảnh khác' : 'Chụp ảnh để AI điền giúp'}</span>
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          disabled={analyzing}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = '';
+            if (file) onPickFile(file);
+          }}
+        />
+      </label>
+      {status === 'done' && discount && (
+        <div
+          style={{
+            background: '#fff',
+            border: '1px solid #bbf7d0',
+            borderRadius: 10,
+            padding: '9px 12px',
+            fontSize: 12.5,
+            color: '#14532d',
+            lineHeight: 1.45,
+          }}
+        >
+          <strong>💡 Gợi ý giảm {discount.percent}%</strong> — {discount.reason}
+          <div style={{ color: '#64748b', marginTop: 4 }}>AI đã điền sẵn form bên dưới. Hãy kiểm tra giá gốc & số lượng rồi bấm “Tạo túi hàng”.</div>
+        </div>
+      )}
+      {status === 'error' && error && (
+        <div style={{ fontSize: 12.5, color: '#b91c1c', fontWeight: 600 }}>
+          ⚠️ {error} <span style={{ color: '#64748b', fontWeight: 500 }}>Bạn vẫn có thể nhập tay bên dưới.</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function BagEditorModal({ bag, open, saving, onClose, onSubmit, storeId }: { bag?: BagItem; open: boolean; saving: boolean; onClose: () => void; onSubmit: (input: BagInput) => void; storeId?: string }) {
   const [minimumExpiryDate, setMinimumExpiryDate] = useState(() => new Date(Date.now() + 86400000).toISOString().split('T')[0]);
   useEffect(() => {
     const timer = window.setInterval(() => setMinimumExpiryDate(new Date(Date.now() + 86400000).toISOString().split('T')[0]), 60000);
     return () => window.clearInterval(timer);
   }, []);
+  const aiDraft = useAiBagDraft(storeId);
+  const showAiPanel = !bag && Boolean(storeId);
   const [name, setName] = useState(bag?.name ?? '');
   const [category, setCategory] = useState(bag?.category ?? PRESET_BAG_CATEGORIES[0]);
   const [bagType, setBagType] = useState<'daily' | 'shelf_life'>(bag?.bagType ?? 'daily');
@@ -460,9 +557,41 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
       setImageBlob(null);
       setImageError(null);
       setFormError(null);
+      aiDraft.reset();
     }
-
   }
+
+  // Ping route AI khi mở form tạo túi (side effect -> để trong effect, không chạy trong render)
+  const { warmUp: warmUpAi } = aiDraft;
+  useEffect(() => {
+    if (open && !bag && storeId) warmUpAi();
+  }, [open, bag, storeId, warmUpAi]);
+
+  const applyAiPhoto = async (file: File) => {
+    const draft = await aiDraft.analyze(file);
+    if (!draft) return;
+    setFormError(null);
+    setImageError(null);
+    setName(draft.name);
+    setCategory(draft.category);
+    setDescription(draft.description);
+    setBagType(draft.bagType);
+    if (draft.bagType === 'shelf_life') setExpiryDate(draft.expiryDate);
+    setPickupTimeStart(draft.pickupTimeStart);
+    setPickupTimeEnd(draft.pickupTimeEnd);
+    setImageBlob(draft.imageBlob);
+    setImageUrls([draft.previewUrl]);
+    // Save the rounded amount shown in the draft instead of recomputing its percentage.
+    setPricingMode('amount');
+    setDiscountPercent(String(draft.discount.percent));
+    if (draft.originalPrice && draft.salePrice) {
+      setOriginalPrice(String(draft.originalPrice));
+      setSalePrice(String(draft.salePrice));
+    } else if (Number(originalPrice) > 0) {
+      setSalePrice(String(Math.max(0, Math.round(Number(originalPrice) * (1 - draft.discount.percent / 100)))));
+    }
+    setQuantity((q) => q || '1');
+  };
 
   const handleOriginalPriceChange = (val: string) => {
     setOriginalPrice(val);
@@ -572,6 +701,14 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   return (
     <Modal open={open} title={bag ? 'Chỉnh sửa túi hàng' : 'Tạo túi hàng mới'} onClose={onClose}>
       <form className="merchant-form" onSubmit={submit}>
+        {showAiPanel && (
+          <AiQuickFillPanel
+            status={aiDraft.status}
+            error={aiDraft.error}
+            discount={aiDraft.lastDraft?.discount ?? null}
+            onPickFile={(file) => void applyAiPhoto(file)}
+          />
+        )}
         {formError && (
           <div
             style={{
