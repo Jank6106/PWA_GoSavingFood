@@ -59,6 +59,19 @@ export const compressImageToBlob = (
             resolve({ blob: file, previewUrl: URL.createObjectURL(file) });
             return;
           }
+          // Safari (iPhone) có thể không xuất được WebP và âm thầm trả về PNG (nặng gấp 5–10 lần)
+          // -> xuất lại bằng JPEG để ảnh nhẹ, upload nhanh.
+          if (blob.type !== 'image/webp') {
+            canvas.toBlob(
+              (jpegBlob) => {
+                const finalBlob = jpegBlob && jpegBlob.size < blob.size ? jpegBlob : blob;
+                resolve({ blob: finalBlob, previewUrl: URL.createObjectURL(finalBlob) });
+              },
+              'image/jpeg',
+              quality
+            );
+            return;
+          }
           resolve({ blob, previewUrl: URL.createObjectURL(blob) });
         },
         'image/webp',
