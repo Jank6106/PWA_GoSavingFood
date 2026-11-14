@@ -14,7 +14,8 @@ export async function OPTIONS() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    let { orderCode, orderId, cancellationReason } = body;
+    const { orderId, cancellationReason } = body;
+    let { orderCode } = body;
 
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

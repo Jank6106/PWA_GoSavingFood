@@ -1,3 +1,4 @@
+import { errorMessage as getErrorMessage } from '../../../shared/utils/errors';
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Button } from '@gosavingfood/ui';
 import {
@@ -42,7 +43,11 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Đồng bộ thông tin khi user load xong
-  useEffect(() => {
+  const [profileInputs, setProfileInputs] = useState<readonly unknown[] | null>(null);
+  // Prop-backed drafts are reset before stale values can be committed.
+  if (profileInputs === null || [user, nameTouched, phoneTouched].some((value, index) => !Object.is(value, profileInputs[index]))) {
+    setProfileInputs([user, nameTouched, phoneTouched]);
+
     if (user) {
       if (!nameTouched) {
         setProfileName(user.name || '');
@@ -51,7 +56,8 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
         setProfilePhone(user.phone || '');
       }
     }
-  }, [user, nameTouched, phoneTouched]);
+
+  }
 
   const clearFeedback = () => {
     setErrorMessage(null);
@@ -86,8 +92,8 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
     clearFeedback();
     try {
       await loginWithGoogle();
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Đăng nhập bằng Google không thành công. Vui lòng thử lại.');
+    } catch (err: unknown) {
+      setErrorMessage(getErrorMessage(err) || 'Đăng nhập bằng Google không thành công. Vui lòng thử lại.');
       setIsGoogleSubmitting(false);
     }
   };
@@ -124,8 +130,8 @@ export function AuthModal({ onClose }: { onClose?: () => void } = {}) {
       setTimeout(() => {
         handleClose();
       }, 500);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể lưu thông tin cá nhân. Vui lòng thử lại.');
+    } catch (err: unknown) {
+      setErrorMessage(getErrorMessage(err) || 'Không thể lưu thông tin cá nhân. Vui lòng thử lại.');
     } finally {
       setIsSubmitting(false);
     }

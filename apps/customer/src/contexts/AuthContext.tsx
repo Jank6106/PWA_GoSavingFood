@@ -1,3 +1,4 @@
+import { getCachedCustomerUser, setCachedCustomerUser, isCustomerProfileComplete, requestPersistentStorage } from './auth-cache';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { customerService } from '../services/customer.service';
@@ -5,51 +6,6 @@ import { supabase } from '../services/supabase';
 import type { User } from '../shared/types/customer.types';
 import { AuthContext } from './auth-context';
 import type { AuthContextValue } from './auth-context';
-
-export const CUSTOMER_USER_CACHE_KEY = 'gsf_cached_customer_user';
-
-export function getCachedCustomerUser(): User | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw =
-      localStorage.getItem(CUSTOMER_USER_CACHE_KEY) ||
-      localStorage.getItem('gsf_cached_auth_user') ||
-      localStorage.getItem('gsf_customer_user_cache');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setCachedCustomerUser(u: User | null): void {
-  if (typeof window === 'undefined') return;
-  try {
-    if (u) {
-      const serialized = JSON.stringify(u);
-      localStorage.setItem(CUSTOMER_USER_CACHE_KEY, serialized);
-      localStorage.setItem('gsf_cached_auth_user', serialized);
-      localStorage.setItem('gsf_customer_user_cache', serialized);
-    } else {
-      localStorage.removeItem(CUSTOMER_USER_CACHE_KEY);
-      localStorage.removeItem('gsf_cached_auth_user');
-      localStorage.removeItem('gsf_customer_user_cache');
-    }
-  } catch {}
-}
-
-export function requestPersistentStorage(): void {
-  if (typeof window !== 'undefined' && 'storage' in navigator && (navigator.storage as any)?.persist) {
-    (navigator.storage as any).persist().catch(() => {});
-  }
-}
-
-export const isCustomerProfileComplete = (user: User | null): boolean => {
-  if (!user) return false;
-  const hasValidName = Boolean(user.name && user.name.trim().length >= 2);
-  const digitsOnly = (user.phone || '').replace(/\D/g, '');
-  const hasValidPhone = digitsOnly.length === 10 && /^0[3|5|7|8|9]\d{8}$/.test(digitsOnly);
-  return hasValidName && hasValidPhone;
-};
 
 function cleanAuthUrl() {
   if (typeof window === 'undefined') return;
@@ -74,7 +30,7 @@ function cleanAuthUrl() {
       const cleanPath = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '');
       window.history.replaceState({}, '', cleanPath);
     }
-  } catch {}
+  } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -87,11 +43,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const needsProfileCompletion = Boolean(user && !isCustomerProfileComplete(user));
 
   // Tự động mở modal bổ sung thông tin nếu tài khoản đăng nhập chưa có SĐT / Họ tên
-  useEffect(() => {
+  const [completionInputs, setCompletionInputs] = useState<readonly unknown[] | null>(null);
+  // Prop-backed drafts are reset before stale values can be committed.
+  if (completionInputs === null || [initializing, user].some((value, index) => !Object.is(value, completionInputs[index]))) {
+    setCompletionInputs([initializing, user]);
+
     if (!initializing && user && !isCustomerProfileComplete(user)) {
       setIsAuthOpen(true);
     }
-  }, [initializing, user]);
+
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -230,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(fullUser);
             setCachedCustomerUser(fullUser);
           }
-        } catch {}
+        } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
       }
     });
 

@@ -132,3 +132,8 @@ Sau khi hoàn thành code:
 2. **Không commit secret hay token vào Git**: Các file `.env.test` phải nằm ngoài Git tracking (`.gitignore` đã chặn `.env*`).
 3. **Bảo toàn tính tương thích**: Script `scripts/lib/env.mjs` phải giữ nguyên khả năng đọc `.env` khi chạy app ngoài đời thực. Không được làm hỏng luồng chạy `pnpm dev`.
 4. **Giao tiếp rõ ràng**: Sau khi hoàn thành, Codex phải bàn giao danh sách các file đã thay đổi và kết quả chạy `pnpm test:offline` + `pnpm test:local`.
+
+
+## Implementation addendum — 2026-11-13
+
+The project owner authorized a Cloud schema-only baseline and filename-only renumbering of duplicate migrations. SQL bytes in historical files are preserved; see `supabase/migration-renames.json`. Baseline compatibility adapters are documented in ADR-006. Production `comprehensive-system-audit.mjs` is not an acceptance gate for the local seed. Offline 14/14 and local 42/42 tests passed on Docker.

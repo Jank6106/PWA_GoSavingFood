@@ -1,3 +1,5 @@
+import type { BagRow } from '../types/database';
+import { errorMessage } from '../utils/errors';
 import type { BagInput, BagItem, BagStatus } from '../types';
 import { supabase } from './supabase';
 import { base64ToBlob, optimizeImageUrl } from './utils';
@@ -147,7 +149,7 @@ export function setCachedBagItems(storeId: string, bags: BagItem[]): void {
   }
 }
 
-const mapDbBag = (b: any): BagItem => ({
+const mapDbBag = (b: BagRow): BagItem => ({
   id: b.id,
   storeId: b.store_id,
   name: b.name,
@@ -275,7 +277,7 @@ export async function updateBagStatus(bagId: string, status: BagStatus): Promise
   const isAvailable = status !== 'hidden';
   const existing = await fetchBagRow(bagId);
 
-  const updates: Record<string, any> = {
+  const updates: Record<string, unknown> = {
     is_available: isAvailable,
     updated_at: new Date().toISOString(),
   };
@@ -309,7 +311,7 @@ export async function updateBagQuantity(bagId: string, quantity: number): Promis
   const safeQty = Math.max(0, quantity);
   const existing = await fetchBagRow(bagId);
 
-  const updates: Record<string, any> = {
+  const updates: Record<string, unknown> = {
     quantity: safeQty,
     updated_at: new Date().toISOString(),
   };
@@ -400,8 +402,8 @@ export async function createBagItem(storeId: string, input: BagInput): Promise<B
     } else {
       throw new Error('Chưa đăng nhập. Vui lòng đăng nhập tài khoản cửa hàng trước khi tạo túi.');
     }
-  } catch (err: any) {
-    if (err?.message?.includes('Chưa đăng nhập')) {
+  } catch (err: unknown) {
+    if (errorMessage(err)?.includes('Chưa đăng nhập')) {
       throw err;
     }
     console.warn('Lỗi lấy thông tin user store:', err);

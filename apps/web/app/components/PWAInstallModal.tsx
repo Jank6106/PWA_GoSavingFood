@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { X, ExternalLink } from "lucide-react";
 
 interface PWAInstallModalProps {
@@ -26,6 +27,12 @@ function AppleIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
+const subscribePlatform = () => () => {};
+function getPlatform(): 'android' | 'ios' {
+  if (typeof navigator === 'undefined') return 'android';
+  return /iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios' : 'android';
+}
+
 export function PWAInstallModal({
   isOpen,
   target,
@@ -33,22 +40,13 @@ export function PWAInstallModal({
   customerUrl,
   merchantUrl,
 }: PWAInstallModalProps) {
-  const [activeTab, setActiveTab] = useState<"android" | "ios">("android");
-
-  // Tự động nhận diện thiết bị khi mở popup
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const ua = navigator.userAgent || "";
-    const isIOS =
-      /iPad|iPhone|iPod/.test(ua) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-    if (isIOS) {
-      setActiveTab("ios");
-    } else {
-      setActiveTab("android");
-    }
-  }, [isOpen]);
+  const platform = useSyncExternalStore(subscribePlatform, getPlatform, () => 'android' as const);
+  const [activeTab, setActiveTab] = useState<'android' | 'ios'>(platform);
+  const [lastInputs, setLastInputs] = useState({ isOpen, platform });
+  if (lastInputs.isOpen !== isOpen || lastInputs.platform !== platform) {
+    setLastInputs({ isOpen, platform });
+    setActiveTab(platform);
+  }
 
   // Handle ESC key và chặn cuộn trang phía sau
   useEffect(() => {
@@ -156,7 +154,7 @@ export function PWAInstallModal({
 
                 {/* Ảnh thực tế bước 1 */}
                 <div className="w-32 sm:w-40 lg:w-44 aspect-[16/9] rounded-xl sm:rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex-shrink-0 bg-white flex items-center justify-center">
-                  <img
+                  <Image unoptimized loading="eager" width={1024} height={576}
                     src="/images/install-guide/android-step-1.png"
                     alt="Nhấn vào dấu ba chấm"
                     className="w-full h-full object-cover block"
@@ -177,7 +175,7 @@ export function PWAInstallModal({
 
                 {/* Ảnh thực tế bước 2 */}
                 <div className="w-32 sm:w-40 lg:w-44 aspect-[16/9] rounded-xl sm:rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex-shrink-0 bg-white flex items-center justify-center">
-                  <img
+                  <Image unoptimized loading="eager" width={886} height={499}
                     src="/images/install-guide/android-step-2.png"
                     alt="Chọn Install and create shortcut"
                     className="w-full h-full object-cover block"
@@ -198,7 +196,7 @@ export function PWAInstallModal({
 
                 {/* Ảnh thực tế bước 3 */}
                 <div className="w-32 sm:w-40 lg:w-44 aspect-[16/9] rounded-xl sm:rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex-shrink-0 bg-white flex items-center justify-center">
-                  <img
+                  <Image unoptimized loading="eager" width={1024} height={576}
                     src="/images/install-guide/android-step-3.png"
                     alt="Nhấn Install để cài đặt ứng dụng"
                     className="w-full h-full object-cover block"
@@ -224,7 +222,7 @@ export function PWAInstallModal({
 
                 {/* Ảnh thực tế bước 1 */}
                 <div className="w-32 sm:w-40 lg:w-44 aspect-[16/9] rounded-xl sm:rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex-shrink-0 bg-[#f8f9fb] flex items-center justify-center p-1 sm:p-1.5">
-                  <img
+                  <Image unoptimized loading="eager" width={282} height={136}
                     src="/images/install-guide/ios-step-1.png"
                     alt="Nhấn vào chia sẻ"
                     className="max-w-full max-h-full object-contain block"
@@ -245,7 +243,7 @@ export function PWAInstallModal({
 
                 {/* Ảnh thực tế bước 2 */}
                 <div className="w-32 sm:w-40 lg:w-44 aspect-[16/9] rounded-xl sm:rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex-shrink-0 bg-[#f8f9fb] flex items-center justify-center p-1 sm:p-1.5">
-                  <img
+                  <Image unoptimized loading="eager" width={301} height={94}
                     src="/images/install-guide/ios-step-2.png"
                     alt="Chọn Thêm vào màn hình chính"
                     className="max-w-full max-h-full object-contain block"
@@ -266,7 +264,7 @@ export function PWAInstallModal({
 
                 {/* Ảnh thực tế bước 3 */}
                 <div className="w-32 sm:w-40 lg:w-44 aspect-[16/9] rounded-xl sm:rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex-shrink-0 bg-[#f8f9fb] flex items-center justify-center p-1 sm:p-1.5">
-                  <img
+                  <Image unoptimized loading="eager" width={330} height={120}
                     src="/images/install-guide/ios-step-3.png"
                     alt="Chọn Thêm"
                     className="max-w-full max-h-full object-contain block"

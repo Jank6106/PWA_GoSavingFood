@@ -1,7 +1,7 @@
 import { AlertTriangle, Camera, Check, Clock3, Copy, FileSearch, KeyRound, Phone, QrCode, Search, XCircle } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
 import type { MerchantOrder, OrderStatus, OrderStatusFilter, OrderSummaryMetrics } from '../../types';
-import { optimizeImageUrl } from '../../services/utils';
+import { optimizeImageUrl } from '../../utils/browser';
 import { Button, Field, Modal, SelectField, TextAreaField } from '../ui';
 import { CameraQRScanner } from './CameraQRScanner';
 

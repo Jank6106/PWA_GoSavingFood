@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronLeft, ShoppingBag, Star, X } from 'lucide-react';
 import { EmptyState } from '@gosavingfood/ui';
 import type { Merchant } from '../../../shared/types/customer.types';
@@ -122,7 +122,7 @@ export function MerchantReviewsView({ merchant, onBack }: MerchantReviewsViewPro
   const ratingValue = merchant.rating ? merchant.rating.toFixed(1) : '4.5';
 
   // Tính toán breakdown tỉ lệ sao
-  const breakdown = useMemo(() => {
+  const breakdown = (() => {
     const star5 = Math.round(totalReviews * 0.75);
     const star4 = Math.round(totalReviews * 0.09);
     const star3 = Math.round(totalReviews * 0.09);
@@ -136,10 +136,10 @@ export function MerchantReviewsView({ merchant, onBack }: MerchantReviewsViewPro
       { stars: 2, count: star2, pct: (star2 / totalReviews) * 100 },
       { stars: 1, count: star1, pct: (star1 / totalReviews) * 100 },
     ];
-  }, [totalReviews]);
+  })();
 
   // Lọc và sắp xếp review theo tab
-  const filteredReviews = useMemo(() => {
+  const filteredReviews = (() => {
     const list = [...INITIAL_REVIEWS];
     switch (activeTab) {
       case 'latest':
@@ -152,7 +152,7 @@ export function MerchantReviewsView({ merchant, onBack }: MerchantReviewsViewPro
       default:
         return list;
     }
-  }, [activeTab]);
+  })();
 
   return (
     <div className="customer-reviews-screen">

@@ -30,17 +30,17 @@ pnpm dev:merchant  # Vite on http://localhost:5174
 ```bash
 pnpm build         # Runs `turbo build`: builds @gosavingfood/ui -> web, customer, merchant
 pnpm lint          # Runs `turbo lint` across packages
-pnpm test          # Runs `vitest run`
+pnpm test          # Offline unit suites only
 ```
 - **Caveat on `apps/web` build**: `apps/web/next.config.ts` sets `typescript: { ignoreBuildErrors: true }`. Run `tsc --noEmit` inside `apps/web` manually if strict TypeScript validation is desired.
-- **Caveat on `pnpm test`**: `tests/auth-backend.test.ts` and `tests/production-backend-audit.test.ts` execute live requests against production Supabase (`lblwvbedtlxjtkcuxmsf.supabase.co`). `tests/bagTiming.test.ts` and `tests/mapbox.test.ts` are pure unit tests.
+- Run backend integration with `pnpm test:local`; Cloud verification is explicit via `pnpm test:live` or `pnpm test:audit`.
 
 ---
 
 ## 3. Production Hosting & Infrastructure (`CONFIRMED`)
 
-- **Docker**: None. No `Dockerfile` or `docker-compose.yml` exists in the repository.
-- **CI/CD**: None. No `.github/workflows` or automated CI pipeline exists in the repository.
+- **Docker**: Supabase CLI manages the local test stack; production hosting remains Vercel/Supabase Cloud.
+- **CI/CD**: `.github/workflows/ci.yml` implements the CI quality gate described below. Required checks must also be enabled in GitHub repository settings.
 - **Vercel Deployments** (3 separate projects inferred from 3 `vercel.json` files + root `vercel.json`):
   1. **`apps/web`** (root `vercel.json` -> `pnpm --filter=web build`, output `apps/web/.next`): Primary domain **`gosavingfood.app`** (`www.gosavingfood.app` permanently redirects to apex). Rewrites `/explore/*` to `CUSTOMER_APP_URL` (`https://gsf-customer-pwa.vercel.app`) and `/merchant/*` to `MERCHANT_APP_URL` (`https://gsf-merchant-pwa.vercel.app`).
   2. **`apps/customer`** (`apps/customer/vercel.json` -> `pnpm --filter=customer build`, output `dist`): Hosted at `https://gsf-customer-pwa.vercel.app`, base path `/explore/`. Rewrites `/api/:path*` -> `https://gosavingfood.app/api/:path*`.
@@ -61,8 +61,9 @@ pnpm db:stop
 
 Create the ignored root `.env.test` from `.env.test.example`, then copy the local anon and service-role keys from `pnpm db:status`. Local integration tests use this file before `.env` when `NODE_ENV=test` or `USE_LOCAL_DB=true`; values already exported by the shell still take precedence. `pnpm test:local` checks that API and database URLs are loopback hosts before it runs.
 
-> [!IMPORTANT]
-> The checked-in migration history has no baseline before `0009`, and it has duplicate version prefixes. A new Supabase project may therefore fail during migration replay. Migrations `0009`–`0041` must remain unchanged per the Docker testing plan; resolve the baseline/version-history problem in a separately reviewed migration strategy before treating a clean `db reset` as supported.
+Fresh local databases replay `0000_baseline_schema.sql`, historical migrations, then `seed.sql`. Renumbering preserves SQL bytes and lexical order. The custom Cloud runner recognizes old filenames through `supabase/migration-renames.json` and skips the bootstrap snapshot on existing databases. Never repair or renumber Cloud migration history to match the local CLI ledger.
+
+Local SMTP uses Mailpit (54324), and external Google OAuth is disabled in the local config. If pnpm is absent from PATH, use `corepack.cmd pnpm` on Windows. Studio: http://localhost:54323.
 
 ## 5. Database Migrations (`CONFIRMED`)
 
@@ -102,3 +103,41 @@ Never commit actual secrets. Required variables in root `.env` / Vercel project 
 - **Rollback**:
   - **App**: Vercel deployment rollback (`UNKNOWN` exact Vercel project team workflow).
   - **Database**: No down-migration scripts exist in `supabase/migrations/`. Rollback requires writing a new corrective forward SQL migration (`CONFIRMED`).
+
+
+---
+
+## 8. GitHub Actions CI quality gate
+
+Workflow: [.github/workflows/ci.yml](../.github/workflows/ci.yml), decision: [ADR-008](adr/ADR-008-local-ci-quality-gate.md).
+Runs on pushes/PRs targeting master or main and manual workflow dispatch.
+
+| Job ID | Required status check | Work |
+| --- | --- | --- |
+| quality-check | Fast Quality Gate & Build | Lint, 14 offline tests, all three app builds |
+| database-integration | Docker Supabase Integration Tests | Fresh local Supabase migrations/seed and 42 tests |
+| e2e-playwright | E2E Playwright Tests | Separate fresh local DB, Chromium, 9 browser tests |
+
+Jobs run sequentially on separate ubuntu-latest runners, Node 22 and pnpm 11.13.1. Supabase CLI is pinned to 3.1.0. Installs use frozen-lockfile; pnpm store, Turbo/Next build cache and Chromium binaries are cached. Chromium Linux system dependencies are installed even after a browser cache hit. Concurrency cancels older runs for the same PR/ref. Each Docker job stops the stack with always(), including test failures.
+
+CI needs no Supabase Cloud, PayOS or deployment secrets. Do not add the production .env to checkout, caches or artifacts; the workflow rejects a root .env. Build uses loopback URLs and a non-secret build-only anon placeholder. DB jobs pipe local Supabase status JSON into scripts/ci-local-env.mjs, which validates loopback URLs, masks credentials in GitHub logs and fills .env.test.example into ignored .env.test. Simply copying the template without replacing keys will fail authentication.
+
+The E2E harness forwards Linux HOME/USER, uses local server/client URLs and blank PayOS credentials. Browser external HTTP/WebSocket requests are blocked by fixtures. Failure reports from playwright-report/ and test-results/ are uploaded with actions/upload-artifact@v4 for seven days; treat artifacts as internal because they may contain local test sessions. Raw environment/status documents are never uploaded.
+
+### Activate branch protection for master
+
+1. Push the workflow and let it run once so GitHub knows the three check names.
+2. Open repository Settings -> Branches -> Add branch protection rule (or the equivalent branch ruleset), targeting master.
+3. Enable Require a pull request before merging, Require status checks to pass before merging, and Require branches to be up to date before merging.
+4. Select all three exact status-check names in the table above. Scope them to GitHub Actions when the UI allows selecting a source.
+5. Apply the rule to administrators / disallow bypassing, and restrict direct pushes. Do not enable force pushes or deletion. Confirm with a deliberately failing test PR that merging stays blocked and E2E failures produce artifacts.
+
+Creating this workflow does not change repository settings. If GitHub does not offer branch protection for the repository's visibility/plan, that setting must be resolved by the repository administrator.
+
+Vercel Git integration may continue to create PR previews and production deployments after protected merges to master. This workflow contains no deployment step. A push-triggered workflow alone cannot delay Vercel's direct-push deployment; required protected PR merges establish the release gate. Check all three Vercel projects use master as their production branch and restrict manual production deploys separately if required.
+
+### Verification and runtime budget
+
+Local acceptance: pnpm test:offline, pnpm test:local, pnpm test:e2e and pnpm build. YAML/schema is checked with actionlint. Windows local success does not prove an Ubuntu Actions run; verify the first GitHub run and its timing before marking runner acceptance complete. Target under five minutes with warm caches; cold Docker pulls on two fresh runners can exceed it. Job timeouts bound runaway jobs but do not guarantee the runtime target.
+
+Verified locally on 2026-11-14 (Windows, Node 24.13.0): offline 14/14, Docker 42/42, E2E 9/9 (43.6 seconds), and build 3/3 apps passed. Actionlint v1.7.12 passed; Node syntax checks passed for all three test/server scripts. The local env generator succeeded against the running Docker stack and rejected non-loopback API/DB URLs and missing fields without overwriting the existing test configuration. Node 22/Ubuntu execution and the total Actions runtime remain to be verified on GitHub.

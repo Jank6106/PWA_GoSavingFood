@@ -64,6 +64,7 @@ flowchart TB
 | Payments | PayOS v2 REST API | Server-only in `apps/web/app/api/payos/*` |
 | Maps & Geocoding | Mapbox GL JS + Search Box v1 / Geocoding v6 & v5 | Client-side token (`VITE_MAPBOX_TOKEN`) |
 | Testing | Vitest `5.0.5` + Node `.mjs` audit scripts | Unit tests + live Supabase integration suites |
+| Browser E2E | Playwright + Chromium | Local Docker only; Next gateway and two isolated browser contexts, one test worker |
 
 ---
 

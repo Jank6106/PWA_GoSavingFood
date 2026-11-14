@@ -5,12 +5,20 @@
 ## [Unreleased]
 
 ### Added
+- 2026-11-14: Added a three-job GitHub Actions quality gate for lint/unit/build, isolated Docker Supabase integration, and Chromium E2E. Uses frozen pnpm installs, pnpm/build/browser caches, PR cancellation, failure artifacts retained seven days and unconditional Docker cleanup. Local configuration is generated from Docker status without Cloud secrets; E2E children retain Linux HOME/USER. See ADR-008 and the branch-protection guide in DEPLOYMENT.md.
+- 2026-11-14: Added Playwright/Chromium E2E infrastructure, isolated local gateway servers, seeded Customer identities, auth/route-guard specs and a dual-context zero-VND order/Realtime/QR lifecycle. See `docs/reports/E2E_TESTING_2026-11-14.md`.
+- 2026-11-13: Exported a schema-only Cloud baseline for Docker; added local compatibility adapters and synthetic prerequisite owner without copying Cloud user/order data.
+- Added legacy filename mapping for 16 byte-preserved migration renames and local merchant/admin test fixtures.
 - Added Docker Supabase database commands, a local test seed, and ignored `.env.test` configuration template.
 - Added local and offline test commands; `pnpm test` now runs offline unit suites by default and local integration commands enforce loopback URLs.
 - Project Memory Pack documentation structure (`README.md`, `AI_CONTEXT.md`, `AGENTS.md`, `docs/*.md`, `docs/adr/ADR-001..005.md`).
 - Centralized root `.env` loader [`scripts/lib/env.mjs`](../scripts/lib/env.mjs) (with TypeScript declarations [`scripts/lib/env.d.ts`](../scripts/lib/env.d.ts)) and offline unit test [`tests/envHelper.test.ts`](../tests/envHelper.test.ts).
 
 ### Changed
+- 2026-11-14: Cleared Merchant ESLint debt (113 errors, 3 warnings) and existing Customer/Web diagnostics without disabling rules. Added typed database payloads and unknown-error narrowing, corrected React hook/ref usage, and moved Merchant browser utilities out of services to preserve UI layering. Verified workspace lint with zero diagnostics, all three builds, offline 14/14, Docker integration 42/42, and Playwright E2E 9/9. See `docs/reports/ESLINT_CLEANUP_2026-11-14.md` for changed files and terminal excerpts.
+- Merchant startup and login now verify the server-side profile role before resolving a store; unverified local cache cannot open the dashboard. Auth event profile requests run after the SDK auth lock is released. Added explicit E2E gateway/base-path settings and kept Vitest specs separate.
+- Docker acceptance: clean reset applied 42 migrations and seed; Studio HTTP 200; zero leftover test users. Workspace build passed from Turbo cache. Workspace lint failed in unchanged merchant source (113 errors, 3 warnings).
+- Local Docker SMTP/OAuth configuration is isolated; production audit is explicit, and live tests bypass `.env.test`. Verified offline 14/14 and local 42/42 tests.
 - Documented migration-history blockers that prevent a clean Docker database replay without changing the protected migration files.
 - Extracted hardcoded `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SUPABASE_URL`, and `DATABASE_URL` credentials out of `tests/` (`auth-backend.test.ts`, `production-backend-audit.test.ts`) and 13 `scripts/*.mjs` files into `.env` via `scripts/lib/env.mjs`.
 - Replaced hardcoded PayOS fallback bank account/holder values in [`apps/web/app/api/payos/create-payment/route.ts`](../apps/web/app/api/payos/create-payment/route.ts) with `PAYOS_BANK_ACCOUNT` / `PAYOS_ACCOUNT_NAME` env vars, and removed the hardcoded fallback bank account from [`apps/customer/src/features/checkout/pages/PaymentPage.tsx`](../apps/customer/src/features/checkout/pages/PaymentPage.tsx).

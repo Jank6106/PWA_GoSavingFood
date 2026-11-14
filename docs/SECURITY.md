@@ -20,13 +20,13 @@
 | **Secret Management (Scripts & Tests)** | `Implemented` (Working Tree) / `Rotation Pending` | Hardcoded `service_role`, `DATABASE_URL`, and fallback bank details removed from `tests/`, `scripts/`, and `apps/`; scripts/tests now load `.env` via `scripts/lib/env.mjs`. Key rotation in Supabase Dashboard is still advised for Git history. |
 | **Storage Upload Scoping** | `Partially Implemented` | `storage.objects` allows `INSERT`/`UPDATE` for any `authenticated` user (per DB policy inspection), without visible bucket/folder ownership checks on `storage.objects` policies. |
 | **Audit Logging** | `Partially Implemented` | `admin_audit_logs` table exists with Admin-only RLS (`CONFIRMED`), but no application code writes to it yet (`INFERRED` — `apps/admin` does not exist). |
-| **CI/CD Security Scanning / Dependency Audit** | `Missing` | No `.github/workflows`, Dependabot, or SAST/secret scanning config in repo. |
+| **CI/CD Security Scanning / Dependency Audit** | `Missing` | CI quality gate exists, but Dependabot and dedicated SAST/secret scanning are not configured. CI uses local Docker credentials only. |
 
 ---
 
 ## 2. Authentication & Session Management (`CONFIRMED`)
 - **PWAs**: Sessions are managed by `@supabase/supabase-js` with `persistSession: true`, `autoRefreshToken: true`, stored in `window.localStorage`. Customer app uses `flowType: 'pkce'`.
-- **0ms UI Hydration Cache**: Both `customer` (`gsf_cached_customer_user`) and `merchant` (`gsf_merchant_cached_user`) cache user profile JSON in `localStorage` for instant render, re-verifying against `supabase.auth.getSession()` asynchronously.
+- **UI Hydration Cache**: Customer caches profile JSON in `gsf_cached_customer_user`. Merchant retains `gsf_merchant_cached_user` as a profile cache but waits for session and `public.users.role = 'merchant'` verification before granting dashboard access. Both login and session restoration reject Customer roles before calling `ensureUserStore`. This frontend guard supplements existing RLS; the RPC findings below remain unchanged.
 - **Phone Login**: `get_email_by_phone(p_phone)` RPC maps a phone number to the user's email before calling `signInWithPassword`.
 
 ---

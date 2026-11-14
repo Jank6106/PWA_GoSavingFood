@@ -1,3 +1,4 @@
+import type { StoreRow } from '../shared/types/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { customerService } from '../services/customer.service';
 import { supabase } from '../services/supabase';
@@ -26,12 +27,12 @@ function getInitialCatalog(): CatalogState {
           banners: parsed.banners?.length ? parsed.banners : customerService.getStaticHome().banners,
           categories: parsed.categories?.length ? parsed.categories : customerService.getStaticHome().categories,
           brands: parsed.brands || [],
-          merchants: (parsed.merchants || []).filter((m: any) => !m.id?.startsWith('store-hn-')),
-          bags: (parsed.bags || []).filter((b: any) => !b.id?.startsWith('bag-hn-') && isBagVisibleOnMarket(b)),
+          merchants: (parsed.merchants || []).filter((m: Merchant) => !m.id?.startsWith('store-hn-')),
+          bags: (parsed.bags || []).filter((b: SurpriseBag) => !b.id?.startsWith('bag-hn-') && isBagVisibleOnMarket(b)),
         };
       }
     }
-  } catch {}
+  } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
   const staticHome = customerService.getStaticHome();
   return {
     ...staticHome,
@@ -42,7 +43,7 @@ function getInitialCatalog(): CatalogState {
 export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
   const [catalog, setCatalog] = useState<CatalogState>(getInitialCatalog);
   const catalogRef = useRef<CatalogState>(catalog);
-  catalogRef.current = catalog;
+  useEffect(() => { catalogRef.current = catalog; }, [catalog]);
 
   const [isLoading, setIsLoading] = useState(() => {
     const init = getInitialCatalog();
@@ -53,6 +54,8 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
   const lastFetchTimeRef = useRef<number>(0);
   const prevCoordsRef = useRef<{ lat: number; lng: number } | undefined>(undefined);
 
+  const coordsRef = useRef(coords);
+  useEffect(() => { coordsRef.current = coords; }, [coords]);
   const fetchCatalog = useCallback(async (isInitial = false) => {
     const now = Date.now();
     const hasData = catalogRef.current.merchants.length > 0 || catalogRef.current.bags.length > 0;
@@ -65,7 +68,7 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
           setIsLoading(false);
           return;
         }
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     }
 
     // Tránh duplicate API calls quá dồn dập
@@ -80,12 +83,12 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
     }
 
     try {
-      const data = await customerService.getHome(coords);
+      const data = await customerService.getHome(coordsRef.current);
       setCatalog(data);
       try {
         localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(data));
         localStorage.setItem(CATALOG_TIMESTAMP_KEY, String(Date.now()));
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
       setError(null);
     } catch {
       if (!hasData) {
@@ -94,7 +97,7 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
     } finally {
       setIsLoading(false);
     }
-  }, [coords?.lat, coords?.lng]);
+  }, []);
 
   // Kích hoạt nạp dữ liệu ban đầu hoặc khi tọa độ thay đổi đáng kể (> 500m)
   useEffect(() => {
@@ -109,7 +112,7 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
     }
     prevCoordsRef.current = coords;
     void fetchCatalog(true);
-  }, [coords?.lat, coords?.lng, fetchCatalog]);
+  }, [coords, fetchCatalog]);
 
   // Đồng bộ khi user quay lại tab Customer app (sau khi chuyển tab > 5s)
   useEffect(() => {
@@ -139,7 +142,7 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'surprise_bags' },
-        (payload: any) => {
+        (payload) => {
           if (payload.eventType === 'DELETE' && payload.old?.id) {
             setCatalog((current) => {
               const updated = {
@@ -148,7 +151,7 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
               };
               try {
                 localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(updated));
-              } catch {}
+              } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
               return updated;
             });
           } else if (payload.eventType === 'UPDATE' && payload.new) {
@@ -163,7 +166,7 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
                 };
                 try {
                   localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(updated));
-                } catch {}
+                } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
                 return updated;
               });
             } else if (payload.new.quantity != null) {
@@ -176,14 +179,14 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
                       ? {
                           ...b,
                           quantity: Number(payload.new.quantity),
-                          isAvailable: payload.new.is_available ?? b.isAvailable,
+                          isAvailable: (payload.new.is_available as boolean | undefined) ?? b.isAvailable,
                         }
                       : b
                   ),
                 };
                 try {
                   localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(updated));
-                } catch {}
+                } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
                 return updated;
               });
             }
@@ -196,17 +199,18 @@ export function useCustomerCatalog(coords?: { lat: number; lng: number }) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'stores' },
-        (payload: any) => {
-          if (payload.new && payload.new.id) {
+        (payload) => {
+          const nextStore = payload.new as Partial<StoreRow>;
+          if (nextStore && nextStore.id) {
             setCatalog((current) => {
-              const nextIsOpen = payload.new.is_open ?? true;
+              const nextIsOpen = (nextStore.is_open as boolean | undefined) ?? true;
               const updatedMerchants = current.merchants.map((m) =>
-                m.id === payload.new.id ? { ...m, isOpen: nextIsOpen } : m
+                m.id === nextStore.id ? { ...m, isOpen: nextIsOpen } : m
               );
               const nextCatalog = { ...current, merchants: updatedMerchants };
               try {
                 localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(nextCatalog));
-              } catch {}
+              } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
               return nextCatalog;
             });
           }

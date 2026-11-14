@@ -5,6 +5,9 @@
 ---
 
 ## NOW (Recently Completed / Active Stabilization — `CONFIRMED`)
+- **ESLint stabilization (2026-11-14)**: Merchant, Customer and Web now lint with zero errors/warnings, with rules unchanged. Workspace build and offline 14/14, Docker 42/42 and E2E 9/9 passed after cleanup; see `docs/reports/ESLINT_CLEANUP_2026-11-14.md`.
+- **Browser E2E testing (2026-11-14)**: Auth/route/session/logout and voucher-zero order/Realtime/QR coverage implemented with isolated Docker fixtures.
+- **Docker database testing**: Local baseline replay and seed implemented; offline 14/14 and local 42/42 tests verified (2026-11-13). Production audit remains separate.
 - **Customer & Merchant PWA Stabilization** (`CONFIRMED` from commits `ccc457f0`, `7b8e671a`, `e4b02942`, `da0d10f6`):
   - Goal: Eliminate mobile horizontal overflow on Merchant orders, fix order detail deep-linking from notifications, re-sync hooks on `storeId` change, fix PayOS `check-status` with numeric `paymentOrderCode`, and support 0đ voucher orders (`TMU2026`).
   - Status: Merged to `master` (`396f294c`); verified with `pnpm turbo build` and `25/25` audit script (`ad98e7de`).
@@ -44,5 +47,5 @@
    - **Status**: `PLANNED` (DB table exists; VAPID keys & `sw.js` push handlers not implemented).
 
 3. **CI/CD Pipeline & Isolated Test Database**
-   - **Goal**: Add GitHub Actions (`lint`, `typecheck`, `build`, unit tests) and separate staging Supabase project so Vitest integration tests do not run against production.
-   - **Status**: `PLANNED` / `UNKNOWN`.
+   - **Goal**: Gate merges with GitHub Actions lint, unit tests, build, Docker integration and Chromium E2E using isolated local credentials.
+   - **Status**: Workflow implemented (2026-11-14); first GitHub runner execution, timing and required status-check activation pending. Docker replaces the need for a staging Cloud database in this gate. Web build still bypasses strict TypeScript checking as documented.

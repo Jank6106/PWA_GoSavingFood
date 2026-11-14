@@ -80,7 +80,6 @@ export interface Merchant {
   longitude?: number;
 }
 
-
 export type BagType = 'daily' | 'shelf_life';
 export type RepeatMode = 'today_only' | 'recurring';
 
@@ -172,7 +171,9 @@ export interface NotificationItem {
   data?: {
     orderId?: string;
     status?: string;
-    [key: string]: any;
+    order_id?: string; orderCode?: string; order_code?: string; bagId?: string; bag_id?: string;
+    storeId?: string; store_id?: string; merchantId?: string; merchant_id?: string; imageUrl?: string; image_url?: string; id?: string;
+    [key: string]: unknown;
   } | null;
 }
 

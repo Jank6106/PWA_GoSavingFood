@@ -19,9 +19,9 @@
 ## 2. Current State & Project Snapshot (`CONFIRMED`)
 
 ### Project Snapshot
-- **Last reviewed**: 2026-11-12
+- **Last reviewed**: 2026-11-14
 - **Current version**: `1.0.0` (per root/app `package.json`; no Git semver tags exist)
-- **Current branch**: `master` (clean working tree, synced with `origin/master` at merge `396f294c`)
+- **Current branch**: `master` (Docker/E2E implementation documented below; inspect `git status` before editing)
 - **Production status**: `INFERRED` Active / Live (`gosavingfood.app`, `gsf-customer-pwa.vercel.app`, `gsf-merchant-pwa.vercel.app`, `api.gosavingfood.app` Cloudflare proxy, Supabase project `lblwvbedtlxjtkcuxmsf` — `UNKNOWN` exact live traffic/monitoring state)
 
 ### Working (`CONFIRMED`)
@@ -30,7 +30,8 @@
 - Merchant PWA (`apps/merchant`): 1:1 isolated merchant-store login, first-time setup wizard, bag CRUD (`daily` & `shelf_life`), order lifecycle management, HTML5 QR scanner (`verify_pickup_qr`), realtime notifications, analytics dashboard, mobile-responsive order screen.
 - Landing Page (`apps/web`): Editorial landing page with GSAP animations, impact calculator, iOS/Android PWA install guide modal, standalone PWA redirect to `/explore/`, and 5 PayOS API routes.
 - Database (`supabase/migrations/0009`–`0041`): PostgreSQL 17 + PostGIS 3.3.7, 16 public tables, 5 public WebP/image storage buckets, automated audit script passing 25/25 checks (`scripts/comprehensive-system-audit.mjs` verified in git history `ad98e7de`).
-- Local Database Testing: Docker Supabase commands, isolated `.env.test`, offline default `pnpm test`, loopback-guarded `pnpm test:local`, and local `supabase/seed.sql` are configured. Fresh database replay remains blocked by the absence of a pre-0009 baseline and duplicate migration version prefixes; migrations `0009`–`0041` remain untouched.
+- Local Database Testing: Docker Supabase runs on 54321/54322 (Studio 54323). Cloud schema-only baseline plus byte-preserved renumbered migrations support fresh replay; seed is local. Offline 14/14 and local 42/42 tests verified on 2026-11-13. Production catalog audit remains explicit and separate.
+- Browser E2E: Playwright Chromium covers guest gating, merchant role/session/logout, and a two-context zero-VND order with actual Realtime frames and QR handover. Verified after fresh reset: E2E 9/9, offline 14/14, local 42/42, fresh build 3/3. See `docs/TESTING.md` and `docs/reports/E2E_TESTING_2026-11-14.md`. Subsequent ESLint cleanup verified zero errors/warnings across all three apps and reran the same passing build/test suites; see `docs/reports/ESLINT_CLEANUP_2026-11-14.md`.
 
 ### In Progress / Unfinished (`CONFIRMED`)
 - **Admin Portal (`apps/admin`)**: `PLANNED` — no source files or app package exist yet (DB schema & admin RPCs partially exist).
@@ -43,7 +44,7 @@
    - Previously committed Supabase `service_role` JWT and `DATABASE_URL` credentials in Git history still require rotation in Supabase Dashboard (all hardcoded occurrences in working-tree `tests/`, `scripts/`, and `apps/` have now been moved to `.env` via `scripts/lib/env.mjs`).
 2. **Build Type-Check Bypass**: `apps/web/next.config.ts` sets `typescript: { ignoreBuildErrors: true }`.
 3. **Monolithic Service File**: `apps/customer/src/services/customer.service.ts` is ~4,956 lines (bundles API logic + hardcoded `HANOI_BAGS` fallback data that must stay 1:1 synced with DB).
-4. **No CI/CD Pipeline**: No `.github/workflows` or automated test gate before deploy.
+4. **CI activation pending**: `.github/workflows/ci.yml` implements lint/unit/build -> Docker integration -> Playwright on Ubuntu with Node 22/pnpm 11.13.1. Local credentials are generated from Docker, and Linux HOME/USER are preserved. A first GitHub runner execution, timing measurement and required-check configuration remain pending; see `docs/DEPLOYMENT.md` and ADR-008.
 5. **Architecture Doc Drift (historical)**: Legacy docs claimed `react-router`, `@tanstack/react-query`, `zod`, `react-hook-form`, and `msw` — none of these are installed or used in `apps/customer` or `apps/merchant`.
 
 ### Next Recommended Work (`INFERRED`)

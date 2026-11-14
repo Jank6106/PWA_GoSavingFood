@@ -14,6 +14,11 @@ const {
   requireDatabaseUrl: true,
 });
 
+if (process.env.USE_LOCAL_DB === 'true' ||
+    ['localhost', '127.0.0.1', '[::1]'].includes(new URL(SUPABASE_URL).hostname)) {
+  throw new Error('The production catalog audit does not support the local seed. Use pnpm test:local.');
+}
+
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });

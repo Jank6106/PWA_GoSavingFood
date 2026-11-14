@@ -6,8 +6,8 @@ import './index.css'
 import App from './App.tsx'
 
 // Kích hoạt quyền lưu trữ bền vững của PWA (Persistent Storage)
-if (typeof window !== 'undefined' && 'storage' in navigator && (navigator.storage as any)?.persist) {
-  (navigator.storage as any).persist().catch(() => {});
+if (typeof window !== 'undefined' && 'storage' in navigator && navigator.storage?.persist) {
+  navigator.storage.persist().catch(() => {});
 }
 
 // Khóa cử chỉ phóng to (pinch-to-zoom) trên mobile để đảm bảo trải nghiệm chuẩn App PWA, giữ nguyên thao tác cuộn/vuốt
@@ -77,7 +77,6 @@ if ('serviceWorker' in navigator) {
     }
   }
 }
-
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

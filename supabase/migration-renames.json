@@ -1,0 +1,18 @@
+{
+  "00151_get_email_by_phone.sql": "0015_get_email_by_phone.sql",
+  "00152_payos_integration.sql": "0015_payos_integration.sql",
+  "00211_fix_bag_expiry_and_daily_order.sql": "0021_fix_bag_expiry_and_daily_order.sql",
+  "00212_toggle_store_status.sql": "0021_toggle_store_status.sql",
+  "00221_auto_heal_user_on_order.sql": "0022_auto_heal_user_on_order.sql",
+  "00222_store_logos_and_banners.sql": "0022_store_logos_and_banners.sql",
+  "00281_add_order_recipient_contact.sql": "0028_add_order_recipient_contact.sql",
+  "00282_add_payos_qr_cache_and_lifecycle_cleanup.sql": "0028_add_payos_qr_cache_and_lifecycle_cleanup.sql",
+  "00291_bag_management_redesign.sql": "0029_bag_management_redesign.sql",
+  "00292_cancel_order_policy_and_noshow.sql": "0029_cancel_order_policy_and_noshow.sql",
+  "00321_dry_food_inventory_lifecycle.sql": "0032_dry_food_inventory_lifecycle.sql",
+  "00322_fix_order_phone_conflict.sql": "0032_fix_order_phone_conflict.sql",
+  "00331_allow_shared_phone_across_accounts.sql": "0033_allow_shared_phone_across_accounts.sql",
+  "00332_fix_auto_deactivate_bag_trigger.sql": "0033_fix_auto_deactivate_bag_trigger.sql",
+  "00341_allow_user_profile_update.sql": "0034_allow_user_profile_update.sql",
+  "00342_enhance_auth_trigger_and_avatar.sql": "0034_enhance_auth_trigger_and_avatar.sql"
+}

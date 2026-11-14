@@ -21,10 +21,7 @@ if (!isLocalHost(apiHost) || !isLocalHost(databaseHost)) {
   );
 }
 
-const [mode = 'vitest', ...args] = process.argv.slice(2);
-const command = mode === 'audit'
-  ? [resolve('scripts/comprehensive-system-audit.mjs')]
-  : [resolve('node_modules/vitest/vitest.mjs'), 'run', ...args];
+const command = [resolve('node_modules/vitest/vitest.mjs'), 'run', ...process.argv.slice(2)];
 
 const result = spawnSync(process.execPath, command, { stdio: 'inherit', env: process.env });
 if (result.error) throw result.error;
