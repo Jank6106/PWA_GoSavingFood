@@ -25,7 +25,7 @@
 - **Production status**: `INFERRED` Active / Live (`gosavingfood.app`, `gsf-customer-pwa.vercel.app`, `gsf-merchant-pwa.vercel.app`, `api.gosavingfood.app` Cloudflare proxy, Supabase project `lblwvbedtlxjtkcuxmsf` — `UNKNOWN` exact live traffic/monitoring state)
 
 ### Working (`CONFIRMED`)
-- Customer build, web typecheck and scoped lint pass; 136 offline tests pass. OpenAI Mini/Nano text, synthetic-label vision and forced-failover smoke tests pass; full monorepo build not rerun.
+- Customer build, web typecheck and scoped lint pass; 137 offline tests pass. OpenAI Luna/Mini text, synthetic-label vision and forced-failover smoke tests pass; full monorepo build not rerun.
 - Customer PWA (`apps/customer`): Email/phone & OAuth login, Mapbox search + PostGIS nearby bags/stores, cart, checkout, PayOS VietQR payment + 33-min QR cache + polling fallback, 0đ voucher flow (`TMU2026`), order tracking, notifications, reviews, account deletion.
 - Merchant PWA (`apps/merchant`): 1:1 isolated merchant-store login, first-time setup wizard, bag CRUD (`daily` & `shelf_life`), order lifecycle management, HTML5 QR scanner (`verify_pickup_qr`), realtime notifications, analytics dashboard, mobile-responsive order screen.
 - Landing Page (`apps/web`): Editorial landing page with GSAP animations, impact calculator, iOS/Android PWA install guide modal, standalone PWA redirect to `/explore/`, and 5 PayOS API routes.
@@ -33,7 +33,7 @@
 - Local Database Testing: Docker Supabase commands, isolated `.env.test`, offline default `pnpm test`, loopback-guarded `pnpm test:local`, and local `supabase/seed.sql` are configured. Fresh database replay remains blocked by the absence of a pre-0009 baseline and duplicate migration version prefixes; migrations `0009`–`0041` remain untouched.
 
 ### In Progress / Unfinished (`CONFIRMED`)
-- **Customer hackathon**: Home Today Deals and Finder accepted for local preview. VITE_CUSTOMER_FINDER_API_ENABLED=true enables the authenticated OpenAI customer-search route on Hung. Primary gpt-5.4-mini, fallback gpt-5.4-nano; strict validated constraints, current catalogue results, actual model provenance. Both models passed live text and synthetic-label vision tests plus forced failover. Gemini remains inactive in source. Generic adapter supports images but Finder is text-only, no merchant upload UI added. Key stays server-side. Setup: docs/hackathon/customer/AI_SETUP.md. OpenAI integration prepared for branch Hung; production and physical-phone acceptance pending.
+- **Customer hackathon**: Home Today Deals and Finder accepted for local preview. VITE_CUSTOMER_FINDER_API_ENABLED=true enables the authenticated OpenAI customer-search route on Hung. Primary gpt-6-luna, fallback gpt-5.4-mini; strict validated constraints, current catalogue results, actual model provenance. Both models passed live text and synthetic-label vision tests plus forced failover. Gemini remains inactive in source. Generic adapter supports images but Finder is text-only, no merchant upload UI added. Key stays server-side. Setup: docs/hackathon/customer/AI_SETUP.md. OpenAI integration prepared for branch Hung; production and physical-phone acceptance pending.
 - Catalogue bags/stores now carry optional `catalogSource` (`remote` / `demo`); hardcoded fallbacks are tagged `demo`. `remote` identifies the data source only and does not verify merchant consent or partnership. Customer cache namespace is v6.
 - **Admin Portal (`apps/admin`)**: `PLANNED` — no source files or app package exist yet (DB schema & admin RPCs partially exist).
 

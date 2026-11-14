@@ -5,8 +5,8 @@ export class OpenAIError extends Error {
 }
 
 export function getOpenAIModelChain(): string[] {
-  return [...new Set([process.env.OPENAI_MODEL || 'gpt-5.4-mini',
-    ...(process.env.OPENAI_FALLBACK_MODELS ?? 'gpt-5.4-nano').split(',')].map(m => m.trim()))]
+  return [...new Set([process.env.OPENAI_MODEL || 'gpt-6-luna',
+    ...(process.env.OPENAI_FALLBACK_MODELS ?? 'gpt-5.4-mini').split(',')].map(m => m.trim()))]
     .filter(m => /^gpt-[a-zA-Z0-9._-]+$/.test(m)).slice(0, 3);
 }
 
@@ -53,7 +53,7 @@ export function generateOpenAIStructured<T>(options: {
             body: JSON.stringify({ model, store: false, instructions: options.system,
               input: [{ role: 'user', content: [{ type: 'input_text', text: JSON.stringify({ query: options.query }) },
                 ...images.map(image_url => ({ type: 'input_image', image_url, detail: 'high' }))] }],
-              ...(model.startsWith('gpt-5') ? { reasoning: { effort: 'none' } } : {}),
+              ...((model.startsWith('gpt-5') || model === 'gpt-6-luna') ? { reasoning: { effort: 'none' } } : {}),
               max_output_tokens: 2048,
               text: { format: { type: 'json_schema', name: 'gsf_result', strict: true, schema: options.schema } },
             }),

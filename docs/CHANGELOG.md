@@ -53,3 +53,5 @@
 - **PayOS Status Check & Order Detail Loading** (`da0d10f6`, `249af0c9`, `7b8e671a`, `427b00df`): Queried `/api/payos/check-status` with numeric `paymentOrderCode`, synchronized `supabaseUrl` fallbacks in PayOS API routes, and fixed deep-linking from notifications.
 - **Merchant 1:1 Account Isolation** (`6633ddd2`): Dedicated credentials and strict 1:1 store isolation per merchant account.
 - **Catalog Image & Fallback Sync** (`e0113cfd`, `4c7eadf7`): Sanitized all bag image URLs in DB and synchronized `HANOI_BAGS` fallback 1:1.
+
+- 2026-11-14: Customer Finder primary switched to GPT-6 Luna with GPT-5.4 mini fallback, explicit reasoning=none. Live text, synthetic-label vision and forced failover passed; no image-upload UI or production deployment added.

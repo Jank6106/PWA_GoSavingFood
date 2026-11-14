@@ -53,3 +53,5 @@ Customer AI follow-up: user supplied the Gemini key; live primary, fallback and 
 
 ## OpenAI switch (2026-11-14)
 Active Finder switched to OpenAI Responses API: gpt-5.4-mini -> gpt-5.4-nano. Live text and synthetic-label image tests passed for both; forced primary failure switched to Nano. No upload UI added. 136 offline tests, customer build, web typecheck/scoped lint pass. Key stays server-side; TLS verification retained with system CA store on this Windows host. Setup/evidence: docs/hackathon/customer/AI_SETUP.md. AI changes not committed/pushed.
+
+- 2026-11-14: Customer Finder primary switched to GPT-6 Luna with GPT-5.4 mini fallback, explicit reasoning=none. Live text, synthetic-label vision and forced failover passed; no image-upload UI or production deployment added.

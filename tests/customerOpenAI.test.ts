@@ -14,6 +14,14 @@ beforeEach(() => {
 });
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 describe('OpenAI Responses transport', () => {
+  it('uses Luna without implicit medium reasoning and falls back to Mini', async () => {
+    vi.stubEnv('OPENAI_MODEL', undefined); vi.stubEnv('OPENAI_FALLBACK_MODELS', undefined);
+    vi.mocked(fetch).mockResolvedValueOnce(new Response('', { status: 503 })).mockResolvedValueOnce(ok());
+    await run();
+    const bodies = vi.mocked(fetch).mock.calls.map(([, init]) => JSON.parse(init?.body as string));
+    expect(bodies.map(b => b.model)).toEqual(['gpt-6-luna', 'gpt-5.4-mini']);
+    expect(bodies.every(b => b.reasoning.effort === 'none')).toBe(true);
+  });
   it('bounds and deduplicates model configuration', () => {
     vi.stubEnv('OPENAI_FALLBACK_MODELS', 'gpt-primary,https://bad,gpt-backup,gpt-extra,gpt-four');
     expect(getOpenAIModelChain()).toEqual(['gpt-primary','gpt-backup','gpt-extra']);
