@@ -78,6 +78,7 @@ export function BagManagementScreen({ storeId }: { storeId: string }) {
       </div>
       <BagEditorModal
         open={state.isCreateModalOpen}
+        storeId={storeId}
         saving={state.saving}
         onClose={() => state.setIsCreateModalOpen(false)}
         onSubmit={(input) => void state.addBag(input)}

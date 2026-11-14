@@ -15,7 +15,7 @@
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
     "db:status": "npx supabase status",
-    "test:offline": "vitest run tests/bagTiming.test.ts tests/mapbox.test.ts tests/envHelper.test.ts",
+    "test:offline": "vitest run tests/bagTiming.test.ts tests/mapbox.test.ts tests/envHelper.test.ts tests/bagDraft.test.ts tests/discountSuggestion.test.ts",
     "test:local": "node scripts/test-local.mjs",
     "test:audit": "node scripts/comprehensive-system-audit.mjs",
     "test:live": "node scripts/test-live.mjs",

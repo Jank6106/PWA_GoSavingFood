@@ -22,6 +22,18 @@ In production, `apps/customer` calls `https://gosavingfood.app/api/payos/*` (or 
 - `create-payment` strips Vietnamese diacritics from `description` and truncates to **25 ASCII characters** per PayOS limits.
 - `check-status` **must receive numeric `paymentOrderCode`** (not textual `GSF-...` orderCode); if `orderCode` is omitted and `orderId` is provided, the route looks up `payment_order_code` in `orders`.
 
+### AI Endpoint (`apps/web/app/api/ai/*`)
+
+Merchant PWA calls it same-origin: Vercel rewrite `/api/:path*` -> `https://gosavingfood.app/api/:path*` (`apps/merchant/vercel.json`); locally Vite proxies `/api` -> `http://localhost:3000`.
+
+| Method | Endpoint | Purpose | Auth / Authz | Input | Output | Error Handling |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/ai/analyze-bag` | AI Đăng Hàng: Gemini vision reads a surplus-food photo and returns a draft for the create-bag form (no DB writes) | `Authorization: Bearer <Supabase access_token>`; caller must own a store (`stores.owner_user_id`); no CORS wildcard; 12 req/min/user (in-memory) | `{ image: "data:image/(jpeg\|png\|webp);base64,..." }` (≤ ~3MB) | `{ success: true, data: { isFood, name, category: bakery\|beverage\|raw_food\|vegetarian\|other, description, expiryDate: YYYY-MM-DD\|null, estimatedOriginalPrice: number\|null } }` | `401` no/invalid JWT; `403` not a store owner; `400`/`413` bad image; `422` not food; `429` rate limited; `502`/`504` Gemini error/timeout; `500` missing `GEMINI_API_KEY`. |
+
+Model selection: `GEMINI_MODEL` (default `gemini-3.5-flash-lite`) + `GEMINI_FALLBACK_MODELS`; the route hedges (starts the next model in parallel after 5s or immediately on 503/404/429) within a 25s budget. `GET /api/ai/analyze-bag` is a no-auth, no-AI warm-up ping returning `{ ok: true }`.
+
+Discount % is **not** produced by the AI: the merchant client applies a deterministic rule from the store `close_time` (`apps/merchant/src/utils/discountSuggestion.ts`).
+
 ---
 
 ## 2. Supabase PostgreSQL RPCs Called by Clients (`CONFIRMED`)
