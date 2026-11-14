@@ -969,7 +969,7 @@ function CustomerApp() {
         } else {
           setOrders((current) =>
             current.map((o) =>
-              o.id === existingOrder.id
+              o.id === existingOrder.id && ['pending_payment', 'pending'].includes(o.status)
                 ? { ...o, status: 'paid', paymentStatus: 'success' }
                 : o
             )
@@ -978,7 +978,7 @@ function CustomerApp() {
       } catch {
         setOrders((current) =>
           current.map((o) =>
-            o.id === existingOrder.id
+            o.id === existingOrder.id && ['pending_payment', 'pending'].includes(o.status)
               ? { ...o, status: 'paid', paymentStatus: 'success' }
               : o
           )
@@ -1237,6 +1237,7 @@ function CustomerApp() {
 
       return (
         <PaymentPage
+          key={matchedOrder?.id || qOrderId}
           draft={route.draft}
           order={matchedOrder}
           orderId={qOrderId}

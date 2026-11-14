@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { reconcilePayment } from '../payment';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,6 +33,17 @@ async function handleCleanup() {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    // Reconcile money received before expiring reservations. If PayOS cannot be
+    // reached, defer this cleanup attempt rather than guessing payment state.
+    const { data: due, error: dueError } = await supabaseAdmin.from('orders')
+      .select('payment_order_code,final_amount').eq('status', 'pending_payment')
+      .eq('payment_status', 'pending').lt('payment_expires_at', new Date().toISOString())
+      .is('deleted_at', null).not('payment_order_code', 'is', null);
+    if (dueError) throw dueError;
+    if (due?.length) {
+      for (const order of due) await reconcilePayment(order);
+    }
 
     // 1. Dọn dẹp các đơn hết hạn trong database
     const { data: rpcRes, error: rpcErr } = await supabaseAdmin.rpc('cleanup_expired_pending_orders');

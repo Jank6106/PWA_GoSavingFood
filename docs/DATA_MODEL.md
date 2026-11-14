@@ -107,3 +107,10 @@ stateDiagram-v2
 ## 6. Sensitive Data (`CONFIRMED`)
 - **PII**: `users.email`, `users.phone`, `orders.recipient_name`, `orders.recipient_phone`, `refund_requests.bank_account_info` (`jsonb`), `push_subscriptions.p256dh` & `auth`, `admin_audit_logs.ip_address`.
 - **Tokens**: `orders.pickup_token` (cleared on cancel/expire), `orders.payos_qr_code` (cleared on cancel/complete/expire).
+
+
+## Payment lifecycle migration 0042
+
+New nullable orders.payos_account_name/payos_bin preserve provider display details. A service-only sequence and row-locked reserve_payos_payment allocate a stable payment_order_code before external requests; it never rotates on reopening/retry. create_order_transaction gives new reservations 33 minutes even near pickup closing. Young pending rows with shorter TTL are extended to created_at + 33 minutes; terminal orders are not revived.
+
+confirm_payos_payment is service-only and idempotent: repeated paid confirmation does not create refund requests or regress fulfillment; repeated late confirmation creates at most one refund per order. Genuine additional/overpayment detection requires distinct provider transaction reconciliation and must not be inferred from repeated polling/webhooks.

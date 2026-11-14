@@ -3219,14 +3219,8 @@ export const HANOI_BAGS: SurpriseBag[] = [
 
 function mapCustomerOrderRow(o: OrderRow): Order {
   const rev = Array.isArray(o.reviews) ? o.reviews[0] : o.reviews;
-  const isOverdue =
-    o.status === 'pending_payment' &&
-    o.payment_expires_at &&
-    new Date(o.payment_expires_at).getTime() <= Date.now();
-
-  const normalizedStatus = isOverdue
-    ? 'expired'
-    : o.status === 'picked_up'
+  // Only the server can expire a reservation after payment reconciliation.
+  const normalizedStatus = o.status === 'picked_up'
     ? 'completed'
     : o.status;
 
@@ -3259,7 +3253,7 @@ function mapCustomerOrderRow(o: OrderRow): Order {
     paidAt: o.paid_at || undefined,
     completedAt: o.completed_at || undefined,
     cancelledAt: o.cancelled_at || undefined,
-    cancelReason: isOverdue ? 'Hết thời hạn thanh toán (TTL 30 phút)' : (o.cancel_reason || undefined),
+    cancelReason: o.cancel_reason || undefined,
     note: o.note || undefined,
     qrCode: o.qr_code || `GSF-ORDER-${o.id}`,
     pickupToken: o.pickup_token || undefined,
@@ -4635,7 +4629,7 @@ export const customerService = {
       pickupToken: pickupToken || undefined,
       recipientName: customerInfo?.name?.trim() || undefined,
       recipientPhone: customerInfo?.phone?.trim() || undefined,
-      paymentExpiresAt: new Date(Date.now() + 30 * 60000).toISOString(),
+      paymentExpiresAt: rpcResult?.expires_at || undefined,
       status: resolvedStatus,
       paymentStatus: resolvedPaymentStatus,
       paidAt: resolvedPaymentStatus === 'success' ? new Date().toISOString() : undefined,
@@ -4681,8 +4675,9 @@ export const customerService = {
         }
       } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
-      const { data } = await supabase.rpc('cleanup_expired_pending_orders');
-      return (data as {expired_orders_count?: number} | null)?.expired_orders_count || 0;
+      // A failed API reconciliation must not be bypassed with direct DB expiry.
+      // The server/cron owns expiry; the client retries on the next refresh.
+      return 0;
     } catch (err) {
       console.warn('cleanupExpiredPendingOrders error:', err);
       return 0;
@@ -4776,6 +4771,8 @@ export const customerService = {
     items?: Array<{ name: string; quantity: number; price: number }>;
   }): Promise<{
     success: boolean;
+    paid?: boolean;
+    expiresAt?: string;
     orderCode: number;
     paymentLinkId: string;
     checkoutUrl: string;
@@ -4796,17 +4793,17 @@ export const customerService = {
         body: JSON.stringify(params),
       });
       if (!res.ok) {
-        console.warn('[customerService] PayOS create-payment returned non-200:', res.status);
-        return null;
+        const failure = await res.json();
+        throw new Error(failure.error || 'Không thể tải thanh toán.');
       }
       const data = await res.json();
       if (data.success) {
         return data;
       }
-      return null;
+      throw new Error('Không thể tải thanh toán.');
     } catch (err) {
       console.warn('[customerService] createPayOSPayment error:', err);
-      return null;
+      throw err;
     }
   },
 

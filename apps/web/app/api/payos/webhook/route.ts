@@ -40,7 +40,6 @@ function verifySignature(data: Record<string, unknown>, signature: string, check
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log('[PayOS Webhook] Received payload:', JSON.stringify(body));
 
     const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
     if (!checksumKey) {
@@ -66,6 +65,10 @@ export async function POST(request: Request) {
     const orderCode = data.orderCode;
     const paymentLinkId = data.paymentLinkId;
 
+    if (data.code !== '00') {
+      return NextResponse.json({ success: true, message: 'Non-payment event ignored' });
+    }
+
     if (!orderCode) {
       return NextResponse.json({ success: false, error: 'Missing orderCode' }, { status: 400 });
     }
@@ -81,15 +84,21 @@ export async function POST(request: Request) {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
+    const { data: order, error: orderError } = await supabaseAdmin.from('orders')
+      .select('final_amount').eq('payment_order_code', orderCode).single();
+    if (orderError || !order || Number(data.amount) !== Number(order.final_amount)) {
+      return NextResponse.json({ success: false, error: 'Unknown order or payment amount mismatch' }, { status: 400 });
+    }
+
     // Gọi hàm RPC confirm_payos_payment đã tạo ở migration 0015
     const { data: rpcRes, error: rpcErr } = await supabaseAdmin.rpc('confirm_payos_payment', {
       p_order_code: orderCode,
       p_payment_link_id: paymentLinkId || null,
     });
 
-    if (rpcErr) {
+    if (rpcErr || !rpcRes?.success) {
       console.error('[PayOS Webhook] confirm_payos_payment RPC error:', rpcErr);
-      return NextResponse.json({ success: false, error: rpcErr.message }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Payment confirmation failed' }, { status: 500 });
     }
 
     console.log('[PayOS Webhook] Successfully confirmed payment for orderCode:', orderCode, rpcRes);

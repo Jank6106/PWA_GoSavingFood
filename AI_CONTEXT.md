@@ -26,6 +26,9 @@
 
 ### Working (`CONFIRMED`)
 - Local merge validation: 137 offline tests, customer build, workspace lint and web typecheck pass. Earlier OpenAI Luna/Mini text, synthetic-label vision and forced-failover smoke tests are recorded in `docs/hackathon/customer/AI_SETUP.md`; live providers, full monorepo build, Docker and browser E2E were not rerun for this merge.
+- Payment lifecycle fix (0042): stable DB-reserved PayOS code, 33-minute window including near closing, duplicate confirmation is a no-op, expired/cancelled late payments are refunded once. Migration 0042 applied to Cloud on 2026-11-14 for the requested local dev session; API/PWA dev servers use Cloud. Production application deployment remains pending. See ADR-009.
+- Full monorepo build passes (`pnpm turbo build`: `web`, `customer`, `merchant`, `@gosavingfood/ui`).
+
 - Customer PWA (`apps/customer`): Email/phone & OAuth login, Mapbox search + PostGIS nearby bags/stores, cart, checkout, PayOS VietQR payment + 33-min QR cache + polling fallback, 0đ voucher flow (`TMU2026`), order tracking, notifications, reviews, account deletion.
 - Merchant PWA (`apps/merchant`): 1:1 isolated merchant-store login, first-time setup wizard, bag CRUD (`daily` & `shelf_life`), order lifecycle management, HTML5 QR scanner (`verify_pickup_qr`), realtime notifications, analytics dashboard, mobile-responsive order screen.
 - Landing Page (`apps/web`): Editorial landing page with GSAP animations, impact calculator, iOS/Android PWA install guide modal, standalone PWA redirect to `/explore/`, and 5 PayOS API routes.
@@ -40,7 +43,7 @@
 
 ### Known Issues & Technical Debt (`CONFIRMED`)
 1. **Critical Security / Authorization Debt** (see [`docs/SECURITY.md`](docs/SECURITY.md)):
-   - `apps/web/app/api/payos/{create-payment,check-status,cancel-payment,cleanup-expired}/route.ts` have `Access-Control-Allow-Origin: '*'` and **no JWT/caller authentication** (also `create-payment` trusts client-supplied `amount`).
+   - `apps/web/app/api/payos/{create-payment,check-status,cancel-payment,cleanup-expired}/route.ts` have `Access-Control-Allow-Origin: '*'` and **no JWT/caller authentication**.
    - Migration `0040_zero_vnd_order_flow.sql` rewrote `transition_order_status_transaction` (`SECURITY DEFINER`) and **omitted the `is_store_owner` / merchant role check** that existed in `0035`, allowing any authenticated user to invoke merchant transitions.
    - `create_order_transaction` (`0040`) trusts `p_total_discount_price` and `p_discount_amount` from the client instead of recomputing item totals and voucher discounts from DB tables.
    - Previously committed Supabase `service_role` JWT and `DATABASE_URL` credentials in Git history still require rotation in Supabase Dashboard (all hardcoded occurrences in working-tree `tests/`, `scripts/`, and `apps/` have now been moved to `.env` via `scripts/lib/env.mjs`).

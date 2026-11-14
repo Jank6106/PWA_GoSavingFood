@@ -93,3 +93,10 @@ pnpm turbo lint                                # Runs ESLint across workspace pa
    - Store open/close (`stores.is_open`) -> Customer bag availability/badges.
    - Bag stock/price updates (`surprise_bags`) -> Customer stepper limits & Sold Out state.
    - Order transitions (`orders.status`, `payment_status`) -> Live screen updates and `notifications` inserts on both apps.
+
+
+### PayOS lifecycle regressions (0042)
+
+Apply new migrations to local Docker with supabase migration up --local before pnpm test:local. tests/payment-lifecycle.test.ts uses real local PostgreSQL/PostgREST and intercepts every PayOS fetch; no real payment credentials are used. It covers near-closing TTL, concurrent/reopened QR reuse, DB amount authority, paid resume, repeated confirmation, late refunds, terminal guards and RPC permissions. The existing 42 tests remain; five additional cases bring local total to 47.
+
+tests/e2e/03-payment-resume.spec.ts adds browser reload/QR stability and focus reconciliation with mocked PayOS HTTP responses and a real local order. It also verifies that a server-pending order remains in the payment tab despite an elapsed client deadline. E2E total is now 11; offline remains 14. No real-money transaction or Cloud migration is performed in acceptance.

@@ -5,6 +5,8 @@ Status: Accepted (`CONFIRMED`)
 ## Context
 Surprise Bags have limited daily quantities and short pickup windows. Unpaid reservations lock inventory (`surprise_bags.quantity`), and cash-on-pickup increases no-show risk without payment guarantee. Additionally, promotional campaigns require 100% discount vouchers resulting in 0đ orders.
 
+The pickup-end cap below is superseded by [ADR-009](ADR-009-payment-lifecycle.md) and migration 0042, which guarantee the full 33-minute window.
+
 ## Decision
 1. Disable cash payments at the database RPC level (`CASH_PAYMENT_NOT_SUPPORTED` in `create_order_transaction`).
 2. Route paid orders (`final_amount > 0`) through PayOS VietQR with a **33-minute TTL** (30m + 3m buffer, capped at `pickup_end + 5m` for `daily` bags), caching `payos_qr_code` in `orders` and confirming via both PayOS Webhook and `/api/payos/check-status` polling using numeric `payment_order_code`.

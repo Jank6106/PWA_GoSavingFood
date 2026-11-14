@@ -21,6 +21,17 @@ export async function POST(request: Request) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabaseAdmin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
 
+    if (!supabaseAdmin) throw new Error('Database credentials missing');
+    const orderQuery = supabaseAdmin.from('orders').select('status,payment_status,payment_order_code');
+    const { data: target, error: lookupError } = await (orderId
+      ? orderQuery.eq('id', orderId) : orderQuery.eq('payment_order_code', orderCode)).single();
+    if (lookupError || !target || !['expired', 'cancelled'].includes(target.status) ||
+        target.payment_status !== 'pending') {
+      return NextResponse.json({ success: false, error: 'Only cancelled or expired unpaid orders can close their payment link' },
+        { status: 409, headers: corsHeaders });
+    }
+    orderCode = target.payment_order_code;
+
     if (!orderCode && orderId && supabaseAdmin) {
       const { data: dbOrder } = await supabaseAdmin
         .from('orders')
