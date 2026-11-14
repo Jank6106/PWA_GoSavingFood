@@ -44,7 +44,7 @@
    - Previously committed Supabase `service_role` JWT and `DATABASE_URL` credentials in Git history still require rotation in Supabase Dashboard (all hardcoded occurrences in working-tree `tests/`, `scripts/`, and `apps/` have now been moved to `.env` via `scripts/lib/env.mjs`).
 2. **Build Type-Check Bypass**: `apps/web/next.config.ts` sets `typescript: { ignoreBuildErrors: true }`.
 3. **Monolithic Service File**: `apps/customer/src/services/customer.service.ts` is ~4,956 lines (bundles API logic + hardcoded `HANOI_BAGS` fallback data that must stay 1:1 synced with DB).
-4. **No CI/CD Pipeline**: No `.github/workflows` or automated test gate before deploy.
+4. **CI activation pending**: `.github/workflows/ci.yml` implements lint/unit/build -> Docker integration -> Playwright on Ubuntu with Node 22/pnpm 11.13.1. Local credentials are generated from Docker, and Linux HOME/USER are preserved. A first GitHub runner execution, timing measurement and required-check configuration remain pending; see `docs/DEPLOYMENT.md` and ADR-008.
 5. **Architecture Doc Drift (historical)**: Legacy docs claimed `react-router`, `@tanstack/react-query`, `zod`, `react-hook-form`, and `msw` — none of these are installed or used in `apps/customer` or `apps/merchant`.
 
 ### Next Recommended Work (`INFERRED`)

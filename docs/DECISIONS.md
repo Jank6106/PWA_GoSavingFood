@@ -10,3 +10,4 @@
 
 | ADR-006 | Docker database bootstrap and migration filename compatibility | Accepted | [ADR-006](adr/ADR-006-local-database-bootstrap.md) |
 | ADR-007 | Isolated Playwright browser tests and verified Merchant startup | Accepted | [ADR-007](adr/ADR-007-local-browser-e2e.md) |
+| ADR-008 | GitHub Actions quality gate with isolated Docker databases | Accepted | [ADR-008](adr/ADR-008-local-ci-quality-gate.md) |

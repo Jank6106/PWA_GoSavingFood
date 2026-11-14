@@ -5,7 +5,7 @@ import { getE2EConfig } from './lib/e2e-env.mjs';
 const config = getE2EConfig();
 // Pass an allowlist, not the production secrets supplemented by the env loader.
 const env = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
-  /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|TEMP|TMP|APPDATA|LOCALAPPDATA|USERPROFILE|COMSPEC|CI)$/i.test(key)));
+  /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|TEMP|TMP|APPDATA|LOCALAPPDATA|USERPROFILE|USER|HOME|COMSPEC|CI)$/i.test(key)));
 Object.assign(env, {
   NODE_ENV: 'development', E2E_LOCAL: 'true', USE_LOCAL_DB: 'true',
   SUPABASE_URL: config.url, SUPABASE_ANON_KEY: config.anonKey,

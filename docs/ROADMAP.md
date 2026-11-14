@@ -47,5 +47,5 @@
    - **Status**: `PLANNED` (DB table exists; VAPID keys & `sw.js` push handlers not implemented).
 
 3. **CI/CD Pipeline & Isolated Test Database**
-   - **Goal**: Add GitHub Actions (`lint`, `typecheck`, `build`, unit tests) and separate staging Supabase project so Vitest integration tests do not run against production.
-   - **Status**: `PLANNED` / `UNKNOWN`.
+   - **Goal**: Gate merges with GitHub Actions lint, unit tests, build, Docker integration and Chromium E2E using isolated local credentials.
+   - **Status**: Workflow implemented (2026-11-14); first GitHub runner execution, timing and required status-check activation pending. Docker replaces the need for a staging Cloud database in this gate. Web build still bypasses strict TypeScript checking as documented.

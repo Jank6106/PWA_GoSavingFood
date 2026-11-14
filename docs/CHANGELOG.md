@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Added
+- 2026-11-14: Added a three-job GitHub Actions quality gate for lint/unit/build, isolated Docker Supabase integration, and Chromium E2E. Uses frozen pnpm installs, pnpm/build/browser caches, PR cancellation, failure artifacts retained seven days and unconditional Docker cleanup. Local configuration is generated from Docker status without Cloud secrets; E2E children retain Linux HOME/USER. See ADR-008 and the branch-protection guide in DEPLOYMENT.md.
 - 2026-11-14: Added Playwright/Chromium E2E infrastructure, isolated local gateway servers, seeded Customer identities, auth/route-guard specs and a dual-context zero-VND order/Realtime/QR lifecycle. See `docs/reports/E2E_TESTING_2026-11-14.md`.
 - 2026-11-13: Exported a schema-only Cloud baseline for Docker; added local compatibility adapters and synthetic prerequisite owner without copying Cloud user/order data.
 - Added legacy filename mapping for 16 byte-preserved migration renames and local merchant/admin test fixtures.

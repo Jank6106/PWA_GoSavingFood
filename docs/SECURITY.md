@@ -20,7 +20,7 @@
 | **Secret Management (Scripts & Tests)** | `Implemented` (Working Tree) / `Rotation Pending` | Hardcoded `service_role`, `DATABASE_URL`, and fallback bank details removed from `tests/`, `scripts/`, and `apps/`; scripts/tests now load `.env` via `scripts/lib/env.mjs`. Key rotation in Supabase Dashboard is still advised for Git history. |
 | **Storage Upload Scoping** | `Partially Implemented` | `storage.objects` allows `INSERT`/`UPDATE` for any `authenticated` user (per DB policy inspection), without visible bucket/folder ownership checks on `storage.objects` policies. |
 | **Audit Logging** | `Partially Implemented` | `admin_audit_logs` table exists with Admin-only RLS (`CONFIRMED`), but no application code writes to it yet (`INFERRED` — `apps/admin` does not exist). |
-| **CI/CD Security Scanning / Dependency Audit** | `Missing` | No `.github/workflows`, Dependabot, or SAST/secret scanning config in repo. |
+| **CI/CD Security Scanning / Dependency Audit** | `Missing` | CI quality gate exists, but Dependabot and dedicated SAST/secret scanning are not configured. CI uses local Docker credentials only. |
 
 ---
 
