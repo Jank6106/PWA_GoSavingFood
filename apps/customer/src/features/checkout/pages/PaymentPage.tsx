@@ -4,7 +4,7 @@ import { Button } from '@gosavingfood/ui';
 import { ScreenHeader, CancelOrderModal } from '../../../shared/components';
 import { usePayment, type PaymentPageProps } from '../../../hooks/usePayment';
 export function PaymentPage(props: PaymentPageProps) {
-  const { isExpired, terminalMessage, onBack, timeFormatted, effectiveTotal, payosData, qrImageUrl, isImgError, setIsImgError, fallbackQrData, paymentError, handleDownloadQr, copiedField, handleCopy, isPayosLoading, bankAccount, bankName, accountHolder, isCancelling, setIsCancelModalOpen, isCancelModalOpen, effectiveOrderCode, handleCancelPayment, toastMessage } = usePayment(props);
+  const { retryPayment, isExpired, terminalMessage, onBack, timeFormatted, effectiveTotal, payosData, qrImageUrl, isImgError, setIsImgError, fallbackQrData, paymentError, handleDownloadQr, copiedField, handleCopy, isPayosLoading, bankAccount, bankName, accountHolder, isCancelling, setIsCancelModalOpen, isCancelModalOpen, effectiveOrderCode, handleCancelPayment, toastMessage } = usePayment(props);
   // Trường hợp hết hạn thời gian thanh toán
   if (isExpired) {
     return (
@@ -134,10 +134,13 @@ export function PaymentPage(props: PaymentPageProps) {
           )}
         </div>
 
+        {paymentError && <Button variant="secondary" onClick={retryPayment}>Thử tải lại mã thanh toán</Button>}
+
         {/* Nút tải ảnh mã QR */}
         <button
           type="button"
           onClick={handleDownloadQr}
+          disabled={!payosData?.qrCode}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -199,7 +202,7 @@ export function PaymentPage(props: PaymentPageProps) {
               <span className="customer-bank-info-label">Số tài khoản</span>
               <div className="customer-bank-info-val-wrap">
                 <span className="customer-bank-info-val">
-                  {isPayosLoading ? 'Đang lấy STK PayOS...' : bankAccount}
+                  {isPayosLoading ? 'Đang lấy STK PayOS...' : bankAccount || 'Chưa có thông tin thanh toán'}
                 </span>
                 <button
                   type="button"
@@ -207,7 +210,7 @@ export function PaymentPage(props: PaymentPageProps) {
                   onClick={() => handleCopy(bankAccount, 'stk')}
                   title="Sao chép số tài khoản"
                   aria-label="Sao chép số tài khoản"
-                  disabled={isPayosLoading}
+                  disabled={isPayosLoading || !bankAccount}
                 >
                   {copiedField === 'stk' ? <Check size={14} /> : <Copy size={14} />}
                 </button>

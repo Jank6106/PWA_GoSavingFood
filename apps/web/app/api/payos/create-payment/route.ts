@@ -10,7 +10,15 @@ export async function POST(request: Request) {
     }
     const db = paymentDB();
     const { data: order, error } = await db.rpc('reserve_payos_payment', { p_order_id: orderId });
-    if (error || !order) throw new Error('Không thể tải đơn hàng.');
+    if (error || !order) {
+      console.error('[PayOS] reserve order failed', { code: error?.code || 'EMPTY_RESULT' });
+      const notFound = error?.message === 'ORDER_NOT_FOUND';
+      return NextResponse.json({ success: false,
+        error: notFound ? 'Không tìm thấy đơn hàng. Vui lòng tải lại danh sách đơn.'
+          : 'Dịch vụ thanh toán chưa truy cập được đơn hàng. Vui lòng thử lại sau.',
+        errorCode: notFound ? 'ORDER_NOT_FOUND' : 'PAYMENT_DATABASE_UNAVAILABLE',
+      }, { status: notFound ? 404 : 503, headers: corsHeaders });
+    }
     const settled = () => NextResponse.json({ success: true, paid: true, status: 'PAID', updated: true }, { headers: corsHeaders });
     if (isSettled(order)) return settled();
     if (order.status !== 'pending_payment' || order.payment_status !== 'pending') {

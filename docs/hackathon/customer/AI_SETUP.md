@@ -72,3 +72,12 @@ Verification: OpenAI model access for the supplied key returned success; GET htt
 At the user's request, Production now uses OPENAI_MODEL=gpt-6.1-terra and OPENAI_FALLBACK_MODELS=gpt-6-luna. The existing sensitive OPENAI_API_KEY was preserved; the placeholder in the user's example was not stored as a key. Customer's Finder flag remains enabled.
 
 Both model IDs were accessible with the existing key. Backend redeployment: dpl_5UaEecHgmdWTnXcPnxNzkks6M89i. This environment override supersedes the earlier Production Luna/Mini chain; repository defaults are unchanged. No source commit/push is required to activate the Vercel environment override.
+
+
+## Authenticated Production verification and auth configuration repair — 2026-11-14
+
+The earlier configured=true health check was insufficient: a real authenticated probe on both gosavingfood.app and gsf-customer-pwa.vercel.app returned 401 before reaching the provider. Resynchronized the Web project's Production SUPABASE_URL/SUPABASE_ANON_KEY with the validated Cloud auth configuration, preserving model/key settings and all auth checks. Deployment dpl_92pbc75KNtqH45STWGgGZQsXof5R reached READY.
+
+After redeploy, the same sample request with a valid customer session returned HTTP 200 and model gpt-6.1-terra on both domains (single samples: 5782 ms and 4032 ms). Extracted constraints: 2 people, 100000 VND, vegetarian, pickup before 20:00. Browser verification at 390x844 also submitted the live Finder form successfully, displayed AI model provenance and 11 matching catalogue results. The screenshot is in ignored scratch/finder-production-diagnostic.png.
+
+Checks used temporary synthetic Customer accounts with email confirmation set administratively (no email sent), no orders/payment actions, and automatic deletion in finally. All temporary accounts were removed. No auth guard was bypassed. Source code and model defaults were not changed for this configuration repair.
