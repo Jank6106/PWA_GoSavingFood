@@ -41,7 +41,8 @@ test('Pending orders stay in the payment tab until the server expires them', asy
   await page.route('**/api/payos/cleanup-expired', route=>route.fulfill({json:{success:true,expiredCount:0}}));
   await page.goto('/explore/?tab=orders');
   await page.getByRole('button',{name:/^Chờ thanh toán/}).click();
-  await expect(page.locator('.customer-order-card')).toHaveCount(1);
+  const orderCode = 'GSF-' + id.slice(0, 6).toUpperCase();
+  await expect(page.locator('.customer-order-card').filter({hasText:orderCode})).toHaveCount(1);
   expect((await withDB(db=>db.query('select status from orders where id=$1',[id]))).rows[0].status).toBe('pending_payment');
 });
 
