@@ -1,6 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { RESPONSE_SCHEMA, SYSTEM_PROMPT, buildUserPrompt, sanitizeResult, type StoreContext } from './bagDraft';
+import {
+  OPENAI_RESPONSE_SCHEMA,
+  RESPONSE_SCHEMA,
+  SYSTEM_PROMPT,
+  buildUserPrompt,
+  sanitizeResult,
+  type StoreContext,
+} from './bagDraft';
 
 /**
  * POST /api/ai/analyze-bag
@@ -8,7 +15,9 @@ import { RESPONSE_SCHEMA, SYSTEM_PROMPT, buildUserPrompt, sanitizeResult, type S
  * AI Đăng Hàng (Merchant): nhận 1 ảnh món còn dư, trả về bản nháp JSON để điền form tạo túi.
  * - Bắt buộc Supabase JWT (Authorization: Bearer <access_token>) của user SỞ HỮU một cửa hàng.
  * - Không CORS wildcard: Merchant PWA gọi same-origin qua rewrite `/api/*` -> gosavingfood.app.
- * - API key AI chỉ nằm ở server (`GEMINI_API_KEY`, Google AI Studio), không bao giờ expose ra client.
+ * - API key AI chỉ nằm ở server (`OPENAI_API_KEY` và/hoặc `GEMINI_API_KEY`), không bao giờ expose ra client.
+ * - Nhà cung cấp chính: `AI_PROVIDER` (openai | gemini); mặc định OpenAI nếu có key. Có cả 2 key thì
+ *   nhà cung cấp còn lại tự động làm dự phòng (khác hạ tầng -> demo không chết theo 1 nhà cung cấp).
  * - Route này KHÔNG ghi gì vào DB; chủ quán vẫn phải bấm xác nhận để tạo túi qua luồng cũ.
  */
 
@@ -18,7 +27,8 @@ const MAX_IMAGE_BYTES = 3 * 1024 * 1024; // ~3MB base64 payload (client đã né
 const ALLOWED_MIME = /^data:image\/(png|jpe?g|webp);base64,/i;
 const HEDGE_DELAY_MS = 5_000; // model chưa trả lời sau 5s -> gọi thêm model dự phòng song song
 const TOTAL_AI_BUDGET_MS = 25_000; // tổng thời gian chờ AI cho 1 ảnh
-const DEFAULT_FALLBACK_MODELS = 'gemini-3.5-flash-lite,gemini-3.8-flash,gemini-3.6-flash';
+const DEFAULT_GEMINI_MODELS = 'gemini-3.5-flash-lite,gemini-3.8-flash,gemini-3.6-flash';
+const DEFAULT_OPENAI_MODEL = 'gpt-6.1-terra'; // đọc ảnh chuẩn nhất khi đo (~3-4s/ảnh, effort=none)
 const RATE_LIMIT_PER_MINUTE = 12;
 
 // Rate limit đơn giản theo user trong cùng serverless instance (đủ chống spam khi demo / lỡ tay bấm liên tục)
@@ -47,8 +57,14 @@ export async function POST(request: NextRequest) {
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
-  if (!supabaseUrl || !anonKey || !geminiKey) {
+  const candidates = getCandidates();
+  if (!supabaseUrl || !anonKey || candidates.length === 0) {
+    console.error('[AI analyze-bag] missing config:', {
+      supabaseUrl: Boolean(supabaseUrl),
+      supabaseAnonKey: Boolean(anonKey),
+      OPENAI_API_KEY: Boolean(process.env.OPENAI_API_KEY?.trim()),
+      GEMINI_API_KEY: Boolean(process.env.GEMINI_API_KEY?.trim()),
+    });
     return jsonError(500, 'Máy chủ AI chưa được cấu hình.');
   }
 
@@ -76,24 +92,25 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Validate input
-  let body: any;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return jsonError(400, 'Dữ liệu gửi lên không hợp lệ.');
   }
-  const image = typeof body?.image === 'string' ? body.image : '';
+  const rawImage = body && typeof body === 'object' ? (body as { image?: unknown }).image : undefined;
+  const image = typeof rawImage === 'string' ? rawImage : '';
   const mimeMatch = image.match(ALLOWED_MIME);
   if (!mimeMatch) return jsonError(400, 'Ảnh phải là JPG, PNG hoặc WebP.');
   if (image.length > MAX_IMAGE_BYTES) return jsonError(413, 'Ảnh quá lớn, vui lòng chụp lại.');
   const mimeType = `image/${mimeMatch[1].toLowerCase() === 'jpg' ? 'jpeg' : mimeMatch[1].toLowerCase()}`;
   const base64Data = image.slice(mimeMatch[0].length);
 
-  // 4. Gọi Gemini (Google AI Studio) vision với structured output JSON.
+  // 4. Gọi AI vision (OpenAI / Gemini) với structured output JSON.
   // "Hedged requests": gọi model chính; nếu sau HEDGE_DELAY_MS chưa xong (hoặc lỗi) thì gọi thêm
   // model dự phòng SONG SONG, lấy kết quả đầu tiên thành công -> tránh bị kẹt khi 1 model treo/503.
   const store: StoreContext = { name: ownedStores[0]?.name, foodCategories: ownedStores[0]?.food_categories };
-  const result = await raceModels(getModelChain(), geminiKey, mimeType, base64Data, buildUserPrompt(store));
+  const result = await raceModels(candidates, mimeType, base64Data, buildUserPrompt(store));
 
   if (result.kind === "ok") {
     const draft = sanitizeResult(result.data);
@@ -117,12 +134,11 @@ export async function GET() {
 }
 
 async function raceModels(
-  models: string[],
-  apiKey: string,
+  models: Candidate[],
   mimeType: string,
   base64Data: string,
   userPrompt: string
-): Promise<{ kind: "ok"; data: unknown; model: string } | { kind: "timeout" | "failed" }> {
+): Promise<RaceResult> {
   const deadline = Date.now() + TOTAL_AI_BUDGET_MS;
   const controllers: AbortController[] = [];
 
@@ -134,7 +150,9 @@ async function raceModels(
     let hedgeTimer: ReturnType<typeof setTimeout> | undefined;
     const startedAt = Date.now();
 
-    const finish = (value: { kind: "ok"; data: unknown; model: string } | { kind: "timeout" | "failed" }) => {
+    const deadProviders = new Set<Provider>(); // key sai/hết quota -> bỏ qua mọi model của provider đó
+
+    const finish = (value: RaceResult) => {
       if (settled) return;
       settled = true;
       clearTimeout(hedgeTimer);
@@ -144,27 +162,31 @@ async function raceModels(
     };
 
     const launch = () => {
-      if (settled || next >= models.length) return;
+      if (settled) return;
+      while (next < models.length && deadProviders.has(models[next].provider)) next++;
+      if (next >= models.length) return;
       const remaining = deadline - Date.now();
       if (remaining < 1_500) return;
-      const model = models[next++];
+      const candidate = models[next++];
+      const label = `${candidate.provider}:${candidate.model}`;
       const controller = new AbortController();
       controllers.push(controller);
       pending++;
       clearTimeout(hedgeTimer);
       hedgeTimer = setTimeout(launch, HEDGE_DELAY_MS); // model này chậm -> mở thêm model kế tiếp
 
-      callGemini(model, apiKey, mimeType, base64Data, userPrompt, remaining, controller).then((attempt) => {
+      const call = candidate.provider === "openai" ? callOpenAI : callGemini;
+      call(candidate.model, candidate.apiKey, mimeType, base64Data, userPrompt, remaining, controller).then((attempt) => {
         pending--;
         if (settled) return;
         if (attempt.kind === "ok") {
-          console.info(`[AI analyze-bag] ok via ${model} in ${Date.now() - startedAt}ms`);
-          finish({ kind: "ok", data: attempt.data, model });
+          console.info(`[AI analyze-bag] ok via ${label} in ${Date.now() - startedAt}ms`);
+          finish({ kind: "ok", data: attempt.data, model: label });
           return;
         }
         if (attempt.kind === "timeout") sawTimeout = true;
-        console.warn("[AI analyze-bag] model failed", model, attempt.kind, attempt.detail?.slice(0, 160));
-        if (attempt.kind === "fatal") return finish({ kind: "failed" }); // vd. sai API key
+        console.warn("[AI analyze-bag] model failed", label, attempt.kind, attempt.detail?.slice(0, 160));
+        if (attempt.kind === "fatal") deadProviders.add(candidate.provider); // vd. sai API key -> bỏ provider này
         launch(); // lỗi nhanh (503/404/429) -> chuyển ngay model kế tiếp
         if (pending === 0 && (next >= models.length || deadline - Date.now() < 1_500)) {
           finish({ kind: sawTimeout ? "timeout" : "failed" });
@@ -177,17 +199,111 @@ async function raceModels(
   });
 }
 
-type GeminiAttempt =
+type Provider = "openai" | "gemini";
+type Candidate = { provider: Provider; model: string; apiKey: string };
+type RaceResult = { kind: "ok"; data: unknown; model: string } | { kind: "timeout" | "failed" };
+type AiAttempt =
   | { kind: "ok"; data: unknown; detail?: string }
   | { kind: "retryable" | "timeout" | "fatal"; detail?: string };
 
-function getModelChain(): string[] {
-  const primary = process.env.GEMINI_MODEL?.trim();
-  const fallbacks = (process.env.GEMINI_FALLBACK_MODELS || DEFAULT_FALLBACK_MODELS)
+const splitModels = (value: string | undefined) =>
+  (value || "")
     .split(",")
     .map((m) => m.trim())
     .filter(Boolean);
-  return Array.from(new Set([primary, ...fallbacks].filter((m): m is string => Boolean(m))));
+
+/** Chuỗi (provider, model) theo thứ tự ưu tiên; provider không có key thì bị bỏ qua. */
+function getCandidates(): Candidate[] {
+  const openaiKey = process.env.OPENAI_API_KEY?.trim();
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+
+  const openaiModels = Array.from(
+    new Set([process.env.OPENAI_MODEL?.trim() || DEFAULT_OPENAI_MODEL, ...splitModels(process.env.OPENAI_FALLBACK_MODELS)])
+  );
+  const geminiModels = Array.from(
+    new Set(
+      [process.env.GEMINI_MODEL?.trim(), ...splitModels(process.env.GEMINI_FALLBACK_MODELS || DEFAULT_GEMINI_MODELS)].filter(
+        (m): m is string => Boolean(m)
+      )
+    )
+  );
+
+  const openai: Candidate[] = openaiKey
+    ? openaiModels.map((model) => ({ provider: "openai" as const, model, apiKey: openaiKey }))
+    : [];
+  const gemini: Candidate[] = geminiKey
+    ? geminiModels.map((model) => ({ provider: "gemini" as const, model, apiKey: geminiKey }))
+    : [];
+
+  const preferred = (process.env.AI_PROVIDER || (openaiKey ? "openai" : "gemini")).trim().toLowerCase();
+  return preferred === "gemini" ? [...gemini, ...openai] : [...openai, ...gemini];
+}
+
+/** OpenAI Chat Completions + vision + Structured Outputs (strict JSON Schema). */
+async function callOpenAI(
+  model: string,
+  apiKey: string,
+  mimeType: string,
+  base64Data: string,
+  userPrompt: string,
+  timeoutMs: number,
+  controller: AbortController
+): Promise<AiAttempt> {
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const body: Record<string, unknown> = {
+      model,
+      max_completion_tokens: 2048,
+      response_format: {
+        type: "json_schema",
+        json_schema: { name: "surprise_bag_draft", strict: true, schema: OPENAI_RESPONSE_SCHEMA },
+      },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: userPrompt },
+            { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64Data}`, detail: "high" } },
+          ],
+        },
+      ],
+    };
+    // Chỉ gửi khi được cấu hình (model reasoning như gpt-5*: "minimal"/"low" cho nhanh); model thường từ chối tham số này
+    const effort = process.env.OPENAI_REASONING_EFFORT?.trim();
+    if (effort) body.reasoning_effort = effort;
+
+    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!aiRes.ok) {
+      const detail = await aiRes.text().catch(() => "");
+      // 401/403: key sai; 429 insufficient_quota: hết credit -> bỏ provider. 404/429 rate/5xx -> thử model khác
+      const fatal =
+        aiRes.status === 401 || aiRes.status === 403 || (aiRes.status === 429 && /insufficient_quota/i.test(detail));
+      return { kind: fatal ? "fatal" : "retryable", detail: `${aiRes.status} ${detail}` };
+    }
+
+    const aiJson = await aiRes.json();
+    const message = aiJson?.choices?.[0]?.message;
+    if (message?.refusal) return { kind: "retryable", detail: `refusal: ${message.refusal}` };
+    const content: string | undefined = typeof message?.content === "string" ? message.content.trim() : undefined;
+    if (!content) return { kind: "retryable", detail: "empty content" };
+    try {
+      return { kind: "ok", data: JSON.parse(content) };
+    } catch {
+      return { kind: "retryable", detail: "invalid JSON" };
+    }
+  } catch (err: unknown) {
+    const aborted = err instanceof Error && err.name === "AbortError";
+    return { kind: aborted ? "timeout" : "retryable", detail: aborted ? "timeout" : String(err) };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function callGemini(
@@ -198,7 +314,7 @@ async function callGemini(
   userPrompt: string,
   timeoutMs: number,
   controller: AbortController
-): Promise<GeminiAttempt> {
+): Promise<AiAttempt> {
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const aiRes = await fetch(

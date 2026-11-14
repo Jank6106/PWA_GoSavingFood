@@ -24,10 +24,16 @@ export const SYSTEM_PROMPT = `Bạn là copywriter đăng bán cho GoSavingFood 
 Chủ quán chụp 1 ảnh đồ còn dư; bạn trả về JSON đúng schema để điền sẵn form đăng bán. Khách sẽ đọc tên + mô tả trên điện thoại trong 2 giây, nên phải CỤ THỂ, NGON MIỆNG và TRUNG THỰC.
 
 BƯỚC 1 – items_seen: liệt kê 1–6 món nhìn thấy RÕ trong ảnh, tên tiếng Việt thông dụng (vd "bánh sừng bò", "bánh mì que", "trà sữa trân châu"). Không liệt kê thứ không thấy.
+NHẬN DIỆN MÓN VIỆT (ảnh chụp tại quán ở Hà Nội, mặc định đây là đồ ăn Việt Nam):
+- Ổ bánh mì ngắn ~20–30cm, vỏ mỏng giòn, ruột xốp, hai đầu thon hoặc bầu, có/không có nhân (pate, chả, thịt, trứng, rau, dưa) -> "bánh mì" (có nhân thì ghi rõ nhân: "bánh mì pate chả", "bánh mì trứng"). KHÔNG gọi là "baguette".
+- Chỉ dùng "baguette" khi là bánh mì Pháp rất dài (~50cm+), mảnh, vỏ dày rạch xéo nhiều đường, hoặc nhãn/biển ghi rõ "baguette".
+- Tương tự: dùng tên Việt cho món Việt (xôi, bánh bao, bánh giò, bánh chưng, bánh cuốn, bún, phở, cơm tấm, chè, nem/chả giò, bánh bông lan, bánh su kem, sữa chua, trà đá...). Món ngoại phổ biến mà người Việt gọi bằng tên gốc thì giữ (croissant, tiramisu, donut, kimbap, tokbokki).
+- Đọc chữ trên nhãn/bao bì/biển nếu có (tên sản phẩm, vị) và ưu tiên dùng đúng tên in trên đó.
+- Không chắc món cụ thể thì dùng tên chung đúng (vd "bánh mì", "bánh ngọt", "cơm hộp") thay vì đoán sai tên cụ thể.
 
 BƯỚC 2 – name (18–50 ký tự):
 - Mẫu: "Túi " + món chính cụ thể + 1 đặc điểm nổi bật nhìn thấy được (nhân/vị/kiểu). Nhiều loại thì gộp: "Túi bánh ngọt mix: croissant & su kem".
-- Dùng tên món người Việt hay gọi; tên nước ngoài phổ biến thì giữ (croissant, tiramisu).
+- Dùng đúng tên món đã nhận diện ở BƯỚC 1 (ưu tiên tên Việt theo quy tắc trên).
 - KHÔNG dùng: "cuối ngày", "giải cứu", "giảm giá", "siêu", "ngon nhất", số lượng, giá, emoji, dấu ngoặc kép, tên thương hiệu không thấy trên bao bì, dấu chấm cuối.
 - Chỉ viết hoa chữ cái đầu (và tên riêng).
 
@@ -130,21 +136,40 @@ export function normalizeExpiry(raw: unknown): string | null {
   return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
-export function sanitizeResult(raw: any): AnalyzeBagResult {
-  const category: CategoryEnum = CATEGORY_ENUM.includes(raw?.category) ? raw.category : 'other';
-  const price = Number(raw?.estimated_original_price);
-  const itemsSeen = Array.isArray(raw?.items_seen)
+export function sanitizeResult(input: unknown): AnalyzeBagResult {
+  const raw = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  const category: CategoryEnum = (CATEGORY_ENUM as readonly unknown[]).includes(raw.category)
+    ? (raw.category as CategoryEnum)
+    : 'other';
+  const price = Number(raw.estimated_original_price);
+  const itemsSeen: string[] = Array.isArray(raw.items_seen)
     ? raw.items_seen.map((i: unknown) => String(i ?? '').trim()).filter(Boolean).slice(0, 8)
     : [];
   return {
-    isFood: raw?.is_food !== false,
+    isFood: raw.is_food !== false,
     itemsSeen,
     // AI để trống tên -> ghép từ các món nhìn thấy để form không bị rỗng
-    name: cleanName(raw?.name) || (itemsSeen.length ? cleanName(`Túi ${itemsSeen.slice(0, 3).join(' & ')}`) : ''),
+    name: cleanName(raw.name) || (itemsSeen.length ? cleanName(`Túi ${itemsSeen.slice(0, 3).join(' & ')}`) : ''),
     category,
-    description: cleanDescription(raw?.description),
-    expiryDate: normalizeExpiry(raw?.expiry_date),
+    description: cleanDescription(raw.description),
+    expiryDate: normalizeExpiry(raw.expiry_date),
     estimatedOriginalPrice:
       Number.isFinite(price) && price >= 1000 && price <= 5_000_000 ? Math.round(price / 1000) * 1000 : null,
   };
 }
+
+// OpenAI Structured Outputs (strict JSON Schema): mọi trường bắt buộc, null biểu diễn bằng union type.
+export const OPENAI_RESPONSE_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['is_food', 'items_seen', 'name', 'category', 'description', 'expiry_date', 'estimated_original_price'],
+  properties: {
+    is_food: { type: 'boolean' },
+    items_seen: { type: 'array', items: { type: 'string' } },
+    name: { type: 'string' },
+    category: { type: 'string', enum: [...CATEGORY_ENUM] },
+    description: { type: 'string' },
+    expiry_date: { type: ['string', 'null'] },
+    estimated_original_price: { type: ['integer', 'null'] },
+  },
+} as const;
