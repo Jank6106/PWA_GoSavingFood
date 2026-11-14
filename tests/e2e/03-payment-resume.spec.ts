@@ -3,6 +3,28 @@ import { test, expect } from './helpers/fixtures';
 import { loginCustomerSession } from './helpers/auth';
 import { CUSTOMER_ID, STORE_ID, withDB } from './helpers/db';
 
+test('Payment failure stops loading and explicit retry recovers the QR', async ({page,context})=>{
+ const id=randomUUID();
+ await withDB(db=>db.query(`insert into orders(id,customer_id,store_id,total_original_price,total_discount_price,
+ final_amount,payment_method,qr_code,pickup_time) values($1::uuid,$2,$3,7500,7500,7500,'payos_vietqr',$1::text,now()+interval '1 hour')`,[id,CUSTOMER_ID,STORE_ID]));
+ await loginCustomerSession(page,context);
+ let attempts=0;
+ await page.route('**/api/payos/create-payment',route=>{
+  attempts++;
+  return route.fulfill(attempts===1?{status:503,json:{success:false,error:'Dịch vụ thanh toán chưa truy cập được đơn hàng.'}}:
+   {json:{success:true,orderCode:1000000999998,amount:7500,qrCode:'RETRY-SAME-ORDER-QR',checkoutUrl:'https://pay.payos.vn/web/test',
+    accountNumber:'12345',accountName:'TEST',bin:'970418',description:'TEST',expiresAt:new Date(Date.now()+33*60000).toISOString()}});
+ });
+ await page.route('**/api/payos/check-status?**',route=>route.fulfill({json:{success:true,paid:false,status:'PENDING'}}));
+ await page.goto('/explore/?view=payment&orderId='+id);
+ await expect(page.getByText('Dịch vụ thanh toán chưa truy cập được đơn hàng.',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Tải ảnh mã QR',exact:true})).toBeDisabled();
+ await page.getByRole('button',{name:'Thử tải lại mã thanh toán',exact:true}).click();
+ await expect(page.locator('.customer-payment-qr-wrap svg')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Tải ảnh mã QR',exact:true})).toBeEnabled();
+ expect(attempts).toBe(2);
+});
+
 test('Pending orders stay in the payment tab until the server expires them', async ({page, context}) => {
   const id=randomUUID();
   await withDB(db=>db.query(`insert into orders(id,customer_id,store_id,total_original_price,total_discount_price,

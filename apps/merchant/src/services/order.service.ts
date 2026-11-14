@@ -232,132 +232,36 @@ export async function updateMerchantOrderStatus(
     return updatedLocal;
   }
 
-  // Real database UUID: sync with Supabase
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const targetDbStatus =
-      status === 'cancelled'
-        ? 'cancelled'
-        : UI_TO_DB_TARGET[status as Exclude<OrderStatus, 'pending'>] || status;
-
-    const updatePayload: Record<string, unknown> = {
-      status: targetDbStatus,
-      updated_at: new Date().toISOString(),
-    };
-    if (status === 'completed') {
-      updatePayload.completed_at = new Date().toISOString();
-    }
-    if (status === 'cancelled') {
-      updatePayload.cancelled_at = new Date().toISOString();
-      if (note) updatePayload.cancel_reason = note;
-    }
-
-    if (status === 'cancelled') {
-      // Khi quán hủy đơn: BẮT BUỘC gọi RPC transition_order_status_transaction
-      // để tự động kích hoạt hoàn kho túi, hoàn voucher, sinh refund_requests hoàn tiền cho khách và gửi thông báo
-      if (user) {
-        try {
-          await supabase.rpc('transition_order_status_transaction', {
-            p_order_id: orderId,
-            p_target_status: 'cancelled',
-            p_actor_id: user.id,
-            p_actor_role: 'merchant',
-            p_reason: note || 'Chủ quán hủy đơn',
-          });
-        } catch (rpcErr) {
-          console.warn('RPC cancel transition warning:', rpcErr);
-        }
-      }
-    } else {
-      // 1. Tiến trình thông thường (processing, confirmed, completed): Direct update
-      const { error: directErr } = await supabase
-        .from('orders')
-        .update(updatePayload)
-        .eq('id', orderId);
-
-      // 2. If direct update fails (e.g. strict RLS), try RPC transition
-      if (directErr && user) {
-        try {
-          await supabase.rpc('transition_order_status_transaction', {
-            p_order_id: orderId,
-            p_target_status: targetDbStatus,
-            p_actor_id: user.id,
-            p_actor_role: 'merchant',
-          });
-        } catch (rpcErr) {
-          console.warn('RPC transition warning:', rpcErr);
-        }
-      }
-    }
-
-    const row = await fetchOrderRow(orderId).catch(() => null);
-    if (row) return mapDbOrder(row);
-  } catch (err) {
-    console.warn('Supabase sync order status warning:', err);
-  }
-
-  return updatedLocal;
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) throw new Error('Phiên đăng nhập không hợp lệ.');
+  const targetDbStatus = status === 'cancelled' ? 'cancelled' :
+    UI_TO_DB_TARGET[status as Exclude<OrderStatus, 'pending'>] || status;
+  const { data, error } = await supabase.rpc('transition_order_status_transaction', {
+    p_order_id: orderId, p_target_status: targetDbStatus,
+    p_actor_id: user.id, p_actor_role: 'merchant', p_reason: note || null,
+  });
+  if (error || !data?.success) throw new Error('Không thể cập nhật đơn hàng. Vui lòng tải lại và thử lại.');
+  const row = await fetchOrderRow(orderId);
+  if (!row || row.status !== targetDbStatus) throw new Error('Trạng thái đơn chưa được xác nhận.');
+  return mapDbOrder(row);
 }
 
 export async function verifyOrderQR(orderId: string, code: string, storeId?: string): Promise<boolean> {
-  const cleanCode = code.trim();
-
-  // 1. Nếu mã quét là UUID (pickup_token bảo mật), ưu tiên gọi RPC verify_pickup_qr
-  if (isValidUuid(cleanCode) && storeId) {
-    try {
-      const { data: rpcRes, error: rpcErr } = await supabase.rpc('verify_pickup_qr', {
-        p_token: cleanCode,
-        p_store_id: storeId,
-      });
-      if (!rpcErr && rpcRes?.success) {
-        return true;
-      }
-    } catch (err) {
-      console.warn('verify_pickup_qr error:', err);
-    }
-  }
-
-  if (!isValidUuid(orderId)) return true;
-
+  if (!isValidUuid(orderId) || !storeId || !code.trim()) return false;
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    // 2. Cập nhật trực tiếp
-    const { error: directErr } = await supabase
-      .from('orders')
-      .update({
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        pickup_token: null,
-      })
-      .eq('id', orderId);
-
-    if (!directErr) return true;
-
-    // 3. Fallback to RPC transition
-    if (user) {
-      try {
-        await supabase.rpc('transition_order_status_transaction', {
-          p_order_id: orderId,
-          p_target_status: 'completed',
-          p_actor_id: user.id,
-          p_actor_role: 'merchant',
-        });
-        return true;
-      } catch {
-        return true;
-      }
-    }
-  } catch (err) {
-    console.warn('verifyOrderQR error:', err);
+    const row = await fetchOrderRow(orderId);
+    if (!row || row.store_id !== storeId || row.status !== 'ready_for_pickup' ||
+        row.payment_status !== 'success' || !row.pickup_token) return false;
+    const normalized = code.trim().toUpperCase();
+    const validCodes = [row.pickup_token, row.qr_code, row.id, mapDbOrder(row).orderCode];
+    if (!validCodes.some(value => value?.toUpperCase() === normalized)) return false;
+    const { data, error } = await supabase.rpc('verify_pickup_qr', {
+      p_token: row.pickup_token, p_store_id: storeId,
+    });
+    return !error && data?.success === true && data?.order_id === orderId && data?.status === 'completed';
+  } catch {
+    return false;
   }
-  return true;
 }
 
 export function subscribeToStoreOrders(

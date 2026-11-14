@@ -14,4 +14,5 @@
 
 Both branches independently assigned ADR-006. The distinct filenames and existing IDs are preserved for link compatibility; use the decision title to distinguish them.
 | ADR-009 | Stable PayOS payment identity and full reservation deadline | Accepted | [ADR-009](adr/ADR-009-payment-lifecycle.md) |
+| ADR-010 | Server-confirmed Merchant order transitions and pickup | Accepted | [ADR-010](adr/ADR-010-merchant-order-guards.md) |
 

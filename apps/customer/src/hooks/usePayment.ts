@@ -85,6 +85,7 @@ export function usePayment({ total, order, orderId, orderCode, onBack, onCancel,
   const [isExpired, setIsExpired] = useState(false);
   const [terminalMessage, setTerminalMessage] = useState('Đơn hàng đã hết thời gian thanh toán');
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentAttempt, setPaymentAttempt] = useState(0);
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -103,6 +104,12 @@ export function usePayment({ total, order, orderId, orderCode, onBack, onCancel,
   const payosRequestedOrderIdRef = useRef<string | null>(null);
   const isPaidConfirmedRef = useRef(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const retryPayment = () => {
+    payosPromiseRef.current = null;
+    payosRequestedOrderIdRef.current = null;
+    setPaymentError(null);
+    setPaymentAttempt(value => value + 1);
+  };
 
   // Lưu vào sessionStorage để giữ trạng thái khi mobile chuyển app ngân hàng (giấu sạch URL)
   useEffect(() => {
@@ -162,7 +169,7 @@ export function usePayment({ total, order, orderId, orderCode, onBack, onCancel,
     }
   }, [order, effectiveOrderId, effectiveTotal]);
 
-  const isPayosLoading = !payosData;
+  const isPayosLoading = !payosData && !paymentError;
   const transferContent = payosData?.description || effectiveOrderCode;
   const rawAccount = payosData?.accountNumber || '';
   const bankAccount = rawAccount;
@@ -405,16 +412,12 @@ export function usePayment({ total, order, orderId, orderCode, onBack, onCancel,
         if (isMounted) {
           setPaymentError(err instanceof Error ? err.message : 'Không thể tải mã thanh toán. Vui lòng quay lại và thử lại.');
         }
-        if (payosRequestedOrderIdRef.current === targetOrderId) {
-          payosPromiseRef.current = null;
-          payosRequestedOrderIdRef.current = null;
-        }
       });
 
     return () => {
       isMounted = false;
     };
-  }, [effectiveOrderId, order?.id, isExpired, effectiveTotal, effectiveOrderCode, order?.items, handlePaymentSuccess]);
+  }, [paymentAttempt, effectiveOrderId, order?.id, isExpired, effectiveTotal, effectiveOrderCode, order?.items, handlePaymentSuccess]);
 
   // 2. Lắng nghe Supabase Realtime tự động xác nhận đơn
   useEffect(() => {
@@ -589,5 +592,5 @@ export function usePayment({ total, order, orderId, orderCode, onBack, onCancel,
   const seconds = timeLeft % 60;
   const timeFormatted = timeLeft === 0 ? 'Đang đối soát...' : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  return { isExpired, terminalMessage, onBack, timeFormatted, effectiveTotal, payosData, qrImageUrl, isImgError, setIsImgError, fallbackQrData, paymentError, handleDownloadQr, copiedField, handleCopy, isPayosLoading, bankAccount, bankName, accountHolder, transferContent, isCancelling, setIsCancelModalOpen, isCancelModalOpen, effectiveOrderCode, handleCancelPayment, toastMessage };
+  return { retryPayment, isExpired, terminalMessage, onBack, timeFormatted, effectiveTotal, payosData, qrImageUrl, isImgError, setIsImgError, fallbackQrData, paymentError, handleDownloadQr, copiedField, handleCopy, isPayosLoading, bankAccount, bankName, accountHolder, transferContent, isCancelling, setIsCancelModalOpen, isCancelModalOpen, effectiveOrderCode, handleCancelPayment, toastMessage };
 }
