@@ -5,6 +5,12 @@
 ## [Unreleased]
 
 ### Added
+- **AI Đăng Hàng & Gợi Ý Giá (Merchant)** — additive, optional quick-fill on the *create bag* form; manual entry and edit flows are unchanged:
+  - New authenticated route [`apps/web/app/api/ai/analyze-bag/route.ts`](../apps/web/app/api/ai/analyze-bag/route.ts): requires Supabase JWT of a store owner, no CORS wildcard, per-user rate limit, image type/size validation, Gemini vision structured JSON (`name`, `category`, `description`, `expiry_date`, `estimated_original_price`). Writes nothing to DB. Requires server-only `GEMINI_API_KEY` (optional `GEMINI_MODEL`, `GEMINI_FALLBACK_MODELS`); hedged multi-model fallback within a 25s budget and a `GET` warm-up ping triggered when the create-bag form opens.
+  - Merchant: [`services/ai.service.ts`](../apps/merchant/src/services/ai.service.ts), [`hooks/useAiBagDraft.ts`](../apps/merchant/src/hooks/useAiBagDraft.ts), deterministic discount rule [`utils/discountSuggestion.ts`](../apps/merchant/src/utils/discountSuggestion.ts) (<1h to closing → 70%, 1–3h → 50%, >3h → 30%) and camera "AI Đăng Hàng" panel in `BagEditorModal` (create mode only).
+  - Merchant `/api/*` now reaches `apps/web` via Vercel rewrite (`apps/merchant/vercel.json`) and Vite dev proxy (`localhost:3000`).
+  - Naming/description prompt, schema and output cleanup live in [`apps/web/app/api/ai/analyze-bag/bagDraft.ts`](../apps/web/app/api/ai/analyze-bag/bagDraft.ts): "Túi + món cụ thể + đặc điểm" names (18–50 chars) with banned words stripped (e.g. "cuối ngày", "giải cứu"), 2-sentence grounded descriptions, `items_seen` grounding step, store name/category context, strict expiry parsing (rejects text like "Hôm nay"). Tests: [`tests/bagDraft.test.ts`](../tests/bagDraft.test.ts).
+  - Offline unit test [`tests/discountSuggestion.test.ts`](../tests/discountSuggestion.test.ts).
 - Added Docker Supabase database commands, a local test seed, and ignored `.env.test` configuration template.
 - Added local and offline test commands; `pnpm test` now runs offline unit suites by default and local integration commands enforce loopback URLs.
 - Project Memory Pack documentation structure (`README.md`, `AI_CONTEXT.md`, `AGENTS.md`, `docs/*.md`, `docs/adr/ADR-001..005.md`).

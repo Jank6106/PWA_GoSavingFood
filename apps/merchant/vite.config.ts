@@ -13,6 +13,13 @@ export default defineConfig({
     host: true,
     port: 5174,
     strictPort: true,
+    // AI Đăng Hàng gọi same-origin `/api/ai/*` -> Next.js (apps/web) khi chạy local
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     rollupOptions: {

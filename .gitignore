@@ -51,6 +51,7 @@ next-env.d.ts
 scratch/
 
 .agent/
+.claude/
 .codex/
 .cursor/
 .gemini/
