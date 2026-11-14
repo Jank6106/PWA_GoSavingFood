@@ -17,7 +17,7 @@ const display = localFont({ src: "./fonts/BeVietnamPro-Bold.ttf", variable: "--f
 const marquee = localFont({ src: "./fonts/BarlowCondensed-Bold.ttf", variable: "--font-marquee", weight: "700", display: "swap", preload: false });
 
 export const viewport: Viewport = {
-  themeColor: "#163e2e",
+  themeColor: "#1B4D3E",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: "/media/logo-mark.svg",
-    apple: "/media/logo.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -46,6 +46,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="GoSavingFood" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={`${bodyFont.className} min-h-full flex flex-col bg-[#163e2e] text-[#0a2e1d] font-sans antialiased selection:bg-[#00a854] selection:text-white`}>
         {children}

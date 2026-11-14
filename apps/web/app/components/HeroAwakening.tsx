@@ -7,11 +7,13 @@ import { ArrowRight } from "lucide-react";
 interface HeroAwakeningProps {
   customerUrl: string;
   merchantUrl: string;
+  onInstall?: (target: "customer" | "merchant") => void;
 }
 
 export const HeroAwakening: React.FC<HeroAwakeningProps> = ({
   customerUrl,
   merchantUrl,
+  onInstall,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -71,7 +73,12 @@ export const HeroAwakening: React.FC<HeroAwakeningProps> = ({
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pointer-events-auto">
               <a
                 href={customerUrl}
-                className="inline-flex items-center gap-2 rounded-full bg-[#00e676] px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-[#002b1b] shadow-xl shadow-[#00e676]/35 hover:bg-[#69f0ae] hover:scale-105 active:scale-95 transition-all"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (onInstall) onInstall("customer");
+                  else window.location.assign(customerUrl);
+                }}
+                className="inline-flex items-center gap-2 rounded-full bg-[#00e676] px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-[#002b1b] shadow-xl shadow-[#00e676]/35 hover:bg-[#69f0ae] hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 <span>Trải nghiệm ứng dụng ngay</span>
                 <ArrowRight className="w-4 h-4 stroke-[3]" />
@@ -79,7 +86,12 @@ export const HeroAwakening: React.FC<HeroAwakeningProps> = ({
 
               <a
                 href={merchantUrl}
-                className="inline-flex items-center gap-2 rounded-full px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-white border-2 border-white/60 hover:border-white hover:bg-white/10 backdrop-blur-sm transition-all"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (onInstall) onInstall("merchant");
+                  else window.location.assign(merchantUrl);
+                }}
+                className="inline-flex items-center gap-2 rounded-full px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-white border-2 border-white/60 hover:border-white hover:bg-white/10 backdrop-blur-sm transition-all cursor-pointer"
               >
                 <span>Dành cho cửa hàng</span>
                 <ArrowRight className="w-4 h-4" />

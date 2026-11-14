@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useSyncExternalStore } from "react";
+import React, { useState, useEffect } from "react";
 import { LandingMotion } from "./components/LandingMotion";
 import { Navbar } from "./components/Navbar";
 import { HeroAwakening } from "./components/HeroAwakening";
@@ -11,48 +11,107 @@ import { ImpactCalculator } from "./components/ImpactCalculator";
 import { CommunityAndPartners } from "./components/CommunityAndPartners";
 import { FoodMarquee } from "./components/FoodMarquee";
 import { Footer } from "./components/Footer";
+import { PWAInstallModal } from "./components/PWAInstallModal";
 
+function getAppUrls() {
+  if (typeof window === "undefined") {
+    return {
+      customerUrl: "/explore/",
+      merchantUrl: "https://gsf-merchant-pwa.vercel.app",
+    };
+  }
+  const host = window.location.hostname;
+  const isLocal =
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.startsWith("192.168.") ||
+    host.startsWith("10.") ||
+    host.endsWith(".local");
 
-const subscribe = () => () => {};
-const isLocal = () => ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  return {
+    customerUrl: isLocal ? "http://localhost:5173/explore/" : "/explore/",
+    merchantUrl: isLocal ? "http://localhost:5174" : "https://gsf-merchant-pwa.vercel.app",
+  };
+}
 
 export default function Home() {
-  const local = useSyncExternalStore(subscribe, isLocal, () => false);
-  const customerUrl = local ? "http://localhost:5173" : "https://gsf-customer-pwa.vercel.app";
-  const merchantUrl = local ? "http://localhost:5174" : "https://gsf-merchant-pwa.vercel.app";
+  const [urls, setUrls] = useState({
+    customerUrl: "/explore/",
+    merchantUrl: "https://gsf-merchant-pwa.vercel.app",
+  });
+
+  useEffect(() => {
+    const appUrls = getAppUrls();
+    setUrls(appUrls);
+
+    if (typeof window !== "undefined") {
+      // 1. Khi mở ở chế độ Standalone PWA từ màn hình chính tại root '/', tự động chuyển tiếp ngay vào Customer App
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+      if (isStandalone && window.location.pathname === "/") {
+        window.location.replace(appUrls.customerUrl);
+        return;
+      }
+
+      // 2. Nếu người dùng bị redirect về Landing Page kèm OAuth token/code, chuyển hướng ngay về Customer App
+      const search = window.location.search;
+      const hash = window.location.hash;
+      const params = new URLSearchParams(search);
+      if (params.has("code") || params.has("error") || hash.includes("access_token")) {
+        const base = appUrls.customerUrl;
+        const target = base.endsWith("/") ? base : `${base}/`;
+        window.location.replace(`${target}${search}${hash}`);
+      }
+    }
+  }, []);
+
+  const [installModalOpen, setInstallModalOpen] = useState(false);
+  const [installTarget, setInstallTarget] = useState<"customer" | "merchant">("customer");
+
+  const handleInstall = (target: "customer" | "merchant") => {
+    setInstallTarget(target);
+    setInstallModalOpen(true);
+  };
 
   return (
     <div className="landing-page relative min-h-screen-dynamic bg-[#f8faf7] text-[#0a2e1d] flex flex-col font-sans selection:bg-[#00a854] selection:text-white">
       <LandingMotion />
       {/* Navigation Bar */}
-      <Navbar customerUrl={customerUrl} merchantUrl={merchantUrl} />
+      <Navbar customerUrl={urls.customerUrl} merchantUrl={urls.merchantUrl} onInstall={handleInstall} />
 
       <main className="flex-1 w-full">
-        {/* 1. Hero Section (The Awakening) - Scrub Video 1 via GSAP ScrollTrigger */}
-        <HeroAwakening customerUrl={customerUrl} merchantUrl={merchantUrl} />
+        {/* 1. Hero Section (The Awakening) */}
+        <HeroAwakening customerUrl={urls.customerUrl} merchantUrl={urls.merchantUrl} onInstall={handleInstall} />
 
-        {/* 1.5 Story & Philosophy Bridge - Transition between Awakening and Harsh Reality */}
+        {/* 1.5 Story & Philosophy Bridge */}
         <StoryBridge />
 
-        {/* 2. The Shocking Reality - Scrub Video 2 via GSAP ScrollTrigger & Dynamic Counter */}
+        {/* 2. The Shocking Reality */}
         <ShockingReality />
 
-        {/* 3. Giải Pháp GoSavingFood - Interactive Dual-Audience Tab (Consumer vs Merchant) */}
-        <SolutionGoSavingFood customerUrl={customerUrl} merchantUrl={merchantUrl} />
+        {/* 3. Giải Pháp GoSavingFood */}
+        <SolutionGoSavingFood customerUrl={urls.customerUrl} merchantUrl={urls.merchantUrl} onInstall={handleInstall} />
 
-        {/* 4. Lợi Ích & Tác Động - Interactive Impact & Savings Calculator */}
+        {/* 4. Lợi Ích & Tác Động */}
         <ImpactCalculator />
 
-        {/* 5. Community / Testimonials & Store Partners Marquee */}
+        {/* 5. Community / Testimonials & Store Partners */}
         <CommunityAndPartners />
       </main>
 
       <FoodMarquee />
       {/* 6. Footer */}
-      <Footer customerUrl={customerUrl} merchantUrl={merchantUrl} />
+      <Footer customerUrl={urls.customerUrl} merchantUrl={urls.merchantUrl} onInstall={handleInstall} />
 
-
-
+      {/* Popup Hướng Dẫn Tải App PWA / Mở Bản Web */}
+      <PWAInstallModal
+        isOpen={installModalOpen}
+        target={installTarget}
+        onClose={() => setInstallModalOpen(false)}
+        customerUrl={urls.customerUrl}
+        merchantUrl={urls.merchantUrl}
+      />
     </div>
   );
 }

@@ -1,75 +1,28 @@
-# React + TypeScript + Vite
+# GoSavingFood Merchant PWA (`apps/merchant`)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Store partner Progressive Web App (`gsf-merchant-pwa.vercel.app`).
 
-Currently, two official plugins are available:
+> **Project-wide context & rules**: See [`../../AI_CONTEXT.md`](../../AI_CONTEXT.md) and [`../../AGENTS.md`](../../AGENTS.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+## Architecture (`CONFIRMED`)
+```text
+src/
+├── types/       # Domain types (BagItem, MerchantOrder, StoreProfile, AnalyticsMetrics, NotificationItem)
+├── mocks/       # Fallback constants (STORE_ID)
+├── services/    # Supabase adapters (auth, bag, order, store, notification, analytics)
+├── hooks/       # SWR localStorage caches (60s TTL), Supabase Realtime sync, mutations
+├── components/  # Domain UI components (bags, orders, layout, notifications, ui)
+├── pages/       # BagManagementScreen, OrderManagementScreen, AnalyticsScreen, SettingsScreen, FirstTimeSetupScreen, LoginScreen
+├── utils/       # bagTiming, validation
+└── App.tsx      # Auth gating & ?tab= screen shell + global QR scanner FAB
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+- **Strict Layering**: `pages/` or `components/` -> `hooks/` -> `services/` -> Supabase. UI components must NOT import from `services/`.
+- **1:1 Isolation**: Each merchant credential maps 1:1 to a single store via `stores.owner_user_id`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+## Commands (from repo root)
+```bash
+pnpm --filter merchant dev    # http://localhost:5174
+pnpm --filter merchant build  # tsc -b && vite build
+pnpm --filter merchant lint   # eslint .
 ```

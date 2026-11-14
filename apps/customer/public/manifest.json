@@ -1,31 +1,38 @@
 {
-  "name": "Go Saving Food - Khách Hàng",
-  "short_name": "GSF Khách",
-  "description": "Nền tảng săn suất ăn giải cứu giá tốt, giảm đến 80% và chống lãng phí thực phẩm",
-  "start_url": "./",
-  "scope": "./",
+  "name": "GoSavingFood",
+  "short_name": "GSF",
+  "description": "Nền tảng giải cứu thực phẩm chất lượng giá ưu đãi",
+  "id": "/explore/",
+  "start_url": "/explore/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0b1329",
-  "theme_color": "#10b981",
+  "background_color": "#1B4D3E",
+  "theme_color": "#1B4D3E",
   "icons": [
     {
-      "src": "/pwa-192x192.svg",
+      "src": "/pwa-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-512x512.svg",
+      "src": "/pwa-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "./pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-512x512.svg",
+      "src": "./pwa-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "type": "image/png",
+      "purpose": "maskable any"
     }
   ]
 }

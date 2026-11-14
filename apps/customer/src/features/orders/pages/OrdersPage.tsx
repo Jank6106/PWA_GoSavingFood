@@ -1,176 +1,170 @@
-import React, { useState } from 'react';
-import { QrCode, MapPin, Clock, CheckCircle2 } from 'lucide-react';
-import { Card, Badge, Button, EmptyState, Dialog } from '@gosavingfood/ui';
-import type { CustomerOrder } from '../../../shared/types/customer.types';
+import { useMemo, useState } from 'react';
+import { ChevronRight, Clock3, MapPin } from 'lucide-react';
+import { EmptyState } from '@gosavingfood/ui';
+import { AuthRequiredState, OrderStatusBadge, PageHeading } from '../../../shared/components';
+import type { Order } from '../../../shared/types/customer.types';
 
 interface OrdersPageProps {
-  orders: CustomerOrder[];
-  onGoHome: () => void;
+  orders: Order[];
+  isAuthenticated: boolean;
+  onLogin: () => void;
+  onOpenOrder: (order: Order) => void;
 }
 
-export const OrdersPage: React.FC<OrdersPageProps> = ({ orders, onGoHome }) => {
-  const [filter, setFilter] = useState<'pending' | 'history'>('pending');
-  const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
+type FilterId = 'all' | 'pending_payment' | 'pending' | 'preparing' | 'ready_for_pickup' | 'completed' | 'cancelled';
 
-  const displayedOrders = orders.filter((order) =>
-    filter === 'pending'
-      ? order.status === 'ready'
-      : order.status === 'completed' || order.status === 'cancelled'
+const filters: Array<{ id: FilterId; label: string }> = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'pending_payment', label: 'Chờ thanh toán' },
+  { id: 'pending', label: 'Chờ xác nhận' },
+  { id: 'preparing', label: 'Đang xử lý' },
+  { id: 'ready_for_pickup', label: 'Chờ lấy' },
+  { id: 'completed', label: 'Hoàn thành' },
+  { id: 'cancelled', label: 'Đã hủy' },
+];
+
+function formatPickupTimeDisplay(pickupTime?: string): string {
+  if (!pickupTime) return '11:00 - 14:00';
+  if (pickupTime.includes('T') || (pickupTime.includes('-') && pickupTime.includes(':'))) {
+    try {
+      const d = new Date(pickupTime);
+      if (!isNaN(d.getTime())) {
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        return `${hours}:${minutes} · ${day}/${month}`;
+      }
+    } catch {}
+  }
+  return pickupTime;
+}
+
+const matchesFilter = (order: Order, filterId: FilterId): boolean => {
+  if (filterId === 'all') return true;
+  if (filterId === 'pending_payment') {
+    return order.status === 'pending_payment';
+  }
+  if (filterId === 'pending') {
+    return order.status === 'paid' || order.status === 'pending';
+  }
+  if (filterId === 'preparing') {
+    return order.status === 'preparing' || order.status === 'confirmed';
+  }
+  if (filterId === 'ready_for_pickup') {
+    return order.status === 'ready_for_pickup';
+  }
+  if (filterId === 'completed') {
+    return order.status === 'completed' || order.status === 'picked_up';
+  }
+  if (filterId === 'cancelled') {
+    return order.status === 'cancelled' || order.status === 'expired';
+  }
+  return false;
+};
+
+export function OrdersPage({ orders, isAuthenticated, onLogin, onOpenOrder }: OrdersPageProps) {
+  const [filter, setFilter] = useState<FilterId>('all');
+
+  // Hiển thị đầy đủ đơn hàng của khách hàng (bao gồm đơn đang chờ thanh toán VietQR)
+  const validOrders = useMemo(
+    () => orders,
+    [orders]
   );
 
+  // 2. Tính toán số lượng đơn thực tế cho từng trạng thái từ danh sách đơn hợp lệ
+  const tabCounts = useMemo(() => {
+    const counts: Record<FilterId, number> = {
+      all: 0,
+      pending_payment: 0,
+      pending: 0,
+      preparing: 0,
+      ready_for_pickup: 0,
+      completed: 0,
+      cancelled: 0,
+    };
+    for (const order of validOrders) {
+      if (matchesFilter(order, 'pending_payment')) counts.pending_payment++;
+      else if (matchesFilter(order, 'pending')) counts.pending++;
+      else if (matchesFilter(order, 'preparing')) counts.preparing++;
+      else if (matchesFilter(order, 'ready_for_pickup')) counts.ready_for_pickup++;
+      else if (matchesFilter(order, 'completed')) counts.completed++;
+      else if (matchesFilter(order, 'cancelled')) counts.cancelled++;
+    }
+    return counts;
+  }, [validOrders]);
+
+  // 3. Danh sách đơn hiển thị theo tab hiện tại
+  const visibleOrders = useMemo(
+    () => validOrders.filter((order) => matchesFilter(order, filter)),
+    [filter, validOrders]
+  );
+
+  if (!isAuthenticated) return <AuthRequiredState onLogin={onLogin} />;
   return (
-    <div className="customer-page-orders">
-      <div className="customer-orders-header">
-        <h2 className="customer-page-title">Đơn hàng của bạn</h2>
+    <div className="customer-screen">
+      <PageHeading title="Đơn hàng" />
+      <div className="customer-filter-tabs">
+        {filters.map((item) => {
+          const count = item.id !== 'all' ? tabCounts[item.id] : 0;
+          return (
+            <button
+              type="button"
+              key={item.id}
+              className={filter === item.id ? 'is-active' : ''}
+              onClick={() => setFilter(item.id)}
+            >
+              <span>{item.label}</span>
+              {count > 0 && <span className="customer-tab-badge">{count}</span>}
+            </button>
+          );
+        })}
       </div>
-
-      {/* Tabs filter */}
-      <div className="customer-orders-tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={filter === 'pending'}
-          className={`customer-tab-btn ${filter === 'pending' ? 'customer-tab-btn--active' : ''}`}
-          onClick={() => setFilter('pending')}
-        >
-          Chờ nhận món ({orders.filter(o => o.status === 'ready').length})
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={filter === 'history'}
-          className={`customer-tab-btn ${filter === 'history' ? 'customer-tab-btn--active' : ''}`}
-          onClick={() => setFilter('history')}
-        >
-          Lịch sử đơn
-        </button>
-      </div>
-
-      {displayedOrders.length === 0 ? (
-        <EmptyState
-          title={filter === 'pending' ? 'Không có đơn hàng chờ nhận' : 'Chưa có lịch sử đơn hàng'}
-          description={
-            filter === 'pending'
-              ? 'Bạn chưa có suất ăn nào đang chờ lấy hôm nay. Hãy ghé trang chủ để khám phá món ngon giá tốt!'
-              : 'Các đơn hàng đã hoàn tất trong quá khứ sẽ hiển thị tại đây.'
-          }
-          action={
-            <Button variant="primary" size="md" onClick={onGoHome}>
-              Đặt món ngay
-            </Button>
-          }
-        />
+      {!visibleOrders.length ? (
+        <EmptyState title="Chưa có đơn phù hợp" />
       ) : (
         <div className="customer-orders-list">
-          {displayedOrders.map((order) => (
-            <Card key={order.id} className="customer-order-card">
-              <div className="customer-order-top">
-                <div>
-                  <div className="customer-order-shop">{order.shopName}</div>
-                  <div className="customer-order-code">Mã: #{order.orderCode}</div>
+          {visibleOrders.map((order) => {
+            return (
+              <button
+                key={order.id}
+                type="button"
+                className="customer-order-card"
+                onClick={() => onOpenOrder(order)}
+              >
+                <div className="customer-order-card-top">
+                  <span>
+                    <small>{order.orderCode}</small>
+                    <strong>{order.merchantName}</strong>
+                  </span>
+                  <OrderStatusBadge status={order.status} />
                 </div>
-                <Badge
-                  variant={order.status === 'ready' ? 'warning' : 'success'}
-                >
-                  {order.status === 'ready' ? 'Chờ lấy món' : 'Đã nhận thành công'}
-                </Badge>
-              </div>
-
-              <div className="customer-order-items">
-                {order.items.map((it) => (
-                  <div key={it.product.id} className="customer-order-item-row">
-                    <span>
-                      {it.quantity}x {it.product.title}
+                <div className="customer-order-products">
+                  {order.items.map((item) => (
+                    <span key={item.bagId}>
+                      {item.quantity}× {item.bagName}
                     </span>
-                    <span className="customer-order-item-price">
-                      {(it.product.rescuePrice * it.quantity).toLocaleString('vi-VN')}đ
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="customer-order-details">
-                <div className="customer-order-detail-row">
-                  <Clock size={15} strokeWidth={2} />
-                  <span>Khung giờ lấy: <strong>{order.pickupTime}</strong></span>
+                  ))}
                 </div>
-                <div className="customer-order-detail-row">
-                  <MapPin size={15} strokeWidth={2} />
-                  <span>{order.pickupAddress}</span>
+                <div className="customer-order-meta">
+                  <span>
+                    <Clock3 size={14} /> {formatPickupTimeDisplay(order.pickupTime)}
+                  </span>
+                  <span>
+                    <MapPin size={14} /> {order.pickupAddress}
+                  </span>
                 </div>
-              </div>
-
-              <div className="customer-order-bottom">
-                <div>
-                  <span className="customer-order-total-label">Tổng thanh toán: </span>
-                  <strong className="customer-order-total-val">
-                    {order.totalAmount.toLocaleString('vi-VN')}đ
-                  </strong>
+                <div className="customer-order-card-bottom">
+                  <span>
+                    Tổng cộng <strong>{order.finalAmount.toLocaleString('vi-VN')}đ</strong>
+                  </span>
+                  <ChevronRight size={19} />
                 </div>
-
-                {order.status === 'ready' && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => setSelectedOrder(order)}
-                    leftIcon={<QrCode size={16} strokeWidth={2} />}
-                  >
-                    Mã nhận hàng
-                  </Button>
-                )}
-              </div>
-            </Card>
-          ))}
+              </button>
+            );
+          })}
         </div>
-      )}
-
-      {/* Modal hiển thị mã nhận món */}
-      {selectedOrder && (
-        <Dialog
-          isOpen={Boolean(selectedOrder)}
-          onClose={() => setSelectedOrder(null)}
-          title="Mã nhận suất ăn"
-          footer={
-            <Button
-              variant="outline"
-              size="md"
-              fullWidth
-              onClick={() => setSelectedOrder(null)}
-            >
-              Đóng
-            </Button>
-          }
-        >
-          <div className="customer-qr-modal-content">
-            <div className="customer-qr-icon-wrap">
-              <CheckCircle2 size={40} className="customer-green-text" />
-            </div>
-            <p className="customer-qr-desc">
-              Vui lòng đến <strong>{selectedOrder.shopName}</strong> và đưa mã này cho nhân viên khi thanh toán:
-            </p>
-
-            <div className="customer-pickup-code-box">
-              <span className="customer-pickup-code-label">MÃ LẤY HÀNG CỦA BẠN</span>
-              <span className="customer-pickup-code-text">{selectedOrder.orderCode}</span>
-            </div>
-
-            <div className="customer-qr-info-group">
-              <div>
-                <strong>Khung giờ:</strong> {selectedOrder.pickupTime}
-              </div>
-              <div>
-                <strong>Địa chỉ:</strong> {selectedOrder.pickupAddress}
-              </div>
-              <div>
-                <strong>Thanh toán tại quán:</strong>{' '}
-                <span className="customer-highlight-price">
-                  {selectedOrder.totalAmount.toLocaleString('vi-VN')}đ
-                </span>
-              </div>
-            </div>
-          </div>
-        </Dialog>
       )}
     </div>
   );
-};
+}

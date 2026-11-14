@@ -1,379 +1,361 @@
-import { useState, useEffect } from 'react';
-import './index.css';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { AppHeader } from './components/layout/AppHeader';
+import { AppTabBar } from './components/layout/AppTabBar';
+import { DraggableQRFab } from './components/layout/DraggableQRFab';
+import { NotificationModal } from './components/notifications/NotificationModal';
+import { ToastBar } from './components/ui';
+import { useAuth } from './hooks/useAuth';
+import { useNotifications } from './hooks/useNotifications';
+import { useStoreProfile } from './hooks/useStoreProfile';
+import { useToast } from './hooks/useToast';
+import { STORE_ID } from './mocks';
+import { LoginScreen } from './pages/LoginScreen';
+import { getCachedMerchantUser } from './services/auth.service';
+import type { LoginCredentials, NotificationItem, TabRoute } from './types';
 
-interface ProductItem {
-  id: number;
-  title: string;
-  originalPrice: number;
-  rescuePrice: number;
-  stock: number;
-  pickupTime: string;
-  active: boolean;
+const BagManagementScreen = lazy(() =>
+  import('./pages/BagManagementScreen').then((m) => ({ default: m.BagManagementScreen }))
+);
+const OrderManagementScreen = lazy(() =>
+  import('./pages/OrderManagementScreen').then((m) => ({ default: m.OrderManagementScreen }))
+);
+const AnalyticsScreen = lazy(() =>
+  import('./pages/AnalyticsScreen').then((m) => ({ default: m.AnalyticsScreen }))
+);
+const SettingsScreen = lazy(() =>
+  import('./pages/SettingsScreen').then((m) => ({ default: m.SettingsScreen }))
+);
+
+// FirstTimeSetupScreen chỉ dùng 1 lần cho đối tác mới nên giữ lazy
+const FirstTimeSetupScreen = lazy(() =>
+  import('./pages/FirstTimeSetupScreen').then((m) => ({ default: m.FirstTimeSetupScreen }))
+);
+
+function ScreenLoadingSkeleton() {
+  return (
+    <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16, width: '100%', maxWidth: 480, margin: '0 auto' }}>
+      <div
+        style={{
+          height: 38,
+          width: '50%',
+          borderRadius: 8,
+          background: 'rgba(0, 86, 57, 0.08)',
+          animation: 'pulse 1.5s infinite ease-in-out',
+        }}
+      />
+      <div
+        style={{
+          height: 120,
+          borderRadius: 16,
+          background: 'rgba(0, 86, 57, 0.05)',
+          animation: 'pulse 1.5s infinite ease-in-out',
+        }}
+      />
+      <div
+        style={{
+          height: 120,
+          borderRadius: 16,
+          background: 'rgba(0, 86, 57, 0.05)',
+          animation: 'pulse 1.5s infinite ease-in-out',
+        }}
+      />
+    </div>
+  );
 }
 
 export default function App() {
-  const [products, setProducts] = useState<ProductItem[]>([
-    {
-      id: 1,
-      title: 'Túi Bí Mật Bánh Mì Tươi Cuối Ngày',
-      originalPrice: 80000,
-      rescuePrice: 25000,
-      stock: 2,
-      pickupTime: '18:30 - 20:00',
-      active: true,
-    },
-    {
-      id: 2,
-      title: 'Khay Bánh Croissant bơ Pháp (Lẻ 3 chiếc)',
-      originalPrice: 95000,
-      rescuePrice: 35000,
-      stock: 5,
-      pickupTime: '19:00 - 20:30',
-      active: true,
-    },
-  ]);
+  const auth = useAuth();
 
-  const [showModal, setShowModal] = useState(false);
-  const [codeInput, setCodeInput] = useState('');
-  const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
-
-  useEffect(() => {
-    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
-      setIsInstalled(true);
+  // Khởi tạo ngay lập tức từ URL params hoặc dữ liệu cached (0ms), fallback 'login' nếu chưa đăng nhập
+  const [route, setRoute] = useState<'login' | 'setup' | TabRoute>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') as TabRoute | null;
+      if (tabParam && ['bags', 'orders', 'analytics', 'settings'].includes(tabParam)) {
+        return tabParam;
+      }
     }
+    const cached = getCachedMerchantUser();
+    if (cached) {
+      return cached.isFirstLogin ? 'setup' : 'bags';
+    }
+    return 'login';
+  });
 
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
+  const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
+  const [isGlobalQRScannerOpen, setIsGlobalQRScannerOpen] = useState(false);
+  const storeId = auth.user?.storeId || STORE_ID;
+  const store = useStoreProfile(storeId);
+  const { toastMessage, showToast } = useToast();
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', () => {
-      setIsInstalled(true);
-      setDeferredPrompt(null);
-    });
+  const handleNewNotification = useCallback(
+    (item: any) => {
+      showToast(`🔔 ${item?.title ?? 'Đơn hàng mới'}: ${item?.body ?? 'Có đơn hàng mới vừa được đặt!'}`);
+    },
+    [showToast]
+  );
 
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
+  const notifications = useNotifications(auth.user?.id ?? '', handleNewNotification);
+
+  const routeRef = useRef<'login' | 'setup' | TabRoute>(route);
+  routeRef.current = route;
+
+  const notificationsRef = useRef(notifications);
+  notificationsRef.current = notifications;
+
+  const navigateTo = useCallback((nextRoute: 'login' | 'setup' | TabRoute, pushHistory = true) => {
+    if (routeRef.current === nextRoute) return;
+
+    if (pushHistory && nextRoute !== 'login' && nextRoute !== 'setup') {
+      const url = nextRoute === 'bags' ? window.location.pathname : `${window.location.pathname}?tab=${nextRoute}`;
+      window.history.pushState({ route: nextRoute }, '', url);
+    }
+    setRoute(nextRoute);
   }, []);
 
-  const handleInstallPWA = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setIsInstalled(true);
-      }
-      setDeferredPrompt(null);
-    } else {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-      if (isIOS) {
-        setShowIOSPrompt(true);
-      } else {
-        alert('👉 Trên trình duyệt điện thoại: Nhấn vào menu 3 chấm (⋮) và chọn "Cài đặt ứng dụng" hoặc "Thêm vào Màn hình chính" để tải App Cửa Hàng!');
-      }
+  const [visitedTabs, setVisitedTabs] = useState<Record<string, boolean>>(() => ({
+    [route]: true,
+  }));
+
+  useEffect(() => {
+    if (['bags', 'orders', 'analytics', 'settings'].includes(route)) {
+      setVisitedTabs((prev) => (prev[route] ? prev : { ...prev, [route]: true }));
     }
-  };
+  }, [route]);
 
-  // Form State
-  const [newTitle, setNewTitle] = useState('');
-  const [newOrigPrice, setNewOrigPrice] = useState('');
-  const [newRescuePrice, setNewRescuePrice] = useState('');
-  const [newStock, setNewStock] = useState('3');
-  const [newPickupTime, setNewPickupTime] = useState('18:00 - 20:00');
+  // Đồng bộ lịch sử điều hướng với trình duyệt cho Merchant PWA (chỉ chạy 1 lần khi mount)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab') as TabRoute | null;
+    const initialRoute = tabParam && ['bags', 'orders', 'analytics', 'settings'].includes(tabParam)
+      ? tabParam
+      : 'bags';
+    const initialUrl = initialRoute === 'bags' ? window.location.pathname : `${window.location.pathname}?tab=${initialRoute}`;
+    window.history.replaceState({ route: initialRoute }, '', initialUrl);
 
-  const handleCreateProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle || !newRescuePrice) return;
+    const handlePopState = (event: PopStateEvent) => {
+      // Đóng modal overlay khi bấm phím Back
+      setIsGlobalQRScannerOpen(false);
+      notificationsRef.current?.setIsOpen(false);
+      setTargetOrderId(null);
 
-    const newItem: ProductItem = {
-      id: Date.now(),
-      title: newTitle,
-      originalPrice: Number(newOrigPrice) || Number(newRescuePrice) * 3,
-      rescuePrice: Number(newRescuePrice),
-      stock: Number(newStock) || 1,
-      pickupTime: newPickupTime,
-      active: true,
+      const state = event.state as { route?: 'login' | 'setup' | TabRoute } | null;
+      if (state && state.route) {
+        setRoute(state.route);
+      } else {
+        const p = new URLSearchParams(window.location.search);
+        const t = (p.get('tab') as TabRoute) || 'bags';
+        setRoute(t);
+      }
     };
 
-    setProducts([newItem, ...products]);
-    setShowModal(false);
-    setNewTitle('');
-    setNewOrigPrice('');
-    setNewRescuePrice('');
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Hỗ trợ tự động kích hoạt cài đặt PWA khi mở từ Landing Page với ?install=true
+  useEffect(() => {
+    const handleInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      const promptEvent = event as any;
+      if (new URLSearchParams(window.location.search).has('install')) {
+        promptEvent.prompt?.().catch(() => {});
+      }
+    };
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+
+    if (new URLSearchParams(window.location.search).has('install')) {
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS) {
+        window.setTimeout(() => {
+          showToast('Nhấn nút Chia sẻ ⎋ và chọn "Thêm vào MH chính" ➕ để cài đặt GoSavingFood Cửa Hàng');
+        }, 1000);
+      }
+    }
+
+    return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+  }, [showToast]);
+
+  // Route Guard: Bảo vệ tuyến đường chặt chẽ
+  // 1. Chưa đăng nhập: Luôn chặn và giữ ở 'login'
+  // 2. Đã đăng nhập nhưng chưa xong Onboarding (isFirstLogin === true): Bắt buộc ở 'setup'
+  // 3. Đã đăng nhập và hoàn thành Onboarding (isFirstLogin === false): Cố vào 'setup'/'login' sẽ tự đẩy về 'bags'
+  useEffect(() => {
+    if (!auth.user) {
+      if (route !== 'login') setRoute('login');
+    } else if (auth.user.isFirstLogin) {
+      if (route !== 'setup') {
+        console.log('[RouteGuard] Merchant chưa hoàn tất hồ sơ -> chuyển hướng về Onboarding (/setup)');
+        setRoute('setup');
+      }
+    } else {
+      if (route === 'setup' || route === 'login') {
+        console.log('[RouteGuard] Merchant đã có đủ thông tin -> chuyển hướng vào Dashboard (/bags)');
+        setRoute('bags');
+      }
+    }
+  }, [auth.user, route]);
+
+  const handleNavigateToOrder = useCallback(
+    (item: NotificationItem) => {
+      notifications.setIsOpen(false);
+      navigateTo('orders');
+      const orderTarget = item.orderId || item.orderCode || null;
+      if (orderTarget) {
+        setTargetOrderId(orderTarget);
+      }
+    },
+    [notifications, navigateTo]
+  );
+
+  const handleLogin = async (credentials: LoginCredentials) => {
+    const user = await auth.login(credentials);
+    if (user) {
+      const nextRoute = user.isFirstLogin ? 'setup' : 'bags';
+      window.history.replaceState({ route: nextRoute }, '', window.location.pathname);
+      setRoute(nextRoute);
+    }
+    return user;
   };
 
-  const handleVerifyCode = () => {
-    if (!codeInput) return;
-    setVerifyMessage(`✅ Đã xác nhận giao đơn [${codeInput.toUpperCase()}] thành công!`);
-    setCodeInput('');
-    setTimeout(() => setVerifyMessage(null), 4000);
+  const handleCompleteSetup = async (storeData?: { name?: string }) => {
+    await auth.completeSetup(storeData);
+    showToast('Chào mừng đối tác đến với GoSavingFood!');
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({ route: 'bags' }, '', window.location.pathname);
+    }
+    setRoute('bags');
   };
+
+  const handleLogout = async () => {
+    await auth.logout();
+    window.history.replaceState({ route: 'login' }, '', window.location.pathname);
+    setRoute('login');
+  };
+
+  if (auth.initializing) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+        <ScreenLoadingSkeleton />
+      </div>
+    );
+  }
+
+  // Chặn hoàn toàn truy cập dữ liệu cửa hàng/dashboard nếu chưa có phiên đăng nhập
+  if (!auth.user || route === 'login') {
+    return (
+      <LoginScreen
+        loading={auth.loading}
+        error={auth.error}
+        onLogin={handleLogin}
+        onClearError={auth.clearError}
+        onExploreDemo={() => {
+          auth.exploreDemo();
+          window.history.replaceState({ route: 'bags' }, '', window.location.pathname);
+          setRoute('bags');
+        }}
+      />
+    );
+  }
+
+  if (route === 'setup') {
+    return (
+      <Suspense fallback={<ScreenLoadingSkeleton />}>
+        <FirstTimeSetupScreen
+          storeId={storeId}
+          loading={auth.loading}
+          error={auth.error}
+          onChangePassword={auth.changePassword}
+          onComplete={handleCompleteSetup}
+        />
+      </Suspense>
+    );
+  }
 
   return (
-    <div className="app-root">
-      {/* Header */}
-      <header className="glass-header">
-        <div className="header-container">
-          <div className="logo-badge">
-            <div className="logo-icon">🏪</div>
-            <div>
-              <h1 className="brand-title">Go Saving Food</h1>
-              <span className="store-name">Bánh Mì Sài Gòn Bakery 🟢</span>
-            </div>
+    <div className="merchant-app-shell">
+      <ToastBar message={toastMessage} />
+      <AppHeader
+        title="Merchant"
+        storeName={store.profile?.name ?? 'GoSavingFood'}
+        isOpen={store.profile?.isOpen ?? true}
+        avatar={store.profile?.avatar}
+        unreadCount={notifications.unreadCount}
+        onToggleStatus={() => void store.toggleStatus()}
+        onNotificationPress={() => notifications.setIsOpen(true)}
+        onProfilePress={() => navigateTo('settings')}
+        activeRoute={route}
+        onNavigate={navigateTo}
+        orderBadge={notifications.unreadCount}
+        onOpenQR={() => {
+          navigateTo('orders');
+          setIsGlobalQRScannerOpen(true);
+        }}
+      />
+      <main className={`merchant-main merchant-main--${route}`}>
+        <Suspense fallback={<ScreenLoadingSkeleton />}>
+        {visitedTabs.bags && (
+          <div style={{ display: route === 'bags' ? 'contents' : 'none' }}>
+            <BagManagementScreen storeId={storeId} />
           </div>
-          <a
-            href="http://localhost:3000"
-            style={{
-              fontSize: '12px',
-              color: '#f59e0b',
-              textDecoration: 'none',
-              fontWeight: 600,
-              background: 'rgba(245, 158, 11, 0.1)',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              border: '1px solid rgba(245, 158, 11, 0.2)',
-            }}
-          >
-            🏠 Hub Portal
-          </a>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="app-content">
-        {/* PWA Banner */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(16, 185, 129, 0.1))',
-          border: '1px solid rgba(245, 158, 11, 0.3)',
-          borderRadius: '16px',
-          padding: '14px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '20px'
-        }}>
-          <div>
-            <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#fbbf24', marginBottom: '2px' }}>
-              {isInstalled ? '✅ Cửa Hàng Đã Cài Đặt PWA' : '📲 Quản Lý Bán Hàng PWA Ready'}
-            </h4>
-            <p style={{ fontSize: '12px', color: '#94a3b8' }}>
-              {isInstalled ? 'Ứng dụng hoạt động toàn màn hình trên điện thoại' : 'Cài đặt app quản lý đơn hàng ngay trên màn hình chính'}
-            </p>
-          </div>
-          {!isInstalled && (
-            <button
-              onClick={handleInstallPWA}
-              style={{
-                background: '#f59e0b',
-                color: '#0f1420',
-                fontWeight: 700,
-                fontSize: '12px',
-                padding: '8px 14px',
-                borderRadius: '10px',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              Cài Đặt App 📲
-            </button>
-          )}
-        </div>
-
-        {/* Stats Row */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-val">680.000đ</div>
-            <div className="stat-lbl">Doanh thu hôm nay</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-val" style={{ color: '#10b981' }}>18 suất</div>
-            <div className="stat-lbl">Đã giải cứu</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-val" style={{ color: '#38bdf8' }}>14.5 kg</div>
-            <div className="stat-lbl">CO2 Cắt Giảm</div>
-          </div>
-        </div>
-
-        {/* Create Button */}
-        <button className="create-btn" onClick={() => setShowModal(true)}>
-          + Đăng Bán Suất Ăn Dư Thừa Mới (30s) 🚀
-        </button>
-
-        {/* Products List */}
-        <div className="section-head">
-          <h3 className="section-title">📦 Đang Đăng Bán Hôn Nay</h3>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{products.length} mặt hàng</span>
-        </div>
-
-        <div className="product-list">
-          {products.map((p) => (
-            <div className="product-item" key={p.id}>
-              <div className="product-info">
-                <h4>{p.title}</h4>
-                <div className="product-meta">
-                  <span>Giá giải cứu: <strong style={{ color: '#f59e0b' }}>{p.rescuePrice.toLocaleString('vi-VN')}đ</strong></span>
-                  <span>| Số lượng: <strong>{p.stock} suất</strong></span>
-                </div>
-              </div>
-              <span className="toggle-switch">Đang hiển thị PWA</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Order Verification */}
-        <div className="verify-box">
-          <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>
-            🔍 Quét / Xác Nhận Đơn Hàng Từ Khách
-          </h4>
-          <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-            Nhập mã QR hoặc Mã xác nhận của khách hàng khi tới nhận đồ
-          </p>
-
-          <div className="verify-input-group">
-            <input
-              type="text"
-              className="verify-input"
-              placeholder="Ví dụ: GSF-8892"
-              value={codeInput}
-              onChange={(e) => setCodeInput(e.target.value)}
+        )}
+        {visitedTabs.orders && (
+          <div style={{ display: route === 'orders' ? 'contents' : 'none' }}>
+            <OrderManagementScreen
+              storeId={storeId}
+              targetOrderId={targetOrderId}
+              onClearTargetOrder={() => setTargetOrderId(null)}
+              isGlobalQROpen={isGlobalQRScannerOpen}
+              onCloseGlobalQR={() => setIsGlobalQRScannerOpen(false)}
             />
-            <button className="verify-submit-btn" onClick={handleVerifyCode}>
-              Xác Nhận ⚡
-            </button>
           </div>
-
-          {verifyMessage && (
-            <div style={{ marginTop: '10px', fontSize: '12px', color: '#10b981', fontWeight: 700 }}>
-              {verifyMessage}
-            </div>
-          )}
-        </div>
+        )}
+        {visitedTabs.analytics && (
+          <div style={{ display: route === 'analytics' ? 'contents' : 'none' }}>
+            <AnalyticsScreen storeId={storeId} />
+          </div>
+        )}
+        {visitedTabs.settings && (
+          <div style={{ display: route === 'settings' ? 'contents' : 'none' }}>
+            <SettingsScreen
+              storeId={storeId}
+              storeProfileState={store}
+              authLoading={auth.loading}
+              onChangePassword={auth.changePassword}
+              onLogout={handleLogout}
+              onDeleteAccount={async () => {
+                const res = await auth.deleteAccount();
+                if (res.success) {
+                  showToast('Tài khoản đối tác đã được xóa vĩnh viễn khỏi hệ thống.');
+                  setRoute('login');
+                } else {
+                  showToast(res.message || 'Không thể xóa tài khoản. Vui lòng thử lại.');
+                }
+              }}
+            />
+          </div>
+        )}
+      </Suspense>
       </main>
-
-      {/* Modal Add Product */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '16px' }}>
-              ➕ Đăng Suất Ăn Dư Thừa Mới
-            </h3>
-
-            <form onSubmit={handleCreateProduct}>
-              <div className="form-group">
-                <label>Tên món ăn / Túi bí mật</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Ví dụ: Túi Bí Mật Bánh Mì Tươi Cuối Ngày"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div className="form-group">
-                  <label>Giá gốc (VNĐ)</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="80000"
-                    value={newOrigPrice}
-                    onChange={(e) => setNewOrigPrice(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Giá giải cứu (VNĐ)</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="25000"
-                    value={newRescuePrice}
-                    onChange={(e) => setNewRescuePrice(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div className="form-group">
-                  <label>Số lượng bán</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={newStock}
-                    onChange={(e) => setNewStock(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Khung giờ nhận đồ</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={newPickupTime}
-                    onChange={(e) => setNewPickupTime(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="modal-cancel" onClick={() => setShowModal(false)}>
-                  Hủy Bỏ
-                </button>
-                <button type="submit" className="modal-submit">
-                  Phát Hành Lên PWA 🚀
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Guide for iOS Safari */}
-      {showIOSPrompt && (
-        <div className="modal-overlay" onClick={() => setShowIOSPrompt(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontSize: '36px', marginBottom: '8px' }}>📲</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>
-              Cài Đặt App Cửa Hàng Trên iPhone
-            </h3>
-            <div style={{ textAlign: 'left', fontSize: '13px', color: '#cbd5e1', marginTop: '14px', lineHeight: '1.6' }}>
-              <p><strong>Bước 1:</strong> Bấm biểu tượng <strong>Chia sẻ (Share 📤)</strong> ở thanh dưới Safari.</p>
-              <p style={{ marginTop: '8px' }}><strong>Bước 2:</strong> Cuộn xuống và chọn <strong>"Thêm vào MH chính" (Add to Home Screen ➕)</strong>.</p>
-              <p style={{ marginTop: '8px' }}><strong>Bước 3:</strong> Bấm <strong>"Thêm" (Add)</strong> ở góc trên để cài đặt app quản lý đơn hàng.</p>
-            </div>
-            <button className="close-btn" onClick={() => setShowIOSPrompt(false)} style={{ width: '100%', marginTop: '16px', background: '#f59e0b', color: '#0f1420', fontWeight: 700 }}>
-              Đã Hiểu 👍
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom Nav */}
-      <nav className="bottom-nav">
-        <div className="nav-item active">
-          <span style={{ fontSize: '18px' }}>📊</span>
-          <span>Tổng Quan</span>
-        </div>
-        <div className="nav-item">
-          <span style={{ fontSize: '18px' }}>➕</span>
-          <span>Đăng Bài</span>
-        </div>
-        <div className="nav-item">
-          <span style={{ fontSize: '18px' }}>🧾</span>
-          <span>Đơn Hàng</span>
-        </div>
-        <div className="nav-item">
-          <span style={{ fontSize: '18px' }}>⚙️</span>
-          <span>Cài Đặt</span>
-        </div>
-      </nav>
+      <DraggableQRFab
+        onClick={() => {
+          navigateTo('orders');
+          setIsGlobalQRScannerOpen(true);
+        }}
+      />
+      <AppTabBar active={route} orderBadge={notifications.unreadCount} onNavigate={navigateTo} />
+      <NotificationModal
+        open={notifications.isOpen}
+        items={notifications.notifications}
+        filter={notifications.filter}
+        onFilter={notifications.setFilter}
+        onClose={() => notifications.setIsOpen(false)}
+        onRead={(id) => void notifications.markAsRead(id)}
+        onReadAll={() => void notifications.markAllAsRead()}
+        onNavigateToOrder={handleNavigateToOrder}
+      />
     </div>
   );
 }

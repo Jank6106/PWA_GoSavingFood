@@ -1,0 +1,560 @@
+import type { BagInput, BagItem, BagStatus } from '../types';
+import { supabase } from './supabase';
+import { base64ToBlob, optimizeImageUrl } from './utils';
+
+const DEFAULT_BAG_IMAGE = optimizeImageUrl(
+  'https://images.unsplash.com/photo-1509440159596-0249088772ff',
+  400,
+  75
+);
+
+export function getBagCategoryFallbackImage(category = 'bakery'): string {
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('salad') || cat.includes('chay') || cat.includes('vegan')) {
+    return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80';
+  }
+  if (
+    cat.includes('uống') ||
+    cat.includes('nước') ||
+    cat.includes('trà') ||
+    cat.includes('cà phê') ||
+    cat.includes('beverage') ||
+    cat.includes('coffee')
+  ) {
+    return 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80';
+  }
+  if (cat.includes('trái cây') || cat.includes('hoa quả') || cat.includes('fruit')) {
+    return 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=800&q=80';
+  }
+  if (cat.includes('cơm') || cat.includes('mặn') || cat.includes('meal') || cat.includes('thức ăn')) {
+    return 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80';
+  }
+  return DEFAULT_BAG_IMAGE;
+}
+
+export async function deleteStorageObjectByUrl(bucket: string, fullUrl?: string | null): Promise<void> {
+  if (!fullUrl) return;
+  try {
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    if (!fullUrl.includes(marker)) return;
+    const path = fullUrl.split(marker)[1];
+    if (path) {
+      await supabase.storage.from(bucket).remove([path]);
+    }
+  } catch (err) {
+    console.warn(`Lỗi khi dọn dẹp ảnh cũ trong bucket ${bucket}:`, err);
+  }
+}
+
+export async function uploadBagImageToStorage(
+  folderId: string,
+  imageInput?: Blob | File | string,
+  category = 'bakery'
+): Promise<string> {
+  if (!imageInput) {
+    return getBagCategoryFallbackImage(category);
+  }
+
+  // 1. Nếu đã là link HTTPS/CDN, lưu trực tiếp URL sạch
+  if (typeof imageInput === 'string' && (imageInput.startsWith('http://') || imageInput.startsWith('https://'))) {
+    return imageInput;
+  }
+
+  let blob: Blob | null = null;
+  let ext = 'webp';
+
+  // 2. Nếu là Blob hoặc File nhị phân trực tiếp (tối ưu nhất, zero memory overhead)
+  if (imageInput instanceof Blob) {
+    blob = imageInput;
+    ext = blob.type.includes('png') ? 'png' : blob.type.includes('jpeg') || blob.type.includes('jpg') ? 'jpg' : 'webp';
+  } else if (typeof imageInput === 'string' && imageInput.startsWith('data:')) {
+    // Tương thích ngược: Base64 data URL
+    try {
+      blob = base64ToBlob(imageInput);
+      ext = blob.type.includes('png') ? 'png' : blob.type.includes('jpeg') || blob.type.includes('jpg') ? 'jpg' : 'webp';
+    } catch {
+      blob = null;
+    }
+  }
+
+  if (blob) {
+    try {
+      const fileName = `${folderId}/bag_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+
+      // Upload ưu tiên vào bucket bag-photos với Cache-Control 1 năm bất biến
+      const { error: uploadError } = await supabase.storage
+        .from('bag-photos')
+        .upload(fileName, blob, {
+          contentType: blob.type || 'image/webp',
+          cacheControl: '31536000, immutable',
+          upsert: true,
+        });
+
+      if (!uploadError) {
+        const { data } = supabase.storage.from('bag-photos').getPublicUrl(fileName);
+        if (data?.publicUrl) return data.publicUrl;
+      }
+
+      // Fallback nếu bucket bag-photos gặp sự cố
+      const { error: fallbackError } = await supabase.storage
+        .from('bag-images')
+        .upload(fileName, blob, {
+          contentType: blob.type || 'image/webp',
+          cacheControl: '31536000, immutable',
+          upsert: true,
+        });
+
+      if (!fallbackError) {
+        const { data } = supabase.storage.from('bag-images').getPublicUrl(fileName);
+        if (data?.publicUrl) return data.publicUrl;
+      }
+      console.warn('Upload ảnh túi lên Supabase Storage bucket thất bại:', uploadError?.message);
+    } catch (err) {
+      console.warn('Lỗi khi nén/upload ảnh túi lên storage:', err);
+    }
+  }
+
+  // Fallback an toàn: Dùng ảnh CDN theo danh mục, TUYỆT ĐỐI không lưu Base64 vào database!
+  return getBagCategoryFallbackImage(category);
+}
+
+const BAGS_CACHE_PREFIX = 'gsf_merchant_bags:';
+const bagsInFlight = new Map<string, Promise<BagItem[]>>();
+
+export function getCachedBagItems(storeId: string): BagItem[] {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem(`${BAGS_CACHE_PREFIX}${storeId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore parse error
+    }
+  }
+  return [];
+}
+
+export function setCachedBagItems(storeId: string, bags: BagItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`${BAGS_CACHE_PREFIX}${storeId}`, JSON.stringify(bags));
+  } catch {
+    // Ignore storage quota
+  }
+}
+
+const mapDbBag = (b: any): BagItem => ({
+  id: b.id,
+  storeId: b.store_id,
+  name: b.name,
+  description: b.description || '',
+  category: normalizeCategoryToUi(b.category),
+  originalPrice: Number(b.original_price),
+  salePrice: Number(b.discount_price),
+  quantity: Number(b.quantity),
+  availableQuantity: Number(b.quantity),
+  imageUrl: optimizeImageUrl(b.image_url || DEFAULT_BAG_IMAGE, 400, 75),
+  imageUrls: [optimizeImageUrl(b.image_url || DEFAULT_BAG_IMAGE, 400, 75)],
+  pickupTimeStart: b.pickup_start?.slice(0, 5) || '18:00',
+  pickupTimeEnd: b.pickup_end?.slice(0, 5) || '21:00',
+  bagType: b.bag_type || 'daily',
+  repeatMode: b.repeat_mode || 'today_only',
+  dailyQuota: b.daily_quota != null ? Number(b.daily_quota) : undefined,
+  expiryDate: b.expiry_date || undefined,
+  status: (b.status === 'archived' || b.status === 'expired'
+    ? 'hidden'
+    : b.is_available
+    ? b.quantity > 0
+      ? 'active'
+      : 'sold_out'
+    : 'hidden') as BagStatus,
+  createdAt: b.created_at || new Date().toISOString(),
+});
+
+const fetchBagRow = async (bagId: string): Promise<BagItem | null> => {
+  const { data, error } = await supabase
+    .from('surprise_bags')
+    .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at, bag_type, repeat_mode, daily_quota, expiry_date, status')
+    .eq('id', bagId)
+    .is('deleted_at', null)
+    .maybeSingle();
+  if (error) {
+    console.warn('Lấy túi hàng từ Supabase lỗi:', error.message);
+    return null;
+  }
+  return data ? mapDbBag(data) : null;
+};
+
+export const CATEGORY_MAP_TO_DB: Record<string, 'bakery' | 'beverage' | 'raw_food' | 'vegetarian' | 'other'> = {
+  'Bánh ngọt': 'bakery',
+  'Đồ uống': 'beverage',
+  'Rau củ': 'raw_food',
+  'Rau củ & Trái cây': 'raw_food',
+  'Món Chay': 'vegetarian',
+  'Món chay': 'vegetarian',
+  'Món Việt': 'other',
+  'Combo bất ngờ': 'other',
+  'Khác': 'other',
+  bakery: 'bakery',
+  beverage: 'beverage',
+  raw_food: 'raw_food',
+  vegetarian: 'vegetarian',
+  other: 'other',
+};
+
+export const CATEGORY_MAP_TO_UI: Record<string, string> = {
+  bakery: 'Bánh ngọt',
+  beverage: 'Đồ uống',
+  raw_food: 'Rau củ',
+  vegetarian: 'Món Chay',
+  other: 'Món Việt',
+};
+
+export function normalizeCategoryToDb(category?: string): 'bakery' | 'beverage' | 'raw_food' | 'vegetarian' | 'other' {
+  if (!category) return 'bakery';
+  const trimmed = category.trim();
+  if (CATEGORY_MAP_TO_DB[trimmed]) {
+    return CATEGORY_MAP_TO_DB[trimmed];
+  }
+  const lower = trimmed.toLowerCase();
+  if (lower.includes('bánh') || lower.includes('bakery')) return 'bakery';
+  if (lower.includes('uống') || lower.includes('nước') || lower.includes('beverage') || lower.includes('drink')) return 'beverage';
+  if (lower.includes('rau') || lower.includes('củ') || lower.includes('trái cây') || lower.includes('quả') || lower.includes('raw')) return 'raw_food';
+  if (lower.includes('chay') || lower.includes('vege')) return 'vegetarian';
+  return 'other';
+}
+
+export function normalizeCategoryToUi(category?: string): string {
+  if (!category) return 'Bánh ngọt';
+  return CATEGORY_MAP_TO_UI[category] || category;
+}
+
+export async function fetchBagItems(storeId: string): Promise<BagItem[]> {
+  const existing = bagsInFlight.get(storeId);
+  if (existing) return existing;
+
+  const fetchPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('surprise_bags')
+        .select('id, store_id, name, description, category, original_price, discount_price, quantity, image_url, pickup_start, pickup_end, is_available, created_at, bag_type, repeat_mode, daily_quota, expiry_date, status')
+        .eq('store_id', storeId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Lấy danh sách bags từ Supabase lỗi:', error.message);
+        return getCachedBagItems(storeId);
+      }
+      const remoteBags = (data || []).map(mapDbBag);
+      setCachedBagItems(storeId, remoteBags);
+      return remoteBags;
+    } finally {
+      bagsInFlight.delete(storeId);
+    }
+  })();
+
+  bagsInFlight.set(storeId, fetchPromise);
+  return fetchPromise;
+}
+
+export function invalidateBagInFlight(storeId?: string): void {
+  if (storeId) {
+    bagsInFlight.delete(storeId);
+  } else {
+    bagsInFlight.clear();
+  }
+}
+
+export async function updateBagStatus(bagId: string, status: BagStatus): Promise<BagItem> {
+  invalidateBagInFlight();
+  const isAvailable = status !== 'hidden';
+  const existing = await fetchBagRow(bagId);
+
+  const updates: Record<string, any> = {
+    is_available: isAvailable,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (isAvailable && existing) {
+    const [endH, endM] = (existing.pickupTimeEnd || '21:00').split(':').map(Number);
+    const exp = new Date();
+    exp.setHours(endH || 21, endM || 0, 0, 0);
+    if (exp.getTime() <= Date.now()) {
+      exp.setDate(exp.getDate() + 1);
+    }
+    updates.expires_at = exp.toISOString();
+  }
+
+  const { error } = await supabase
+    .from('surprise_bags')
+    .update(updates)
+    .eq('id', bagId);
+  if (error) {
+    console.warn('Cập nhật trạng thái túi trên Supabase lỗi:', error.message);
+    throw new Error('Không thể cập nhật trạng thái túi hàng.');
+  }
+
+  const bag = await fetchBagRow(bagId);
+  if (!bag) throw new Error('Không tìm thấy túi hàng.');
+  return bag;
+}
+
+export async function updateBagQuantity(bagId: string, quantity: number): Promise<BagItem> {
+  invalidateBagInFlight();
+  const safeQty = Math.max(0, quantity);
+  const existing = await fetchBagRow(bagId);
+
+  const updates: Record<string, any> = {
+    quantity: safeQty,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (safeQty > 0 && existing && existing.status !== 'hidden') {
+    const [endH, endM] = (existing.pickupTimeEnd || '21:00').split(':').map(Number);
+    const exp = new Date();
+    exp.setHours(endH || 21, endM || 0, 0, 0);
+    if (exp.getTime() <= Date.now()) {
+      exp.setDate(exp.getDate() + 1);
+    }
+    updates.expires_at = exp.toISOString();
+    updates.is_available = true;
+  }
+
+  const { error } = await supabase
+    .from('surprise_bags')
+    .update(updates)
+    .eq('id', bagId);
+  if (error) {
+    console.warn('Cập nhật số lượng túi trên Supabase lỗi:', error.message);
+    throw new Error('Không thể cập nhật số lượng túi hàng.');
+  }
+
+  const bag = await fetchBagRow(bagId);
+  if (!bag) throw new Error('Không tìm thấy túi hàng.');
+  return bag;
+}
+
+export async function createBagItem(storeId: string, input: BagInput): Promise<BagItem> {
+  let targetStoreId = storeId;
+
+  // Đảm bảo targetStoreId là store thuộc quyền sở hữu của user đang đăng nhập để RLS cho phép
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      // 1. Kiểm tra xem storeId truyền vào có thuộc về user này không
+      if (storeId && storeId !== 'b0000000-0000-0000-0000-000000000002') {
+        const { data: matchedStore } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('id', storeId)
+          .eq('owner_user_id', user.id)
+          .maybeSingle();
+
+        if (matchedStore?.id) {
+          targetStoreId = matchedStore.id;
+        }
+      }
+
+      // 2. Nếu targetStoreId chưa khớp hoặc đang là mock store, tìm store của user (dùng limit 1 để tránh lỗi khi user sở hữu nhiều store)
+      if (!targetStoreId || targetStoreId === 'b0000000-0000-0000-0000-000000000002') {
+        const { data: userStores } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('owner_user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (userStores && userStores.length > 0) {
+          targetStoreId = userStores[0].id;
+        } else {
+          // 3. Nếu user chưa có store nào, tự tạo store cho user qua RPC create_store
+          const storeName = user.user_metadata?.store_name || user.user_metadata?.name || 'Cửa hàng của tôi';
+          const { data: newStores } = await supabase.rpc('create_store', {
+            p_owner_user_id: user.id,
+            p_name: storeName,
+            p_description: 'Cửa hàng đối tác GoSavingFood',
+            p_phone: user.user_metadata?.phone || '0900000000',
+            p_address: user.user_metadata?.address || 'Hà Nội',
+            p_latitude: 21.0285,
+            p_longitude: 105.8542,
+            p_logo_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
+            p_banner_url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
+            p_food_categories: ['bakery'],
+            p_open_time: '07:00:00',
+            p_close_time: '21:00:00',
+            p_is_open: true,
+          });
+          if (newStores && newStores.length > 0) {
+            targetStoreId = newStores[0].id;
+          }
+        }
+      }
+    } else {
+      throw new Error('Chưa đăng nhập. Vui lòng đăng nhập tài khoản cửa hàng trước khi tạo túi.');
+    }
+  } catch (err: any) {
+    if (err?.message?.includes('Chưa đăng nhập')) {
+      throw err;
+    }
+    console.warn('Lỗi lấy thông tin user store:', err);
+  }
+
+  // Tính toán thời gian hết hạn (expires_at) luôn đảm bảo lớn hơn thời điểm hiện tại
+  const calculatedExpiresAt = (() => {
+    if (input.bagType === 'shelf_life' && input.expiryDate) {
+      const parsed = new Date(`${input.expiryDate}T23:59:59+07:00`);
+      if (!isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
+        return parsed.toISOString();
+      }
+    }
+    const [endH, endM] = (input.pickupTimeEnd || '21:00').split(':').map(Number);
+    const exp = new Date();
+    exp.setHours(endH || 21, endM || 0, 0, 0);
+    if (exp.getTime() <= Date.now()) {
+      exp.setDate(exp.getDate() + 1);
+    }
+    return exp.toISOString();
+  })();
+
+  const rawImage = input.imageBlob || input.imageUrl || input.imageUrls?.[0] || '';
+  const finalImageUrl = await uploadBagImageToStorage(targetStoreId, rawImage, input.category);
+
+  const { data, error } = await supabase
+    .from('surprise_bags')
+    .insert({
+      store_id: targetStoreId,
+      name: input.name,
+      description: input.description,
+      original_price: input.originalPrice,
+      discount_price: input.salePrice,
+      category: normalizeCategoryToDb(input.category),
+      image_url: finalImageUrl,
+      quantity: input.quantity,
+      max_quantity: 2,
+      pickup_start:
+        input.pickupTimeStart.length === 5
+          ? `${input.pickupTimeStart}:00`
+          : input.pickupTimeStart,
+      pickup_end:
+        input.pickupTimeEnd.length === 5
+          ? `${input.pickupTimeEnd}:00`
+          : input.pickupTimeEnd,
+      is_daily: input.bagType !== 'shelf_life',
+      bag_type: input.bagType || 'daily',
+      repeat_mode: input.bagType === 'shelf_life' ? 'today_only' : (input.repeatMode || 'today_only'),
+      daily_quota: input.dailyQuota ?? input.quantity,
+      expiry_date: input.bagType === 'shelf_life' ? (input.expiryDate || null) : null,
+      status: input.quantity > 0 ? 'active' : 'sold_out',
+      is_available: true,
+      expires_at: calculatedExpiresAt,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Lỗi khi lưu túi mù vào Database Supabase:', error);
+    throw new Error(`Không thể lưu túi mù vào Database: ${error.message}`);
+  }
+
+  invalidateBagInFlight(targetStoreId);
+
+  const newBag: BagItem = {
+    ...input,
+    id: data.id,
+    storeId: targetStoreId,
+    category: normalizeCategoryToUi(data.category),
+    imageUrl: finalImageUrl,
+    imageUrls: [finalImageUrl],
+    availableQuantity: input.quantity,
+    status: input.quantity > 0 ? 'active' : 'sold_out',
+    createdAt: data.created_at || new Date().toISOString(),
+  };
+  return newBag;
+}
+
+export async function updateBagItem(bagId: string, input: BagInput): Promise<BagItem> {
+  invalidateBagInFlight();
+  const currentBag = await fetchBagRow(bagId);
+  const rawImage = input.imageBlob || input.imageUrl || input.imageUrls?.[0] || '';
+  const finalImageUrl = await uploadBagImageToStorage(bagId, rawImage, input.category);
+
+  // Nếu người bán upload ảnh mới thay thế ảnh cũ trong storage, dọn dẹp ảnh cũ ngầm để tiết kiệm storage
+  if (currentBag?.imageUrl && currentBag.imageUrl !== finalImageUrl) {
+    void deleteStorageObjectByUrl('bag-photos', currentBag.imageUrl);
+    void deleteStorageObjectByUrl('bag-images', currentBag.imageUrl);
+  }
+
+  const { error } = await supabase
+    .from('surprise_bags')
+    .update({
+      name: input.name,
+      description: input.description,
+      original_price: input.originalPrice,
+      discount_price: input.salePrice,
+      category: normalizeCategoryToDb(input.category),
+      image_url: finalImageUrl,
+      quantity: input.quantity,
+      pickup_start:
+        input.pickupTimeStart.length === 5 ? `${input.pickupTimeStart}:00` : input.pickupTimeStart,
+      pickup_end:
+        input.pickupTimeEnd.length === 5 ? `${input.pickupTimeEnd}:00` : input.pickupTimeEnd,
+      bag_type: input.bagType || 'daily',
+      repeat_mode: input.bagType === 'shelf_life' ? 'today_only' : (input.repeatMode || 'today_only'),
+      daily_quota: input.dailyQuota ?? input.quantity,
+      expiry_date: input.bagType === 'shelf_life' ? (input.expiryDate || null) : null,
+      is_daily: input.bagType !== 'shelf_life',
+      is_available: true,
+      status: 'active',
+      expires_at: (() => {
+        if (input.bagType === 'shelf_life' && input.expiryDate) {
+          return `${input.expiryDate}T23:59:59.999Z`;
+        }
+        const [endH, endM] = (input.pickupTimeEnd || '21:00').split(':').map(Number);
+        const exp = new Date();
+        exp.setHours(endH || 21, endM || 0, 0, 0);
+        if (exp.getTime() <= Date.now()) {
+          exp.setDate(exp.getDate() + 1);
+        }
+        return exp.toISOString();
+      })(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', bagId);
+  if (error) {
+    console.warn('Cập nhật túi mù trên Supabase lỗi:', error.message);
+    throw new Error('Không thể cập nhật túi hàng.');
+  }
+
+  const bag = await fetchBagRow(bagId);
+  if (!bag) throw new Error('Không tìm thấy túi hàng.');
+  return bag;
+}
+
+export async function deleteBagItem(bagId: string): Promise<boolean> {
+  invalidateBagInFlight();
+  // Luôn dùng soft delete: gán deleted_at, is_available = false, status = 'archived' để bảo toàn lịch sử đơn & báo cáo
+  const { error } = await supabase
+    .from('surprise_bags')
+    .update({
+      deleted_at: new Date().toISOString(),
+      is_available: false,
+      status: 'archived',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', bagId);
+
+  if (error) {
+    console.warn('Lỗi khi xóa túi hàng (soft delete):', error.message);
+    throw new Error('Không thể xóa túi hàng: ' + error.message);
+  }
+
+  return true;
+}

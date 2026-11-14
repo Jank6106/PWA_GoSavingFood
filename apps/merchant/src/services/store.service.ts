@@ -1,0 +1,310 @@
+import type { StoreImageUpdate, StoreProfile, StoreUpdateInput } from '../types';
+import { deleteStorageObjectByUrl } from './bag.service';
+import { fetchCompletedBagQuantity } from './order.service';
+import { supabase } from './supabase';
+import { base64ToBlob } from './utils';
+
+const CO2_KG_PER_BAG = 2.5;
+const STORE_CACHE_PREFIX = 'gsf_merchant_store:';
+const storeInFlight = new Map<string, Promise<StoreProfile | null>>();
+
+const createEmptyStoreProfile = (storeId: string): StoreProfile => ({
+  id: storeId,
+  userId: '',
+  name: 'Cửa hàng',
+  description: '',
+  coverImage: '',
+  logoUrl: '',
+  avatar: '',
+  address: '',
+  latitude: 0,
+  longitude: 0,
+  phone: '',
+  email: '',
+  category: 'bakery',
+  openingHours: '08:00',
+  closingHours: '22:00',
+  pickupHours: '19:00 - 21:00',
+  isOpen: true,
+  rating: 0,
+  totalRescuedBags: 0,
+  totalCo2SavedKg: 0,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+
+export function getCachedStoreProfile(storeId: string): StoreProfile {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem(`${STORE_CACHE_PREFIX}${storeId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.id) return parsed;
+      }
+    } catch {
+      // Ignore parse error
+    }
+  }
+  return createEmptyStoreProfile(storeId);
+}
+
+export function setCachedStoreProfile(storeId: string, profile: StoreProfile | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (profile) {
+      window.localStorage.setItem(`${STORE_CACHE_PREFIX}${storeId}`, JSON.stringify(profile));
+    } else {
+      window.localStorage.removeItem(`${STORE_CACHE_PREFIX}${storeId}`);
+    }
+  } catch {
+    // Ignore storage quota
+  }
+}
+
+const mapStoreRow = (store: any): StoreProfile => ({
+  id: store.id,
+  userId: store.owner_user_id || '',
+  name: store.name,
+  description: store.description || '',
+  coverImage: store.banner_url || '',
+  logoUrl: store.logo_url || '',
+  avatar: store.logo_url || '',
+  address: store.address || '',
+  latitude: Number(store.latitude) || 0,
+  longitude: Number(store.longitude) || 0,
+  phone: store.phone || '',
+  email: '',
+  category: (store.food_categories && store.food_categories[0]) || 'bakery',
+  openingHours: store.open_time?.slice(0, 5) || '08:00',
+  closingHours: store.close_time?.slice(0, 5) || '22:00',
+  pickupHours: '19:00 - 21:00',
+  isOpen: store.is_open ?? true,
+  rating: Number(store.rating) || 0,
+  totalRescuedBags: 0,
+  totalCo2SavedKg: 0,
+  createdAt: store.created_at || new Date().toISOString(),
+  updatedAt: store.updated_at || new Date().toISOString(),
+});
+
+export async function fetchStoreProfile(storeId: string): Promise<StoreProfile | null> {
+  const existing = storeInFlight.get(storeId);
+  if (existing) return existing;
+
+  const fetchPromise = (async () => {
+    try {
+      const { data: store, error } = await supabase
+        .from('stores')
+        .select('id, owner_user_id, name, description, banner_url, logo_url, address, latitude, longitude, phone, food_categories, open_time, close_time, is_open, rating, created_at, updated_at')
+        .eq('id', storeId)
+        .maybeSingle();
+
+      if (error || !store) {
+        if (error) console.warn('Lấy thông tin store từ Supabase lỗi:', error.message);
+        return getCachedStoreProfile(storeId);
+      }
+
+      const profile = mapStoreRow(store);
+      const cached = getCachedStoreProfile(storeId);
+      if (cached) {
+        if (!profile.coverImage) profile.coverImage = cached.coverImage;
+        if (!profile.logoUrl) profile.logoUrl = cached.logoUrl;
+        if (!profile.avatar) profile.avatar = cached.avatar;
+        if (!profile.description) profile.description = cached.description;
+        profile.totalRescuedBags = cached.totalRescuedBags;
+        profile.totalCo2SavedKg = cached.totalCo2SavedKg;
+        profile.email = cached.email;
+        if (!profile.phone && cached.phone) profile.phone = cached.phone;
+      }
+
+      // Chạy ngầm việc tính túi và thông tin owner song song không gây trễ hiển thị
+      Promise.all([
+        fetchCompletedBagQuantity(storeId).catch(() => 0),
+        store.owner_user_id
+          ? Promise.resolve(supabase.from('users').select('email, phone').eq('id', store.owner_user_id).maybeSingle()).catch(() => ({ data: null }))
+          : Promise.resolve({ data: null }),
+      ]).then(([rescuedBags, ownerRes]) => {
+        profile.totalRescuedBags = rescuedBags;
+        profile.totalCo2SavedKg = Math.round(rescuedBags * CO2_KG_PER_BAG);
+        if (ownerRes && 'data' in ownerRes && ownerRes.data) {
+          profile.email = ownerRes.data.email || '';
+          if (!profile.phone && ownerRes.data.phone) profile.phone = ownerRes.data.phone;
+        }
+        setCachedStoreProfile(storeId, profile);
+      });
+
+      setCachedStoreProfile(storeId, profile);
+      return profile;
+    } finally {
+      storeInFlight.delete(storeId);
+    }
+  })();
+
+  storeInFlight.set(storeId, fetchPromise);
+  return fetchPromise;
+}
+export async function updateStoreProfile(
+  storeId: string,
+  input: StoreUpdateInput
+): Promise<StoreProfile | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Chưa đăng nhập tài khoản cửa hàng.');
+
+  const updatePayload: Record<string, any> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (input.name !== undefined) updatePayload.name = input.name;
+  if (input.description !== undefined) updatePayload.description = input.description;
+  if (input.phone !== undefined) updatePayload.phone = input.phone;
+  if (input.address !== undefined) updatePayload.address = input.address;
+  if (input.latitude !== undefined) updatePayload.latitude = input.latitude;
+  if (input.longitude !== undefined) updatePayload.longitude = input.longitude;
+  if (input.openingHours !== undefined) {
+    updatePayload.open_time = input.openingHours.length === 5 ? `${input.openingHours}:00` : input.openingHours;
+  }
+  if (input.closingHours !== undefined) {
+    updatePayload.close_time = input.closingHours.length === 5 ? `${input.closingHours}:00` : input.closingHours;
+  }
+  if (input.category !== undefined) {
+    updatePayload.food_categories = [input.category];
+  }
+
+  const { error } = await supabase
+    .from('stores')
+    .update(updatePayload)
+    .eq('id', storeId);
+
+  if (error) {
+    console.warn('Cập nhật store trên Supabase lỗi:', error.message);
+    throw new Error('Không thể lưu thông tin cửa hàng.');
+  }
+
+  return fetchStoreProfile(storeId);
+}
+
+export async function toggleStoreOpenStatus(
+  storeId: string,
+  nextIsOpen?: boolean
+): Promise<StoreProfile | null> {
+  // 1. Ưu tiên gọi RPC toggle_store_status (SECURITY DEFINER) đảm bảo ghi nhận vào DB
+  const { error: rpcError } = await supabase.rpc('toggle_store_status', {
+    p_store_id: storeId,
+    p_is_open: nextIsOpen ?? null,
+  });
+
+  if (rpcError) {
+    console.warn('Gọi RPC toggle_store_status lỗi, thử fallback update:', rpcError.message);
+    const { data: store } = await supabase
+      .from('stores')
+      .select('is_open')
+      .eq('id', storeId)
+      .maybeSingle();
+
+    const targetStatus = nextIsOpen ?? !(store?.is_open ?? true);
+    const { error: updateError } = await supabase
+      .from('stores')
+      .update({
+        is_open: targetStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', storeId);
+
+    if (updateError) {
+      console.warn('Đổi trạng thái đóng/mở store trên Supabase lỗi:', updateError.message);
+      throw new Error('Không thể đổi trạng thái cửa hàng.');
+    }
+  }
+
+  // 2. Tải lại profile mới nhất từ DB và lưu cache
+  const updated = await fetchStoreProfile(storeId);
+  if (updated) {
+    setCachedStoreProfile(storeId, updated);
+  }
+  return updated;
+}
+
+async function uploadStoreImageToStorage(
+  storeId: string,
+  imageStr: string,
+  bucket: 'store-assets' | 'store-logos',
+  prefix: 'banner' | 'logo'
+): Promise<string> {
+  // Nếu đã là URL CDN / HTTP, lưu trực tiếp
+  if (!imageStr.startsWith('data:')) {
+    return imageStr;
+  }
+
+  try {
+    const blob = base64ToBlob(imageStr);
+    const ext = blob.type.includes('webp') ? 'webp' : 'jpg';
+    const fileName = `${storeId}/${prefix}_${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, blob, {
+        contentType: blob.type,
+        cacheControl: '31536000, immutable',
+        upsert: true,
+      });
+
+    if (!uploadError) {
+      const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
+      if (data?.publicUrl) {
+        return data.publicUrl;
+      }
+    } else {
+      console.warn(`Upload ${prefix} lên ${bucket} thất bại:`, uploadError.message);
+    }
+  } catch (err) {
+    console.warn(`Lỗi khi nén/upload ảnh ${prefix}:`, err);
+  }
+
+  // Fallback an toàn: Nếu upload storage thất bại, dùng CDN fallback - TUYỆT ĐỐI không lưu Base64 vào database!
+  console.warn(`Upload ${prefix} lên ${bucket} thất bại, dùng fallback CDN để bảo vệ database.`);
+  return prefix === 'logo'
+    ? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80'
+    : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80';
+}
+
+export async function updateStoreImages(
+  storeId: string,
+  input: StoreImageUpdate
+): Promise<StoreProfile | null> {
+  const currentStore = await fetchStoreProfile(storeId);
+  const updatePayload: Record<string, any> = {};
+
+  if (input.coverImage) {
+    updatePayload.banner_url = await uploadStoreImageToStorage(
+      storeId,
+      input.coverImage,
+      'store-assets',
+      'banner'
+    );
+    if (currentStore?.coverImage && currentStore.coverImage !== updatePayload.banner_url) {
+      void deleteStorageObjectByUrl('store-assets', currentStore.coverImage);
+    }
+  }
+  if (input.avatar) {
+    updatePayload.logo_url = await uploadStoreImageToStorage(
+      storeId,
+      input.avatar,
+      'store-logos',
+      'logo'
+    );
+    if (currentStore?.avatar && currentStore.avatar !== updatePayload.logo_url) {
+      void deleteStorageObjectByUrl('store-logos', currentStore.avatar);
+    }
+  }
+
+  if (Object.keys(updatePayload).length > 0) {
+    updatePayload.updated_at = new Date().toISOString();
+    const { error } = await supabase.from('stores').update(updatePayload).eq('id', storeId);
+    if (error) {
+      console.warn('Cập nhật ảnh store trên Supabase lỗi:', error.message);
+      throw new Error('Không thể cập nhật ảnh cửa hàng.');
+    }
+  }
+
+  return fetchStoreProfile(storeId);
+}

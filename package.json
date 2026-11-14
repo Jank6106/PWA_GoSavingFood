@@ -4,25 +4,33 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "pnpm --parallel -r dev",
+    "dev:turbo": "turbo dev",
+    "dev:customer": "pnpm --filter customer dev",
+    "dev:merchant": "pnpm --filter merchant dev",
+    "dev:web": "pnpm --filter web dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db:start": "npx supabase start",
+    "db:stop": "npx supabase stop",
+    "db:reset": "npx supabase db reset",
+    "db:status": "npx supabase status",
+    "test:offline": "vitest run tests/bagTiming.test.ts tests/mapbox.test.ts tests/envHelper.test.ts",
+    "test:local": "node scripts/test-local.mjs",
+    "test:audit": "node scripts/test-local.mjs audit",
+    "test:live": "vitest run",
+    "test": "pnpm test:offline"
   },
   "private": true,
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "11.25.0",
-      "onFail": "download"
-    }
-  },
-  "packageManager": "pnpm@11.25.0",
+  "packageManager": "pnpm@11.13.1",
   "type": "module",
   "devDependencies": {
-    "turbo": "^2.10.12"
+    "@supabase/supabase-js": "^2.117.2",
+    "pg": "^8.23.0",
+    "turbo": "^2.10.12",
+    "vitest": "^5.0.5"
   }
 }
