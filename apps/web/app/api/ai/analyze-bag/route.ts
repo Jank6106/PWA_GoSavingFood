@@ -45,6 +45,16 @@ function isRateLimited(userId: string): boolean {
   return false;
 }
 
+/** Đọc `sub` (user id) từ JWT để tra cửa hàng song song; KHÔNG dùng để xác thực (getUser mới xác thực). */
+function readJwtSub(token: string): string | null {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1] || '', 'base64url').toString('utf8'));
+    return typeof payload?.sub === 'string' ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}
+
 function jsonError(status: number, error: string) {
   return NextResponse.json({ success: false, error }, { status });
 }
@@ -73,17 +83,30 @@ export async function POST(request: NextRequest) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data: userData, error: userError } = await supabaseUser.auth.getUser(token);
-  const user = userData?.user;
-  if (userError || !user) return jsonError(401, 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.');
+  // Chạy SONG SONG: đọc ảnh gửi lên + xác thực JWT + tra cửa hàng (theo `sub` trong token).
+  // Kết quả tra cửa hàng chỉ được dùng khi getUser() xác nhận đúng user đó -> không nới lỏng bảo mật.
+  const t0 = Date.now();
+  const claimedUserId = readJwtSub(token);
+  const [bodyResult, userResult, storeResult] = await Promise.all([
+    request.json().then(
+      (value: unknown) => ({ ok: true as const, value }),
+      () => ({ ok: false as const, value: undefined })
+    ),
+    supabaseUser.auth.getUser(token),
+    claimedUserId
+      ? supabaseUser.from('stores').select('id, name, food_categories').eq('owner_user_id', claimedUserId).limit(1)
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  const tAuth = Date.now();
+
+  const user = userResult.data?.user;
+  if (userResult.error || !user || user.id !== claimedUserId) {
+    return jsonError(401, 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.');
+  }
 
   // 2. Phân quyền: chỉ chủ cửa hàng mới được dùng AI đăng hàng
-  const { data: ownedStores, error: storeError } = await supabaseUser
-    .from('stores')
-    .select('id, name, food_categories')
-    .eq('owner_user_id', user.id)
-    .limit(1);
-  if (storeError || !ownedStores?.length) {
+  const ownedStores = storeResult.data;
+  if (storeResult.error || !ownedStores?.length) {
     return jsonError(403, 'Chỉ tài khoản cửa hàng mới dùng được tính năng này.');
   }
 
@@ -92,12 +115,8 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Validate input
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return jsonError(400, 'Dữ liệu gửi lên không hợp lệ.');
-  }
+  if (!bodyResult.ok) return jsonError(400, 'Dữ liệu gửi lên không hợp lệ.');
+  const body = bodyResult.value;
   const rawImage = body && typeof body === 'object' ? (body as { image?: unknown }).image : undefined;
   const image = typeof rawImage === 'string' ? rawImage : '';
   const mimeMatch = image.match(ALLOWED_MIME);
@@ -111,6 +130,12 @@ export async function POST(request: NextRequest) {
   // model dự phòng SONG SONG, lấy kết quả đầu tiên thành công -> tránh bị kẹt khi 1 model treo/503.
   const store: StoreContext = { name: ownedStores[0]?.name, foodCategories: ownedStores[0]?.food_categories };
   const result = await raceModels(candidates, mimeType, base64Data, buildUserPrompt(store));
+  const tAi = Date.now();
+  // Log thời gian từng bước để biết chậm ở đâu (mạng/xác thực hay AI)
+  console.info(
+    `[AI analyze-bag] timing auth+body=${tAuth - t0}ms ai=${tAi - tAuth}ms total=${tAi - t0}ms ` +
+      `img=${Math.round((base64Data.length * 3) / 4 / 1024)}KB result=${result.kind}${result.kind === "ok" ? ` via ${result.model}` : ""}`
+  );
 
   if (result.kind === "ok") {
     const draft = sanitizeResult(result.data);
@@ -235,8 +260,13 @@ function getCandidates(): Candidate[] {
     ? geminiModels.map((model) => ({ provider: "gemini" as const, model, apiKey: geminiKey }))
     : [];
 
-  const preferred = (process.env.AI_PROVIDER || (openaiKey ? "openai" : "gemini")).trim().toLowerCase();
-  return preferred === "gemini" ? [...gemini, ...openai] : [...openai, ...gemini];
+  // AI_PROVIDER = danh sách provider được phép dùng, theo thứ tự ưu tiên (mặc định CHỈ "openai").
+  // Gemini chỉ được gọi khi ghi rõ, vd AI_PROVIDER=openai,gemini — có GEMINI_API_KEY trong env cũng không tự bật.
+  const allowed = splitModels(process.env.AI_PROVIDER || "openai").map((p) => p.toLowerCase());
+  const byProvider: Record<Provider, Candidate[]> = { openai, gemini };
+  return Array.from(new Set(allowed))
+    .filter((p): p is Provider => p === "openai" || p === "gemini")
+    .flatMap((p) => byProvider[p]);
 }
 
 /** OpenAI Chat Completions + vision + Structured Outputs (strict JSON Schema). */
@@ -269,9 +299,10 @@ async function callOpenAI(
         },
       ],
     };
-    // Chỉ gửi khi được cấu hình (model reasoning như gpt-5*: "minimal"/"low" cho nhanh); model thường từ chối tham số này
-    const effort = process.env.OPENAI_REASONING_EFFORT?.trim();
-    if (effort) body.reasoning_effort = effort;
+    // Mặc định "none" (tắt suy luận): đọc ảnh nhanh gấp ~1.5-2 lần mà kết quả như nhau (đo 2026-11-14).
+    // Đặt OPENAI_REASONING_EFFORT=default để không gửi tham số (model không hỗ trợ reasoning).
+    const effort = (process.env.OPENAI_REASONING_EFFORT?.trim() || "none").toLowerCase();
+    if (effort !== "default") body.reasoning_effort = effort;
 
     const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
