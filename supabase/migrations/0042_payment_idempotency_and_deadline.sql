@@ -75,7 +75,7 @@ DECLARE
   v_order_payment_status payment_status;
   v_paid_at TIMESTAMPTZ;
 BEGIN
-  -- 1. Chặn phương thức tiền mặ
+  -- 1. Chặn phương thức tiền mặt
   IF p_payment_method = 'cash' THEN
     RAISE EXCEPTION 'CASH_PAYMENT_NOT_SUPPORTED' USING DETAIL = 'GoSavingFood chỉ hỗ trợ thanh toán trực tuyến qua VietQR.';
   END IF;
@@ -101,7 +101,7 @@ BEGIN
     );
   END IF;
 
-  -- 3. LAZY CLEANUP: Hoàn kho cho các đơn pending_payment quá hạn của các túi được đặ
+  -- 3. LAZY CLEANUP: Hoàn kho cho các đơn pending_payment quá hạn của các túi được đặt
   FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x("bagId" UUID, quantity INTEGER) LOOP
     FOR v_expired_order IN
       SELECT o.id, o.voucher_code, oi.quantity AS expired_qty
@@ -278,7 +278,7 @@ BEGIN
     id, customer_id, store_id, total_original_price, total_discount_price,
     discount_amount, final_amount, voucher_code, status,
     payment_method, payment_status, paid_at, qr_code, pickup_time, note,
-    payment_expires_at, pickup_token, recipient_name, recipient_phone, created_at, updated_a
+    payment_expires_at, pickup_token, recipient_name, recipient_phone, created_at, updated_at
   ) VALUES (
     p_id, p_customer_id, p_store_id, p_total_original_price, p_total_discount_price,
     p_discount_amount, p_final_amount, p_voucher_code, v_order_status,
@@ -323,7 +323,7 @@ BEGIN
     'pickup_token', v_pickup_token,
     'expires_at', v_payment_expires_at,
     'status', v_order_status::text,
-    'payment_status', v_order_payment_status::tex
+    'payment_status', v_order_payment_status::text
   );
 END;
 $function$;
@@ -382,7 +382,7 @@ BEGIN
       status,
       reason,
       created_at,
-      updated_a
+      updated_at
     ) VALUES (
       gen_random_uuid(),
       v_order.id,
@@ -403,7 +403,7 @@ BEGIN
         body,
         data,
         is_read,
-        created_a
+        created_at
       ) VALUES (
         gen_random_uuid(),
         v_order.customer_id,
@@ -421,7 +421,7 @@ BEGIN
       'success', true,
       'message', 'LATE_PAYMENT_REFUND_QUEUED',
       'order_id', v_order.id,
-      'refund_amount', v_order.final_amoun
+      'refund_amount', v_order.final_amount
     );
   END IF;
 
@@ -448,7 +448,7 @@ BEGIN
       body,
       data,
       is_read,
-      created_a
+      created_at
     ) VALUES (
       gen_random_uuid(),
       v_order.customer_id,

@@ -18,6 +18,7 @@
 - Centralized root `.env` loader [`scripts/lib/env.mjs`](../scripts/lib/env.mjs) (with TypeScript declarations [`scripts/lib/env.d.ts`](../scripts/lib/env.d.ts)) and offline unit test [`tests/envHelper.test.ts`](../tests/envHelper.test.ts).
 
 ### Changed
+- 2026-11-14: Fixed truncated SQL identifiers/casts in unmerged migration 0042 introduced during rebase whitespace cleanup (updated_at, created_at, text and final_amount). CI had exposed the issue by replaying migrations on a fresh Docker DB; existing local DBs still held the earlier valid function definitions.
 - 2026-11-14: Switched Vercel Production AI configuration to GPT-6.1 Terra with GPT-6 Luna fallback, preserved the existing server API key and redeployed the Web backend.
 - 2026-11-14: Configured Production OpenAI secrets/model chain (GPT-6 Luna, GPT-5.4 mini fallback) on Vercel Web and enabled Finder AI on Customer; both deployments READY. Verified configured health, model-key access and unauthenticated 401; no secrets committed. See docs/hackathon/customer/AI_SETUP.md.
 - 2026-11-14: Integrated `master` (`798152e`) into `Hung` for PR conflict resolution, combining CI/Docker/E2E and React hook fixes with Finder routing, StrictMode-safe browser history, Mapbox fallbacks and cancelled location-search protection. Preserved both branches' documentation and ADR links. Merge validation: 137 offline tests, customer build, workspace lint and web typecheck passed; Docker/browser E2E and live providers were not rerun.
