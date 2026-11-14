@@ -1,0 +1,316 @@
+/* Scoped styles cho mục "Hời nhất hôm nay" (TodayDeals), BagCard accessibility và entry "Tìm món theo nhu cầu" */
+
+/* 1. KHỐI ENTRY: TÌM MÓN THEO NHU CẦU */
+.customer-finder-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 16px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #e8f4ec 0%, #f4fbf7 100%);
+  border: 1.5px solid #b7dcbe;
+  color: #172b22;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(22, 107, 74, 0.07);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+  user-select: none;
+}
+
+.customer-finder-trigger:hover {
+  border-color: #166b4a;
+  background: #def0e3;
+  box-shadow: 0 5px 18px rgba(22, 107, 74, 0.14);
+  transform: translateY(-1px);
+}
+
+.customer-finder-trigger:active {
+  transform: scale(0.985);
+}
+
+.customer-finder-trigger:focus-visible {
+  outline: 2px solid #166b4a;
+  outline-offset: 2px;
+}
+
+.customer-finder-icon-wrap {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  background: #166b4a;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(22, 107, 74, 0.25);
+}
+
+.customer-finder-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.customer-finder-title {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: #11543a;
+  letter-spacing: -0.2px;
+  line-height: 1.25;
+}
+
+.customer-finder-desc {
+  font-size: 11.5px;
+  color: #5d6b63;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-finder-arrow {
+  color: #166b4a;
+  flex: 0 0 18px;
+  transition: transform 0.2s ease;
+}
+
+.customer-finder-trigger:hover .customer-finder-arrow {
+  transform: translateX(3px);
+}
+
+/* 2. SECTION: HỜI NHẤT HÔM NAY (TODAY DEALS) */
+.today-deals-section {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.today-deals-icon {
+  color: #e11d48;
+}
+
+.today-deals-demo-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  margin: 0 0 12px 0;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.today-deals-demo-notice-icon {
+  flex: 0 0 15px;
+  color: #0284c7;
+}
+
+.today-deals-row-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.today-deals-list {
+  display: flex;
+  gap: 10px;
+  margin: 0 -16px;
+  padding: 0 16px 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.today-deals-list::-webkit-scrollbar {
+  display: none;
+}
+
+.today-deals-nav-btn {
+  display: none;
+}
+
+/* Empty state */
+.today-deals-empty {
+  padding: 22px 18px;
+  border-radius: 14px;
+  background: #f7f9f6;
+  border: 1px dashed #dde5de;
+  text-align: center;
+  color: #5d6b63;
+  margin: 4px 0 12px;
+}
+
+.today-deals-empty-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #172b22;
+  margin-bottom: 4px;
+}
+
+.today-deals-empty-desc {
+  font-size: 12px;
+  color: #5d6b63;
+  line-height: 1.4;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* Skeletons */
+.today-deals-skeleton-card {
+  min-width: 172px;
+  width: 172px;
+  flex: 0 0 172px;
+  height: 185px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-bg-subtle, #f3f4f6);
+  pointer-events: none;
+  scroll-snap-align: start;
+}
+
+/* 3. BAGCARD ACCESSIBILITY & BADGES */
+/* Nút phủ toàn bộ thẻ bài để mở chi tiết mà không bọc nút con */
+.customer-bag-card-action {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  border-radius: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.customer-bag-card-action:focus-visible {
+  outline: 2px solid #166b4a !important;
+  outline-offset: 3px !important;
+  border-radius: 14px;
+}
+
+.customer-bag-top-badges-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.customer-demo-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2.5px 5.5px;
+  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.88);
+  color: #f1f5f9;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Vùng chạm nút Add đảm bảo >= 44x44px bằng pseudo-element */
+.customer-bag-add-btn {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.customer-bag-add-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+}
+
+.customer-bag-add-btn:focus-visible {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 2px !important;
+}
+
+/* 4. DESKTOP ENHANCEMENTS (>= 768px) */
+@media (min-width: 768px) {
+  .customer-finder-trigger {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    min-height: 48px;
+    border-radius: 14px;
+    padding: 8px 18px;
+  }
+
+  .today-deals-list {
+    margin: 0 !important;
+    padding: 4px 2px 10px !important;
+  }
+
+  /* Nút điều hướng desktop đạt kích thước chạm >= 44x44px */
+  .today-deals-nav-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #dde5de;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    color: #166b4a;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .today-deals-nav-btn:hover:not(:disabled) {
+    background: #166b4a;
+    color: #ffffff;
+    transform: translateY(-50%) scale(1.08);
+  }
+
+  .today-deals-nav-btn:disabled,
+  .today-deals-nav-btn.is-disabled {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .today-deals-nav-btn.is-prev {
+    left: -16px;
+  }
+
+  .today-deals-nav-btn.is-next {
+    right: -16px;
+  }
+}
+
+/* 5. REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+  .today-deals-list,
+  .customer-finder-trigger,
+  .today-deals-nav-btn,
+  .customer-finder-arrow {
+    transition: none !important;
+    transform: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

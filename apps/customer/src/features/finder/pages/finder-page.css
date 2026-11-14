@@ -1,0 +1,950 @@
+/* ==========================================================================
+   GoSavingFood - Customer Natural Language Finder Styles
+   Strict compliance with Design System (#166B4A, Inter, mobile safe areas)
+   ========================================================================== */
+
+/* 1. Main screen & container */
+.gsf-finder-screen {
+  min-height: 100vh;
+  background-color: #F7F9F6;
+  color: #172B22;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px));
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.gsf-finder-container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 2. Top Navigation Bar */
+.gsf-finder-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #DDE5DE;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  box-shadow: 0 1px 3px rgba(23, 43, 34, 0.05);
+}
+
+.gsf-finder-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid #DDE5DE;
+  background: #FFFFFF;
+  color: #172B22;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.gsf-finder-back-btn:hover {
+  background-color: #F7F9F6;
+  border-color: #7C8B81;
+}
+
+.gsf-finder-back-btn:focus-visible {
+  outline: 2px solid #166B4A;
+  outline-offset: 2px;
+}
+
+.gsf-finder-topbar-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.gsf-finder-topbar-title {
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+  color: #172B22;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gsf-finder-location-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: #5D6B63;
+  cursor: pointer;
+  text-align: left;
+  max-width: 100%;
+}
+
+.gsf-finder-location-trigger.is-static {
+  cursor: default;
+}
+
+.gsf-finder-location-trigger:not(.is-static):hover {
+  color: #166B4A;
+}
+
+.gsf-finder-location-trigger:focus-visible {
+  outline: 2px solid #166B4A;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.gsf-finder-location-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 3. Section structure */
+.gsf-finder-section {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Catalog loading state */
+.gsf-finder-catalog-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background-color: #E8F4EC;
+  border: 1px solid #DDE5DE;
+  border-radius: 12px;
+  color: #166B4A;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 4. Natural Language Input Form */
+.gsf-finder-form {
+  background-color: #FFFFFF;
+  border: 1px solid #DDE5DE;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(23, 43, 34, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gsf-finder-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gsf-finder-form-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #172B22;
+  cursor: pointer;
+}
+
+.gsf-finder-form-sublabel {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: #5D6B63;
+}
+
+.gsf-finder-char-counter {
+  font-size: 12px;
+  font-weight: 500;
+  color: #7C8B81;
+}
+
+.gsf-finder-char-counter.is-warning {
+  color: #8A4B08;
+  font-weight: 600;
+}
+
+.gsf-finder-char-counter.is-error {
+  color: #B42318;
+  font-weight: 700;
+}
+
+.gsf-finder-textarea-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.gsf-finder-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 84px;
+  padding: 12px;
+  padding-right: 36px;
+  font-size: 15px;
+  line-height: 22px;
+  color: #172B22;
+  background-color: #FFFFFF;
+  border: 1px solid #7C8B81;
+  border-radius: 12px;
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.gsf-finder-textarea:focus {
+  outline: none;
+  border-color: #166B4A;
+  box-shadow: 0 0 0 3px rgba(22, 107, 74, 0.15);
+}
+
+.gsf-finder-textarea.is-invalid {
+  border-color: #B42318;
+}
+
+.gsf-finder-clear-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #F7F9F6;
+  border: 1px solid #DDE5DE;
+  border-radius: 50%;
+  color: #5D6B63;
+  cursor: pointer;
+  padding: 0;
+}
+
+.gsf-finder-clear-btn:hover {
+  background: #E8F4EC;
+  color: #166B4A;
+}
+
+.gsf-finder-clear-btn:focus-visible {
+  outline: 2px solid #166B4A;
+  outline-offset: 1px;
+}
+
+.gsf-finder-validation-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #B42318;
+  font-weight: 500;
+}
+
+.gsf-finder-submit-row {
+  width: 100%;
+}
+
+/* Example queries chips */
+.gsf-finder-examples {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gsf-finder-examples-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #5D6B63;
+}
+
+.gsf-finder-examples-icon {
+  color: #166B4A;
+  flex-shrink: 0;
+}
+
+.gsf-finder-examples-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gsf-finder-example-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  min-height: 44px;
+  border-radius: 22px;
+  border: 1px solid #DDE5DE;
+  background-color: #F7F9F6;
+  color: #172B22;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 150ms ease;
+  user-select: none;
+}
+
+.gsf-finder-example-chip:hover:not(:disabled) {
+  background-color: #E8F4EC;
+  border-color: #166B4A;
+  color: #166B4A;
+}
+
+.gsf-finder-example-chip:focus-visible {
+  outline: 2px solid #166B4A;
+  outline-offset: 2px;
+}
+
+.gsf-finder-example-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 5. Mode Notification Banner (Truthful & Transparent) */
+.gsf-finder-mode-banner {
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gsf-finder-mode-banner--local {
+  background-color: #E8F4EC;
+  border: 1px solid #C4DEC9;
+}
+
+.gsf-finder-mode-banner--ai {
+  background-color: #E0F2FE;
+  border: 1px solid #BAE6FD;
+}
+
+.gsf-finder-mode-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gsf-finder-mode-icon {
+  color: #166B4A;
+}
+
+.gsf-finder-mode-banner--ai .gsf-finder-mode-icon {
+  color: #0284C7;
+}
+
+.gsf-finder-mode-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #166B4A;
+}
+
+.gsf-finder-mode-banner--ai .gsf-finder-mode-title {
+  color: #0369A1;
+}
+
+.gsf-finder-mode-desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: #5D6B63;
+}
+
+/* 6. Extracted Criteria Chips */
+.gsf-finder-criteria {
+  background: #FFFFFF;
+  border: 1px solid #DDE5DE;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.gsf-finder-criteria-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5D6B63;
+}
+
+.gsf-finder-criteria-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gsf-finder-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background-color: #E8F4EC;
+  color: #166B4A;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #C4DEC9;
+}
+
+.gsf-finder-chip--budget {
+  background-color: #FEF9C3;
+  border-color: #FDE047;
+  color: #713F12;
+}
+
+.gsf-finder-chip--pref {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #334155;
+}
+
+.gsf-finder-chip-icon {
+  flex-shrink: 0;
+}
+
+/* 7. Warnings & Safety Disclaimers */
+.gsf-finder-warnings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.gsf-finder-warning-box {
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gsf-finder-warning-box--custom {
+  background-color: #FFFBEB;
+  border: 1px solid #FDE68A;
+}
+
+.gsf-finder-warning-box--disclaimer {
+  background-color: #FAFAF9;
+  border: 1px solid #E7E5E4;
+}
+
+.gsf-finder-warning-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gsf-finder-warning-icon {
+  color: #8A4B08;
+  flex-shrink: 0;
+}
+
+.gsf-finder-warning-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8A4B08;
+}
+
+.gsf-finder-warning-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 17px;
+  color: #8A4B08;
+}
+
+.gsf-finder-warning-item {
+  margin-top: 2px;
+}
+
+.gsf-finder-disclaimer-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: #5D6B63;
+}
+
+/* 8. Results List & Cards */
+.gsf-finder-results-anchor {
+  width: 100%;
+}
+
+.gsf-finder-results-header {
+  margin-bottom: 12px;
+}
+
+.gsf-finder-results-count {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #172B22;
+}
+
+.gsf-finder-results-count strong {
+  color: #166B4A;
+  font-weight: 700;
+}
+
+.gsf-finder-stale-query-notice {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: #7C8B81;
+  font-style: italic;
+}
+
+.gsf-finder-results-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Individual Result Card */
+.gsf-finder-card {
+  background-color: #FFFFFF;
+  border: 1px solid #DDE5DE;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(23, 43, 34, 0.04);
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+}
+
+.gsf-finder-card:hover {
+  border-color: #166B4A;
+  box-shadow: 0 4px 16px rgba(23, 43, 34, 0.08);
+}
+
+.gsf-finder-card:focus-visible {
+  outline: 2px solid #166B4A;
+  outline-offset: 2px;
+}
+
+.gsf-finder-card.is-out-of-stock {
+  opacity: 0.65;
+}
+
+/* Card Media (16:9 ratio) */
+.gsf-finder-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #F3F4F6;
+  overflow: hidden;
+}
+
+.gsf-finder-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gsf-finder-card-image--placeholder {
+  object-fit: cover;
+  background-color: #0f291e;
+}
+
+.gsf-finder-card-discount-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #F4C95D;
+  color: #493600;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gsf-finder-card-demo-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #0369A1;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.gsf-finder-card-stock-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(23, 43, 34, 0.85);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.gsf-finder-card-stock-badge.is-empty {
+  background-color: rgba(180, 35, 24, 0.9);
+}
+
+/* Card Content */
+.gsf-finder-card-content {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gsf-finder-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gsf-finder-card-store {
+  font-size: 13px;
+  font-weight: 600;
+  color: #166B4A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gsf-finder-card-distance {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: #5D6B63;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gsf-finder-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gsf-finder-card-title {
+  margin: 0;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  color: #172B22;
+  flex: 1;
+}
+
+.gsf-finder-card-category-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: #F7F9F6;
+  border: 1px solid #DDE5DE;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #5D6B63;
+  white-space: nowrap;
+}
+
+/* Pricing Row */
+.gsf-finder-card-pricing-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 0;
+  border-top: 1px dashed #E5E7EB;
+  border-bottom: 1px dashed #E5E7EB;
+}
+
+.gsf-finder-card-price-block {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.gsf-finder-card-current-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #166B4A;
+}
+
+.gsf-finder-card-original-price {
+  font-size: 13px;
+  color: #7C8B81;
+  text-decoration: line-through;
+}
+
+.gsf-finder-card-total-badge {
+  font-size: 13px;
+  color: #172B22;
+}
+
+.gsf-finder-card-total-badge strong {
+  color: #166B4A;
+}
+
+/* Time Row: Separated Pickup & Expiry (HSD) */
+.gsf-finder-card-time-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background-color: #F7F9F6;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.gsf-finder-time-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #5D6B63;
+}
+
+.gsf-finder-time-item strong {
+  color: #172B22;
+}
+
+.gsf-finder-time-item--pickup {
+  color: #166B4A;
+}
+
+.gsf-finder-time-item--expiry {
+  color: #5D6B63;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gsf-finder-daily-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  background-color: #FEF3C7;
+  color: #92400E;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Reasons */
+.gsf-finder-card-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gsf-finder-reason-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background-color: #E8F4EC;
+  color: #166B4A;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.gsf-finder-reason-icon {
+  flex-shrink: 0;
+}
+
+/* CTA Button (View detail only - touch target >= 44px) */
+.gsf-finder-card-actions {
+  margin-top: 4px;
+}
+
+.gsf-finder-card-cta-btn {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: #166B4A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+  padding: 0 16px;
+}
+
+.gsf-finder-card-cta-btn:hover {
+  background-color: #11543A;
+}
+
+.gsf-finder-card-cta-btn:focus-visible {
+  outline: 2px solid #166B4A;
+  outline-offset: 2px;
+}
+
+/* 9. Loading & Skeletons */
+.gsf-finder-loading-state {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gsf-finder-loading-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #166B4A;
+  padding: 12px;
+}
+
+.gsf-finder-skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gsf-finder-skeleton-card {
+  background: #FFFFFF;
+  border: 1px solid #DDE5DE;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.gsf-finder-spin {
+  animation: gsf-spin 1s linear infinite;
+}
+
+@keyframes gsf-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 10. Error fallback actions */
+.gsf-finder-error-fallback-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 11. Empty state actions */
+.gsf-finder-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.gsf-finder-inline-icon {
+  flex-shrink: 0;
+}
+
+/* 12. Responsive adjustments */
+@media (min-width: 640px) {
+  .gsf-finder-topbar {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .gsf-finder-container {
+    padding: 24px;
+    gap: 20px;
+  }
+
+  .gsf-finder-card {
+    flex-direction: row;
+  }
+
+  .gsf-finder-card-media {
+    width: 220px;
+    min-width: 220px;
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 180px;
+  }
+
+  .gsf-finder-card-content {
+    flex: 1;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 389px) {
+  .gsf-finder-container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .gsf-finder-card-content {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .gsf-finder-card-title {
+    font-size: 15px;
+  }
+
+  .gsf-finder-example-chip {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
+
+/* 13. Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

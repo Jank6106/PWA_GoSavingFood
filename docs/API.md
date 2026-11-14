@@ -57,6 +57,7 @@ Invoked via `supabase.rpc(name, params)` using `SUPABASE_ANON_KEY` + user JWT se
 ---
 
 ## 3. External Integrations (`CONFIRMED`)
+- **Customer Finder OpenAI adapter**: Local `POST /api/ai/customer-search` requires a verified Supabase user JWT, accepts `{query}` (400 characters), and returns `{constraints, model, warnings}`. Server-only `OPENAI_API_KEY`; no DB writes or invented catalogue prices. `GET` is a non-billable warm-up. Setup and limitations: [`AI_SETUP.md`](hackathon/customer/AI_SETUP.md).
 - **PayOS v2 REST (`https://api-merchant.payos.vn/v2/payment-requests`)**: Authenticated with `x-client-id`, `x-api-key`, and `PAYOS_CHECKSUM_KEY` HMAC-SHA256 signatures.
 - **Mapbox APIs (`apps/customer/src/services/mapbox.service.ts`)**:
   - Search Box API v1 (`https://api.mapbox.com/search/searchbox/v1/forward`) with `country=vn&language=vi`
