@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import type { CartItem, SurpriseBag } from '../shared/types/customer.types';
 
 const GUEST_CART_KEY = 'gsf_cart_guest';
@@ -18,6 +18,32 @@ function loadStoredCart(key: string): CartItem[] {
   }
 }
 
+// A stable external-store snapshot keeps cache hydration out of render effects.
+const cartSnapshots = new Map<string, { raw: string | null; items: CartItem[] }>();
+const cartListeners = new Set<() => void>();
+const EMPTY_CART: CartItem[] = [];
+function subscribeCart(listener: () => void) {
+  cartListeners.add(listener);
+  return () => { cartListeners.delete(listener); };
+}
+
+function readCartRaw(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function getCartSnapshot(key: string): CartItem[] {
+  const raw = readCartRaw(key);
+  const cached = cartSnapshots.get(key);
+  if (cached && cached.raw === raw) return cached.items;
+  const items = loadStoredCart(key);
+  cartSnapshots.set(key, { raw, items });
+  return items;
+}
+
 function saveStoredCart(key: string, items: CartItem[]): void {
   try {
     if (items.length === 0) {
@@ -25,12 +51,17 @@ function saveStoredCart(key: string, items: CartItem[]): void {
     } else {
       localStorage.setItem(key, JSON.stringify(items));
     }
-  } catch {}
+  } catch {
+    // Browser storage failure must not block in-memory cart updates.
+  }
+  // Retain in-memory updates even when browser storage is full or unavailable.
+  cartSnapshots.set(key, { raw: readCartRaw(key), items });
+  for (const listener of cartListeners) listener();
 }
 
 export function useCart(userId?: string | null) {
   const currentKey = getCartStorageKey(userId);
-  const [items, setItems] = useState<CartItem[]>(() => loadStoredCart(currentKey));
+  const items = useSyncExternalStore(subscribeCart, () => getCartSnapshot(currentKey), () => EMPTY_CART);
   const prevUserIdRef = useRef<string | null | undefined>(userId);
 
   // Xử lý chuyển đổi session người dùng (đăng nhập, đăng xuất, đổi tài khoản)
@@ -65,11 +96,9 @@ export function useCart(userId?: string | null) {
         });
         saveStoredCart(`gsf_cart_${userId}`, merged);
         saveStoredCart(GUEST_CART_KEY, []);
-        setItems(merged);
         return;
       }
 
-      setItems(userItems);
       return;
     }
 
@@ -77,23 +106,16 @@ export function useCart(userId?: string | null) {
     if (prevUserId && !userId) {
       // Giỏ hàng của tài khoản cũ vẫn được lưu an toàn trong gsf_cart_${prevUserId}
       // Đăng xuất: chuyển về giỏ hàng guest (trống, số badge biến mất)
-      const guestItems = loadStoredCart(GUEST_CART_KEY);
-      setItems(guestItems);
       return;
     }
 
     // 3. Trường hợp: Chuyển đổi trực tiếp giữa 2 tài khoản (User A -> User B)
-    const newUserItems = loadStoredCart(getCartStorageKey(userId));
-    setItems(newUserItems);
   }, [userId]);
 
   const updateAndPersist = useCallback(
     (updater: (current: CartItem[]) => CartItem[]) => {
-      setItems((current) => {
-        const next = updater(current);
-        saveStoredCart(getCartStorageKey(userId), next);
-        return next;
-      });
+      const key = getCartStorageKey(userId);
+      saveStoredCart(key, updater(getCartSnapshot(key)));
     },
     [userId]
   );
@@ -139,7 +161,6 @@ export function useCart(userId?: string | null) {
   );
 
   const clear = useCallback(() => {
-    setItems([]);
     saveStoredCart(getCartStorageKey(userId), []);
   }, [userId]);
 

@@ -75,6 +75,12 @@ const { rows: appliedRows } = await client.query(
   'SELECT name FROM public._migrations ORDER BY id'
 );
 const applied = new Set(appliedRows.map((row) => row.name));
+const legacyNames = JSON.parse(readFileSync(resolve(ROOT_DIR, 'supabase/migration-renames.json'), 'utf8'));
+for (const [currentName, legacyName] of Object.entries(legacyNames)) {
+  if (applied.has(legacyName)) applied.add(currentName);
+}
+// This snapshot bootstraps an empty database only; never replay it on Cloud.
+if (appliedRows.length > 0) applied.add('0000_baseline_schema.sql');
 
 if (mode === 'list') {
   for (const file of files) {

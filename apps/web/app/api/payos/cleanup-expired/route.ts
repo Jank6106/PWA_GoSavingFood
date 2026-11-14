@@ -11,11 +11,11 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders });
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   return handleCleanup();
 }
 
-export async function POST(request: Request) {
+export async function POST() {
   return handleCleanup();
 }
 

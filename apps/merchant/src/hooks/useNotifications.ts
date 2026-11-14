@@ -1,8 +1,9 @@
+import type { NotificationRow } from '../types/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { notificationService } from '../services/notification.service';
 import type { NotificationItem } from '../types';
 
-export function useNotifications(userId: string, onNewNotification?: (item: any) => void) {
+export function useNotifications(userId: string, onNewNotification?: (item: NotificationRow) => void) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [isOpen, setIsOpen] = useState(false);

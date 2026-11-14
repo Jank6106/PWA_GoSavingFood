@@ -1,3 +1,4 @@
+import type { NotificationRow } from '../types/database';
 import type { NotificationItem } from '../types';
 import { supabase } from './supabase';
 
@@ -15,7 +16,7 @@ const formatTimeAgo = (iso?: string | null) => {
   return new Date(iso).toLocaleDateString('vi-VN');
 };
 
-const inferNotificationType = (row: any): NotificationItem['type'] => {
+const inferNotificationType = (row: NotificationRow): NotificationItem['type'] => {
   const status = String(row?.data?.status ?? '');
   const title = String(row?.title ?? '').toLowerCase();
   if (status === 'ready_for_pickup') return 'pickup_reminder';
@@ -25,7 +26,7 @@ const inferNotificationType = (row: any): NotificationItem['type'] => {
   return 'new_order';
 };
 
-const mapNotification = (row: any): NotificationItem => {
+const mapNotification = (row: NotificationRow): NotificationItem => {
   const orderId = row?.data?.orderId || row?.data?.order_id || row?.data?.id;
   const orderCode =
     row?.data?.orderCode ||
@@ -86,7 +87,7 @@ async function markAllAsRead(userId: string): Promise<NotificationItem[]> {
 
 export function subscribeToNotifications(
   userId: string,
-  onNewNotification: (payload: any) => void
+  onNewNotification: (payload: NotificationRow) => void
 ) {
   return supabase
     .channel(`merchant-notifications-${userId}`)
@@ -99,7 +100,7 @@ export function subscribeToNotifications(
         filter: `user_id=eq.${userId}`,
       },
       (payload) => {
-        onNewNotification(payload.new);
+        onNewNotification(payload.new as NotificationRow);
       }
     )
     .subscribe();

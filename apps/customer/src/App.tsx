@@ -1,4 +1,5 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { RowChange } from './shared/types/database';
+import { useEffectEvent, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { AppLayout } from './app/layouts/AppLayout';
 import { AuthProvider } from './contexts/AuthContext';
@@ -72,7 +73,7 @@ interface PendingAuthTarget {
 function loadInitialHistory(): AppRoute[] {
   try {
     sessionStorage.removeItem(STORAGE_HISTORY_KEY);
-  } catch {}
+  } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
   if (typeof window !== 'undefined' && window.location.pathname.includes('/auth/callback')) {
     const base = import.meta.env.BASE_URL || '/explore/';
@@ -107,7 +108,7 @@ function loadInitialHistory(): AppRoute[] {
   return [{ name: 'tabs', tab: 'home' }];
 }
 
-function getRouteUrl(_route?: AppRoute): string {
+function getRouteUrl(): string {
   // In-Memory routing: Giấu toàn bộ query/view/id trên thanh URL, luôn trả về pathname gốc sạch sẽ
   if (typeof window !== 'undefined') {
     return window.location.pathname;
@@ -150,10 +151,9 @@ function parseRouteFromUrl(): AppRoute | null {
     if (tab && ['home', 'cart', 'orders', 'profile'].includes(tab)) {
       return { name: 'tabs', tab };
     }
-  } catch {}
+  } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
   return null;
 }
-
 
 const DEFAULT_COORDS = { lat: 21.0285, lng: 105.8542 };
 const DEFAULT_LOCATION = 'Hà Nội';
@@ -187,12 +187,12 @@ function CustomerApp() {
     setLocation(nextLocation);
     try {
       localStorage.setItem(STORAGE_LOCATION_KEY, nextLocation);
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     if (nextCoords) {
       setCoords(nextCoords);
       try {
         localStorage.setItem(STORAGE_COORDS_KEY, JSON.stringify(nextCoords));
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     }
   };
 
@@ -221,12 +221,12 @@ function CustomerApp() {
       setPendingAuthTarget(full);
       try {
         localStorage.setItem(STORAGE_PENDING_AUTH_KEY, JSON.stringify(full));
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     } else {
       setPendingAuthTarget(null);
       try {
         localStorage.removeItem(STORAGE_PENDING_AUTH_KEY);
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     }
   };
 
@@ -257,6 +257,131 @@ function CustomerApp() {
     []
   );
 
+  const route = useMemo<AppRoute>(() => history[history.length - 1] || { name: 'tabs', tab: 'home' }, [history]);
+  const activeTab: CustomerTab = route.name === 'tabs' ? route.tab : 'home';
+
+  const activeNav = useMemo(() => {
+    if (route.name === 'tabs') return route.tab;
+    if (route.name === 'notifications') return 'notifications';
+    if (route.name === 'order' || route.name === 'review' || route.name === 'report') return 'orders';
+    if (route.name === 'checkout' || route.name === 'payment' || route.name === 'success') return 'cart';
+    if (route.name === 'finder' || route.name === 'search' || route.name === 'bags' || route.name === 'bag' || route.name === 'merchant' || route.name === 'merchant_reviews' || route.name === 'brand' || route.name === 'location') return 'home';
+    return 'home';
+  }, [route]);
+
+  const previousRouteRef = useRef<AppRoute>(route);
+  useEffect(() => {
+    const prevRoute = previousRouteRef.current;
+    previousRouteRef.current = route;
+
+    const isCurrentOrdersTab = route.name === 'tabs' && route.tab === 'orders';
+    const wasPrevOrdersTab = prevRoute.name === 'tabs' && prevRoute.tab === 'orders';
+
+    // 1. Khi người dùng vào tab 'orders' để check -> xoá số báo đơn hàng
+    // 2. Nếu đang ở tab 'orders' mà có thông báo, khi chuyển sang trang khác -> xoá số báo
+    if (isCurrentOrdersTab || wasPrevOrdersTab) {
+      setOrdersBadgeCount(0);
+    }
+  }, [route]);
+
+  const push = (nextRoute: AppRoute) => {
+    const nextHistory = [...history, nextRoute];
+    // History writes belong to the event handler: StrictMode may replay state updaters.
+    window.history.pushState(
+      { route: nextRoute, index: nextHistory.length - 1 },
+      '',
+      getRouteUrl()
+    );
+    setHistory(nextHistory);
+  };
+
+  const back = () => {
+    if (history.length > 1) {
+      window.history.back();
+    } else {
+      openTab('home');
+    }
+  };
+
+  const openTab = (tab: CustomerTab) => {
+    if (tab === 'orders') {
+      setOrdersBadgeCount(0);
+    }
+    const active = history[history.length - 1];
+    if (active && active.name === 'tabs' && active.tab === tab) return;
+    const nextRoute: AppRoute = { name: 'tabs', tab };
+    const nextHistory: AppRoute[] =
+      tab === 'home' ? [{ name: 'tabs', tab: 'home' }] : [...history, nextRoute];
+    window.history.pushState(
+      { route: nextRoute, index: nextHistory.length - 1 },
+      '',
+      getRouteUrl()
+    );
+    setHistory(nextHistory);
+  };
+
+  const home = () => openTab('home');
+
+  const resetToSuccess = (orderId: string) => {
+    const successRoute: AppRoute = { name: 'success', orderId };
+    const nextHistory: AppRoute[] = [{ name: 'tabs', tab: 'home' }, successRoute];
+    window.history.replaceState(
+      { route: successRoute, index: 1 },
+      '',
+      getRouteUrl()
+    );
+    setHistory(nextHistory);
+  };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [history.length]);
+
+  const readInitialHistory = useEffectEvent(() => ({ route: history[history.length - 1] || { name: 'tabs', tab: 'home' }, index: history.length - 1 }));
+
+  // Đồng bộ với History API của trình duyệt (Bắt sự kiện Back / Forward hoặc cử chỉ vuốt)
+  useEffect(() => {
+    const initialEntry = readInitialHistory();
+    const initialRoute = initialEntry.route;
+    window.history.replaceState(
+      { route: initialRoute, index: initialEntry.index },
+      '',
+      getRouteUrl()
+    );
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state as { route?: AppRoute; index?: number } | null;
+
+      setHistory((current) => {
+        if (state && typeof state.index === 'number') {
+          if (state.index < current.length - 1) {
+            // Người dùng bấm Back: lùi về route tương ứng
+            return current.slice(0, state.index + 1);
+          }
+          if (state.route && state.index >= current.length) {
+            // Người dùng bấm Forward
+            return [...current, state.route];
+          }
+        }
+
+        if (current.length > 1) {
+          return current.slice(0, -1);
+        }
+
+        if (state && state.route) {
+          return [state.route];
+        }
+
+        const urlRoute = parseRouteFromUrl();
+        return [urlRoute || { name: 'tabs', tab: 'home' }];
+      });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
   // Tối ưu định vị không chặn (Non-blocking): Timeout 2.5s, dùng vị trí sẵn có ngay 0ms
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -323,31 +448,16 @@ function CustomerApp() {
       window.clearTimeout(timer);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
     };
-  }, []);
+  }, [showToast]);
 
   // Trì hoãn tải Orders & Notifications để nhường băng thông cho màn hình chính khởi động tức thì
-  useEffect(() => {
-    if (!auth.user) {
-      setOrders([]);
-      setNotifications([]);
-      setOrdersBadgeCount(0);
-      return;
-    }
-
-    let active = true;
-    const timer = window.setTimeout(() => {
-      if (!active || !auth.user) return;
-      void customerService.getOrders(auth.user.id).then((items) => {
-        if (active) setOrders(items || []);
-      });
-      void customerService.getNotifications().then((items) => {
-        if (active) setNotifications(items || []);
-      });
-    }, 800);
-
-    const channel = customerService.subscribeToCustomerUpdates(
-      auth.user.id,
-      (orderPayload) => {
+  const userId = auth.user?.id;
+  const [ordersUserId, setOrdersUserId] = useState(userId);
+  if (ordersUserId !== userId) {
+    setOrdersUserId(userId);
+    if (!userId) { setOrders([]); setNotifications([]); setOrdersBadgeCount(0); }
+  }
+  const onRealtimeOrder = useEffectEvent((orderPayload: RowChange) => {
         console.log('[Realtime Customer App] onOrderChange received:', orderPayload?.eventType, orderPayload?.new?.status, orderPayload?.new?.id);
         if (orderPayload?.eventType === 'INSERT') {
           const newId = orderPayload.new?.id;
@@ -358,7 +468,7 @@ function CustomerApp() {
           setOrdersBadgeCount((prev) => prev + 1);
         }
         if (orderPayload?.new && orderPayload.new.id) {
-          const rawStatus = orderPayload.new.status;
+          const rawStatus = orderPayload.new.status!;
           const normalizedStatus = rawStatus === 'picked_up' ? 'completed' : rawStatus;
           setOrders((current) => {
             const exists = current.some(
@@ -390,8 +500,8 @@ function CustomerApp() {
             if (items && items.length > 0) setOrders(items);
           });
         }
-      },
-      (notificationPayload) => {
+      });
+  const onRealtimeNotification = useEffectEvent((notificationPayload: RowChange) => {
         // Cập nhật danh sách thông báo và bật toast alert khi có thông báo mới
         void customerService.getNotifications().then((items) => setNotifications(items));
         if (notificationPayload.eventType === 'INSERT' && notificationPayload.new) {
@@ -410,14 +520,11 @@ function CustomerApp() {
             },
           });
         }
-      }
-    );
-
-    // Xử lý phục hồi khi App Active trở lại từ nền (Banking App switch)
-    const handleAppVisibility = () => {
+      });
+  const onAppVisibility = useEffectEvent((isActive: () => boolean) => {
       if (document.visibilityState === 'visible' && auth.user?.id) {
         void customerService.getOrders(auth.user.id).then((items) => {
-          if (!active || !items) return;
+          if (!isActive() || !items) return;
           setOrders(items);
           setHistory((currentHistory) => {
             const currentRoute = currentHistory[currentHistory.length - 1];
@@ -445,7 +552,30 @@ function CustomerApp() {
           });
         });
       }
-    };
+    });
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let active = true;
+    const timer = window.setTimeout(() => {
+      if (!active || !userId) return;
+      void customerService.getOrders(userId).then((items) => {
+        if (active) setOrders(items || []);
+      });
+      void customerService.getNotifications().then((items) => {
+        if (active) setNotifications(items || []);
+      });
+    }, 800);
+
+    const channel = customerService.subscribeToCustomerUpdates(
+      userId,
+      onRealtimeOrder,
+      onRealtimeNotification
+    );
+
+    // Xử lý phục hồi khi App Active trở lại từ nền (Banking App switch)
+    const handleAppVisibility = () => onAppVisibility(() => active);
 
     document.addEventListener('visibilitychange', handleAppVisibility);
     window.addEventListener('focus', handleAppVisibility);
@@ -457,132 +587,15 @@ function CustomerApp() {
       window.removeEventListener('focus', handleAppVisibility);
       void supabase.removeChannel(channel);
     };
-  }, [auth.user?.id]);
+  }, [userId]);
 
-  const route = history[history.length - 1] || { name: 'tabs', tab: 'home' };
-  const activeTab: CustomerTab = route.name === 'tabs' ? route.tab : 'home';
-
-  const activeNav = useMemo(() => {
-    if (route.name === 'tabs') return route.tab;
-    if (route.name === 'notifications') return 'notifications';
-    if (route.name === 'order' || route.name === 'review' || route.name === 'report') return 'orders';
-    if (route.name === 'checkout' || route.name === 'payment' || route.name === 'success') return 'cart';
-    if (route.name === 'finder' || route.name === 'search' || route.name === 'bags' || route.name === 'bag' || route.name === 'merchant' || route.name === 'merchant_reviews' || route.name === 'brand' || route.name === 'location') return 'home';
-    return 'home';
-  }, [route]);
-
-  const previousRouteRef = useRef<AppRoute>(route);
-  useEffect(() => {
-    const prevRoute = previousRouteRef.current;
-    previousRouteRef.current = route;
-
-    const isCurrentOrdersTab = route.name === 'tabs' && route.tab === 'orders';
-    const wasPrevOrdersTab = prevRoute.name === 'tabs' && prevRoute.tab === 'orders';
-
-    // 1. Khi người dùng vào tab 'orders' để check -> xoá số báo đơn hàng
-    // 2. Nếu đang ở tab 'orders' mà có thông báo, khi chuyển sang trang khác -> xoá số báo
-    if (isCurrentOrdersTab || wasPrevOrdersTab) {
-      setOrdersBadgeCount(0);
-    }
-  }, [route]);
-
-  const push = (nextRoute: AppRoute) => {
-    const nextHistory = [...history, nextRoute];
-    // History writes belong to the event handler: StrictMode may replay state updaters.
-    window.history.pushState(
-      { route: nextRoute, index: nextHistory.length - 1 },
-      '',
-      getRouteUrl(nextRoute)
-    );
-    setHistory(nextHistory);
-  };
-
-  const back = () => {
-    if (history.length > 1) {
-      window.history.back();
-    } else {
-      openTab('home');
-    }
-  };
-
-  const openTab = (tab: CustomerTab) => {
-    if (tab === 'orders') {
-      setOrdersBadgeCount(0);
-    }
-    const active = history[history.length - 1];
-    if (active && active.name === 'tabs' && active.tab === tab) return;
-    const nextRoute: AppRoute = { name: 'tabs', tab };
-    const nextHistory: AppRoute[] =
-      tab === 'home' ? [{ name: 'tabs', tab: 'home' }] : [...history, nextRoute];
-    window.history.pushState(
-      { route: nextRoute, index: nextHistory.length - 1 },
-      '',
-      getRouteUrl(nextRoute)
-    );
-    setHistory(nextHistory);
-  };
-
-  const home = () => openTab('home');
-
-  const resetToSuccess = (orderId: string) => {
-    const successRoute: AppRoute = { name: 'success', orderId };
-    const nextHistory: AppRoute[] = [{ name: 'tabs', tab: 'home' }, successRoute];
-    window.history.replaceState(
-      { route: successRoute, index: 1 },
-      '',
-      getRouteUrl(successRoute)
-    );
-    setHistory(nextHistory);
-  };
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [history.length]);
-
-  // Đồng bộ với History API của trình duyệt (Bắt sự kiện Back / Forward hoặc cử chỉ vuốt)
-  useEffect(() => {
-    const initialRoute = history[history.length - 1] || { name: 'tabs', tab: 'home' };
-    window.history.replaceState(
-      { route: initialRoute, index: history.length - 1 },
-      '',
-      getRouteUrl(initialRoute)
-    );
-
-    const handlePopState = (event: PopStateEvent) => {
-      const state = event.state as { route?: AppRoute; index?: number } | null;
-
-      setHistory((current) => {
-        if (state && typeof state.index === 'number') {
-          if (state.index < current.length - 1) {
-            // Người dùng bấm Back: lùi về route tương ứng
-            return current.slice(0, state.index + 1);
-          }
-          if (state.route && state.index >= current.length) {
-            // Người dùng bấm Forward
-            return [...current, state.route];
-          }
-        }
-
-        if (current.length > 1) {
-          return current.slice(0, -1);
-        }
-
-        if (state && state.route) {
-          return [state.route];
-        }
-
-        const urlRoute = parseRouteFromUrl();
-        return [urlRoute || { name: 'tabs', tab: 'home' }];
-      });
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []);
   const [directBag, setDirectBag] = useState<SurpriseBag | null>(null);
 
+  const [bagRouteName, setBagRouteName] = useState(route.name);
+  if (bagRouteName !== route.name) {
+    setBagRouteName(route.name);
+    if (route.name !== 'bag' && directBag) setDirectBag(null);
+  }
   const selectedBag =
     route.name === 'bag'
       ? catalog.bags.find((bag) => bag.id === route.id) ??
@@ -595,8 +608,6 @@ function CustomerApp() {
       void customerService.getBag(route.id).then((bag) => {
         if (bag) setDirectBag(bag);
       });
-    } else if (route.name !== 'bag' && directBag) {
-      setDirectBag(null);
     }
   }, [route, selectedBag, directBag]);
 
@@ -608,15 +619,20 @@ function CustomerApp() {
       ? route.id
       : selectedBag?.merchantId;
 
+  const [merchantLookupId, setMerchantLookupId] = useState(selectedMerchantId);
+  if (merchantLookupId !== selectedMerchantId) {
+    setMerchantLookupId(selectedMerchantId);
+    if (!selectedMerchantId) {
+      if (directMerchant) setDirectMerchant(null);
+      if (directMerchantBags) setDirectMerchantBags(null);
+    }
+  }
   useEffect(() => {
     if (selectedMerchantId) {
       void customerService.getMerchant(selectedMerchantId).then((res) => {
         if (res?.merchant) setDirectMerchant(res.merchant);
         if (res?.bags && res.bags.length > 0) setDirectMerchantBags(res.bags);
       });
-    } else {
-      if (directMerchant) setDirectMerchant(null);
-      if (directMerchantBags) setDirectMerchantBags(null);
     }
   }, [selectedMerchantId]);
 
@@ -656,20 +672,24 @@ function CustomerApp() {
     return found ?? directOrder ?? null;
   }, [selectedOrderId, orders, directOrder]);
 
+  const [lookupInputs, setLookupInputs] = useState<readonly unknown[]>([selectedOrderId, selectedOrder]);
+  if (lookupInputs[0] !== selectedOrderId || lookupInputs[1] !== selectedOrder) {
+    setLookupInputs([selectedOrderId, selectedOrder]);
+    if (!selectedOrderId && directOrder) setDirectOrder(null);
+    setOrderLoadFailed(false);
+  }
   useEffect(() => {
     if (!selectedOrderId) {
-      if (directOrder) setDirectOrder(null);
-            setOrderLoadFailed(false);
+
       return;
     }
 
     if (selectedOrder) {
-            setOrderLoadFailed(false);
+
       return;
     }
 
     let active = true;
-        setOrderLoadFailed(false);
 
     void customerService
       .getOrder(selectedOrderId)
@@ -741,7 +761,7 @@ function CustomerApp() {
     push({ name: 'checkout' });
   };
   // Tự động điều hướng về đúng trang khách định mua/thêm giỏ hàng và thực hiện tiếp hành động sau khi đăng nhập
-  useEffect(() => {
+  const onAuthenticatedIntent = useEffectEvent(() => {
     if (!auth.isAuthenticated || !auth.user || !pendingAuthTarget) return;
 
     const { route: targetRoute, action, bagId, quantity = 1 } = pendingAuthTarget;
@@ -753,8 +773,8 @@ function CustomerApp() {
         if (
           last &&
           last.name === targetRoute.name &&
-          (last as any).id === (targetRoute as any).id &&
-          (last as any).tab === (targetRoute as any).tab
+          ('id' in last ? last.id : undefined) === ('id' in targetRoute ? targetRoute.id : undefined) &&
+          ('tab' in last ? last.tab : undefined) === ('tab' in targetRoute ? targetRoute.tab : undefined)
         ) {
           return current;
         }
@@ -790,6 +810,11 @@ function CustomerApp() {
     }
 
     savePendingAuth(null);
+  });
+  // Apply the restored intent after session and per-account cart hydration commit.
+  useEffect(() => {
+    const timer = window.setTimeout(() => onAuthenticatedIntent(), 0);
+    return () => window.clearTimeout(timer);
   }, [auth.isAuthenticated, auth.user?.id, pendingAuthTarget, catalog.bags, catalog.isLoading, directBag]);
 
   const enrichedNotifications = useMemo(() => {
@@ -1097,7 +1122,6 @@ function CustomerApp() {
         />
       );
 
-
     if (route.name === 'bags') {
       const selectedCatId = route.categoryId;
       const filteredBags = selectedCatId && selectedCatId !== 'all'
@@ -1241,7 +1265,7 @@ function CustomerApp() {
           onConfirm={() => {
             const confirmedOrder = matchedOrder || route.order;
             if (confirmedOrder) {
-              handlePaymentConfirm(route.draft || ({} as any), confirmedOrder, route.buyNowItem);
+              handlePaymentConfirm(route.draft!, confirmedOrder, route.buyNowItem);
             } else if (qOrderId) {
               resetToSuccess(qOrderId);
             } else {

@@ -1,0 +1,6 @@
+export function errorMessage(error: unknown): string | undefined {
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') return error.message;
+}
+export function errorCode(error: unknown): string | undefined {
+  if (typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string') return error.code;
+}

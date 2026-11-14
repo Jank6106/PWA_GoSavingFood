@@ -1,3 +1,5 @@
+import type { CatalogSnapshot, StoreRow, BagRow, OrderRow, OrderItemRow, RowChange } from '../shared/types/database';
+import { errorMessage } from '../shared/utils/errors';
 import { supabase } from './supabase';
 import { calculateDistanceKm, formatDistance, mapboxService } from './mapbox.service';
 import { isBagVisibleOnMarket } from '../shared/utils/bagTiming';
@@ -171,7 +173,7 @@ const mapCreateOrderError = (error: { message?: string; details?: string } | nul
           }
         }
       }
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     return 'Túi thực phẩm đã hết hoặc không còn mở bán. Vui lòng chọn túi khác.';
   }
   if (raw.includes('BAG_NOT_FOUND')) return 'Không tìm thấy túi thực phẩm trong hệ thống.';
@@ -200,7 +202,7 @@ const normalizeCategory = (cat?: string | null): Exclude<FoodCategory, 'all'> =>
   return 'other';
 };
 
-let inFlightHomePromise: Promise<any> | null = null;
+let inFlightHomePromise: Promise<CatalogSnapshot> | null = null;
 let lastHomeCoordsKey = '';
 
 export const HANOI_STORES: Merchant[] = [
@@ -3215,7 +3217,7 @@ export const HANOI_BAGS: SurpriseBag[] = [
   }
 ];
 
-function mapCustomerOrderRow(o: any): Order {
+function mapCustomerOrderRow(o: OrderRow): Order {
   const rev = Array.isArray(o.reviews) ? o.reviews[0] : o.reviews;
   const isOverdue =
     o.status === 'pending_payment' &&
@@ -3233,7 +3235,7 @@ function mapCustomerOrderRow(o: any): Order {
     orderCode: o.order_code || `GSF-${o.id.slice(0, 6).toUpperCase()}`,
     merchantId: o.store_id,
     merchantName: o.stores?.name || 'Quán đối tác',
-    items: (o.order_items || []).map((item: any) => ({
+    items: (o.order_items || []).map((item: OrderItemRow) => ({
       bagId: item.bag_id,
       bagName: item.bag_name || 'Túi cứu trợ thực phẩm',
       imageUrl:
@@ -3360,7 +3362,7 @@ export const customerService = {
         ]);
 
       if (rawStores.length > 0) {
-        remoteStores = rawStores.map((s: any) => {
+        remoteStores = rawStores.map((s: StoreRow) => {
           const storeLat = s.latitude != null ? Number(s.latitude) : undefined;
           const storeLng = s.longitude != null ? Number(s.longitude) : undefined;
 
@@ -3394,7 +3396,7 @@ export const customerService = {
 
       if (bagsSource.length > 0) {
         remoteBags = bagsSource
-          .map((b: any) => ({
+          .map((b: BagRow) => ({
             id: b.id,
             catalogSource: 'remote' as const,
             merchantId: b.store_id,
@@ -3421,7 +3423,7 @@ export const customerService = {
           }))
           .filter(isBagVisibleOnMarket);
 
-        remoteBags.sort((a: any, b: any) => {
+        remoteBags.sort((a, b) => {
           if (!a.createdAt || !b.createdAt) return 0;
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
@@ -3589,7 +3591,7 @@ export const customerService = {
         };
 
         const mappedBags: SurpriseBag[] = (bags || [])
-          .map((b: any) => ({
+          .map((b: BagRow) => ({
             id: b.id,
             merchantId: b.store_id,
             merchantName: store.name,
@@ -3657,19 +3659,19 @@ export const customerService = {
     try {
       const key = `gsf_local_orders_${currentUserId}`;
       localOrders = JSON.parse(localStorage.getItem(key) || '[]');
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
     try {
       const query = supabase
         .from('orders')
         .select(CUSTOMER_ORDER_SELECT)
         .eq('customer_id', currentUserId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).returns<OrderRow[]>();
 
       const { data, error } = await query;
       if (!error && Array.isArray(data)) {
         const hasOverdueOrders = data.some(
-          (o: any) =>
+          (o) =>
             o.status === 'pending_payment' &&
             o.payment_expires_at &&
             new Date(o.payment_expires_at).getTime() <= Date.now()
@@ -3680,8 +3682,8 @@ export const customerService = {
           void customerService.cleanupExpiredPendingOrders();
         }
 
-        const remoteIdSet = new Set((remoteOrders || []).map((o: any) => String(o.id).toLowerCase()));
-        const validLocalOrders = localOrders.filter((l: any) => !remoteIdSet.has(String(l.id).toLowerCase()));
+        const remoteIdSet = new Set((remoteOrders || []).map((o) => String(o.id).toLowerCase()));
+        const validLocalOrders = localOrders.filter((l) => !remoteIdSet.has(String(l.id).toLowerCase()));
         return [...validLocalOrders, ...remoteOrders];
       }
     } catch (err) {
@@ -3712,7 +3714,7 @@ export const customerService = {
           query = query.ilike('qr_code', `%${hexToken}%`);
         }
 
-        const { data, error } = await query.limit(1).maybeSingle();
+        const { data, error } = await query.limit(1).returns<OrderRow[]>().maybeSingle();
         if (!error && data) {
           return mapCustomerOrderRow(data);
         }
@@ -3725,7 +3727,7 @@ export const customerService = {
             .select(CUSTOMER_ORDER_SELECT)
             .eq('payment_order_code', numericCode)
             .limit(1)
-            .maybeSingle();
+            .returns<OrderRow[]>().maybeSingle();
           if (numOrder) return mapCustomerOrderRow(numOrder);
         }
 
@@ -3745,7 +3747,7 @@ export const customerService = {
             );
             if (target) return target;
           }
-        } catch {}
+        } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
       } catch (err) {
         console.warn('Lấy chi tiết đơn hàng lỗi:', err);
       }
@@ -3770,7 +3772,7 @@ export const customerService = {
         .limit(50);
 
       if (!error && Array.isArray(data)) {
-        return data.map((n: any) => ({
+        return data.map((n) => ({
           id: n.id,
           icon: n.icon || 'system',
           title: n.title || 'Thông báo',
@@ -3823,8 +3825,8 @@ export const customerService = {
 
   subscribeToCustomerUpdates(
     userId: string,
-    onOrderChange: (payload: any) => void,
-    onNotificationChange: (payload: any) => void
+    onOrderChange: (payload: RowChange) => void,
+    onNotificationChange: (payload: RowChange) => void
   ) {
     return supabase
       .channel(`customer-realtime-${userId}`)
@@ -3837,7 +3839,7 @@ export const customerService = {
           filter: `customer_id=eq.${userId}`,
         },
         (payload) => {
-          console.log('[Realtime Customer] Order changed:', payload.eventType, (payload.new as any)?.status);
+          console.log('[Realtime Customer] Order changed:', payload.eventType, ('status' in payload.new ? payload.new.status : undefined));
           onOrderChange(payload);
         }
       )
@@ -3850,7 +3852,7 @@ export const customerService = {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          console.log('[Realtime Customer] Notification received:', (payload.new as any)?.title);
+          console.log('[Realtime Customer] Notification received:', ('title' in payload.new ? payload.new.title : undefined));
           onNotificationChange(payload);
         }
       )
@@ -3868,7 +3870,7 @@ export const customerService = {
         .eq('is_active', true)
         .or('is_hidden.is.null,is_hidden.eq.false');
       if (!error && Array.isArray(data) && data.length > 0) {
-        return data.map((v: any) => ({
+        return data.map((v) => ({
           id: v.id,
           code: v.code,
           description: v.description || 'Ưu đãi GoSavingFood',
@@ -3923,7 +3925,7 @@ export const customerService = {
 
         if (
           Array.isArray(existingOrders) &&
-          existingOrders.some((o: any) => !['cancelled', 'expired'].includes(o.status))
+          existingOrders.some((o) => !['cancelled', 'expired'].includes(o.status))
         ) {
           isAlreadyUsed = true;
         }
@@ -3964,10 +3966,9 @@ export const customerService = {
       mapboxService.searchPlaces(trimmed, proximity).catch(() => []),
     ]);
 
-
     const storeSuggestions: LocationSuggestion[] = [];
     if (storeRes && 'data' in storeRes && Array.isArray(storeRes.data)) {
-      storeRes.data.forEach((s: any) => {
+      storeRes.data.forEach((s: StoreRow) => {
         if (!s.latitude || !s.longitude) return;
         const coords: [number, number] = [Number(s.longitude), Number(s.latitude)];
         let distanceText = 'Quán đối tác';
@@ -3995,7 +3996,7 @@ export const customerService = {
         body: { q: trimmed },
       });
       if (!error && data?.success && Array.isArray(data.data) && data.data.length > 0) {
-        return data.data.map((item: any) => ({
+        return data.data.map((item: {id?: string; name: string; address: string}) => ({
           id: item.id || `loc-${Math.random()}`,
           name: item.name || item.address,
           address: item.address || item.name,
@@ -4013,7 +4014,7 @@ export const customerService = {
    * Lấy danh sách cửa hàng gần nhất theo tọa độ [lat, lng] dùng PostGIS RPC
    */
   async getStoresNearby(coords: { lat: number; lng: number }, radiusMeters = 50000) {
-    let remoteStores: any[] = [];
+    let remoteStores: StoreRow[] = [];
     try {
       const { data, error } = await supabase.rpc('list_stores_nearby', {
         p_lat: coords.lat,
@@ -4025,7 +4026,7 @@ export const customerService = {
       });
 
       if (!error && Array.isArray(data)) {
-        remoteStores = data.filter((s: any) => s.latitude && s.longitude);
+        remoteStores = data.filter((s: StoreRow) => s.latitude && s.longitude);
       }
     } catch (err) {
       console.error('[CustomerService] list_stores_nearby failed:', err);
@@ -4273,7 +4274,7 @@ export const customerService = {
           },
           { onConflict: 'id' }
         );
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
       return { email: trimmedEmail, autoConfirmed: true, user: fullUser };
     }
@@ -4419,21 +4420,21 @@ export const customerService = {
   async deleteAccount(userId?: string, identifier?: string): Promise<{ success: boolean; message?: string }> {
     try {
       // 1. Gọi RPC delete_user_account với userId hiện tại
-      let res = await supabase.rpc('delete_user_account', userId ? { p_user_id: userId } : {});
+      const res = await supabase.rpc('delete_user_account', userId ? { p_user_id: userId } : {});
       let result = res.data as { success?: boolean; error?: string; message?: string } | null;
 
       // 2. Nếu RPC bằng ID chưa thành công hoặc không có userId, thử qua identifier (email / phone)
       if ((!result || !result.success) && identifier) {
         const idRes = await supabase.rpc('delete_user_by_identifier', { p_identifier: identifier });
-        if (idRes.data && (idRes.data as any).success) {
-          result = idRes.data as any;
+        if (idRes.data && idRes.data.success) {
+          result = idRes.data;
         }
       }
 
       // 3. Đăng xuất khỏi Supabase Auth và dọn dẹp bộ nhớ client
       try {
         await supabase.auth.signOut();
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
       if (typeof window !== 'undefined') {
         try {
@@ -4443,19 +4444,19 @@ export const customerService = {
           localStorage.removeItem('gsf_notifications_enabled');
           localStorage.removeItem('gsf_customer_orders');
           localStorage.removeItem('gsf_pending_auth_target');
-        } catch {}
+        } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
       }
 
       return {
         success: result?.success ?? true,
         message: result?.message || 'Tài khoản đã được xóa vĩnh viễn khỏi hệ thống.',
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn('Lỗi khi xóa tài khoản:', err);
       try {
         await supabase.auth.signOut();
-      } catch {}
-      return { success: false, message: err?.message || 'Không thể xóa tài khoản. Vui lòng thử lại.' };
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
+      return { success: false, message: errorMessage(err) || 'Không thể xóa tài khoản. Vui lòng thử lại.' };
     }
   },
 
@@ -4590,7 +4591,7 @@ export const customerService = {
         const key = `gsf_local_orders_${user.id}`;
         const saved = JSON.parse(localStorage.getItem(key) || '[]');
         localStorage.setItem(key, JSON.stringify([localOrder, ...saved]));
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
       return localOrder;
     }
 
@@ -4623,8 +4624,8 @@ export const customerService = {
     const createdId = (rpcResult as { order_id?: string; pickup_token?: string; status?: string; payment_status?: string } | null)?.order_id || orderId;
     const pickupToken = (rpcResult as { pickup_token?: string } | null)?.pickup_token;
     const isZeroAmount = order.finalAmount <= 0;
-    const resolvedStatus = ((rpcResult as any)?.status as Order['status']) || (isZeroAmount ? 'paid' : 'pending_payment');
-    const resolvedPaymentStatus = ((rpcResult as any)?.payment_status as Order['paymentStatus']) || (isZeroAmount ? 'success' : 'pending');
+    const resolvedStatus = (rpcResult?.status as Order['status']) || (isZeroAmount ? 'paid' : 'pending_payment');
+    const resolvedPaymentStatus = (rpcResult?.payment_status as Order['paymentStatus']) || (isZeroAmount ? 'success' : 'pending');
 
     return {
       ...order,
@@ -4678,10 +4679,10 @@ export const customerService = {
             return Number(data.expiredCount) || 0;
           }
         }
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
       const { data } = await supabase.rpc('cleanup_expired_pending_orders');
-      return (data as any)?.expired_orders_count || 0;
+      return (data as {expired_orders_count?: number} | null)?.expired_orders_count || 0;
     } catch (err) {
       console.warn('cleanupExpiredPendingOrders error:', err);
       return 0;
@@ -4704,7 +4705,7 @@ export const customerService = {
         ? `${tags.join(', ')} — ${comment}`.trim()
         : comment;
 
-      const insertData: Record<string, any> = {
+      const insertData: Record<string, unknown> = {
         order_id: orderId,
         customer_id: user?.id,
         store_id: storeId,
@@ -4744,7 +4745,7 @@ export const customerService = {
           'Tuấn Kiệt',
           'Phương Thảo',
         ];
-        return data.map((r: any, idx: number) => {
+        return data.map((r, idx: number) => {
           const isMe = user?.id && r.customer_id === user.id;
           const charSum = (r.id as string).split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), idx);
           const sampleName = sampleNames[charSum % sampleNames.length];
@@ -4883,14 +4884,14 @@ export const customerService = {
         .from('profiles')
         .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
         .eq('id', userId);
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
     try {
       await supabase
         .from('customers')
         .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
         .eq('id', userId);
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
     // 3. Cập nhật Auth Metadata của Supabase
     try {
@@ -4913,7 +4914,7 @@ export const customerService = {
     updates: { name?: string; phone?: string; email?: string; avatar?: string }
   ): Promise<boolean> {
     try {
-      const dbPayload: Record<string, any> = {
+      const dbPayload: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
       if (updates.name !== undefined) dbPayload.name = updates.name;
@@ -4931,7 +4932,7 @@ export const customerService = {
         console.warn('[customerService] updateUserProfile DB error:', error.message);
       }
 
-      const metaPayload: Record<string, any> = {};
+      const metaPayload: Record<string, unknown> = {};
       if (updates.name) {
         const trimmedName = updates.name.trim();
         metaPayload.full_name = trimmedName;

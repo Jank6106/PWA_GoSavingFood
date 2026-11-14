@@ -34,7 +34,7 @@ export function DraggableQRFab({ onClick }: DraggableQRFabProps) {
           return { x: clampedX, y: clampedY };
         }
       }
-    } catch {}
+    } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
     return getDefaultPos();
   });
 
@@ -73,7 +73,7 @@ export function DraggableQRFab({ onClick }: DraggableQRFabProps) {
 
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {}
+    } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -105,7 +105,7 @@ export function DraggableQRFab({ onClick }: DraggableQRFabProps) {
 
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {}
+    } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
 
     // 1. Nếu không di chuyển (> 6px) -> Tính là TAP/CLICK -> Kích hoạt mở camera QR
     if (!hasMovedRef.current) {
@@ -124,7 +124,7 @@ export function DraggableQRFab({ onClick }: DraggableQRFabProps) {
     // Lưu tọa độ hít viền vào localStorage
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ x: snapX, y: snapY }));
-    } catch {}
+    } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
 
     setTimeout(() => {
       setIsSnapping(false);

@@ -5,8 +5,11 @@
 ---
 
 ## NOW (Recently Completed / Active Stabilization — `CONFIRMED`)
-- **Customer AI integration follow-up** (`Hung`): Next.js adapter implemented using Gemini transport from Hanh, JWT/input/output validation and per-instance quota. 120 offline tests, customer build, web typecheck and scoped lint pass. Local env has placeholders for the user to supply a Gemini key; OpenAI event credit and actual provider acceptance remain pending. See [`AI_SETUP.md`](hackathon/customer/AI_SETUP.md). This supersedes the backend-pending portion of the original client-only acceptance below.
-- **Customer hackathon client** (`Hung`, accepted for local preview): Home Today Deals, Finder navigation and a local rules filter are implemented; 85 offline tests, customer build, scoped lint and browser 390px/1440px pass. AI endpoint `/api/ai/customer-search`, model configuration, physical-phone restart demo and production deployment remain unverified/not implemented in this customer-only scope. Plan and acceptance evidence: [`CUSTOMER_HACKATHON_PLAN.md`](plans/CUSTOMER_HACKATHON_PLAN.md), [`REVIEW.md`](hackathon/customer/REVIEW.md).
+- **Customer AI integration** (`Hung`): Authenticated `POST /api/ai/customer-search` uses OpenAI Responses with GPT-6 Luna primary and GPT-5.4 mini fallback, JWT/input/output validation and per-instance quota. The Gemini adapter remains inactive. Recorded text, synthetic-label vision and forced-failover smoke tests passed; the Finder UI remains text-only. Setup and evidence: [`AI_SETUP.md`](hackathon/customer/AI_SETUP.md). Production and physical-phone acceptance remain pending.
+- **Customer hackathon client** (`Hung`, accepted for local preview): Home Today Deals, Finder navigation, local rules filtering, demo catalogue labels and recoverable Mapbox fallbacks are implemented. Customer build, scoped lint and browser 390px/1440px acceptance are recorded in [`REVIEW.md`](hackathon/customer/REVIEW.md); plan: [`CUSTOMER_HACKATHON_PLAN.md`](plans/CUSTOMER_HACKATHON_PLAN.md). `master` CI/Docker/E2E work is integrated locally with these customer changes.
+- **ESLint stabilization (2026-11-14)**: Merchant, Customer and Web now lint with zero errors/warnings, with rules unchanged. Workspace build and offline 14/14, Docker 42/42 and E2E 9/9 passed after cleanup; see `docs/reports/ESLINT_CLEANUP_2026-11-14.md`.
+- **Browser E2E testing (2026-11-14)**: Auth/route/session/logout and voucher-zero order/Realtime/QR coverage implemented with isolated Docker fixtures.
+- **Docker database testing**: Local baseline replay and seed implemented; offline 14/14 and local 42/42 tests verified (2026-11-13). Production audit remains separate.
 - **Customer & Merchant PWA Stabilization** (`CONFIRMED` from commits `ccc457f0`, `7b8e671a`, `e4b02942`, `da0d10f6`):
   - Goal: Eliminate mobile horizontal overflow on Merchant orders, fix order detail deep-linking from notifications, re-sync hooks on `storeId` change, fix PayOS `check-status` with numeric `paymentOrderCode`, and support 0đ voucher orders (`TMU2026`).
   - Status: Merged to `master` (`396f294c`); verified with `pnpm turbo build` and `25/25` audit script (`ad98e7de`).
@@ -46,12 +49,5 @@
    - **Status**: `PLANNED` (DB table exists; VAPID keys & `sw.js` push handlers not implemented).
 
 3. **CI/CD Pipeline & Isolated Test Database**
-   - **Goal**: Add GitHub Actions (`lint`, `typecheck`, `build`, unit tests) and separate staging Supabase project so Vitest integration tests do not run against production.
-   - **Status**: `PLANNED` / `UNKNOWN`.
-
-Customer AI follow-up: user supplied the Gemini key; live primary, fallback and forced-failover tests passed. See AI_SETUP.md live verification, superseding the key-pending status above.
-
-## OpenAI switch (2026-11-14)
-Active Finder switched to OpenAI Responses API: gpt-5.4-mini -> gpt-5.4-nano. Live text and synthetic-label image tests passed for both; forced primary failure switched to Nano. No upload UI added. 136 offline tests, customer build, web typecheck/scoped lint pass. Key stays server-side; TLS verification retained with system CA store on this Windows host. Setup/evidence: docs/hackathon/customer/AI_SETUP.md. AI changes not committed/pushed.
-
-- 2026-11-14: Customer Finder primary switched to GPT-6 Luna with GPT-5.4 mini fallback, explicit reasoning=none. Live text, synthetic-label vision and forced failover passed; no image-upload UI or production deployment added.
+   - **Goal**: Gate merges with GitHub Actions lint, unit tests, build, Docker integration and Chromium E2E using isolated local credentials.
+   - **Status**: Workflow implemented (2026-11-14); first GitHub runner execution, timing and required status-check activation pending. Docker replaces the need for a staging Cloud database in this gate. Web build still bypasses strict TypeScript checking as documented.

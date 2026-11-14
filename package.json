@@ -17,9 +17,12 @@
     "db:status": "npx supabase status",
     "test:offline": "vitest run tests/bagTiming.test.ts tests/mapbox.test.ts tests/envHelper.test.ts tests/customerFinder.test.ts tests/customerFinder.review.test.ts tests/customerFinder.final-review.test.ts tests/customerDeals.test.ts tests/customerAi.test.ts tests/customerOpenAI.test.ts",
     "test:local": "node scripts/test-local.mjs",
-    "test:audit": "node scripts/test-local.mjs audit",
-    "test:live": "vitest run",
-    "test": "pnpm test:offline"
+    "test:audit": "node scripts/comprehensive-system-audit.mjs",
+    "test:live": "node scripts/test-live.mjs",
+    "test": "pnpm test:offline",
+    "test:e2e": "node scripts/test-e2e.mjs",
+    "test:e2e:ui": "node scripts/test-e2e.mjs --ui",
+    "test:e2e:debug": "node scripts/test-e2e.mjs --debug"
   },
   "private": true,
   "keywords": [],
@@ -28,6 +31,7 @@
   "packageManager": "pnpm@11.13.1",
   "type": "module",
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "@supabase/supabase-js": "^2.117.2",
     "pg": "^8.23.0",
     "turbo": "^2.10.12",

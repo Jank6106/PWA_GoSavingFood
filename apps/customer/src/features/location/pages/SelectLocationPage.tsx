@@ -63,6 +63,7 @@ export function SelectLocationPage({
   };
 
   // 3. Khởi tạo bản đồ Mapbox
+  const [initialMapCoords] = useState(selectedCoords);
   useEffect(() => {
     if (!mapContainerRef.current || !MAPBOX_TOKEN.trim()) return;
 
@@ -73,7 +74,7 @@ export function SelectLocationPage({
       map = new mapboxgl.Map({
         container: mapContainerRef.current,
         style: 'mapbox://styles/mapbox/streets-v12',
-        center: selectedCoords,
+        center: initialMapCoords,
         zoom: 14,
         attributionControl: false,
       });
@@ -87,7 +88,7 @@ export function SelectLocationPage({
 
     map.on('load', () => {
       map.resize();
-      updateUserPin(selectedCoords);
+      updateUserPin(initialMapCoords);
     });
 
     // Cho phép người dùng click bất kỳ vị trí nào trên bản đồ để chọn
@@ -116,19 +117,22 @@ export function SelectLocationPage({
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [initialMapCoords]);
 
   // 4. Tìm kiếm địa điểm với debounce 250ms
+  const [searchInputs, setSearchInputs] = useState<readonly unknown[]>([null]);
+  if (searchInputs[0] !== query || searchInputs[1] !== selectedCoords) {
+    setSearchInputs([query, selectedCoords]);
+    if (!query.trim()) { setLocations([]); setIsSearching(false); } else setIsSearching(true);
+  }
   useEffect(() => {
     const trimmed = query.trim();
     let active = true;
+    if (!trimmed) {
+      return;
+    }
+
     const timer = setTimeout(() => {
-      if (!trimmed) {
-        setLocations([]);
-        setIsSearching(false);
-        return;
-      }
-      setIsSearching(true);
       customerService
         .searchLocations(trimmed, selectedCoords)
         .then((items) => {
@@ -140,7 +144,7 @@ export function SelectLocationPage({
         .catch(() => {
           if (active) setIsSearching(false);
         });
-    }, trimmed ? 250 : 0);
+    }, 250);
 
     return () => {
       active = false;

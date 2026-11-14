@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ChevronLeft,
   Clock,
@@ -122,14 +122,14 @@ export function MerchantDetailPage({
     }
   };
 
-  const aboutParagraphs = useMemo(() => {
+  const aboutParagraphs = (() => {
     const p1 =
       merchant.description ||
       `${merchant.name} là điểm đến ẩm thực quen thuộc và được tin yêu, luôn nỗ lực vì giá trị bền vững và thân thiện với môi trường.`;
     const p2 = `${merchant.name} hợp tác cùng GoSavingFood nhằm mang đến những phần ăn thơm ngon, chất lượng tuyệt hảo với mức giá siêu tiết kiệm, đồng thời chung tay giảm thiểu lãng phí thực phẩm trong cộng đồng.`;
     const p3 = `Các sản phẩm trong túi cứu trợ được chọn lọc cẩn thận mỗi ngày, bảo đảm tiêu chuẩn an toàn vệ sinh thực phẩm và hương vị tươi mới tuyệt hảo khi trao đến tay bạn.`;
     return [p1, p2, p3];
-  }, [merchant]);
+  })();
 
   return (
     <div className="customer-store-view">
@@ -465,5 +465,4 @@ export function MerchantDetailPage({
     </div>
   );
 }
-
 

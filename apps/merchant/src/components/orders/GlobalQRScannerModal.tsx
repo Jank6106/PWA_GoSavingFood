@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffectEvent, useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Check,
@@ -155,6 +155,8 @@ export function GlobalQRScannerModal({
     }
   };
 
+  const processCameraCode = useEffectEvent(handleProcessCode);
+
   // Khởi động Camera khi modal mở và chưa có đơn quét trúng
   useEffect(() => {
     if (!open || mode !== 'camera' || matchedOrder || notFoundCode) {
@@ -201,7 +203,7 @@ export function GlobalQRScannerModal({
             void stopScanner();
 
             // Xử lý mã
-            handleProcessCode(decodedText);
+            processCameraCode(decodedText);
           },
           () => {
             // Frame không chứa mã

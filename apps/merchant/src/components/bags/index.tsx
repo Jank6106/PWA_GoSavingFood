@@ -1,7 +1,7 @@
 import { ChevronDown, ImagePlus, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react';
 import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react';
 import { PRESET_BAG_CATEGORIES } from '../../mocks';
-import { compressImageToBlob, optimizeImageUrl } from '../../services/utils';
+import { compressImageToBlob, optimizeImageUrl } from '../../utils/browser';
 import type { BagInput, BagItem } from '../../types';
 import { getBagCategory, getVnTimeMinutes, parseTimeToMinutes, type BagTabCategory } from '../../utils/bagTiming';
 import { Button, Field, Modal, SelectField, TextAreaField } from '../ui';
@@ -85,8 +85,8 @@ export function BagCard({
   const category = getBagCategory(bag);
   const isOnShelf = category === 'on_shelf';
 
-  let statusLabel = 'Đang bán';
-  let badgeVariant = 'active';
+  let statusLabel: string;
+  let badgeVariant: string;
 
   if (category === 'expired') {
     statusLabel = 'Hết hạn';
@@ -258,9 +258,14 @@ function TimeUnitPicker({
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  const [valueInputs, setValueInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (valueInputs === null || [value].some((value, index) => !Object.is(value, valueInputs[index]))) {
+    setValueInputs([value]);
+
     setInputValue(value);
-  }, [value]);
+
+  }
 
   // Đóng dropdown khi click/chạm ra ngoài
   useEffect(() => {
@@ -404,6 +409,11 @@ function MerchantTimePicker({
 }
 
 export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?: BagItem; open: boolean; saving: boolean; onClose: () => void; onSubmit: (input: BagInput) => void }) {
+  const [minimumExpiryDate, setMinimumExpiryDate] = useState(() => new Date(Date.now() + 86400000).toISOString().split('T')[0]);
+  useEffect(() => {
+    const timer = window.setInterval(() => setMinimumExpiryDate(new Date(Date.now() + 86400000).toISOString().split('T')[0]), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [name, setName] = useState(bag?.name ?? '');
   const [category, setCategory] = useState(bag?.category ?? PRESET_BAG_CATEGORIES[0]);
   const [bagType, setBagType] = useState<'daily' | 'shelf_life'>(bag?.bagType ?? 'daily');
@@ -425,7 +435,11 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
   const [imageError, setImageError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [draftInputs, setDraftInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (draftInputs === null || [bag, open].some((value, index) => !Object.is(value, draftInputs[index]))) {
+    setDraftInputs([bag, open]);
+
     if (open) {
       setName(bag?.name ?? '');
       setCategory(bag?.category ?? PRESET_BAG_CATEGORIES[0]);
@@ -447,7 +461,8 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
       setImageError(null);
       setFormError(null);
     }
-  }, [bag, open]);
+
+  }
 
   const handleOriginalPriceChange = (val: string) => {
     setOriginalPrice(val);
@@ -661,7 +676,7 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit }: { bag?:
             }
             type="date"
             value={expiryDate}
-            min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+            min={minimumExpiryDate}
             onChange={(event) => setExpiryDate(event.target.value)}
             required
           />

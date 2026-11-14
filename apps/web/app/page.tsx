@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import { LandingMotion } from "./components/LandingMotion";
 import { Navbar } from "./components/Navbar";
 import { HeroAwakening } from "./components/HeroAwakening";
@@ -13,14 +13,13 @@ import { FoodMarquee } from "./components/FoodMarquee";
 import { Footer } from "./components/Footer";
 import { PWAInstallModal } from "./components/PWAInstallModal";
 
-function getAppUrls() {
-  if (typeof window === "undefined") {
+function getAppUrls(host?: string) {
+  if (host === undefined) {
     return {
       customerUrl: "/explore/",
       merchantUrl: "https://gsf-merchant-pwa.vercel.app",
     };
   }
-  const host = window.location.hostname;
   const isLocal =
     host === "localhost" ||
     host === "127.0.0.1" ||
@@ -34,15 +33,16 @@ function getAppUrls() {
   };
 }
 
+const subscribeHost = () => () => {};
+const getHost = () => window.location.hostname;
+const getServerHost = () => undefined;
+
 export default function Home() {
-  const [urls, setUrls] = useState({
-    customerUrl: "/explore/",
-    merchantUrl: "https://gsf-merchant-pwa.vercel.app",
-  });
+  const host = useSyncExternalStore(subscribeHost, getHost, getServerHost);
+  const urls = getAppUrls(host);
 
   useEffect(() => {
-    const appUrls = getAppUrls();
-    setUrls(appUrls);
+    const appUrls = getAppUrls(window.location.hostname);
 
     if (typeof window !== "undefined") {
       // 1. Khi mở ở chế độ Standalone PWA từ màn hình chính tại root '/', tự động chuyển tiếp ngay vào Customer App
@@ -115,5 +115,4 @@ export default function Home() {
     </div>
   );
 }
-
 

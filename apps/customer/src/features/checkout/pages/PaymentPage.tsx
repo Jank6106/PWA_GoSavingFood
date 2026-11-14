@@ -54,7 +54,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
     try {
       const saved = sessionStorage.getItem(SESSION_ORDER_CODE_KEY);
       if (saved) return saved;
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     if (effectiveOrderId) {
       return `GSF-${effectiveOrderId.slice(0, 6).toUpperCase()}`;
     }
@@ -67,7 +67,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
     try {
       const saved = Number(sessionStorage.getItem(SESSION_ORDER_TOTAL_KEY));
       if (!isNaN(saved) && saved > 0) return saved;
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     return 0;
   });
 
@@ -80,11 +80,11 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
     try {
       const saved = Number(sessionStorage.getItem(SESSION_EXPIRES_AT_KEY));
       if (!isNaN(saved) && saved > 0) return saved;
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     const fresh = Date.now() + 30 * 60 * 1000;
     try {
       sessionStorage.setItem(SESSION_EXPIRES_AT_KEY, String(fresh));
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     return fresh;
   });
 
@@ -110,7 +110,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
     description: string;
   } | null>(null);
 
-  const payosPromiseRef = useRef<Promise<any> | null>(null);
+  const payosPromiseRef = useRef<ReturnType<typeof customerService.createPayOSPayment> | null>(null);
   const payosRequestedOrderIdRef = useRef<string | null>(null);
   const isPaidConfirmedRef = useRef(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -122,7 +122,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
       if (effectiveOrderCode) sessionStorage.setItem(SESSION_ORDER_CODE_KEY, effectiveOrderCode);
       if (effectiveTotal > 0) sessionStorage.setItem(SESSION_ORDER_TOTAL_KEY, String(effectiveTotal));
       if (targetExpiresAt > 0) sessionStorage.setItem(SESSION_EXPIRES_AT_KEY, String(targetExpiresAt));
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
     // Dọn sạch query parameters nếu có để thanh URL luôn sạch sẽ
     if (typeof window !== 'undefined' && window.location.search) {
@@ -131,14 +131,18 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
   }, [effectiveOrderId, effectiveOrderCode, effectiveTotal, targetExpiresAt]);
 
   // Cập nhật targetExpiresAt khi order prop thay đổi
-  useEffect(() => {
+  const [deadlineInputs, setDeadlineInputs] = useState<readonly unknown[] | null>(null);
+  if (!deadlineInputs || deadlineInputs[0] !== order?.paymentExpiresAt || deadlineInputs[1] !== targetExpiresAt) {
+    setDeadlineInputs([order?.paymentExpiresAt, targetExpiresAt]);
+
     if (order?.paymentExpiresAt) {
       const parsed = new Date(order.paymentExpiresAt).getTime();
       if (!isNaN(parsed) && parsed > 0 && parsed !== targetExpiresAt) {
         setTargetExpiresAt(parsed);
       }
     }
-  }, [order?.paymentExpiresAt, targetExpiresAt]);
+
+  }
 
   // Phục hồi thông tin đơn hàng nếu component bị reload do app ngân hàng chiếm bộ nhớ
   useEffect(() => {
@@ -200,7 +204,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
       sessionStorage.removeItem(SESSION_PAYOS_CODE_KEY);
       sessionStorage.removeItem(SESSION_ORDER_TOTAL_KEY);
       sessionStorage.removeItem(SESSION_EXPIRES_AT_KEY);
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
   }, []);
 
   // Hàm kích hoạt xác nhận thanh toán thành công (đảm bảo chỉ chạy đúng 1 lần)
@@ -236,7 +240,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
           try {
             const s = sessionStorage.getItem(SESSION_PAYOS_CODE_KEY);
             if (s) savedCode = Number(s);
-          } catch {}
+          } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
           const numericCode =
             payosData?.orderCode ||
@@ -272,7 +276,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
         setIsCancelling(false);
       }
     },
-    [effectiveOrderId, order?.id, order?.paymentOrderCode, payosData?.orderCode, cleanupPaymentSession, onCancel, onBack]
+    [effectiveOrderId, order, payosData, cleanupPaymentSession, onCancel, onBack]
   );
 
   // Hàm chủ động kiểm tra trạng thái thanh toán từ cả DB Supabase và PayOS API
@@ -315,7 +319,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
       try {
         const s = sessionStorage.getItem(SESSION_PAYOS_CODE_KEY);
         if (s) savedCode = Number(s);
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
 
       const numericCode =
         payosData?.orderCode ||
@@ -346,7 +350,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
     }
 
     return false;
-  }, [effectiveOrderId, order?.id, payosData?.orderCode, isExpired, handlePaymentSuccess]);
+  }, [effectiveOrderId, order, payosData, isExpired, handlePaymentSuccess]);
 
   // Khởi tạo / phục hồi Realtime Subscription
   const setupRealtimeChannel = useCallback(() => {
@@ -356,7 +360,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
     if (channelRef.current) {
       try {
         supabase.removeChannel(channelRef.current);
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
       channelRef.current = null;
     }
 
@@ -399,7 +403,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
     const targetOrderId = effectiveOrderId || order?.id;
     if (!targetOrderId || isExpired) return;
 
-    let paymentPromise: Promise<any>;
+    let paymentPromise: ReturnType<typeof customerService.createPayOSPayment>;
     if (payosRequestedOrderIdRef.current === targetOrderId && payosPromiseRef.current) {
       paymentPromise = payosPromiseRef.current;
     } else {
@@ -427,7 +431,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
             if (res.orderCode) {
               sessionStorage.setItem(SESSION_PAYOS_CODE_KEY, String(res.orderCode));
             }
-          } catch {}
+          } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
         }
       })
       .catch((err) => {
@@ -453,7 +457,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
       if (channelRef.current) {
         try {
           supabase.removeChannel(channelRef.current);
-        } catch {}
+        } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
         channelRef.current = null;
       }
     };
@@ -486,8 +490,8 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
 
           if (
             !channelRef.current ||
-            (channelRef.current as any).state === 'closed' ||
-            (channelRef.current as any).state === 'errored'
+            channelRef.current.state === 'closed' ||
+            channelRef.current.state === 'errored'
           ) {
             setupRealtimeChannel();
           }
@@ -521,7 +525,7 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
           isPolling = false;
           clearInterval(interval);
         }
-      } catch {}
+      } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
     }, 3000);
 
     return () => {
@@ -807,7 +811,6 @@ export function PaymentPage({ total, order, orderId, orderCode, onBack, onCancel
                 </button>
               </div>
             </div>
-
 
 
             {/* Ngân hàng */}

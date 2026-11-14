@@ -157,7 +157,7 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "https://gosavingfood.app"
+site_url = "http://localhost:5173"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
@@ -235,7 +235,7 @@ otp_length = 6
 otp_expiry = 300
 
 [auth.email.smtp]
-enabled = true
+enabled = false
 host = "smtp.resend.com"
 port = 587
 user = "resend"
@@ -329,7 +329,7 @@ email_optional = false
 
 [auth.external.google]
 client_id = "19026008509-vh1oag3chspo97e9bu7r4fvl0uus0nae.apps.googleusercontent.com"
-enabled = true
+enabled = false
 
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.

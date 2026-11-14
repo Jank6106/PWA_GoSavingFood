@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffectEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
   fetchStoreProfile,
   getCachedStoreProfile,
@@ -33,23 +33,23 @@ export function useStoreProfile(storeId: string) {
     }
   }, [storeId]);
 
+  const [profileStoreId, setProfileStoreId] = useState(storeId);
+  if (profileStoreId !== storeId) {
+    setProfileStoreId(storeId);
+    const cached = getCachedStoreProfile(storeId);
+    if (cached) setProfile(cached);
+    setLoading(!cached);
+  }
+
+  const refreshProfile = useEffectEvent(() => { void loadProfile(); });
   const lastFetchedStoreIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!storeId) return;
 
-    // SWR: Cập nhật ngay từ cache của storeId mới nếu có
-    const cached = getCachedStoreProfile(storeId);
-    if (cached) {
-      setProfile(cached);
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
-
     if (lastFetchedStoreIdRef.current !== storeId) {
       lastFetchedStoreIdRef.current = storeId;
-      void loadProfile();
+      refreshProfile();
     }
   }, [storeId, loadProfile]);
 
@@ -62,7 +62,7 @@ export function useStoreProfile(storeId: string) {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'stores', filter: `id=eq.${storeId}` },
-        (payload: any) => {
+        (payload) => {
           if (payload.new && typeof payload.new.is_open === 'boolean') {
             setProfile((current) =>
               current ? { ...current, isOpen: payload.new.is_open } : null

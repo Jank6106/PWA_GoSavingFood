@@ -1,3 +1,5 @@
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { errorMessage } from '../utils/errors';
 import type { AuthUser, LoginCredentials, MerchantRegisterInput } from '../types';
 import {
   isValidEmail,
@@ -10,6 +12,14 @@ import { delay, optimizeImageUrl } from './utils';
 const SETUP_KEY_PREFIX = 'gsf-merchant-setup-completed';
 export const MERCHANT_CACHE_KEY = 'gsf_merchant_cached_user';
 
+async function requireMerchantRole(userId: string): Promise<void> {
+  const { data, error } = await supabase.from('users').select('role').eq('id', userId).maybeSingle();
+  if (error || data?.role !== 'merchant') {
+    setCachedMerchantUser(null);
+    throw new Error('Tài khoản này không có quyền quản lý cửa hàng.');
+  }
+}
+
 const getSetupKey = (userId: string) => `${SETUP_KEY_PREFIX}:${userId}`;
 export const isSetupCompleted = (userId: string) =>
   typeof window !== 'undefined' && window.localStorage.getItem(getSetupKey(userId)) === 'true';
@@ -18,7 +28,7 @@ export const markSetupCompletedLocally = (userId: string) => {
   if (typeof window !== 'undefined') {
     try {
       window.localStorage.setItem(getSetupKey(userId), 'true');
-    } catch {}
+    } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
   }
 };
 
@@ -61,7 +71,7 @@ export function setCachedMerchantUser(user: AuthUser | null): void {
  * 1. Cờ is_first_login trong user metadata hoặc stores DB
  * 2. Tính đầy đủ của thông tin cửa hàng thực tế (Tên, SĐT, Địa chỉ, Tọa độ GPS)
  */
-export function isStoreProfileComplete(store: any, user?: any): boolean {
+export function isStoreProfileComplete(store: { name?: string; phone?: string; address?: string; latitude?: number | string | null; is_first_login?: boolean } | null, user?: SupabaseUser): boolean {
   if (!store) return false;
 
   // Cờ thiết lập lần đầu trong user metadata nếu được chỉ định rõ là true -> chưa hoàn thiện
@@ -107,7 +117,7 @@ export function isStoreProfileComplete(store: any, user?: any): boolean {
 }
 
 export async function ensureUserStore(
-  user: any,
+  user: SupabaseUser,
   defaultName: string,
   extra?: { address?: string; phone?: string; category?: string; latitude?: number; longitude?: number }
 ) {
@@ -193,7 +203,7 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
     throw new Error('Vui lòng nhập đầy đủ thông tin đăng nhập.');
   }
 
-  let email = '';
+  let email: string;
   const parsed = parseIdentifier(username);
 
   if (parsed.type === 'email') {
@@ -216,7 +226,7 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
   }
 
   let user = null;
-  let lastError: any = null;
+  let lastError: unknown = null;
 
   // Xác thực chính xác 1:1 bằng Supabase Auth với email và mật khẩu do người dùng cung cấp
   const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -243,6 +253,7 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
   }
 
   if (user) {
+    await requireMerchantRole(user.id);
     const store = await ensureUserStore(user, username);
     const isComplete = isStoreProfileComplete(store, user);
     const storeId = store?.id || 'b0000000-0000-0000-0000-000000000002';
@@ -258,8 +269,8 @@ export async function loginService(credentials: LoginCredentials): Promise<AuthU
     setCachedMerchantUser(authUser);
 
     // Yêu cầu quyền lưu trữ bền vững trên PWA trình duyệt
-    if (typeof window !== 'undefined' && 'storage' in navigator && (navigator.storage as any)?.persist) {
-      (navigator.storage as any).persist().catch(() => {});
+    if (typeof window !== 'undefined' && 'storage' in navigator && navigator.storage?.persist) {
+      navigator.storage.persist().catch(() => {});
     }
 
     return authUser;
@@ -410,7 +421,7 @@ export async function changePasswordService(
     }
 
     // 2. Cập nhật mật khẩu mới trên Supabase Auth (kèm current_password khi có yêu cầu bảo mật)
-    let updateError = null;
+    let updateError: import('@supabase/supabase-js').AuthError | null;
 
     if (oldPassword !== 'initial') {
       const { error } = await supabase.auth.updateUser({
@@ -491,8 +502,8 @@ export async function completeSetupService(userId: string, storeData?: { name?: 
   }
 
   // 2. Yêu cầu quyền lưu trữ bền vững trên PWA trình duyệt
-  if (typeof window !== 'undefined' && 'storage' in navigator && (navigator.storage as any)?.persist) {
-    (navigator.storage as any).persist().catch(() => {});
+  if (typeof window !== 'undefined' && 'storage' in navigator && navigator.storage?.persist) {
+    navigator.storage.persist().catch(() => {});
   }
 }
 
@@ -524,6 +535,7 @@ export async function getCurrentMerchantSession(): Promise<AuthUser | null> {
     }
 
     const user = session.user;
+    await requireMerchantRole(user.id);
     const cached = getCachedMerchantUser();
 
     // Nếu đã có cache trùng ID:
@@ -553,7 +565,8 @@ export async function getCurrentMerchantSession(): Promise<AuthUser | null> {
     setCachedMerchantUser(authUser);
     return authUser;
   } catch {
-    return getCachedMerchantUser();
+    setCachedMerchantUser(null);
+    return null;
   }
 }
 
@@ -564,37 +577,37 @@ export async function deleteMerchantAccountService(
   identifier?: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    let res = await supabase.rpc('delete_user_account', userId ? { p_user_id: userId } : {});
+    const res = await supabase.rpc('delete_user_account', userId ? { p_user_id: userId } : {});
     let result = res.data as { success?: boolean; error?: string; message?: string } | null;
 
     if ((!result || !result.success) && identifier) {
       const idRes = await supabase.rpc('delete_user_by_identifier', { p_identifier: identifier });
-      if (idRes.data && (idRes.data as any).success) {
-        result = idRes.data as any;
+      if (idRes.data && idRes.data.success) {
+        result = idRes.data;
       }
     }
 
     try {
       await supabase.auth.signOut();
-    } catch {}
+    } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
 
     setCachedMerchantUser(null);
     if (typeof window !== 'undefined') {
       try {
         localStorage.removeItem(MERCHANT_CACHE_KEY);
-      } catch {}
+      } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
     }
 
     return {
       success: result?.success ?? true,
       message: result?.message || 'Tài khoản đối tác đã được xóa vĩnh viễn khỏi hệ thống.',
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.warn('Lỗi khi xóa tài khoản merchant:', err);
     try {
       await supabase.auth.signOut();
-    } catch {}
+    } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
     setCachedMerchantUser(null);
-    return { success: false, message: err?.message || 'Không thể xóa tài khoản. Vui lòng thử lại.' };
+    return { success: false, message: errorMessage(err) || 'Không thể xóa tài khoản. Vui lòng thử lại.' };
   }
 }

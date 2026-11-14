@@ -34,7 +34,11 @@ export function useAnalytics(storeId: string) {
   const [exporting, setExporting] = useState(false);
   const { toastMessage, showToast } = useToast();
 
-  useEffect(() => {
+  const [cachedInputs, setCachedInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (cachedInputs === null || [storeId].some((value, index) => !Object.is(value, cachedInputs[index]))) {
+    setCachedInputs([storeId]);
+
     const cached = getCachedAnalytics(storeId);
     if (cached) {
       setMetrics(cached.metrics);
@@ -42,7 +46,8 @@ export function useAnalytics(storeId: string) {
       setReviews(cached.reviews);
       setLoading(false);
     }
-  }, [storeId]);
+
+  }
 
   const loadPeriodData = useCallback(
     async (tf: AnalyticsTimeframe, range?: { start: string; end: string }) => {

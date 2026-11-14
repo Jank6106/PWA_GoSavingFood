@@ -1,3 +1,4 @@
+import type { OrderRow, OrderItemRow, OrderChange } from '../types/database';
 import type { MerchantOrder, OrderStatus } from '../types';
 import { supabase } from './supabase';
 
@@ -19,7 +20,7 @@ const mapDbStatusToUi = (status: string): OrderStatus => {
   return 'pending';
 };
 
-const mapDbOrder = (o: any): MerchantOrder => {
+const mapDbOrder = (o: OrderRow): MerchantOrder => {
   const firstItem = o.order_items?.[0];
   const customer = Array.isArray(o.users) ? o.users[0] : o.users;
   const recipientPhone = (o.recipient_phone && String(o.recipient_phone).trim()) || '';
@@ -63,7 +64,7 @@ const mapDbOrder = (o: any): MerchantOrder => {
     qrCode: o.qr_code || `GSF-ORDER-${o.id}`,
     pickupToken: o.pickup_token || undefined,
     note: o.note || undefined,
-    items: (o.order_items || []).map((it: any) => ({
+    items: (o.order_items || []).map((it: OrderItemRow) => ({
       id: it.id,
       name: it.bag_name || 'Túi thực phẩm',
       quantity: it.quantity,
@@ -112,7 +113,7 @@ export async function fetchMerchantOrders(storeId: string): Promise<MerchantOrde
         .select(ORDER_SELECT)
         .eq('store_id', storeId)
         .neq('status', 'pending_payment')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }).returns<OrderRow[]>();
 
       if (error) {
         console.warn('Lấy danh sách đơn hàng từ Supabase lỗi:', error.message);
@@ -139,7 +140,7 @@ export async function fetchMerchantOrderById(orderId: string): Promise<MerchantO
         .from('orders')
         .select(ORDER_SELECT)
         .eq('id', orderId)
-        .maybeSingle();
+        .maybeSingle().returns<OrderRow>();
       if (!error && data) return mapDbOrder(data);
     }
 
@@ -150,7 +151,7 @@ export async function fetchMerchantOrderById(orderId: string): Promise<MerchantO
         .select(ORDER_SELECT)
         .ilike('qr_code', `%${token}%`)
         .limit(1)
-        .maybeSingle();
+        .maybeSingle().returns<OrderRow>();
       if (!error && data) return mapDbOrder(data);
 
       const numericCode = Number(orderId.replace(/\D/g, ''));
@@ -160,7 +161,7 @@ export async function fetchMerchantOrderById(orderId: string): Promise<MerchantO
           .select(ORDER_SELECT)
           .eq('payment_order_code', numericCode)
           .limit(1)
-          .maybeSingle();
+          .maybeSingle().returns<OrderRow>();
         if (numOrder) return mapDbOrder(numOrder);
       }
     }
@@ -176,7 +177,7 @@ const fetchOrderRow = async (orderId: string) => {
     .from('orders')
     .select(ORDER_SELECT)
     .eq('id', orderId)
-    .maybeSingle();
+    .maybeSingle().returns<OrderRow>();
   if (error) throw new Error(error.message);
   return data;
 };
@@ -242,7 +243,7 @@ export async function updateMerchantOrderStatus(
         ? 'cancelled'
         : UI_TO_DB_TARGET[status as Exclude<OrderStatus, 'pending'>] || status;
 
-    const updatePayload: Record<string, any> = {
+    const updatePayload: Record<string, unknown> = {
       status: targetDbStatus,
       updated_at: new Date().toISOString(),
     };
@@ -361,7 +362,7 @@ export async function verifyOrderQR(orderId: string, code: string, storeId?: str
 
 export function subscribeToStoreOrders(
   storeId: string,
-  onOrderChange: (payload: any) => void
+  onOrderChange: (payload: OrderChange) => void
 ) {
   return supabase
     .channel(`merchant-orders-${storeId}`)
@@ -374,7 +375,7 @@ export function subscribeToStoreOrders(
         filter: `store_id=eq.${storeId}`,
       },
       (payload) => {
-        console.log('[Realtime Merchant] Store orders changed:', payload.eventType, (payload.new as any)?.status);
+        console.log('[Realtime Merchant] Store orders changed:', payload.eventType, ('status' in payload.new ? payload.new.status : undefined));
         onOrderChange(payload);
       }
     )
@@ -388,14 +389,14 @@ export async function fetchCompletedBagQuantity(storeId: string): Promise<number
   const { data, error } = await supabase
     .from('order_items')
     .select('quantity, orders!inner(store_id, status)')
-    .eq('orders.store_id', storeId);
+    .eq('orders.store_id', storeId).returns<{quantity: number; orders?: {status: string}}[]>();
 
   if (error) {
     console.warn('Đếm số túi đã bán từ Supabase lỗi:', error.message);
     return 0;
   }
 
-  return (data || []).reduce((total: number, item: any) => {
+  return (data || []).reduce((total: number, item) => {
     const status = item.orders?.status;
     if (status === 'completed' || status === 'picked_up') {
       return total + Number(item.quantity || 0);

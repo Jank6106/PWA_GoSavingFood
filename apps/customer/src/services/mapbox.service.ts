@@ -1,3 +1,4 @@
+interface MapboxFeature { id: string; center?: [number, number]; geometry?: {coordinates: [number, number]}; text?: string; place_name?: string; properties?: { name?: string; full_address?: string; place_formatted?: string; mapbox_id?: string } }
 import type { LocationSuggestion } from '../shared/types/customer.types';
 
 // Mapbox Token từ biến môi trường Vite (hoặc fallback token)
@@ -6,7 +7,6 @@ export const MAPBOX_TOKEN =
   import.meta.env.MAPBOX_PUBLIC_TOKEN ||
   import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN ||
   '';
-
 
 
 export interface LatLng {
@@ -93,7 +93,7 @@ export const mapboxService = {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.features) && data.features.length > 0) {
-          return data.features.map((feature: any) => {
+          return data.features.map((feature: MapboxFeature) => {
             const coords = feature.geometry?.coordinates as [number, number];
             let distanceText = 'Khu vực bạn chọn';
             if (coords && proximity) {
@@ -132,7 +132,7 @@ export const mapboxService = {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.features) && data.features.length > 0) {
-          return data.features.map((feature: any) => {
+          return data.features.map((feature: MapboxFeature) => {
             const coords = feature.center as [number, number];
             let distanceText = 'Khu vực bạn chọn';
             if (coords && proximity) {
