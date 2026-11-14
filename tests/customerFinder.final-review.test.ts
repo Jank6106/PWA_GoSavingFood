@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { filterCustomerCatalog, parseFinderQuery, searchCustomerCatalog } from '../apps/customer/src/services/customer-finder.service';
+import { filterCustomerCatalog, parseFinderQuery, searchCustomerCatalog, FINDER_AI_TIMEOUT_MS } from '../apps/customer/src/services/customer-finder.service';
 import type { Merchant, SurpriseBag } from '../apps/customer/src/shared/types/customer.types';
 
 vi.mock('../apps/customer/src/services/supabase', () => ({
@@ -49,7 +49,7 @@ describe('Coordinator integration regression cases', () => {
     let state = 'pending';
     void searchCustomerCatalog({ query: 'bánh dưới 50k', bags: [], merchants: [] })
       .then(() => { state = 'resolved'; }, () => { state = 'rejected'; });
-    await vi.advanceTimersByTimeAsync(8100);
+    await vi.advanceTimersByTimeAsync(FINDER_AI_TIMEOUT_MS + 100);
     expect(state).toBe('rejected');
   });
 });

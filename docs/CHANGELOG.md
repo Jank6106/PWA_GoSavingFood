@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### Added
+- Customer Finder uses OpenAI Responses API (gpt-5.4-mini -> gpt-5.4-nano), strict JSON Schema, no response storage, provenance and refusal handling. Both models passed text extraction, synthetic-label vision and forced-failover smoke tests; no upload UI added. See `hackathon/customer/AI_SETUP.md`.
+- Customer Finder server adapter: authenticated `POST /api/ai/customer-search`, Gemini structured constraints and hedged model fallback adapted from Hanh `5dd09df`, bounded input/output and per-instance quotas. Client displays model provenance and explicit auth/provider failures; real-provider testing awaits a local key. Setup: `hackathon/customer/AI_SETUP.md`.
 - Customer hackathon: Today Deals on Home, a dedicated Finder route, local Vietnamese budget/group/category/area/pickup filtering, optional server-constraints contract, and focused offline regression suites. Server AI integration and physical-device acceptance are pending; see `hackathon/customer/REVIEW.md`.
 - Added Docker Supabase database commands, a local test seed, and ignored `.env.test` configuration template.
 - Added local and offline test commands; `pnpm test` now runs offline unit suites by default and local integration commands enforce loopback URLs.

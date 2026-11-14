@@ -5,6 +5,7 @@
 ---
 
 ## NOW (Recently Completed / Active Stabilization — `CONFIRMED`)
+- **Customer AI integration follow-up** (`Hung`): Next.js adapter implemented using Gemini transport from Hanh, JWT/input/output validation and per-instance quota. 120 offline tests, customer build, web typecheck and scoped lint pass. Local env has placeholders for the user to supply a Gemini key; OpenAI event credit and actual provider acceptance remain pending. See [`AI_SETUP.md`](hackathon/customer/AI_SETUP.md). This supersedes the backend-pending portion of the original client-only acceptance below.
 - **Customer hackathon client** (`Hung`, accepted for local preview): Home Today Deals, Finder navigation and a local rules filter are implemented; 85 offline tests, customer build, scoped lint and browser 390px/1440px pass. AI endpoint `/api/ai/customer-search`, model configuration, physical-phone restart demo and production deployment remain unverified/not implemented in this customer-only scope. Plan and acceptance evidence: [`CUSTOMER_HACKATHON_PLAN.md`](plans/CUSTOMER_HACKATHON_PLAN.md), [`REVIEW.md`](hackathon/customer/REVIEW.md).
 - **Customer & Merchant PWA Stabilization** (`CONFIRMED` from commits `ccc457f0`, `7b8e671a`, `e4b02942`, `da0d10f6`):
   - Goal: Eliminate mobile horizontal overflow on Merchant orders, fix order detail deep-linking from notifications, re-sync hooks on `storeId` change, fix PayOS `check-status` with numeric `paymentOrderCode`, and support 0đ voucher orders (`TMU2026`).
@@ -47,3 +48,8 @@
 3. **CI/CD Pipeline & Isolated Test Database**
    - **Goal**: Add GitHub Actions (`lint`, `typecheck`, `build`, unit tests) and separate staging Supabase project so Vitest integration tests do not run against production.
    - **Status**: `PLANNED` / `UNKNOWN`.
+
+Customer AI follow-up: user supplied the Gemini key; live primary, fallback and forced-failover tests passed. See AI_SETUP.md live verification, superseding the key-pending status above.
+
+## OpenAI switch (2026-11-14)
+Active Finder switched to OpenAI Responses API: gpt-5.4-mini -> gpt-5.4-nano. Live text and synthetic-label image tests passed for both; forced primary failure switched to Nano. No upload UI added. 136 offline tests, customer build, web typecheck/scoped lint pass. Key stays server-side; TLS verification retained with system CA store on this Windows host. Setup/evidence: docs/hackathon/customer/AI_SETUP.md. AI changes not committed/pushed.

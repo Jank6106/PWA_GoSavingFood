@@ -45,3 +45,14 @@ AI optional: `VITE_CUSTOMER_FINDER_API_ENABLED=true` mới gọi `POST /api/ai/c
 Client được nghiệm thu cho local preview. Backend AI/model, điện thoại thật/PWA restart, giao dịch và deploy nằm ngoài nghiệm thu này. Bằng chứng và cách chạy lại fixture: [`REVIEW.md`](../hackathon/customer/REVIEW.md).
 
 Mỗi worker báo file, kiểm tra thực tế, lỗi/giới hạn, rồi worker_done. Root tiếp tục khi nhận mail Orca, không polling terminal.
+
+## Follow-up: AI thực tế (14/11)
+
+- [x] Đọc Gemini implementation từ Hanh `5dd09df`, chuyển thể transport sang server module riêng, giữ customer scope.
+- [x] Route customer-search với JWT, bounded input/output, quota; UI hiển thị mode/model và lỗi tường minh. 120 tests offline, customer build, web typecheck/scoped lint qua.
+- [x] Bật local API flag, chạy Next.js cổng 3000, kiểm tra proxy/health/HTTP guards và UI lỗi cấu hình.
+- [ ] Người dùng điền `GEMINI_API_KEY` trong root `.env`, restart server và nghiệm thu một câu gọi model thật. Credit OpenAI chưa gửi theo người dùng; dùng Gemini tạm, chưa có adapter OpenAI.
+- [ ] Commit/push phần AI sau nghiệm thu; commit customer trước đó là `d758ef8` trên origin/Hung.
+
+## OpenAI switch (2026-11-14)
+Active Finder switched to OpenAI Responses API: gpt-5.4-mini -> gpt-5.4-nano. Live text and synthetic-label image tests passed for both; forced primary failure switched to Nano. No upload UI added. 136 offline tests, customer build, web typecheck/scoped lint pass. Key stays server-side; TLS verification retained with system CA store on this Windows host. Setup/evidence: docs/hackathon/customer/AI_SETUP.md. AI changes not committed/pushed.

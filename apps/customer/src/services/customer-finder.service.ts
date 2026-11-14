@@ -749,9 +749,11 @@ export function validateServerConstraints(data: unknown): FinderConstraints {
 /**
  * Tìm kiếm danh mục: mặc định local; chỉ khi bật VITE_CUSTOMER_FINDER_API_ENABLED=true
  * mới gửi yêu cầu đến POST /api/ai/customer-search để lấy normalized constraints.
- * Bọc toàn bộ auth/import/fetch/body workflow bằng reject-on-abort race (8000ms),
+ * Bọc toàn bộ auth/import/fetch/body workflow bằng reject-on-abort race (35 giây),
  * đảm bảo reject ngay cả khi auth session lookup bị treo vô tận.
  */
+export const FINDER_AI_TIMEOUT_MS = 35_000;
+
 export async function searchCustomerCatalog(
   input: FinderInput,
   options?: { signal?: AbortSignal }
@@ -790,8 +792,8 @@ export async function searchCustomerCatalog(
   });
 
   const timeoutId = setTimeout(() => {
-    controller.abort(new Error('Yêu cầu tìm kiếm AI đã quá thời gian giới hạn (8000ms)'));
-  }, 8000);
+    controller.abort(new Error('AI phản hồi quá lâu. Vui lòng thử lại hoặc dùng bộ lọc cục bộ.'));
+  }, FINDER_AI_TIMEOUT_MS);
 
   // Workflow chính
   const executeWorkflow = async (): Promise<FinderResponse> => {
@@ -811,6 +813,9 @@ export async function searchCustomerCatalog(
       throw controller.signal.reason || new Error('Yêu cầu đã bị huỷ');
     }
 
+    if (!accessToken) {
+      throw new Error('Đăng nhập để dùng tìm kiếm AI, hoặc chọn bộ lọc cục bộ.');
+    }
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -826,8 +831,14 @@ export async function searchCustomerCatalog(
     });
 
     if (!res.ok) {
+      const messages: Record<number, string> = {
+        401: 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để dùng AI.',
+        429: 'Bạn tìm kiếm hơi nhanh. Vui lòng chờ một phút rồi thử lại.',
+        503: 'Máy chủ AI chưa sẵn sàng. Vui lòng kiểm tra cấu hình hoặc thử lại sau.',
+        504: 'AI phản hồi quá lâu. Vui lòng thử lại hoặc dùng bộ lọc cục bộ.',
+      };
       throw new Error(
-        `Dịch vụ AI phản hồi lỗi HTTP ${res.status}. Vui lòng thử lại hoặc sử dụng Bộ lọc cục bộ.`
+        messages[res.status] ?? `Dịch vụ AI phản hồi lỗi HTTP ${res.status}. Vui lòng thử lại hoặc sử dụng Bộ lọc cục bộ.`
       );
     }
 
@@ -844,7 +855,9 @@ export async function searchCustomerCatalog(
       }
     }
 
-    return filterCatalogWithConstraints(serverConstraints, input, 'ai', serverWarnings);
+    const model = typeof data === 'object' && data !== null && 'model' in data &&
+      typeof data.model === 'string' && /^gpt-[a-zA-Z0-9._-]{1,80}$/.test(data.model) ? data.model : undefined;
+    return { ...filterCatalogWithConstraints(serverConstraints, input, 'ai', serverWarnings), model };
   };
 
   try {

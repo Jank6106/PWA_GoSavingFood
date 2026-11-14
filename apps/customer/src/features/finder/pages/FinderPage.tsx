@@ -45,6 +45,7 @@ export function FinderPage({
   onBrowseAll,
 }: FinderPageProps) {
   const {
+    apiEnabled,
     query,
     setQuery,
     response,
@@ -197,14 +198,16 @@ export function FinderPage({
 
         {/* 4. Thông báo chế độ (Local Filter vs AI) - Ngắn gọn, trung thực */}
         <section className="gsf-finder-section" aria-label="Chế độ xử lý">
-          {response?.mode === 'ai' ? (
+          {response?.mode === 'ai' || (apiEnabled && !response) ? (
             <div className="gsf-finder-mode-banner gsf-finder-mode-banner--ai">
               <div className="gsf-finder-mode-header">
                 <Sparkles size={16} className="gsf-finder-mode-icon" aria-hidden="true" />
-                <span className="gsf-finder-mode-title">Chế độ: AI hiểu yêu cầu</span>
+                <span className="gsf-finder-mode-title">{response?.mode === 'ai' ? 'Chế độ: AI hiểu yêu cầu' : 'Chế độ: Tìm kiếm bằng AI'}</span>
               </div>
               <p className="gsf-finder-mode-desc">
-                Phân tích theo câu mô tả nhu cầu của bạn.
+                {response?.mode === 'ai'
+                  ? `Đã phân tích yêu cầu bằng ${response.model || 'OpenAI'}. Kết quả lấy từ danh mục hiện có.`
+                  : 'Gửi yêu cầu để OpenAI phân tích. Bạn cần đăng nhập để sử dụng AI.'}
               </p>
             </div>
           ) : (
@@ -214,7 +217,7 @@ export function FinderPage({
                 <span className="gsf-finder-mode-title">Chế độ: Bộ lọc theo nhu cầu</span>
               </div>
               <p className="gsf-finder-mode-desc">
-                Tìm trong danh mục hiện có. Máy chủ AI chưa kết nối.
+                Tìm theo quy tắc trong danh mục hiện có, không gọi AI.
               </p>
             </div>
           )}

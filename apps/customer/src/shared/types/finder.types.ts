@@ -28,6 +28,7 @@ export interface FinderResult {
 
 export interface FinderResponse {
   mode: 'local' | 'ai';
+  model?: string;
   constraints: FinderConstraints;
   results: FinderResult[];
   warnings: string[];

@@ -106,3 +106,16 @@ Fixture component độc lập ở [`tests/fixtures/customer-finder.html`](../..
 - Validation: 85/85 offline tests, customer build exit 0, ESLint hai trang exit 0 (5 cảnh báo dependency effect có sẵn), diff check pass. Không có test tự động mới cho map lifecycle; nhánh thiếu token được nghiệm thu trình duyệt, nhánh token hợp lệ/WebGL/API lỗi chưa thử thực tế. Mapbox thật cần cấu hình public token local.
 - Sau khi người dùng thêm root `.env` (2026-11-14): Vite tự restart, xác nhận client nhận public token mà không ghi giá trị ra log. Bản đồ thật tải tiles Hà Nội, 37 marker/cluster; trang chọn vị trí tải bản đồ, tìm `Dịch Vọng Hà Nội` trả gợi ý và chọn gợi ý cập nhật địa chỉ/ghim, không còn fallback. Chưa thử nhánh WebGL/API lỗi. `.env` được Git ignore; `.env.test` chưa thấy ở gốc checkout này và không chạy test DB.
 - Sau đó xác định file được đặt tên `env.test`; đã đổi tên thành `.env.test` để khớp loader và được Git ignore, giữ nguyên nội dung. Không chạy test DB. Trước khi đóng gói nhánh `Hung`, chạy lại 85/85 offline tests và customer build thành công với cấu hình local hiện tại. `origin/master` đã tiến tới `798152e`; nhánh bàn giao vẫn dựa trên `2c912c4`, chưa tích hợp master mới hoặc code merchant của Hanh.
+
+### Follow-up AI adapter (14/11)
+
+Theo yêu cầu người dùng, chuyển thể transport Gemini từ Hanh `5dd09df` sang `apps/web/lib/ai/gemini.ts`, không merge toàn branch. Endpoint customer-search xác thực Supabase user JWT, giới hạn input/body/quota/output, hủy/deadline model, trả constraints/model và cảnh báo. UI chỉ hiện AI thành công sau response hợp lệ, giữ explicit local fallback và catalogue revalidation.
+
+120/120 offline tests (35 mới) qua, customer build/scoped lint và web tsc/scoped lint qua. Server Next.js cổng 3000 đã chạy; health và Vite proxy 200 `configured:false`, anonymous POST 401. Trình duyệt gửi yêu cầu hiện lỗi máy chủ chưa cấu hình, không giả thành kết quả AI. Người dùng yêu cầu để trống biến key trong `.env` để tự điền; credit OpenAI BTC chưa gửi, Gemini dùng tạm. Chưa gọi model thật. Setup và giới hạn: [`AI_SETUP.md`](AI_SETUP.md). Phần AI mới chưa commit/push.
+
+## Live verification 2026-11-14
+Key Gemini do nguoi dung dien da duoc doc thanh cong. Goi that: gemini-3.5-flash-lite ~1992 ms, gemini-3.6-flash ~4503 ms; ca hai tra dung 2 nguoi / tong 100000 VND / vegetarian / 20:00. gemini-3.8-flash tra provider 503 UNAVAILABLE trong luot probe, khong ket luan model hong vinh vien. Da doi fallback thanh gemini-3.6-flash,gemini-3.8-flash trong code, env va template. Test ep model chinh khong ton tai da chuyen sang 3.6 va thanh cong ~4641 ms. Mock tests van 120/120, bao gom hedge/timeout/cancel. UI that hien AI hieu yeu cau va provenance gemini-3.5-flash-lite; khong tao giao dich. So ket qua phu thuoc catalogue va gio nhan, khong dong nghia loi AI.
+Server da restart de nhan key va thu tu fallback moi. Phan AI chua commit/push.
+
+## OpenAI switch (2026-11-14)
+Active Finder switched to OpenAI Responses API: gpt-5.4-mini -> gpt-5.4-nano. Live text and synthetic-label image tests passed for both; forced primary failure switched to Nano. No upload UI added. 136 offline tests, customer build, web typecheck/scoped lint pass. Key stays server-side; TLS verification retained with system CA store on this Windows host. Setup/evidence: docs/hackathon/customer/AI_SETUP.md. AI changes not committed/pushed.

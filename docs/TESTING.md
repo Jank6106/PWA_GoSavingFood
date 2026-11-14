@@ -7,6 +7,8 @@
 ## 1. Available Test & Audit Suites (`CONFIRMED`)
 
 ### Safe Offline Unit Tests
+- `tests/customerOpenAI.test.ts`: Mocked Responses API schema/provenance, image bounds, failover, refusal stop, incomplete output, hedge, deadline/cancellation; no real provider calls in `pnpm test`.
+- `tests/customerAi.test.ts`: Server input/output, client contract compatibility, JWT route guards, user quota, mocked Gemini fallback/hedging/deadline/cancellation. Included in offline tests, no real Supabase/Gemini calls. Setup: `hackathon/customer/AI_SETUP.md`.
 ```bash
 pnpm test
 # Equivalent explicit command:

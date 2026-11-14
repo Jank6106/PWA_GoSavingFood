@@ -5,6 +5,7 @@ import {
   searchCustomerCatalog,
   filterCustomerCatalog,
   filterCatalogWithConstraints,
+  isCustomerFinderApiEnabled,
 } from '../services/customer-finder.service';
 
 export interface UseCustomerFinderProps {
@@ -14,6 +15,7 @@ export interface UseCustomerFinderProps {
 }
 
 export interface UseCustomerFinderReturn {
+  apiEnabled: boolean;
   query: string;
   setQuery: (q: string) => void;
   response: FinderResponse | null;
@@ -141,7 +143,7 @@ export function useCustomerFinder({
           res.warnings
         );
 
-        setRawResponse(fresh);
+        setRawResponse({ ...fresh, model: res.model });
         setIsLoading(false);
       } catch (err: unknown) {
         if (!isMountedRef.current || controller.signal.aborted) {
@@ -227,7 +229,7 @@ export function useCustomerFinder({
   const response = useMemo<FinderResponse | null>(() => {
     if (!rawResponse) return null;
     void tick; // Tham chiếu tick để recompute khi tab focus hoặc interval 30s
-    return filterCatalogWithConstraints(
+    return { ...filterCatalogWithConstraints(
       rawResponse.constraints,
       {
         query,
@@ -238,10 +240,11 @@ export function useCustomerFinder({
       },
       rawResponse.mode,
       rawResponse.warnings
-    );
+    ), model: rawResponse.model };
   }, [rawResponse, bags, merchants, coords, query, tick]);
 
   return {
+    apiEnabled: isCustomerFinderApiEnabled(),
     query,
     setQuery,
     response,
