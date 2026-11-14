@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from '../scripts/lib/env.mjs';
 
@@ -14,6 +14,12 @@ const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_KEY, {
 });
 
 const timestamp = Date.now();
+const local = process.env.USE_LOCAL_DB === 'true';
+const merchantEmailA = local ? `local_merchant_a_${timestamp}@gosavingfood.test` : 'merchant@gosavingfood.vn';
+const merchantEmailB = local ? `local_merchant_b_${timestamp}@gosavingfood.test` : 'merchant@gosavingfood.app';
+const adminEmail = local ? `local_admin_${timestamp}@gosavingfood.test` : 'admin@gsf.app';
+const fixtureUserIds: string[] = [];
+const fixtureStoreIds: string[] = [];
 const testEmail1 = `gsf_authtest_${timestamp}_1@gmail.com`;
 const testEmail2 = `gsf_authtest_${timestamp}_2@gmail.com`;
 const testPassword = 'TestPassword123!';
@@ -23,15 +29,48 @@ let createdUser1Id: string | null = null;
 let createdUser2Id: string | null = null;
 let testOrderId: string | null = null;
 let testBagId: string | null = null;
+let testBagOriginalQuantity = 5;
 
 describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
+  beforeAll(async () => {
+    if (!local) return;
+    for (const [email, password, role, storeName] of [
+      [merchantEmailA, 'Password123!', 'merchant', 'Local Bakery A'],
+      [merchantEmailB, 'Password1234', 'merchant', 'Local Bakery B'],
+      [adminEmail, 'LocalAdmin123!', 'admin', ''],
+    ]) {
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email, password, email_confirm: true,
+        app_metadata: { role }, user_metadata: { name: 'Local fixture', role },
+      });
+      if (error) throw error;
+      fixtureUserIds.push(data.user.id);
+      if (!storeName) continue;
+      const id = crypto.randomUUID();
+      const { error: storeError } = await supabaseAdmin.from('stores').insert({
+        id, owner_user_id: data.user.id, name: storeName,
+        phone: '0900000000', address: 'Hanoi local fixture',
+        location: 'SRID=4326;POINT(105.8542 21.0285)',
+        latitude: 21.0285, longitude: 105.8542,
+        open_time: '00:00', close_time: '23:59',
+        logo_url: 'https://example.test/local-logo.webp', status: 'active', is_open: true,
+      });
+      if (storeError) throw storeError;
+      fixtureStoreIds.push(id);
+    }
+  }, 30000);
   afterAll(async () => {
+    if (fixtureStoreIds.length) await supabaseAdmin.from('stores').delete().in('id', fixtureStoreIds);
+    for (const id of fixtureUserIds) {
+      await supabaseAdmin.from('users').delete().eq('id', id);
+      await supabaseAdmin.auth.admin.deleteUser(id);
+    }
     // 1. Dọn dẹp đơn hàng & order_items test
     if (testOrderId) {
       await supabaseAdmin.from('order_items').delete().eq('order_id', testOrderId);
       await supabaseAdmin.from('orders').delete().eq('id', testOrderId);
       if (testBagId) {
-        await supabaseAdmin.from('surprise_bags').update({ quantity: 5 }).eq('id', testBagId);
+        await supabaseAdmin.from('surprise_bags').update({ quantity: testBagOriginalQuantity }).eq('id', testBagId);
       }
     }
 
@@ -188,6 +227,7 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     const { data: bags } = await supabaseAdmin
       .from('surprise_bags')
       .select('id, store_id, name, discount_price, original_price, quantity')
+      .eq(local ? 'id' : 'is_available', local ? '07a8fcb2-3c5c-46e6-94b3-6f0a2378ba16' : true)
       .eq('is_available', true)
       .is('deleted_at', null)
       .gt('quantity', 1)
@@ -196,6 +236,7 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     expect(bags && bags.length > 0).toBe(true);
     const bag = bags![0];
     testBagId = bag.id;
+    testBagOriginalQuantity = bag.quantity;
 
     // Đảm bảo túi đang trong khung giờ mở bán để test đặt hàng
     await supabaseAdmin
@@ -311,7 +352,7 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
   it('12. Đăng nhập tài khoản Đối tác merchant@gosavingfood.vn sở hữu danh sách cửa hàng thực tế', async () => {
     const merchClient = createClient(SUPABASE_URL, ANON_KEY);
     const { data: merchData, error: merchErr } = await merchClient.auth.signInWithPassword({
-      email: 'merchant@gosavingfood.vn',
+      email: merchantEmailA,
       password: 'Password123!'
     });
 
@@ -328,13 +369,13 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     // Xác minh cửa hàng có logo_url chuẩn
     expect(stores![0].logo_url).toBeTruthy();
     expect(stores).toHaveLength(1);
-    expect(stores![0].name).toContain('KFC Vietnam');
+    expect(stores![0].name).toContain(local ? 'Local Bakery A' : 'KFC Vietnam');
   }, 15000);
 
   it('12.1. Đăng nhập tài khoản Đối tác merchant@gosavingfood.app sở hữu duy nhất Bếp Chay An Lạc', async () => {
     const merchClient = createClient(SUPABASE_URL, ANON_KEY);
     const { data: merchData, error: merchErr } = await merchClient.auth.signInWithPassword({
-      email: 'merchant@gosavingfood.app',
+      email: merchantEmailB,
       password: 'Password1234'
     });
 
@@ -348,21 +389,21 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
 
     expect(storesErr).toBeNull();
     expect(stores).toHaveLength(1);
-    expect(stores![0].name).toContain('Bếp Chay An Lạc');
+    expect(stores![0].name).toContain(local ? 'Local Bakery B' : 'Bếp Chay An Lạc');
   }, 15000);
 
   it('12.2. Kiểm định tính độc lập mật khẩu: không cho phép dùng chéo mật khẩu', async () => {
     const merchClient = createClient(SUPABASE_URL, ANON_KEY);
     // merchant@gosavingfood.vn không được đăng nhập bằng Password1234
     const { error: err1 } = await merchClient.auth.signInWithPassword({
-      email: 'merchant@gosavingfood.vn',
+      email: merchantEmailA,
       password: 'Password1234'
     });
     expect(err1).not.toBeNull();
 
     // merchant@gosavingfood.app không được đăng nhập bằng Password123!
     const { error: err2 } = await merchClient.auth.signInWithPassword({
-      email: 'merchant@gosavingfood.app',
+      email: merchantEmailB,
       password: 'Password123!'
     });
     expect(err2).not.toBeNull();
@@ -372,7 +413,7 @@ describe('Toàn diện Luồng Auth & Backend RPC Supabase', () => {
     const { data: adminUser, error: adminErr } = await supabaseAdmin
       .from('users')
       .select('id, email, role')
-      .eq('email', 'admin@gsf.app')
+      .eq('email', adminEmail)
       .single();
 
     expect(adminErr).toBeNull();

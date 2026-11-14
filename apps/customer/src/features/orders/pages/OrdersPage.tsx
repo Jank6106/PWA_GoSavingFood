@@ -35,7 +35,7 @@ function formatPickupTimeDisplay(pickupTime?: string): string {
         const month = String(d.getMonth() + 1).padStart(2, '0');
         return `${hours}:${minutes} · ${day}/${month}`;
       }
-    } catch {}
+    } catch  { /* Best-effort browser persistence/cleanup; unavailable storage must not block the UI. */ }
   }
   return pickupTime;
 }

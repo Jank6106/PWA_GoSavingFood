@@ -10,7 +10,8 @@ import { useStoreProfile } from './hooks/useStoreProfile';
 import { useToast } from './hooks/useToast';
 import { STORE_ID } from './mocks';
 import { LoginScreen } from './pages/LoginScreen';
-import { getCachedMerchantUser } from './services/auth.service';
+import { getCachedMerchantUser } from './hooks/useAuth';
+import type { NotificationRow } from './types/database';
 import type { LoginCredentials, NotificationItem, TabRoute } from './types';
 
 const BagManagementScreen = lazy(() =>
@@ -67,7 +68,7 @@ export default function App() {
   const auth = useAuth();
 
   // Khởi tạo ngay lập tức từ URL params hoặc dữ liệu cached (0ms), fallback 'login' nếu chưa đăng nhập
-  const [route, setRoute] = useState<'login' | 'setup' | TabRoute>(() => {
+  const [requestedRoute, setRoute] = useState<'login' | 'setup' | TabRoute>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab') as TabRoute | null;
@@ -82,6 +83,9 @@ export default function App() {
     return 'login';
   });
 
+  const route = !auth.user ? 'login' : auth.user.isFirstLogin ? 'setup' :
+    requestedRoute === 'login' || requestedRoute === 'setup' ? 'bags' : requestedRoute;
+
   const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
   const [isGlobalQRScannerOpen, setIsGlobalQRScannerOpen] = useState(false);
   const storeId = auth.user?.storeId || STORE_ID;
@@ -89,7 +93,7 @@ export default function App() {
   const { toastMessage, showToast } = useToast();
 
   const handleNewNotification = useCallback(
-    (item: any) => {
+    (item: NotificationRow) => {
       showToast(`🔔 ${item?.title ?? 'Đơn hàng mới'}: ${item?.body ?? 'Có đơn hàng mới vừa được đặt!'}`);
     },
     [showToast]
@@ -98,10 +102,10 @@ export default function App() {
   const notifications = useNotifications(auth.user?.id ?? '', handleNewNotification);
 
   const routeRef = useRef<'login' | 'setup' | TabRoute>(route);
-  routeRef.current = route;
+  useEffect(() => { routeRef.current = route; }, [route]);
 
   const notificationsRef = useRef(notifications);
-  notificationsRef.current = notifications;
+  useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
 
   const navigateTo = useCallback((nextRoute: 'login' | 'setup' | TabRoute, pushHistory = true) => {
     if (routeRef.current === nextRoute) return;
@@ -117,11 +121,16 @@ export default function App() {
     [route]: true,
   }));
 
-  useEffect(() => {
+  const [visitedInputs, setVisitedInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (visitedInputs === null || [route].some((value, index) => !Object.is(value, visitedInputs[index]))) {
+    setVisitedInputs([route]);
+
     if (['bags', 'orders', 'analytics', 'settings'].includes(route)) {
       setVisitedTabs((prev) => (prev[route] ? prev : { ...prev, [route]: true }));
     }
-  }, [route]);
+
+  }
 
   // Đồng bộ lịch sử điều hướng với trình duyệt cho Merchant PWA (chỉ chạy 1 lần khi mount)
   useEffect(() => {
@@ -157,7 +166,7 @@ export default function App() {
   useEffect(() => {
     const handleInstallPrompt = (event: Event) => {
       event.preventDefault();
-      const promptEvent = event as any;
+      const promptEvent = event as Event & { prompt?: () => Promise<void> };
       if (new URLSearchParams(window.location.search).has('install')) {
         promptEvent.prompt?.().catch(() => {});
       }
@@ -177,26 +186,6 @@ export default function App() {
 
     return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
   }, [showToast]);
-
-  // Route Guard: Bảo vệ tuyến đường chặt chẽ
-  // 1. Chưa đăng nhập: Luôn chặn và giữ ở 'login'
-  // 2. Đã đăng nhập nhưng chưa xong Onboarding (isFirstLogin === true): Bắt buộc ở 'setup'
-  // 3. Đã đăng nhập và hoàn thành Onboarding (isFirstLogin === false): Cố vào 'setup'/'login' sẽ tự đẩy về 'bags'
-  useEffect(() => {
-    if (!auth.user) {
-      if (route !== 'login') setRoute('login');
-    } else if (auth.user.isFirstLogin) {
-      if (route !== 'setup') {
-        console.log('[RouteGuard] Merchant chưa hoàn tất hồ sơ -> chuyển hướng về Onboarding (/setup)');
-        setRoute('setup');
-      }
-    } else {
-      if (route === 'setup' || route === 'login') {
-        console.log('[RouteGuard] Merchant đã có đủ thông tin -> chuyển hướng vào Dashboard (/bags)');
-        setRoute('bags');
-      }
-    }
-  }, [auth.user, route]);
 
   const handleNavigateToOrder = useCallback(
     (item: NotificationItem) => {

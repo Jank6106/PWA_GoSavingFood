@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FileSearch } from 'lucide-react';
 import { EmptyState, ErrorState, SkeletonList, ToastBar } from '../components/ui';
 import { CancelOrderModal, GlobalQRScannerModal, OrderCard, OrderDetailsModal, OrderFilterBar } from '../components/orders';
@@ -26,11 +26,16 @@ export function OrderManagementScreen({
   const [cancellingOrder, setCancellingOrder] = useState<MerchantOrder | null>(null);
   const [isGlobalQRModalOpen, setIsGlobalQRModalOpen] = useState(false);
 
-  useEffect(() => {
+  const [scannerInputs, setScannerInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (scannerInputs === null || [isGlobalQROpen].some((value, index) => !Object.is(value, scannerInputs[index]))) {
+    setScannerInputs([isGlobalQROpen]);
+
     if (isGlobalQROpen) {
       setIsGlobalQRModalOpen(true);
     }
-  }, [isGlobalQROpen]);
+
+  }
 
   const openQR = (order: typeof state.selectedOrder) => {
     if (!order) return;

@@ -41,7 +41,7 @@ export function getBagCategory(bag: BagItem): BagTabCategory {
   // 1. Mục "Hàng hết hạn": Túi loại có hạn sử dụng và đã quá ngày HSD
   const isShelfLife = bag.bagType === 'shelf_life' || Boolean(bag.expiryDate);
   if (isShelfLife && bag.expiryDate) {
-    if (bag.expiryDate < todayStr || (bag as any).status === 'expired') {
+    if (bag.expiryDate < todayStr || (bag as { status?: string }).status === 'expired') {
       return 'expired';
     }
   }

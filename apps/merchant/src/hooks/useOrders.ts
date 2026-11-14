@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffectEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchMerchantOrderById,
   fetchMerchantOrders,
@@ -25,14 +25,19 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const { toastMessage, showToast } = useToast();
 
-  useEffect(() => {
+  const [cachedInputs, setCachedInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (cachedInputs === null || [storeId].some((value, index) => !Object.is(value, cachedInputs[index]))) {
+    setCachedInputs([storeId]);
+
     const cached = getCachedMerchantOrders(storeId);
     if (cached.length > 0) {
       setAllOrders(cached);
       setLoading(false);
       setHasLoadedOnce(true);
     }
-  }, [storeId]);
+
+  }
 
   const loadOrders = useCallback(async () => {
     setError(null);
@@ -41,7 +46,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
       setAllOrders(orders);
       try {
         localStorage.setItem(`gsf_orders_cached_at_${storeId}`, String(Date.now()));
-      } catch {}
+      } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
     } catch {
       setError('Không thể tải danh sách đơn hàng.');
     } finally {
@@ -50,6 +55,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
     }
   }, [storeId]);
 
+  const hasCachedItems = useEffectEvent(() => allOrders.length > 0);
   const lastFetchedStoreIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -61,10 +67,10 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
       let isFresh = false;
       try {
         const cachedAt = Number(localStorage.getItem(`gsf_orders_cached_at_${storeId}`) || '0');
-        if (Date.now() - cachedAt < 60000 && allOrders.length > 0) {
+        if (Date.now() - cachedAt < 60000 && hasCachedItems()) {
           isFresh = true;
         }
-      } catch {}
+      } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
 
       if (!isFresh) {
         void loadOrders();
@@ -211,7 +217,7 @@ export function useOrders(storeId: string, targetOrderId?: string | null) {
       if (updated && updated.status === status) {
         replaceOrder(updated);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn('Lỗi đồng bộ trạng thái đơn hàng ngầm:', err);
     }
 

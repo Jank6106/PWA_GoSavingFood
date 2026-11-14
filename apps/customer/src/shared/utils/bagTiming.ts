@@ -17,7 +17,7 @@ const parseTimeToMinutes = (timeStr?: string): number | null => {
   return parts[0] * 60 + parts[1];
 };
 
-export function getBagTimingInfo(bag?: SurpriseBag | null): BagTimingInfo {
+export function getBagTimingInfo(bag?: SurpriseBag | null, clock?: Date): BagTimingInfo {
   if (!bag) {
     return {
       phase: 'order_closed',
@@ -45,7 +45,7 @@ export function getBagTimingInfo(bag?: SurpriseBag | null): BagTimingInfo {
     const [y, m, d] = bag.expiryDate.split('-').map(Number);
     // Hạn sử dụng tính hết 23:59:59 của ngày HSD
     const endOfDay = new Date(y, (m || 1) - 1, d || 1, 23, 59, 59, 999).getTime();
-    if (Date.now() > endOfDay) {
+    if ((clock?.getTime() ?? Date.now()) > endOfDay) {
       return {
         phase: 'expired',
         canOrder: false,
@@ -67,7 +67,7 @@ export function getBagTimingInfo(bag?: SurpriseBag | null): BagTimingInfo {
 
   // 3. Loại 1: Mặt hàng dùng trong ngày (daily)
   // Lấy giờ hiện tại theo giờ chuẩn Việt Nam (UTC+7)
-  const now = new Date();
+  const now = clock ?? new Date();
   const timeInVn = now.toLocaleTimeString('en-US', {
     timeZone: 'Asia/Ho_Chi_Minh',
     hour12: false,

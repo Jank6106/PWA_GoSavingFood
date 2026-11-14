@@ -51,17 +51,27 @@ export function CheckoutPage({ items, subtotal, user, vouchers, isSubmitting = f
 
   // Mặc định điền Họ tên và Số điện thoại từ tài khoản đã đăng nhập
   // Nếu người dùng chưa chủ động chỉnh sửa (!nameTouched / !phoneTouched) thì tiếp tục đồng bộ
-  useEffect(() => {
+  const [nameInputs, setNameInputs] = useState<readonly unknown[] | null>(null);
+  // Prop-backed drafts are reset before stale values can be committed.
+  if (nameInputs === null || [user.name, nameTouched].some((value, index) => !Object.is(value, nameInputs[index]))) {
+    setNameInputs([user.name, nameTouched]);
+
     if (!nameTouched && user.name) {
       setName(user.name);
     }
-  }, [user.name, nameTouched]);
 
-  useEffect(() => {
+  }
+
+  const [phoneInputs, setPhoneInputs] = useState<readonly unknown[] | null>(null);
+  // Prop-backed drafts are reset before stale values can be committed.
+  if (phoneInputs === null || [user.phone, phoneTouched].some((value, index) => !Object.is(value, phoneInputs[index]))) {
+    setPhoneInputs([user.phone, phoneTouched]);
+
     if (!phoneTouched && user.phone) {
       setPhone(user.phone);
     }
-  }, [user.phone, phoneTouched]);
+
+  }
 
   // Validation
   const isNameValid = name.trim().length >= 2;

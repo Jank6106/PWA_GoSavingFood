@@ -132,23 +132,23 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  const revenueOrders = orders.filter((order: any) => isRevenueStatus(order.status));
+  const revenueOrders = orders.filter((order) => isRevenueStatus(order.status));
   const totalRevenue = revenueOrders.reduce(
-    (sum: number, order: any) => sum + Number(order.final_amount || 0),
+    (sum: number, order) => sum + Number(order.final_amount || 0),
     0
   );
   const monthlyRevenue = revenueOrders
-    .filter((order: any) => new Date(order.created_at) >= monthStart)
-    .reduce((sum: number, order: any) => sum + Number(order.final_amount || 0), 0);
+    .filter((order) => new Date(order.created_at) >= monthStart)
+    .reduce((sum: number, order) => sum + Number(order.final_amount || 0), 0);
   const previousMonthRevenue = revenueOrders
-    .filter((order: any) => {
+    .filter((order) => {
       const created = new Date(order.created_at);
       return created >= previousMonthStart && created < monthStart;
     })
-    .reduce((sum: number, order: any) => sum + Number(order.final_amount || 0), 0);
+    .reduce((sum: number, order) => sum + Number(order.final_amount || 0), 0);
 
-  const totalSoldBags = (soldResult.data as any[] || []).reduce(
-    (sum: number, item: any) => {
+  const totalSoldBags = (soldResult.data as Omit<import('../types/database').OrderItemRow, 'id'>[] || []).reduce(
+    (sum: number, item) => {
       const st = Array.isArray(item.orders) ? item.orders[0]?.status : item.orders?.status;
       return isRevenueStatus(st) ? sum + Number(item.quantity || 0) : sum;
     },
@@ -163,7 +163,7 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
 
   // 1. Phân tích Top túi bán chạy nhất (Top Selling Bags)
   const bagMap = new Map<string, { name: string; soldCount: number; revenue: number }>();
-  for (const item of (soldResult.data as any[] || [])) {
+  for (const item of (soldResult.data as Omit<import('../types/database').OrderItemRow, 'id'>[] || [])) {
     const st = Array.isArray(item.orders) ? item.orders[0]?.status : item.orders?.status;
     if (!isRevenueStatus(st)) continue;
     const name = item.bag_name || 'Túi cứu trợ';
@@ -186,7 +186,7 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
     if (totalSoldBags > 0) {
       const topCount = Math.ceil(totalSoldBags * 0.6);
       const restCount = totalSoldBags - topCount;
-      topSellingBags = storeBags.slice(0, 4).map((bag: any, idx: number) => {
+      topSellingBags = storeBags.slice(0, 4).map((bag, idx: number) => {
         const sold = idx === 0 ? topCount : idx === 1 ? restCount : 0;
         const price = Number(bag.discount_price || 35000);
         return {
@@ -197,7 +197,7 @@ export async function fetchAnalyticsMetrics(storeId: string): Promise<AnalyticsM
         };
       });
     } else {
-      topSellingBags = storeBags.slice(0, 4).map((bag: any) => ({
+      topSellingBags = storeBags.slice(0, 4).map((bag) => ({
         name: bag.name || 'Túi cứu trợ',
         soldCount: 0,
         revenue: 0,
@@ -399,9 +399,9 @@ export async function fetchPeriodAnalytics(
   }
 
   const allOrders = data || [];
-  const revenueOrders = allOrders.filter((o: any) => isRevenueStatus(o.status));
+  const revenueOrders = allOrders.filter((o) => isRevenueStatus(o.status));
   const totalRevenue = revenueOrders.reduce(
-    (sum: number, o: any) => sum + Number(o.final_amount || 0),
+    (sum: number, o) => sum + Number(o.final_amount || 0),
     0
   );
   const completedOrders = revenueOrders.length;
@@ -476,17 +476,17 @@ export async function fetchPeriodAnalytics(
   ];
 
   // 3. Biểu đồ cột (Bar Chart Points)
-  let chartData: RevenueChartPoint[] = [];
+  let chartData: RevenueChartPoint[];
 
   if (mode === 'hourly') {
     const hours = [6, 9, 12, 15, 18, 21];
     chartData = hours.map((h, idx) => {
       const nextH = hours[idx + 1] ?? 24;
-      const matching = revenueOrders.filter((o: any) => {
+      const matching = revenueOrders.filter((o) => {
         const orderH = new Date(o.created_at).getHours();
         return orderH >= h && orderH < nextH;
       });
-      const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
+      const val = matching.reduce((sum: number, o) => sum + Number(o.final_amount || 0), 0);
       return {
         label: `${String(h).padStart(2, '0')}:00`,
         date: `${String(h).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00`,
@@ -505,9 +505,9 @@ export async function fetchPeriodAnalytics(
       const d = new Date(start.getTime() + i * oneDayMs);
       const dateStr = d.toDateString();
       const matching = revenueOrders.filter(
-        (o: any) => new Date(o.created_at).toDateString() === dateStr
+        (o) => new Date(o.created_at).toDateString() === dateStr
       );
-      const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
+      const val = matching.reduce((sum: number, o) => sum + Number(o.final_amount || 0), 0);
 
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
@@ -535,7 +535,7 @@ export async function fetchPeriodAnalytics(
     }
 
     chartData = weeks.map((w) => {
-      const matching = revenueOrders.filter((o: any) => {
+      const matching = revenueOrders.filter((o) => {
         const od = new Date(o.created_at);
         return (
           od.getFullYear() === start.getFullYear() &&
@@ -544,7 +544,7 @@ export async function fetchPeriodAnalytics(
           od.getDate() <= w.endDay
         );
       });
-      const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
+      const val = matching.reduce((sum: number, o) => sum + Number(o.final_amount || 0), 0);
       const dd1 = String(w.startDay).padStart(2, '0');
       const dd2 = String(w.endDay).padStart(2, '0');
 
@@ -558,11 +558,11 @@ export async function fetchPeriodAnalytics(
   } else {
     const year = start.getFullYear();
     chartData = Array.from({ length: 12 }, (_, m) => {
-      const matching = revenueOrders.filter((o: any) => {
+      const matching = revenueOrders.filter((o) => {
         const od = new Date(o.created_at);
         return od.getFullYear() === year && od.getMonth() === m;
       });
-      const val = matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0);
+      const val = matching.reduce((sum: number, o) => sum + Number(o.final_amount || 0), 0);
       return {
         label: `T${m + 1}`,
         date: `Tháng ${m + 1}/${year}`,
@@ -636,12 +636,12 @@ export async function fetchAllRevenueCharts(storeId: string): Promise<MultiPerio
     console.warn('Lỗi lấy dữ liệu đa biểu đồ:', error.message);
   }
 
-  const revenueOrders = (data || []).filter((o: any) => isRevenueStatus(o.status));
+  const revenueOrders = (data || []).filter((o) => isRevenueStatus(o.status));
 
   // 1. Biểu đồ Theo Giờ (Hôm nay / 24h)
   const todayStr = now.toDateString();
   const todayRevenueOrders = revenueOrders.filter(
-    (o: any) => new Date(o.created_at).toDateString() === todayStr
+    (o) => new Date(o.created_at).toDateString() === todayStr
   );
   const hourSlots = [
     { label: '06:00', start: 6, end: 9, title: '06:00 - 09:00 (Sáng sớm)' },
@@ -652,14 +652,14 @@ export async function fetchAllRevenueCharts(storeId: string): Promise<MultiPerio
     { label: '21:00', start: 21, end: 24, title: '21:00 - 24:00 (Đêm muộn)' },
   ];
   const hourly: RevenueChartPoint[] = hourSlots.map((slot) => {
-    const matching = todayRevenueOrders.filter((o: any) => {
+    const matching = todayRevenueOrders.filter((o) => {
       const h = new Date(o.created_at).getHours();
       return h >= slot.start && h < slot.end;
     });
     return {
       label: slot.label,
       date: slot.title,
-      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      value: matching.reduce((sum: number, o) => sum + Number(o.final_amount || 0), 0),
       orderCount: matching.length,
     };
   });
@@ -670,14 +670,14 @@ export async function fetchAllRevenueCharts(storeId: string): Promise<MultiPerio
     const d = new Date(now.getTime() - (6 - i) * oneDayMs);
     const dateStr = d.toDateString();
     const matching = revenueOrders.filter(
-      (o: any) => new Date(o.created_at).toDateString() === dateStr
+      (o) => new Date(o.created_at).toDateString() === dateStr
     );
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     return {
       label: DAY_LABELS[d.getDay()],
       date: `${DAY_LABELS[d.getDay()]}, ${dd}/${mm}`,
-      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      value: matching.reduce((sum: number, o) => sum + Number(o.final_amount || 0), 0),
       orderCount: matching.length,
     };
   });
@@ -697,7 +697,7 @@ export async function fetchAllRevenueCharts(storeId: string): Promise<MultiPerio
   const currYear = now.getFullYear();
   const mmStr = String(currMonth + 1).padStart(2, '0');
   const weekly: RevenueChartPoint[] = weeks.map((w) => {
-    const matching = revenueOrders.filter((o: any) => {
+    const matching = revenueOrders.filter((o) => {
       const od = new Date(o.created_at);
       return (
         od.getFullYear() === currYear &&
@@ -711,21 +711,21 @@ export async function fetchAllRevenueCharts(storeId: string): Promise<MultiPerio
     return {
       label: w.label,
       date: `${w.label} (${dd1}/${mmStr} - ${dd2}/${mmStr})`,
-      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      value: matching.reduce((sum: number, o) => sum + Number(o.final_amount || 0), 0),
       orderCount: matching.length,
     };
   });
 
   // 4. Biểu đồ Theo Tháng (Năm nay)
   const monthly: RevenueChartPoint[] = Array.from({ length: 12 }, (_, m) => {
-    const matching = revenueOrders.filter((o: any) => {
+    const matching = revenueOrders.filter((o) => {
       const od = new Date(o.created_at);
       return od.getFullYear() === currYear && od.getMonth() === m;
     });
     return {
       label: `T${m + 1}`,
       date: `Tháng ${m + 1}/${currYear}`,
-      value: matching.reduce((sum: number, o: any) => sum + Number(o.final_amount || 0), 0),
+      value: matching.reduce((sum: number, o) => sum + Number(o.final_amount || 0), 0),
       orderCount: matching.length,
     };
   });
@@ -759,17 +759,17 @@ export async function fetchRevenueChart(
         return [];
       }
 
-      const revenueOrders = (data || []).filter((order: any) => isRevenueStatus(order.status));
+      const revenueOrders = (data || []).filter((order) => isRevenueStatus(order.status));
 
       if (timeframe === 'week') {
         return Array.from({ length: 7 }, (_, index) => {
           const date = new Date(rangeStart);
           date.setDate(rangeStart.getDate() + index);
           const matchingOrders = revenueOrders.filter(
-            (order: any) => new Date(order.created_at).toDateString() === date.toDateString()
+            (order) => new Date(order.created_at).toDateString() === date.toDateString()
           );
           const value = matchingOrders.reduce(
-            (sum: number, order: any) => sum + Number(order.final_amount || 0),
+            (sum: number, order) => sum + Number(order.final_amount || 0),
             0
           );
           const dayName = DAY_LABELS[date.getDay()];
@@ -788,12 +788,12 @@ export async function fetchRevenueChart(
         bucketStart.setDate(rangeStart.getDate() + index * 7);
         const bucketEnd = new Date(bucketStart);
         bucketEnd.setDate(bucketStart.getDate() + 7);
-        const matchingOrders = revenueOrders.filter((order: any) => {
+        const matchingOrders = revenueOrders.filter((order) => {
           const created = new Date(order.created_at);
           return created >= bucketStart && created < bucketEnd;
         });
         const value = matchingOrders.reduce(
-          (sum: number, order: any) => sum + Number(order.final_amount || 0),
+          (sum: number, order) => sum + Number(order.final_amount || 0),
           0
         );
         const startStr = `${bucketStart.getDate()}/${bucketStart.getMonth() + 1}`;
@@ -850,13 +850,13 @@ export async function fetchRecentReviews(storeId: string): Promise<ReviewItem[]>
         .select('id, rating, comment, created_at, customer_id, order_id, users(name), orders(recipient_name)')
         .eq('store_id', storeId)
         .order('created_at', { ascending: false })
-        .limit(6);
+        .limit(6).returns<{ id: string; rating: number; comment: string; created_at: string; customer_id: string; users: { name: string } | { name: string }[]; orders: { recipient_name: string } | { recipient_name: string }[] }[]>();
 
       if (error || !data || data.length === 0) {
         return [];
       }
 
-      return (data || []).map((row: any, idx: number) => {
+      return (data || []).map((row, idx: number) => {
         const customer = Array.isArray(row.users) ? row.users[0] : row.users;
         const recipient = Array.isArray(row.orders) ? row.orders[0]?.recipient_name : row.orders?.recipient_name;
         const charSum = (row.id as string).split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), idx);

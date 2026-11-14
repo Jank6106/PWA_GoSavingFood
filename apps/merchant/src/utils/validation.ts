@@ -1,3 +1,4 @@
+import { errorMessage, errorCode } from './errors';
 /**
  * Tiện ích validation và chuẩn hóa thông tin đăng nhập, xác thực cho Merchant PWA
  * Tuân thủ quy chuẩn số điện thoại Việt Nam và Email RFC 5322
@@ -185,10 +186,10 @@ export function evaluatePasswordStrength(password: string): PasswordStrength {
 /**
  * Chuyển đổi mã lỗi Supabase Auth sang thông báo tiếng Việt thân thiện
  */
-export function mapSupabaseAuthError(error: any): string {
+export function mapSupabaseAuthError(error: unknown): string {
   if (!error) return 'Đã xảy ra lỗi không xác định.';
-  const msg = typeof error === 'string' ? error : error.message || '';
-  const code = error.code || '';
+  const msg = typeof error === 'string' ? error : errorMessage(error) || '';
+  const code = errorCode(error) || '';
 
   if (
     code === 'over_email_send_rate_limit' ||

@@ -1,6 +1,6 @@
 import { QrCode } from 'lucide-react';
 import type { TabRoute } from '../../types';
-import { optimizeImageUrl } from '../../services/utils';
+import { optimizeImageUrl } from '../../utils/browser';
 import logoSvg from '../../assets/logo.svg';
 import logoPng from '../../assets/logo.png';
 

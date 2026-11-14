@@ -4,7 +4,6 @@ import {
   changePasswordService,
   completeSetupService,
   deleteMerchantAccountService,
-  getCachedMerchantUser,
   getCurrentMerchantSession,
   loginService,
   logoutService,
@@ -15,10 +14,10 @@ import { supabase } from '../services/supabase';
 import type { AuthUser, LoginCredentials, MerchantRegisterInput } from '../types';
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(() => getCachedMerchantUser());
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [initializing, setInitializing] = useState(() => !getCachedMerchantUser());
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -37,15 +36,18 @@ export function useAuth() {
     // Đăng ký lắng nghe sự kiện thay đổi phiên Supabase Auth
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         setCachedMerchantUser(null);
         if (isMounted) setUser(null);
       } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-        const verified = await getCurrentMerchantSession();
-        if (verified && isMounted) {
-          setUser(verified);
-        }
+        // Query the profile after the SDK releases its auth event lock.
+        window.setTimeout(() => {
+          if (!isMounted) return;
+          void getCurrentMerchantSession().then((verified) => {
+            if (isMounted) setUser(verified);
+          });
+        }, 0);
       }
     });
 
@@ -100,7 +102,7 @@ export function useAuth() {
     } catch (reason) {
       const msg = reason instanceof Error ? reason.message : 'Không thể đổi mật khẩu.';
       setError(msg);
-      throw new Error(msg);
+      throw new Error(msg, { cause: reason });
     } finally {
       setLoading(false);
     }
@@ -162,3 +164,5 @@ export function useAuth() {
     clearError: () => setError(null),
   };
 }
+
+export { getCachedMerchantUser } from '../services/auth.service';

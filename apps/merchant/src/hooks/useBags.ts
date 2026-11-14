@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { errorMessage } from '../utils/errors';
+import { useEffectEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createBagItem,
   deleteBagItem,
@@ -31,14 +32,19 @@ export function useBags(storeId: string) {
   const { toastMessage, showToast } = useToast();
   const ignoreRealtimeUntilRef = useRef<number>(0);
 
-  useEffect(() => {
+  const [cachedInputs, setCachedInputs] = useState<readonly unknown[] | null>(null);
+  // Reset the draft/cache when its inputs change, before committing stale UI.
+  if (cachedInputs === null || [storeId].some((value, index) => !Object.is(value, cachedInputs[index]))) {
+    setCachedInputs([storeId]);
+
     const cached = getCachedBagItems(storeId);
     if (cached.length > 0) {
       setAllBags(cached);
       setLoading(false);
       setHasLoadedOnce(true);
     }
-  }, [storeId]);
+
+  }
 
   const loadBags = useCallback(async () => {
     setError(null);
@@ -47,7 +53,7 @@ export function useBags(storeId: string) {
       setAllBags(items);
       try {
         localStorage.setItem(`gsf_bags_cached_at_${storeId}`, String(Date.now()));
-      } catch {}
+      } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
     } catch {
       setError('Không thể tải danh sách túi hàng.');
     } finally {
@@ -56,6 +62,7 @@ export function useBags(storeId: string) {
     }
   }, [storeId]);
 
+  const hasCachedItems = useEffectEvent(() => allBags.length > 0);
   const lastFetchedStoreIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -67,10 +74,10 @@ export function useBags(storeId: string) {
       let isFresh = false;
       try {
         const cachedAt = Number(localStorage.getItem(`gsf_bags_cached_at_${storeId}`) || '0');
-        if (Date.now() - cachedAt < 60000 && allBags.length > 0) {
+        if (Date.now() - cachedAt < 60000 && hasCachedItems()) {
           isFresh = true;
         }
-      } catch {}
+      } catch  { /* Best-effort browser storage/cleanup; failure must not block the UI. */ }
 
       if (!isFresh) {
         void loadBags();
@@ -241,11 +248,11 @@ export function useBags(storeId: string) {
         setCachedBagItems(storeId, next);
         return next;
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Rollback
       setAllBags(previousBags);
       setCachedBagItems(storeId, previousBags);
-      showToast(err.message || 'Lỗi tạo túi hàng, đã hoàn tác');
+      showToast(errorMessage(err) || 'Lỗi tạo túi hàng, đã hoàn tác');
     } finally {
       setSaving(false);
     }
@@ -273,11 +280,11 @@ export function useBags(storeId: string) {
       const updated = await updateBagItem(selectedBag.id, input);
       replaceBag(updated);
       setSelectedBag(updated);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Rollback
       setAllBags(previousBags);
       setCachedBagItems(storeId, previousBags);
-      showToast(err.message || 'Lỗi cập nhật túi hàng, đã hoàn tác');
+      showToast(errorMessage(err) || 'Lỗi cập nhật túi hàng, đã hoàn tác');
     } finally {
       setSaving(false);
     }
@@ -298,11 +305,11 @@ export function useBags(storeId: string) {
     setSaving(true);
     try {
       await deleteBagItem(bagId);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Rollback
       setAllBags(previousBags);
       setCachedBagItems(storeId, previousBags);
-      showToast(err.message || 'Lỗi khi xóa túi hàng, đã hoàn tác');
+      showToast(errorMessage(err) || 'Lỗi khi xóa túi hàng, đã hoàn tác');
     } finally {
       setSaving(false);
     }
