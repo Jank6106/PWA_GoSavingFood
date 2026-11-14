@@ -558,9 +558,14 @@ export function BagEditorModal({ bag, open, saving, onClose, onSubmit, storeId }
       setImageError(null);
       setFormError(null);
       aiDraft.reset();
-      if (!bag && storeId) aiDraft.warmUp();
     }
   }
+
+  // Ping route AI khi mở form tạo túi (side effect -> để trong effect, không chạy trong render)
+  const { warmUp: warmUpAi } = aiDraft;
+  useEffect(() => {
+    if (open && !bag && storeId) warmUpAi();
+  }, [open, bag, storeId, warmUpAi]);
 
   const applyAiPhoto = async (file: File) => {
     const draft = await aiDraft.analyze(file);
