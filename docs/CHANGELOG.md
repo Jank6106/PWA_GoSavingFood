@@ -5,6 +5,9 @@
 ## [Unreleased]
 
 ### Added
+- Customer Finder uses OpenAI Responses API (gpt-5.4-mini -> gpt-5.4-nano), strict JSON Schema, no response storage, provenance and refusal handling. Both models passed text extraction, synthetic-label vision and forced-failover smoke tests; no upload UI added. See `hackathon/customer/AI_SETUP.md`.
+- Customer Finder server adapter: authenticated `POST /api/ai/customer-search`, Gemini structured constraints and hedged model fallback adapted from Hanh `5dd09df`, bounded input/output and per-instance quotas. Client displays model provenance and explicit auth/provider failures; real-provider testing awaits a local key. Setup: `hackathon/customer/AI_SETUP.md`.
+- Customer hackathon: Today Deals on Home, a dedicated Finder route, local Vietnamese budget/group/category/area/pickup filtering, optional server-constraints contract, and focused offline regression suites. Server AI integration and physical-device acceptance are pending; see `hackathon/customer/REVIEW.md`.
 - 2026-11-14: Added a three-job GitHub Actions quality gate for lint/unit/build, isolated Docker Supabase integration, and Chromium E2E. Uses frozen pnpm installs, pnpm/build/browser caches, PR cancellation, failure artifacts retained seven days and unconditional Docker cleanup. Local configuration is generated from Docker status without Cloud secrets; E2E children retain Linux HOME/USER. See ADR-008 and the branch-protection guide in DEPLOYMENT.md.
 - 2026-11-14: Added Playwright/Chromium E2E infrastructure, isolated local gateway servers, seeded Customer identities, auth/route-guard specs and a dual-context zero-VND order/Realtime/QR lifecycle. See `docs/reports/E2E_TESTING_2026-11-14.md`.
 - 2026-11-13: Exported a schema-only Cloud baseline for Docker; added local compatibility adapters and synthetic prerequisite owner without copying Cloud user/order data.
@@ -15,6 +18,10 @@
 - Centralized root `.env` loader [`scripts/lib/env.mjs`](../scripts/lib/env.mjs) (with TypeScript declarations [`scripts/lib/env.d.ts`](../scripts/lib/env.d.ts)) and offline unit test [`tests/envHelper.test.ts`](../tests/envHelper.test.ts).
 
 ### Changed
+- 2026-11-14: Integrated `master` (`798152e`) into `Hung` for PR conflict resolution, combining CI/Docker/E2E and React hook fixes with Finder routing, StrictMode-safe browser history, Mapbox fallbacks and cancelled location-search protection. Preserved both branches' documentation and ADR links. Merge validation: 137 offline tests, customer build, workspace lint and web typecheck passed; Docker/browser E2E and live providers were not rerun.
+- Customer map search falls back to its searchable list when the Mapbox token is missing or the map fails to initialize/load, instead of crashing the entire app. Location selection shows a recoverable map error and keeps GPS/current-location selection usable.
+- Root `pnpm test` includes Finder, coordinator regression and customer deal suites while remaining offline. Customer fallbacks carry `catalogSource: demo`, catalogue cache uses v6, and bag cards use semantic open/add controls with honest distance/image/price states.
+- Customer navigation writes browser history outside state updaters, preventing StrictMode duplicate entries and incorrect Back/reload restoration. Finder preserves metre precision before display, including stores within 50 m. Local acceptance: 85 offline tests, customer build, scoped lint and browser mobile/desktop; evidence in `hackathon/customer/REVIEW.md`.
 - 2026-11-14: Cleared Merchant ESLint debt (113 errors, 3 warnings) and existing Customer/Web diagnostics without disabling rules. Added typed database payloads and unknown-error narrowing, corrected React hook/ref usage, and moved Merchant browser utilities out of services to preserve UI layering. Verified workspace lint with zero diagnostics, all three builds, offline 14/14, Docker integration 42/42, and Playwright E2E 9/9. See `docs/reports/ESLINT_CLEANUP_2026-11-14.md` for changed files and terminal excerpts.
 - Merchant startup and login now verify the server-side profile role before resolving a store; unverified local cache cannot open the dashboard. Auth event profile requests run after the SDK auth lock is released. Added explicit E2E gateway/base-path settings and kept Vitest specs separate.
 - Docker acceptance: clean reset applied 42 migrations and seed; Studio HTTP 200; zero leftover test users. Workspace build passed from Turbo cache. Workspace lint failed in unchanged merchant source (113 errors, 3 warnings).
@@ -55,3 +62,5 @@
 - **PayOS Status Check & Order Detail Loading** (`da0d10f6`, `249af0c9`, `7b8e671a`, `427b00df`): Queried `/api/payos/check-status` with numeric `paymentOrderCode`, synchronized `supabaseUrl` fallbacks in PayOS API routes, and fixed deep-linking from notifications.
 - **Merchant 1:1 Account Isolation** (`6633ddd2`): Dedicated credentials and strict 1:1 store isolation per merchant account.
 - **Catalog Image & Fallback Sync** (`e0113cfd`, `4c7eadf7`): Sanitized all bag image URLs in DB and synchronized `HANOI_BAGS` fallback 1:1.
+
+- 2026-11-14: Customer Finder primary switched to GPT-6 Luna with GPT-5.4 mini fallback, explicit reasoning=none. Live text, synthetic-label vision and forced failover passed; no image-upload UI or production deployment added.

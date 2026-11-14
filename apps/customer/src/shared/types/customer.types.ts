@@ -63,6 +63,7 @@ export interface Brand {
 
 export interface Merchant {
   id: string;
+  catalogSource?: 'remote' | 'demo';
   brandId?: string;
   name: string;
   description: string;
@@ -85,6 +86,7 @@ export type RepeatMode = 'today_only' | 'recurring';
 
 export interface SurpriseBag {
   id: string;
+  catalogSource?: 'remote' | 'demo';
   merchantId: string;
   merchantName: string;
   name: string;
@@ -222,6 +224,7 @@ export interface CheckoutDraft {
 export type AppRoute =
   | { name: 'tabs'; tab: CustomerTab }
   | { name: 'search' }
+  | { name: 'finder' }
   | { name: 'bags'; categoryId?: FoodCategory }
   | { name: 'bag'; id: string }
   | { name: 'merchant'; id: string }

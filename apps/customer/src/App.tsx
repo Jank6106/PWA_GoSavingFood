@@ -16,6 +16,7 @@ import { customerService, optimizeImageUrl } from './services/customer.service';
 
 // Lazy-load các trang nặng hoặc chứa mapbox-gl để giảm 70% dung lượng bundle ban đầu
 const SearchPage = lazy(() => import('./features/search/pages/SearchPage').then((m) => ({ default: m.SearchPage })));
+const FinderPage = lazy(() => import('./features/finder/pages/FinderPage').then((m) => ({ default: m.FinderPage })));
 const SelectLocationPage = lazy(() => import('./features/location/pages/SelectLocationPage').then((m) => ({ default: m.SelectLocationPage })));
 const CheckoutPage = lazy(() => import('./features/checkout/pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
 const PaymentPage = lazy(() => import('./features/checkout/pages/PaymentPage').then((m) => ({ default: m.PaymentPage })));
@@ -126,6 +127,7 @@ function parseRouteFromUrl(): AppRoute | null {
     const orderId = params.get('orderId');
 
     if (view === 'search') return { name: 'search' };
+    if (view === 'finder') return { name: 'finder' };
     if (view === 'bags') return { name: 'bags' };
     if (view === 'bag' && id) return { name: 'bag', id };
     if (view === 'merchant' && id) return { name: 'merchant', id };
@@ -263,7 +265,7 @@ function CustomerApp() {
     if (route.name === 'notifications') return 'notifications';
     if (route.name === 'order' || route.name === 'review' || route.name === 'report') return 'orders';
     if (route.name === 'checkout' || route.name === 'payment' || route.name === 'success') return 'cart';
-    if (route.name === 'search' || route.name === 'bags' || route.name === 'bag' || route.name === 'merchant' || route.name === 'merchant_reviews' || route.name === 'brand' || route.name === 'location') return 'home';
+    if (route.name === 'finder' || route.name === 'search' || route.name === 'bags' || route.name === 'bag' || route.name === 'merchant' || route.name === 'merchant_reviews' || route.name === 'brand' || route.name === 'location') return 'home';
     return 'home';
   }, [route]);
 
@@ -283,16 +285,14 @@ function CustomerApp() {
   }, [route]);
 
   const push = (nextRoute: AppRoute) => {
-    setHistory((current) => {
-      const nextHistory = [...current, nextRoute];
-      const url = getRouteUrl();
-      window.history.pushState(
-        { route: nextRoute, index: nextHistory.length - 1 },
-        '',
-        url
-      );
-      return nextHistory;
-    });
+    const nextHistory = [...history, nextRoute];
+    // History writes belong to the event handler: StrictMode may replay state updaters.
+    window.history.pushState(
+      { route: nextRoute, index: nextHistory.length - 1 },
+      '',
+      getRouteUrl()
+    );
+    setHistory(nextHistory);
   };
 
   const back = () => {
@@ -307,22 +307,17 @@ function CustomerApp() {
     if (tab === 'orders') {
       setOrdersBadgeCount(0);
     }
-    setHistory((current) => {
-      const active = current[current.length - 1];
-      if (active && active.name === 'tabs' && active.tab === tab) {
-        return current;
-      }
-      const nextRoute: AppRoute = { name: 'tabs', tab };
-      const nextHistory: AppRoute[] =
-        tab === 'home' ? [{ name: 'tabs', tab: 'home' }] : [...current, nextRoute];
-      const url = getRouteUrl();
-      window.history.pushState(
-        { route: nextRoute, index: nextHistory.length - 1 },
-        '',
-        url
-      );
-      return nextHistory;
-    });
+    const active = history[history.length - 1];
+    if (active && active.name === 'tabs' && active.tab === tab) return;
+    const nextRoute: AppRoute = { name: 'tabs', tab };
+    const nextHistory: AppRoute[] =
+      tab === 'home' ? [{ name: 'tabs', tab: 'home' }] : [...history, nextRoute];
+    window.history.pushState(
+      { route: nextRoute, index: nextHistory.length - 1 },
+      '',
+      getRouteUrl()
+    );
+    setHistory(nextHistory);
   };
 
   const home = () => openTab('home');
@@ -1065,7 +1060,7 @@ function CustomerApp() {
 
   const renderScreen = () => {
     if (route.name === 'tabs') {
-      if (route.tab === 'home') return <HomePage {...catalog} location={location} onSearch={() => push({ name: 'search' })} onLocation={() => push({ name: 'location' })} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })} onAdd={addToCart} onViewAll={(categoryId) => push({ name: 'bags', categoryId })} />;
+      if (route.tab === 'home') return <HomePage {...catalog} location={location} onFinder={() => push({ name: 'finder' })} onSearch={() => push({ name: 'search' })} onLocation={() => push({ name: 'location' })} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} onOpenMerchant={(merchant) => push({ name: 'merchant', id: merchant.id })} onOpenBrand={(brand) => push({ name: 'brand', id: brand.id })} onAdd={addToCart} onViewAll={(categoryId) => push({ name: 'bags', categoryId })} />;
       if (route.tab === 'cart') return <CartPage items={cart.items} isAuthenticated={auth.isAuthenticated} {...cart.summary} onLogin={auth.showAuthModal} onExplore={home} onCheckout={startCheckout} onUpdate={cart.updateQuantity} onRemove={cart.removeItem} onOpenBag={(bag) => push({ name: 'bag', id: bag.id })} />;
       if (route.tab === 'orders') return <OrdersPage orders={orders} isAuthenticated={auth.isAuthenticated} onLogin={auth.showAuthModal} onOpenOrder={(order) => push({ name: 'order', id: order.id })} />;
       return (
@@ -1093,6 +1088,22 @@ function CustomerApp() {
         />
       );
     }
+    if (route.name === 'finder')
+      return (
+        <FinderPage
+          bags={catalog.bags}
+          merchants={catalog.merchants}
+          coords={coords}
+          currentLocation={location}
+          catalogLoading={catalog.isLoading}
+          catalogError={catalog.error}
+          onBack={back}
+          onOpenBag={(bag) => push({ name: 'bag', id: bag.id })}
+          onOpenLocation={() => push({ name: 'location' })}
+          onRetryCatalog={catalog.refetch}
+          onBrowseAll={() => push({ name: 'bags' })}
+        />
+      );
     if (route.name === 'search')
       return (
         <SearchPage

@@ -3384,6 +3384,7 @@ export const customerService = {
             rating: typeof s.rating === 'number' ? Number(s.rating) : 0,
             totalRatings: typeof s.total_ratings === 'number' ? Number(s.total_ratings) : 0,
             distance: distM,
+            catalogSource: 'remote' as const,
             status: 'active' as const,
             isOpen: s.is_open ?? true,
             openingHours: `${s.open_time?.slice(0, 5) || '07:00'} - ${s.close_time?.slice(0, 5) || '20:00'}`,
@@ -3397,6 +3398,7 @@ export const customerService = {
         remoteBags = bagsSource
           .map((b: BagRow) => ({
             id: b.id,
+            catalogSource: 'remote' as const,
             merchantId: b.store_id,
             merchantName: b.store_name || b.stores?.name || 'Quán đối tác',
             name: b.name,
@@ -3435,6 +3437,7 @@ export const customerService = {
       const distKm = calculateDistanceKm([lng, lat], [s.longitude!, s.latitude!]);
       return {
         ...s,
+        catalogSource: 'demo',
         distance: Math.round(distKm * 1000),
       };
     });
@@ -3461,7 +3464,7 @@ export const customerService = {
     }
     for (const b of HANOI_BAGS) {
       if (!bagMap.has(b.id) && !bagMap.has(b.name)) {
-        bagMap.set(b.id, b);
+        bagMap.set(b.id, { ...b, catalogSource: 'demo' });
       }
     }
     const allBags = Array.from(new Set(bagMap.values())).filter(isBagVisibleOnMarket);

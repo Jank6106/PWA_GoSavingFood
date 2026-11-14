@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { ChevronLeft, Crosshair, Loader2, MapPin, Search, X } from 'lucide-react';
-import { Button } from '@gosavingfood/ui';
+import { Button, ErrorState } from '@gosavingfood/ui';
 import { customerService } from '../../../services/customer.service';
 import { MAPBOX_TOKEN, mapboxService } from '../../../services/mapbox.service';
 import type { LocationSuggestion } from '../../../shared/types/customer.types';
@@ -35,6 +35,7 @@ export function SelectLocationPage({
   const [isLocating, setIsLocating] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [mapUnavailable, setMapUnavailable] = useState(!MAPBOX_TOKEN.trim());
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -64,19 +65,26 @@ export function SelectLocationPage({
   // 3. Khởi tạo bản đồ Mapbox
   const [initialMapCoords] = useState(selectedCoords);
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!mapContainerRef.current || !MAPBOX_TOKEN.trim()) return;
 
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: initialMapCoords,
-      zoom: 14,
-      attributionControl: false,
-    });
+    let map: mapboxgl.Map;
+    try {
+      map = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: initialMapCoords,
+        zoom: 14,
+        attributionControl: false,
+      });
+    } catch {
+      const frame = requestAnimationFrame(() => setMapUnavailable(true));
+      return () => cancelAnimationFrame(frame);
+    }
 
     mapRef.current = map;
+    map.on('error', () => setMapUnavailable(true));
 
     map.on('load', () => {
       map.resize();
@@ -119,12 +127,12 @@ export function SelectLocationPage({
   }
   useEffect(() => {
     const trimmed = query.trim();
+    let active = true;
     if (!trimmed) {
       return;
     }
 
     const timer = setTimeout(() => {
-      let active = true;
       customerService
         .searchLocations(trimmed, selectedCoords)
         .then((items) => {
@@ -136,12 +144,12 @@ export function SelectLocationPage({
         .catch(() => {
           if (active) setIsSearching(false);
         });
-      return () => {
-        active = false;
-      };
     }, 250);
 
-    return () => clearTimeout(timer);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [query, selectedCoords]);
 
   // 5. Nút bấm "Dùng vị trí hiện tại" (GPS thật qua navigator.geolocation)
@@ -201,10 +209,10 @@ export function SelectLocationPage({
     setSelected(loc.address || loc.name);
     setQuery(''); // Đóng dropdown sau khi chọn
 
-    if (loc.coordinates && mapRef.current) {
+    if (loc.coordinates) {
       const coords: [number, number] = loc.coordinates;
       setSelectedCoords(coords);
-      mapRef.current.flyTo({
+      mapRef.current?.flyTo({
         center: coords,
         zoom: 15,
         essential: true,
@@ -290,6 +298,14 @@ export function SelectLocationPage({
       <div className="customer-location-fullscreen-map">
         <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
+        {mapUnavailable && (
+          <div style={{ position: 'absolute', top: '25%', left: 16, right: 16 }}>
+            <ErrorState
+              title="Bản đồ hiện chưa khả dụng"
+              message="Bạn có thể dùng vị trí GPS, giữ vị trí đã chọn hoặc quay lại để tiếp tục khám phá."
+            />
+          </div>
+        )}
         {statusMessage && (
           <div className="customer-map-status-overlay">
             <span>{statusMessage}</span>
